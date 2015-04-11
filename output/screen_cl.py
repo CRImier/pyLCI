@@ -1,39 +1,22 @@
 import socket
-net_port = 6000 
 import pickle
-import select
-import string
-import sys
+net_port = 6000 
 
-sock = None
+class NetScreen():
+    def __init__(self):     
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(2)
+        sock.connect(('127.0.0.1', net_port))
+        self.sock = sock
+    def send_string(self, message):
+        self.send_data([message[:16], message[:32][16:]])
+    def send_data(self, data):
+        serialized_data = pickle.dumps(data)
+        self.sock.send(serialized_data)
 
-def divide_data(message) :
-    data = [message[:16], message[:32][16:]]
-    serialized_data = pickle.dumps(data)
-    return serialized_data
- 
-#main function
-def init():     
-    global sock
-    host = 'localhost'
-    port = 6000
-     
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.settimeout(2)
-     
-    # connect to remote host
-    try :
-        sock.connect((host, port))
-    except :
-        print 'Unable to connect'
-        sys.exit()
-     
-    print 'Connected to remote host. Start sending messages'
-     
-
-init()
 if __name__ == "__main__":
+    screen = NetScreen()
     while True:
-        msg = raw_input(":")
-        sock.send(divide_data(msg))
+        message = raw_input(":")
+        screen.send_string(message)
 
