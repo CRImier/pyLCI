@@ -54,9 +54,12 @@ def listen():
     server_socket.close()
 
 
+
 def display_string(first_row, second_row):
     first_row = first_row[:16].ljust(16)
     second_row = second_row[:16].ljust(16)
     ser.write(first_row+second_row)
 
-listen()
+send_string = display_string
+
+#listen()

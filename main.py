@@ -5,7 +5,7 @@ from menu.menu import Menu
 #import menu
 from output import screen as scr
 #import output
-from phone.modem import ModemInterface
+#from phone.modem import ModemInterface
 #import phone
 
 soundcard_listener = kb.KeyListener(name = 'C-Media Electronics Inc.       USB PnP Sound Device')
@@ -13,7 +13,7 @@ numpad_listener = kb.KeyListener(name = 'HID 04d9:1603')
 soundcard_listener.listen()
 numpad_listener.listen()
 
-modem = ModemInterface()
+#modem = ModemInterface()
 
 def volume_up():
     print "Volume up key pressed"
@@ -24,7 +24,7 @@ def f1():
     number = "00000000"
     print "Sending an SMS"
     message = "Hi! Imma Wearable Control System"
-    status = modem.send_message(number, message)
+    #status = modem.send_message(number, message)
     if status:
        print "Sending succeeded =)"
     else:
