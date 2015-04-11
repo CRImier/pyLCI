@@ -2,6 +2,7 @@ from evdev import InputDevice, list_devices, categorize, ecodes
 import threading
 import time
 import os
+#import pickle
 
 debug = True
 
@@ -91,6 +92,7 @@ class KeyListener():
                 if self.stop_flag:
                     break
                 if event.type == ecodes.EV_KEY:
+                    #print pickle.dumps([ecodes.keys[event.code], event.value])
                     key = ecodes.keys[event.code]
                     value = event.value
                     if value == 0:
