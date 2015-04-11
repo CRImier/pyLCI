@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from input import keyboard as kb
 #import input
 from time import sleep
