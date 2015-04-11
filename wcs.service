@@ -1,0 +1,9 @@
+[Unit]
+Description=Wearable Control System
+
+[Service]
+PIDFile=/run/wcs.pid
+ExecStart=/root/WCS/main.py 
+
+[Install]
+WantedBy=getty.target
