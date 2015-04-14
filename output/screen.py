@@ -5,47 +5,31 @@ import pickle
 import select
 import threading
 
+#Currently only 16x2 char displays are supported
+#TODO: ability to configure screen sizes
+#TODO: switch modes from direct-only to socket-only
 net_port = 6000
-ser_port = "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A9CJVD59-if00-port0"
+ser_port = "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A9CJVD59-if00-port0" #send that to settings or something something automagical
  
 class Screen():
+    """Class that has all the screen control functions and defines"""
+    #Yeah, that also should go to some kind of settings module
     type = "char"
     rows = 2
     columns = 16
     def __init__(self, serial):
+        #Okay, that's rather simple, but the "Loading" doesn't work.
         self.serial = serial
         serial.write("Loading...")
     def display_string(self, first_row, second_row):
+        #This doesn't accept a single string, but needs two of them. TODO: make it right.
         first_row = first_row[:self.columns].ljust(self.columns)
         second_row = second_row[:self.columns].ljust(self.columns)
         self.serial.write(first_row+second_row)
 
-class ScreenDriver():
-    mode = None
-    def __init__(self, screen, socket=True):
-#        if socket:
-#            self.server = Server()
-        self.screen = screen
-
-    def display_data (self, message):
-        print message
-        print pickle.loads(message)
-        self.screen.display_string(*pickle.loads(message))
-
-"""
-class Server():
-    socket_enabled = False
-    def __init__(self, socket=True):
-        if socket:
-            self.socket_enabled = True
-            self.init_socket()
-            self.start_server()
-        self.screen = Screen()
-"""
- 
-def listen(screen_driver):     
-    # List to keep track of socket descriptors
-    CONNECTION_LIST = []
+def listen(screen):     
+    """A blocking function that receives data over sockets and sends that directly to the screen"""
+    CONNECTION_LIST = [] # List to keep track of socket descriptors
     RECV_BUFFER = 4096 # Advisable to keep it as an exponent of 2
      
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -73,7 +57,7 @@ def listen(screen_driver):
                     # a "Connection reset by peer" exception will be thrown
                     data = sock.recv(RECV_BUFFER)
                     if data:
-                        screen_driver.display_data(data)               
+                        screen.display_data(*pickle.loads(data))               
                 except:
                     #Client disconnected
                     print "Client (%s, %s) is offline" % addr
@@ -84,14 +68,12 @@ def listen(screen_driver):
     server_socket.close()
 
 
-
-
-serial = Serial(ser_port, 115200)
-screen = Screen(serial)
-screendriver = ScreenDriver(screen)
-listener_thread = threading.Thread(target=listen, args=(screendriver,))
-listener_thread.daemon = True
-listener_thread.start()
-send_string = screen.display_string
+if "__name__" != "__main__":
+    serial = Serial(ser_port, 115200) #Again, settings... or maybe embed that somewhere in the screen driver
+    screen = Screen(serial)
+    listener_thread = threading.Thread(target=listen, args=(screen,))
+    listener_thread.daemon = True
+    listener_thread.start()
+    send_string = screen.display_string
 
 
