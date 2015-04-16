@@ -2,7 +2,7 @@ from evdev import InputDevice, list_devices, categorize, ecodes
 import threading
 import time
 import os
-import pickle
+import cpickle as pickle
 import socket
 debug = True
 
@@ -102,7 +102,7 @@ class KeyListener():
 
     def clear_keymap(self):
         """Removes all the callbacks set"""
-        self.keymap = {}
+        self.keymap.clear()
 
     @to_be_enabled
     def process_message(self, message):
@@ -114,7 +114,7 @@ class KeyListener():
     def socket_event_loop(self):
         """Blocking event loop which both listens for input events, sending them over the sockets, 
            and listens for incoming messages over the sockets. Doesn't react to callbacks in the keymap."""
-        net_port = 6000
+        net_port = 6001
         CONNECTION_LIST = [] # List to keep track of socket descriptors
         RECV_BUFFER = 4096 
         fileno = self.device.fileno()
