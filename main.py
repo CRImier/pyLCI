@@ -10,6 +10,9 @@ from output import screen as scr
 #from phone.modem import ModemInterface
 #import phone
 
+#TODO: global setting to replace hardcoded variables
+#TODO: start extension mechanism
+
 soundcard_listener = kb.KeyListener(name = 'C-Media Electronics Inc.       USB PnP Sound Device')
 numpad_listener = kb.KeyListener(name = 'HID 04d9:1603')
 soundcard_listener.listen()
@@ -27,10 +30,10 @@ def f1():
     print "Sending an SMS"
     message = "Hi! Imma Wearable Control System"
     #status = modem.send_message(number, message)
-    if status:
+"""    if status:
        print "Sending succeeded =)"
     else:
-       print "Sending failed =("
+       print "Sending failed =(" """
 def f2():
     print "Second function selected"
 def f3():
@@ -66,5 +69,3 @@ print "Second menu:",
 print second_menu
 
 main_menu.activate()
-#while True:
-#    sleep(1)

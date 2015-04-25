@@ -2,9 +2,15 @@ from evdev import InputDevice, list_devices, categorize, ecodes
 import threading
 import time
 import os
-import cpickle as pickle
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import socket
 debug = True
+
+#TODO: add server-client communication for requesting listeners and getting listener info
+#TODO: add a function getting all the keys of listener
 
 def to_be_enabled(func):
     """Decorator for KeyListener class. Is used on functions which require enabled KeyListener to be executed. 
@@ -185,11 +191,7 @@ class KeyListener():
                         if debug: print "processing an event: ",
                         if key in self.keymap:
                             if debug: print "event has callback, calling it"
-                            #Two
-                            if len(self.keymap[key]) > 1: #callback has to be supplied arguments if they are enclosed in the list
-                                self.keymap[key][0](*self.keymap[key][1])
-                            else: 
-                                self.keymap[key][0]()
+                            self.keymap[key][0]()
                         else:
                             print ""
         except KeyError as e:

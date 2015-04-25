@@ -8,13 +8,13 @@ net_port = 6001
 debug = True
 
 class NetKeyListener():
+    """A class which listens for input device events sent by Listener over sockets and calls according callbacks if set"""
     enabled = False
     listening = False
     keymap = {}
     stop_flag = True
 
     def __init__(self):     
-        #TODO: get some kind of display parameters to correctly send data
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(2)
         s.connect(('127.0.0.1', net_port))
@@ -27,6 +27,9 @@ class NetKeyListener():
     def remove_callback(self, key_name):
         """Sets a single callback of the listener"""
         self.keymap.remove(key_name)
+
+    def get_keys(self, device):
+        """Gets all the available keys of input device"""
 
     def set_keymap(self, keymap):
         """Sets all the callbacks supplied, removing previously set"""
@@ -42,41 +45,51 @@ class NetKeyListener():
         self.keymap.clear()
 
     def send_message(self, message):
-        serialized_data = pickle.dumps(data)
+        """Sends a message to server"""
+        serialized_data = pickle.dumps(data, 2)
         self.socket.send(serialized_data)
 
-    def get_message(self):
+    def get_messages(self):
+        """Gets incoming messages from server, returning a list of messages received at the moment"""
         data = self.socket.recv(4096)
-        if data: ####OMG MULTIPLE MESSAGES CONCATENATED ABORT ABORT
+        #Imagine that we have received 2 or more messages in a row, basically, two concatenated pickled dicts. 
+        #In that case, 'pickle.loads' will return only the first. So, here's a workaround to avoid losing messages.
+        messages = [] 
+        while data: 
+            try:
+                message = pickle.loads(data)
+            except:
+                break #Will have to make further tests to see if that's possible. I can think of network connection issues or receiving of data which wasn't fully sent
+            else:
+                offset = len(pickle.dumps(message, 2))
+                data = data[offset:]
+                messages += message
+        #My wish is to get anonymous e-mails if len(messages) > 1. I wonder if that actually will happen ;-) Will see myself, though.
+        return messages
 
     def process_events_in_loop(self):
+        """A blocking function that gets messages from server and processes them"""
         self.listening = True
         try:
             while not self.stop_flag:
                 read_sockets,write_sockets,error_sockets = select.select(self.socket,[],[], 0.01)
-                message = 
-
-
-            for event in self.device.read_loop():
-                if event.type == ecodes.EV_KEY:
-                    key = ecodes.keys[event.code]
-                    value = event.value
-                    if value == 0:
-                        if debug: print "processing an event: ",
-                        if key in self.keymap:
-                             if debug: print "event has callback, calling it"
-                             if len(self.keymap[key]) > 1: #callback has to be supplied arguments if they are enclosed in the list
-                                 self.keymap[key][0](*self.keymap[key][1])
-                             else: 
-                                 self.keymap[key][0]()
-                        else:
-                             print ""
+                if read_sockets:
+                    messages = get_messages()
+                    for message in messages:
+                        if message.keys[0] == 'callback':
+                            key = message['callback'][0]
+                            value = message['callback'][1]
+                            if value == 0:
+                                if key in self.keymap:
+                                    if debug: print "Received event that has a callback set, calling it"
+                                    self.keymap[key][0]()
         except KeyError as e:
             self.force_disable()
         finally:
             self.listening = False
 
     def listen(self):
+        """A non-blocking function that starts 'process_events_in_loop' thread"""
         if debug: print "started listening"
         self.stop_flag = False
         self.listener_thread = threading.Thread(target = self.process_events_in_loop) 
@@ -85,6 +98,7 @@ class NetKeyListener():
         return True
 
     def stop_listen(self):
+        """A function that stops 'process_events_in_loop' thread"""
         self.stop_flag = True
         return True
 
@@ -92,92 +106,6 @@ class NetKeyListener():
 def get_input_devices():
     return [InputDevice(fn) for fn in list_devices()]
 
-
 if __name__ == "__main__":
-    listener = NetListener(#####ARGUMENTS)
-    """while True:
-        message = raw_input(":")
-        screen.send_string(message)"""
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    """A class which listens for input device events and calls according callbacks if set"""
-
-    def process_message(self, message):
-        """Processes messages sent by clients over the sockets.
-           Currently no implemented as no message specification is yet designed"""
-        pass
-
-    @to_be_enabled
-    def socket_event_loop(self):
-        """Blocking event loop which both listens for input events, sending them over the sockets, 
-           and listens for incoming messages over the sockets. Doesn't react to callbacks in the keymap."""
-        net_port = 6001
-        CONNECTION_LIST = [] # List to keep track of socket descriptors
-        RECV_BUFFER = 4096 
-        fileno = self.device.fileno()
-        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server_socket.bind(("0.0.0.0", net_port))
-        server_socket.listen(10)
-        # Add server socket to the list of readable connections
-        CONNECTION_LIST.append(server_socket)
-        CONNECTION_LIST.append(fileno)
-        self.listening = True
-        try:
-            while not stop_flag:
-                if read_sockets:
-                    # Handle the case in which there is a new connection recieved through server_socket
-                    for sock in read_sockets:
-                        if sock == server_socket:
-                            #New connection
-                            sockfd, addr = server_socket.accept()
-                            CONNECTION_LIST.append(sockfd)
-                            print "Client (%s, %s) connected" % addr
-                        elif sock == fileno:
-                            event = self.device.read_one()
-                            while event:
-                                if event.type == ecodes.EV_KEY:
-                                    key = ecodes.keys[event.code]
-                                    value = event.value
-                                    if value == 0:
-                                        message = {"callback":[key, value]}
-                                        pickle.dumps(message)
-                                        if debug: print "processing an event: "+str(message)
-                                        self.send_over_socket(pickle.dumps(message))
-                                event = self.device.read_one()
-def get_input_devices():
-    """Returns list of all the available InputDevices"""
-    return [InputDevice(fn) for fn in list_devices()]
-
-def get_path_by_name(name):
-    """Gets HID device path by name, returns None if not found."""
-    path = None
-    for dev in get_input_devices():
-        if dev.name == name:
-            path = dev.fn
-    return path
-
-def get_name_by_path(path):
-    """Gets HID device path by name, returns None if not found."""
-    name = None
-    for dev in get_input_devices():
-        if dev.fn == path:
-            name = dev.name
-    return name
-
-
+    listener = NetKeyListener()
+    
