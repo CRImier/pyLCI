@@ -4,12 +4,15 @@ import socket
 import pickle
 import select
 import threading
+import pifacecad
 
 #Currently only 16x2 char displays are supported
 #TODO: ability to configure screen sizes
 #TODO: switch modes from direct-only to socket-only
 net_port = 6000
 ser_port = "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A9CJVD59-if00-port0" #send that to settings or something something automagical
+cad = pifacecad.PiFaceCAD()
+cad.lcd.backlight_on()
  
 class Screen():
     """Class that has all the screen control functions and defines"""
@@ -67,13 +70,17 @@ def listen(screen):
      
     server_socket.close()
 
+def send_string(first_row, second_row):
+    #This doesn't accept a single string, but needs two of them. TODO: make it right.
+    cad.lcd.clear()
+    first_row = first_row[:16].ljust(16)
+    second_row = second_row[:16].ljust(16)
+    cad.lcd.write(first_row+'\n'+second_row)
 
 if "__name__" != "__main__":
-    serial = Serial(ser_port, 115200) #Again, settings... or maybe embed that somewhere in the screen driver
-    screen = Screen(serial)
-    listener_thread = threading.Thread(target=listen, args=(screen,))
-    listener_thread.daemon = True
-    listener_thread.start()
-    send_string = screen.display_string
-
-
+    pass
+    #serial = Serial(ser_port, 115200) #Again, settings... or maybe embed that somewhere in the screen driver
+    #screen = Screen(serial)
+    #listener_thread = threading.Thread(target=listen, args=(screen,))
+    #listener_thread.daemon = True
+    #listener_thread.start()
