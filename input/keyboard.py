@@ -99,10 +99,7 @@ class KeyListener():
                         if debug: print "processing an event: ",
                         if key in self.keymap:
                              if debug: print "event has callback, calling it"
-                             if len(self.keymap[key]) > 1: #callback has to be supplied arguments if they are enclosed in the list
-                                 self.keymap[key][0](*self.keymap[key][1])
-                             else: 
-                                 self.keymap[key][0]()
+                             self.keymap[key]()
                         else:
                              print ""
         except KeyError as e:

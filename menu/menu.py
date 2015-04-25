@@ -42,10 +42,9 @@ class Menu():
     def activate(self):
         if debug: print "menu activated"
         self.to_foreground()
-        while True:
-            if not self.in_background:
-                break
+        while self.in_background:
             sleep(1)
+        print self.name+" exited"
         return True
 
     def deactivate(self):
@@ -91,28 +90,25 @@ class Menu():
         if self.in_background:
             self.to_foreground()
 
-
-    keymap = {
-        "KEY_LEFT":[deactivate, []],
-        "KEY_RIGHT":[print_name, []],
-        "KEY_UP":[move_up, []],
-        "KEY_DOWN":[move_down, []],
-        "KEY_KPENTER":[select_element, []],
-        "KEY_ENTER":[select_element, []]
-        }
-
-    @menu_name
     def generate_keymap(self):
-        if debug: print "generating keymap"
-        for key in self.keymap:
-            self.keymap[key][1] = [self]
-    
+        keymap = {
+            "KEY_LEFT":lambda: self.deactivate(),
+            "KEY_RIGHT":lambda: self.print_name(),
+            "KEY_UP":lambda: self.move_up(),
+            "KEY_DOWN":lambda: self.move_down(),
+            "KEY_KPENTER":lambda: self.select_element(),
+            "KEY_ENTER":lambda: self.select_element()
+            }
+        self.keymap = keymap
+
     def __init__(self, contents, callback, listener, name):
+        self.generate_keymap()
         self.name = name
         self.listener = listener
         self.contents = contents
         self.process_contents()
         self.set_display_callback(callback)
+        
 
     def process_contents(self):
         for entry in self.contents:
@@ -123,15 +119,13 @@ class Menu():
     @menu_name
     @to_be_foreground
     def set_keymap(self):
-        if debug: print "checking if need to reset keymap"
         self.generate_keymap()
+        self.listener.stop_listen()
+        self.listener.keymap.clear()
+        self.listener.keymap = self.keymap
         print self.keymap
         print self.listener.keymap
-        if self.listener.keymap != self.keymap:
-            self.listener.stop_listen()
-            self.listener.set_keymap(self.keymap)
-            self.listener.listen()
-            if debug: print "keymap set to previous state"
+        self.listener.listen()
 
     @menu_name
     @to_be_foreground
