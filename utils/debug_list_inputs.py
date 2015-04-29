@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from evdev import InputDevice, list_devices
 
 devices = [InputDevice(fn) for fn in list_devices()]
