@@ -9,6 +9,7 @@ from output import screen as scr
 #import output
 #from phone.modem import ModemInterface
 #import phone
+from subprocess import call
 
 #TODO: global setting to replace hardcoded variables
 #TODO: start extension mechanism
@@ -20,52 +21,62 @@ numpad_listener.listen()
 
 #modem = ModemInterface()
 
-def volume_up():
-    print "Volume up key pressed"
-def volume_down():
-    print "Volume down key pressed"
+def send_sms(name):
+    scr.send_string("Sending SMS to:", name)
+    sleep(2)
+    scr.send_string("Success!", "")
+    sleep(2)
 
-def f1():
-    number = "00000000"
-    print "Sending an SMS"
-    message = "Hi! Imma Wearable Control System"
-    #status = modem.send_message(number, message)
-"""    if status:
-       print "Sending succeeded =)"
+def connect_to_wifi(name):
+    scr.send_string("Connecting to:", name)
+    sleep(2)
+    if name != 'linksys':
+        scr.send_string("Success!", "")
     else:
-       print "Sending failed =(" """
-def f2():
-    print "Second function selected"
-def f3():
-    print "Third function selected"
-def f4():
-    print "Fourth function selected"
-def f5():
-    print "Fifth function selected"
-def f6():
-    print "Sixth function selected"
+        scr.send_string("Failure!", "=(")
+    sleep(2)
 
-second_menu_contents = [
-["Fourth item", f4],
-["Fifth item", f5],
-["Sixth item", f6],
+def tether_wifi():
+    scr.send_string("Making WiFi AP:", "")
+    sleep(2)
+    scr.send_string("WiFi AP active!", "")
+    sleep(2)
+
+def switch_music():
+    pass
+
+music_menu_contents = [
+["Next track", switch_music],
+["Previous track", switch_music],
+["Random track", switch_music],
 ["Exit", "exit"]
 ]
 
-second_menu = Menu(second_menu_contents, scr.send_string, numpad_listener, "Second menu")
+sms_menu_contents = [
+["SMS to Alice", lambda: send_sms("Alice")],
+["SMS to Bob", lambda: send_sms("Bob")],
+["SMS to Eve", lambda: send_sms("Eve")],
+["Exit", "exit"]
+]
+
+wifi_menu_contents = [
+["linksys", lambda: connect_to_wifi("linksys")],
+["RTU-WiFi", lambda: connect_to_wifi("RTU-WiFi")],
+["Tethering", lambda: tether_wifi()],
+["Exit", "exit"]
+]
+
+sms_menu = Menu(sms_menu_contents, scr.send_string, numpad_listener, "SMS menu")
+wifi_menu = Menu(wifi_menu_contents, scr.send_string, numpad_listener, "WiFi menu")
+music_menu = Menu(music_menu_contents, scr.send_string, numpad_listener, "Music menu")
 
 main_menu_contents = [
-["Send SMS", f1],
-["Secondary menu", second_menu.activate],
-["Second item", f2],
-["Third item", f3]
+["Send SMS", sms_menu.activate],
+["Connect to WiFi", wifi_menu.activate],
+["Music control", music_menu.activate],
+["Shutdown", lambda:call("/home/wearable/WCS/halt.sh")],
 ]
 
 main_menu = Menu(main_menu_contents, scr.send_string, numpad_listener, "Main menu")
-
-print "Main menu:",
-print main_menu
-print "Second menu:",
-print second_menu
 
 main_menu.activate()
