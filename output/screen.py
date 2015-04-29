@@ -1,6 +1,6 @@
 from serial import Serial
 from time import sleep
-import socket 
+import socket
 import pickle
 import select
 import threading
@@ -29,6 +29,16 @@ class Screen():
         first_row = first_row[:self.columns].ljust(self.columns)
         second_row = second_row[:self.columns].ljust(self.columns)
         self.serial.write(first_row+second_row)
+
+
+class PiFaceCADScreen(Screen):
+    def __init__(self):
+        pass
+    def display_string(self, first_row, second_row):
+        cad.lcd.clear()
+        first_row = first_row[:16].ljust(16)
+        second_row = second_row[:16].ljust(16)
+        cad.lcd.write(first_row+'\n'+second_row)
 
 def listen(screen):     
     """A blocking function that receives data over sockets and sends that directly to the screen"""
@@ -60,27 +70,23 @@ def listen(screen):
                     # a "Connection reset by peer" exception will be thrown
                     data = sock.recv(RECV_BUFFER)
                     if data:
-                        screen.display_data(*pickle.loads(data))               
+                        screen.display_string(*pickle.loads(data))               
+                
                 except:
-                    #Client disconnected
+                    raise
+                    """#Client disconnected
                     print "Client (%s, %s) is offline" % addr
                     sock.close()
                     CONNECTION_LIST.remove(sock)
-                    continue
-     
+                    continue"""
+
     server_socket.close()
 
-def send_string(first_row, second_row):
-    #This doesn't accept a single string, but needs two of them. TODO: make it right.
-    cad.lcd.clear()
-    first_row = first_row[:16].ljust(16)
-    second_row = second_row[:16].ljust(16)
-    cad.lcd.write(first_row+'\n'+second_row)
 
 if "__name__" != "__main__":
-    pass
     #serial = Serial(ser_port, 115200) #Again, settings... or maybe embed that somewhere in the screen driver
-    #screen = Screen(serial)
-    #listener_thread = threading.Thread(target=listen, args=(screen,))
-    #listener_thread.daemon = True
-    #listener_thread.start()
+    screen = PiFaceCADScreen()
+    listener_thread = threading.Thread(target=listen, args=(screen,))
+    listener_thread.daemon = True
+    listener_thread.start()
+    send_string = screen.display_string
