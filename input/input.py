@@ -2,7 +2,9 @@ from evdev import InputDevice, list_devices, categorize, ecodes
 import threading
 import time
 import os
+import importlib
 import select
+from config_parse import read_config
 try:
     import cPickle as pickle
 except ImportError:
@@ -247,4 +249,27 @@ def get_name_by_path(path):
             name = dev.name
     return name
 
+if "__name__" != "__main__":
+    config = read_config()
+    try:
+        driver_name = config["input"][0]["driver"]
+    except:
+        driver_name = None
+    if driver_name:
+        driver_module = importlib.import_module("input.drivers."+driver_name)
+        try:
+            driver_args = config["input"][0]["driver_args"]
+        except KeyError:
+            driver_args = []
+        try:
+            driver_kwargs = config["input"][0]["driver_kwargs"]
+        except KeyError:
+            driver_kwargs = {}
+        driver = driver_module.InputDevice(*driver_args, **driver_kwargs)
+        driver.activate()
+    try:
+        device_name = config["input"][0]["device_name"]
+    except:
+        device_name = driver.name
+    listener = KeyListener(name=device_name)
 

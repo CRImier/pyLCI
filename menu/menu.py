@@ -24,6 +24,17 @@ class Menu():
     exit_flag = False
     name = ""
 
+
+    def __init__(self, contents, screen, listener, name):
+        self.generate_keymap()
+        self.name = name
+        self.listener = listener
+        self.contents = contents
+        self.process_contents()
+        self.screen = screen
+        self.display_callback = screen.display_data
+        self.set_display_callback(self.display_callback)
+
     @menu_name
     def to_foreground(self):
         if debug: print "menu enabled"
@@ -106,14 +117,6 @@ class Menu():
             "KEY_ENTER":lambda: self.select_element()
             }
         self.keymap = keymap
-
-    def __init__(self, contents, callback, listener, name):
-        self.generate_keymap()
-        self.name = name
-        self.listener = listener
-        self.contents = contents
-        self.process_contents()
-        self.set_display_callback(callback)
 
     def process_contents(self):
         for entry in self.contents:
