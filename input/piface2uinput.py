@@ -26,7 +26,6 @@ class Listener():
         self.listener.activate()
 
     def press_key(self, event):
-        print event.pin_num
         key = self.mapping[event.pin_num]
         self.uinput.write(ecodes.EV_KEY, key, 1)
         self.uinput.write(ecodes.EV_KEY, key, 0)
@@ -38,7 +37,6 @@ class Listener():
         self.thread.start()
 
     def __del__(self):
-        print "Closing"
         self.listener.deactivate()
 
 
