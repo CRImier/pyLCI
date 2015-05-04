@@ -94,6 +94,7 @@ class WicdInterface():
 class WicdUserInterface(WicdInterface):
 
     def __init__(self, screen, listener):
+        WicdInterface.__init__(self)
         self.screen = screen
         self.listener = listener
 
@@ -103,7 +104,7 @@ class WicdUserInterface(WicdInterface):
         menu_contents = []
         for network in wireless_networks:
             menu_contents.append([network["essid"], lambda: True])
-        self.menu = Menu(menu_contents, screen, numpad_listener, "WiFi menu")
+        self.menu = Menu(menu_contents, self.screen, self.listener, "WiFi menu")
         self.menu.activate()        
     
 #interface = WicdInterface()
