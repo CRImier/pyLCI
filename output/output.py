@@ -1,31 +1,16 @@
-from serial import Serial
 from time import sleep
-import socket 
+import socket
 import pickle
 import select
 import threading
+from config_parse import read_config
+import importlib
 
-#Currently only 16x2 char displays are supported
-#TODO: ability to configure screen sizes
+#Currently only 16x2 char displays are fully supported and tested, as I simply don't have access to a bigger one yet -_-
+#TODO: make a protocol for client-server messaging
 #TODO: switch modes from direct-only to socket-only
+
 net_port = 6000
-ser_port = "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A9CJVD59-if00-port0" #send that to settings or something something automagical
- 
-class Screen():
-    """Class that has all the screen control functions and defines"""
-    #Yeah, that also should go to some kind of settings module
-    type = "char"
-    rows = 2
-    columns = 16
-    def __init__(self, serial):
-        #Okay, that's rather simple, but the "Loading" doesn't work.
-        self.serial = serial
-        serial.write("Loading...")
-    def display_string(self, first_row, second_row):
-        #This doesn't accept a single string, but needs two of them. TODO: make it right.
-        first_row = first_row[:self.columns].ljust(self.columns)
-        second_row = second_row[:self.columns].ljust(self.columns)
-        self.serial.write(first_row+second_row)
 
 def listen(screen):     
     """A blocking function that receives data over sockets and sends that directly to the screen"""
@@ -57,23 +42,30 @@ def listen(screen):
                     # a "Connection reset by peer" exception will be thrown
                     data = sock.recv(RECV_BUFFER)
                     if data:
-                        screen.display_data(*pickle.loads(data))               
+                        screen.display_string(*pickle.loads(data))               
                 except:
-                    #Client disconnected
+                    raise
+                    """#Client disconnected
                     print "Client (%s, %s) is offline" % addr
                     sock.close()
                     CONNECTION_LIST.remove(sock)
-                    continue
-     
+                    continue"""
     server_socket.close()
 
 
 if "__name__" != "__main__":
-    serial = Serial(ser_port, 115200) #Again, settings... or maybe embed that somewhere in the screen driver
-    screen = Screen(serial)
+    config = read_config()
+    driver_name = config["output"][0]["driver"]
+    driver_module = importlib.import_module("output.drivers."+driver_name)
+    try:
+        driver_args = config["output"][0]["driver_args"]
+    except KeyError:
+        driver_args = []
+    try:
+        driver_kwargs = config["output"][0]["driver_kwargs"]
+    except KeyError:
+        driver_kwargs = {}
+    screen = driver_module.Screen(*driver_args, **driver_kwargs)
     listener_thread = threading.Thread(target=listen, args=(screen,))
     listener_thread.daemon = True
     listener_thread.start()
-    send_string = screen.display_string
-
-

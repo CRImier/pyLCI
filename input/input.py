@@ -2,6 +2,9 @@ from evdev import InputDevice, list_devices, categorize, ecodes
 import threading
 import time
 import os
+import importlib
+import select
+from config_parse import read_config
 try:
     import cPickle as pickle
 except ImportError:
@@ -47,7 +50,7 @@ class KeyListener():
         self.enable()
 
     def enable(self):
-        """Enables listener - sets all the flags and creates devices. Does not start a listener thread - you do that externally."""
+        """Enables listener - sets all the flags and creates devices. Does not start a listening or a listener thread."""
         #TODO: make it re-check path if name was used for the constructor
         #keep in mind that this will get called every time if there's something wrong
         #and input device file nodes aren't strictly mapped to their names
@@ -133,7 +136,7 @@ class KeyListener():
         CONNECTION_LIST.append(fileno)
         self.listening = True
         try:
-            while not stop_flag:
+            while not self.stop_flag:
                 read_sockets,write_sockets,error_sockets = select.select(CONNECTION_LIST,[],[], 0.01)
                 if read_sockets:
                     # Handle the case in which there is a new connection recieved through server_socket
@@ -191,7 +194,7 @@ class KeyListener():
                         if debug: print "processing an event: ",
                         if key in self.keymap:
                             if debug: print "event has callback, calling it"
-                            self.keymap[key][0]()
+                            self.keymap[key]()
                         else:
                             print ""
         except KeyError as e:
@@ -246,4 +249,27 @@ def get_name_by_path(path):
             name = dev.name
     return name
 
+if "__name__" != "__main__":
+    config = read_config()
+    try:
+        driver_name = config["input"][0]["driver"]
+    except:
+        driver_name = None
+    if driver_name:
+        driver_module = importlib.import_module("input.drivers."+driver_name)
+        try:
+            driver_args = config["input"][0]["driver_args"]
+        except KeyError:
+            driver_args = []
+        try:
+            driver_kwargs = config["input"][0]["driver_kwargs"]
+        except KeyError:
+            driver_kwargs = {}
+        driver = driver_module.InputDevice(*driver_args, **driver_kwargs)
+        driver.activate()
+    try:
+        device_name = config["input"][0]["device_name"]
+    except:
+        device_name = driver.name
+    listener = KeyListener(name=device_name)
 

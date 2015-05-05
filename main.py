@@ -1,71 +1,60 @@
 #!/usr/bin/env python
 
-from input import keyboard as kb
-#import input
+from input import input
 from time import sleep
 from menu.menu import Menu
-#import menu
-from output import screen as scr
-#import output
-#from phone.modem import ModemInterface
-#import phone
+from output import output
+from subprocess import call
 
-#TODO: global setting to replace hardcoded variables
-#TODO: start extension mechanism
 
-soundcard_listener = kb.KeyListener(name = 'C-Media Electronics Inc.       USB PnP Sound Device')
-numpad_listener = kb.KeyListener(name = 'HID 04d9:1603')
-soundcard_listener.listen()
-numpad_listener.listen()
+listener = input.listener
+screen = output.screen
+listener.listen_direct()
 
-#modem = ModemInterface()
+#For testing only
+from wlan import wicd_int
+wicd_int.Menu = Menu
 
-def volume_up():
-    print "Volume up key pressed"
-def volume_down():
-    print "Volume down key pressed"
+def send_sms(name):
+    screen.display_data("Sending SMS to:", name)
+    sleep(2)
+    screen.display_data("Success!", "")
+    sleep(2)
 
-def f1():
-    number = "00000000"
-    print "Sending an SMS"
-    message = "Hi! Imma Wearable Control System"
-    #status = modem.send_message(number, message)
-"""    if status:
-       print "Sending succeeded =)"
-    else:
-       print "Sending failed =(" """
-def f2():
-    print "Second function selected"
-def f3():
-    print "Third function selected"
-def f4():
-    print "Fourth function selected"
-def f5():
-    print "Fifth function selected"
-def f6():
-    print "Sixth function selected"
+def switch_music():
+    pass
 
-second_menu_contents = [
-["Fourth item", f4],
-["Fifth item", f5],
-["Sixth item", f6],
+music_menu_contents = [
+["Next track", switch_music],
+["Previous track", switch_music],
+["Random track", switch_music],
 ["Exit", "exit"]
 ]
 
-second_menu = Menu(second_menu_contents, scr.send_string, numpad_listener, "Second menu")
-
-main_menu_contents = [
-["Send SMS", f1],
-["Secondary menu", second_menu.activate],
-["Second item", f2],
-["Third item", f3]
+sms_menu_contents = [
+["SMS to Alice", lambda: send_sms("Alice")],
+["SMS to Bob", lambda: send_sms("Bob")],
+["SMS to Eve", lambda: send_sms("Eve")],
+["Exit", "exit"]
 ]
 
-main_menu = Menu(main_menu_contents, scr.send_string, numpad_listener, "Main menu")
+sms_menu = Menu(sms_menu_contents, screen, listener, "SMS menu")
+music_menu = Menu(music_menu_contents, screen, listener, "Music menu")
 
-print "Main menu:",
-print main_menu
-print "Second menu:",
-print second_menu
+main_menu_contents = [
+["Send SMS", sms_menu.activate],
+["Connect to WiFi", lambda: wicd_int.WicdUserInterface(screen, listener).choose_networks()],
+["Music control", music_menu.activate],
+["Shutdown", lambda:call("/home/wearable/WCS/halt.sh")],
+]
 
-main_menu.activate()
+main_menu = Menu(main_menu_contents, screen, listener, "Main menu")
+
+def start():
+    try:
+        main_menu.activate()
+    except:
+        input.driver.deactivate()
+
+if __name__ == "__main__":
+    start()

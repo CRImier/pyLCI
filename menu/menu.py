@@ -24,6 +24,17 @@ class Menu():
     exit_flag = False
     name = ""
 
+
+    def __init__(self, contents, screen, listener, name):
+        self.generate_keymap()
+        self.name = name
+        self.listener = listener
+        self.contents = contents
+        self.process_contents()
+        self.screen = screen
+        self.display_callback = screen.display_data
+        self.set_display_callback(self.display_callback)
+
     @menu_name
     def to_foreground(self):
         if debug: print "menu enabled"
@@ -46,6 +57,11 @@ class Menu():
             sleep(1)
         print self.name+" exited"
         return True
+
+    @menu_name
+    def prepare_call_external(self):
+        self.listener.stop_listen()
+        self.listener.socket_listen()
 
     def deactivate(self):
         if debug: print "menu deactivated"    
@@ -87,6 +103,7 @@ class Menu():
         if debug: print "element selected"
         self.to_background()
         self.contents[self.pointer][1]()
+        self.set_keymap()        
         if self.in_background:
             self.to_foreground()
 
@@ -101,15 +118,6 @@ class Menu():
             }
         self.keymap = keymap
 
-    def __init__(self, contents, callback, listener, name):
-        self.generate_keymap()
-        self.name = name
-        self.listener = listener
-        self.contents = contents
-        self.process_contents()
-        self.set_display_callback(callback)
-        
-
     def process_contents(self):
         for entry in self.contents:
             if entry[1] == "exit":
@@ -123,9 +131,7 @@ class Menu():
         self.listener.stop_listen()
         self.listener.keymap.clear()
         self.listener.keymap = self.keymap
-        print self.keymap
-        print self.listener.keymap
-        self.listener.listen()
+        self.listener.listen_direct()
 
     @menu_name
     @to_be_foreground

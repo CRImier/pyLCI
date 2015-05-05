@@ -1,0 +1,16 @@
+{
+ "input":
+    [{
+      "driver":"pifacecad_buttons"
+    }],
+ "output":
+    [{
+      "driver":"pifacecad_lcd",
+      "driver_args":[],
+      "driver_kwargs":
+      {
+        "cols":16, 
+        "rows":2
+      }
+    }]
+}
