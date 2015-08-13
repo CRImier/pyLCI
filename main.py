@@ -5,11 +5,16 @@ from menu.menu import Menu
 from output import output
 from wm import window_manager
 
+import logging
 from time import sleep
 from subprocess import call
 
+level = logging.INFO
+
+logging.basicConfig(level=level)
+
 def start_io()
-    print("Starting IO drivers.")
+    logging.info("Starting IO drivers.")
     global listener
     global screen
     listener = input.listener
