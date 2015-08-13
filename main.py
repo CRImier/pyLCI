@@ -30,5 +30,6 @@ if __name__ == "__main__":
         start_io()
         run_wm()
     except:
-        input.driver.deactivate()
+        #input.driver.deactivate()
+        raise
 
