@@ -9,11 +9,11 @@ def to_be_foreground(func):
             return False
     return wrapper
 
-def menu_name(func):
-    def wrapper(self, *args, **kwargs):
-        print self.name+":",
-        return func(self, *args, **kwargs)
-    return wrapper
+#def menu_name(func):
+#    def wrapper(self, *args, **kwargs):
+#        print self.name+":",
+#        return func(self, *args, **kwargs)
+#    return wrapper
 
 class Menu():
     contents = []
@@ -35,72 +35,61 @@ class Menu():
         self.display_callback = screen.display_data
         self.set_display_callback(self.display_callback)
 
-    @menu_name
     def to_foreground(self):
-        if debug: print "menu enabled"
+        logging.info("menu {0} enabled".format(self.name))    
         self.in_background = True
         self.in_foreground = True
         self.refresh()
         self.set_keymap()
 
-    @menu_name
     @to_be_foreground
     def to_background(self):
         self.in_foreground = False
-        if debug: print "menu disabled"
+        logging.info("menu {0} disabled".format(self.name))    
 
-    @menu_name
     def activate(self):
-        if debug: print "menu activated"
+        logging.info("menu {0} activated".format(self.name))    
         self.to_foreground()
         while self.in_background:
             sleep(1)
-        print self.name+" exited"
+        logging.debug(self.name+" exited")
         return True
 
-    @menu_name
-    def prepare_call_external(self):
-        self.listener.stop_listen()
-        self.listener.socket_listen()
-
     def deactivate(self):
-        if debug: print "menu deactivated"    
+        logging.info("menu {0} deactivated".format(self.name))    
         self.to_background()
         self.in_background = False
 
     def print_contents(self):
-        print self.contents
+        logging.info(self.contents)
 
     def print_name(self):
-        print self.name
+        logging.info("Active menu is {0}".format(self.name))    
 
     @to_be_foreground
     def move_down(self):
-        if debug: print "trying to move up...",
         if self.pointer < (len(self.contents)-1):
-            if debug: print "moved down"
+            logging.debug("moved down")
             self.pointer += 1  
             self.refresh()    
             return True
         else: 
-            print "failed"
             return False
 
     @to_be_foreground
     def move_up(self):
         if debug: print "trying to move down...",
         if self.pointer != 0:
-            if debug: print "moved up"
+            logging.debug("moved up")
             self.pointer -= 1
             self.refresh()
             return True
         else: 
-            print "failed"
             return False
 
     @to_be_foreground
     def select_element(self):
-        if debug: print "element selected"
+       logging.debug("element selected")
         self.to_background()
         if len(self.contents) == 0:
             self.deactivate()
@@ -125,9 +114,8 @@ class Menu():
         for entry in self.contents:
             if entry[1] == "exit":
                 entry[1] = self.deactivate
-        if debug: print "menu contents processed"
+        logging.debug("{0}: menu contents processed".format(self.name))
 
-    @menu_name
     @to_be_foreground
     def set_keymap(self):
         self.generate_keymap()
@@ -148,14 +136,13 @@ class Menu():
         else:
             return (" "+self.contents[self.pointer-1][0], "*"+self.contents[self.pointer][0])
 
-    @menu_name
     @to_be_foreground
     def refresh(self):
-        if debug: print "refreshed data on display"
+        logging.debug("{}: refreshed data on display".format(self.name))
         self.display_callback(*self.get_displayed_data())
 
     @menu_name
     def set_display_callback(self, callback):
-        if debug: print "display callback set"
+        logging.debug("{}: display callback set".format(self.name))
         self.display_callback = callback
 
