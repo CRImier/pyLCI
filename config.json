@@ -1,16 +1,12 @@
 {
  "input":
     [{
-      "driver":"pifacecad_buttons"
+      "device_name":"HID 04d9:1603"
     }],
  "output":
     [{
-      "driver":"pifacecad_lcd",
+      "driver":"pcf8574_lcd",
       "driver_args":[],
-      "driver_kwargs":
-      {
-        "cols":16, 
-        "rows":2
-      }
+      "driver_kwargs":{}
     }]
 }

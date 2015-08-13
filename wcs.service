@@ -2,11 +2,11 @@
 Description=Wearable Control System
 
 [Service]
-User=wearable
-Group=wearable
+User=pi
+Group=pi
 PIDFile=/run/wcs.pid
-ExecStart=/home/wearable/WCS/main.py 
-WorkingDirectory=/home/wearable/WCS
+ExecStart=/home/pi/WCS/main.py 
+WorkingDirectory=/home/pi/WCS
 
 [Install]
 WantedBy=graphical.target

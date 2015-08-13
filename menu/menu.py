@@ -88,7 +88,7 @@ class Menu():
 
     @to_be_foreground
     def move_up(self):
-        if debug: print "trying to move up...",
+        if debug: print "trying to move down...",
         if self.pointer != 0:
             if debug: print "moved up"
             self.pointer -= 1
@@ -141,7 +141,9 @@ class Menu():
     def get_displayed_data(self):
         if len(self.contents) == 0:
             return ("No menu entries", " ")
-        if self.pointer < (len(self.contents)-1):
+        elif len(self.contents) == 1:
+            return ("*"+self.contents[0][0], " ")
+        elif self.pointer < (len(self.contents)-1):
             return ("*"+self.contents[self.pointer][0], " "+self.contents[self.pointer+1][0])
         else:
             return (" "+self.contents[self.pointer-1][0], "*"+self.contents[self.pointer][0])
