@@ -80,7 +80,6 @@ class Menu():
 
     @to_be_foreground
     def move_up(self):
-        if debug: print "trying to move down...",
         if self.pointer != 0:
             logging.debug("moved up")
             self.pointer -= 1
@@ -91,7 +90,7 @@ class Menu():
 
     @to_be_foreground
     def select_element(self):
-       logging.debug("element selected")
+        logging.debug("element selected")
         self.to_background()
         if len(self.contents) == 0:
             self.deactivate()
@@ -126,7 +125,6 @@ class Menu():
         self.listener.keymap = self.keymap
         self.listener.listen_direct()
 
-    @menu_name
     @to_be_foreground
     def get_displayed_data(self):
         if len(self.contents) == 0:
@@ -140,11 +138,10 @@ class Menu():
 
     @to_be_foreground
     def refresh(self):
-        logging.debug("{}: refreshed data on display".format(self.name))
+        logging.debug("{0}: refreshed data on display".format(self.name))
         self.display_callback(*self.get_displayed_data())
 
-    @menu_name
     def set_display_callback(self, callback):
-        logging.debug("{}: display callback set".format(self.name))
+        logging.debug("{0}: display callback set".format(self.name))
         self.display_callback = callback
 
