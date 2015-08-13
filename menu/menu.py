@@ -1,6 +1,8 @@
 from time import sleep
 debug = True
 
+import logging
+
 def to_be_foreground(func):
     def wrapper(self, *args, **kwargs):
         if self.in_foreground:
