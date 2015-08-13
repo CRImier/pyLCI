@@ -13,7 +13,7 @@ level = logging.INFO
 
 logging.basicConfig(level=level)
 
-def start_io()
+def start_io():
     logging.info("Starting IO drivers.")
     global listener
     global screen
