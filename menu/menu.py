@@ -102,7 +102,10 @@ class Menu():
     def select_element(self):
         if debug: print "element selected"
         self.to_background()
-        self.contents[self.pointer][1]()
+        if len(self.contents) == 0:
+            self.deactivate()
+        else:
+            self.contents[self.pointer][1]()
         self.set_keymap()        
         if self.in_background:
             self.to_foreground()
@@ -136,6 +139,8 @@ class Menu():
     @menu_name
     @to_be_foreground
     def get_displayed_data(self):
+        if len(self.contents) == 0:
+            return ("No menu entries", " ")
         if self.pointer < (len(self.contents)-1):
             return ("*"+self.contents[self.pointer][0], " "+self.contents[self.pointer+1][0])
         else:
