@@ -3,16 +3,7 @@ import threading
 import time
 import os
 import importlib
-import select
 from config_parse import read_config
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-import socket
-debug = True
-
-#TODO: add server-client communication for requesting listeners and getting listener info
 #TODO: add a function getting all the keys of listener
 
 def to_be_enabled(func):
@@ -28,7 +19,6 @@ def to_be_enabled(func):
 
 class KeyListener():
     """A class which listens for input device events and calls according callbacks if set"""
-    socket_mode = False
     enabled = False
     listening = False
     keymap = {}
@@ -114,73 +104,8 @@ class KeyListener():
         self.keymap.clear()
 
     @to_be_enabled
-    def process_message(self, message):
-        """Processes messages sent by clients over the sockets.
-           Currently no implemented as no message specification is yet designed"""
-        pass
-
-    @to_be_enabled
-    def socket_event_loop(self):
-        """Blocking event loop which both listens for input events, sending them over the sockets, 
-           and listens for incoming messages over the sockets. Doesn't react to callbacks in the keymap."""
-        net_port = 6001
-        CONNECTION_LIST = [] # List to keep track of socket descriptors
-        RECV_BUFFER = 4096 
-        fileno = self.device.fileno()
-        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server_socket.bind(("0.0.0.0", net_port))
-        server_socket.listen(10)
-        # Add server socket to the list of readable connections
-        CONNECTION_LIST.append(server_socket)
-        CONNECTION_LIST.append(fileno)
-        self.listening = True
-        try:
-            while not self.stop_flag:
-                read_sockets,write_sockets,error_sockets = select.select(CONNECTION_LIST,[],[], 0.01)
-                if read_sockets:
-                    # Handle the case in which there is a new connection recieved through server_socket
-                    for sock in read_sockets:
-                        if sock == server_socket:
-                            #New connection
-                            sockfd, addr = server_socket.accept()
-                            CONNECTION_LIST.append(sockfd)
-                            print "Client (%s, %s) connected" % addr
-                        elif sock == fileno:
-                            event = self.device.read_one()
-                            while event:
-                                if event.type == ecodes.EV_KEY:
-                                    key = ecodes.keys[event.code]
-                                    value = event.value
-                                    if value == 0:
-                                        message = {"callback":[key, value]}
-                                        pickle.dumps(message)
-                                        if debug: print "processing an event: "+str(message)
-                                        self.send_over_socket(pickle.dumps(message))
-                                event = self.device.read_one()
-                        else:  #Some incoming message from a client
-                            # Data recieved from client, process it
-                            try:
-                                #In Windows, sometimes when a TCP program closes abruptly,
-                                # a "Connection reset by peer" exception will be thrown
-                                pickled_data = sock.recv(RECV_BUFFER)
-                                if pickled_data:
-                                    data = pickle.loads(pickled_data)
-                                    self.process_message(data)   
-                            except: #Client has disconnected
-                                print "Client (%s, %s) is offline" % addr
-                                sock.close()
-                                CONNECTION_LIST.remove(sock)
-                                continue
-        except KeyError as e:
-            self.force_disable()
-        finally: 
-            server_socket.close()
-            self.listening = False
-
-    @to_be_enabled
-    def direct_event_loop(self):
-        """Blocking event loop which just calls supplied callbacks in the keymap. Doesn't work with sockets."""
+    def event_loop(self):
+        """Blocking event loop which just calls supplied callbacks in the keymap."""
         #TODO: describe callback interpretation ways
         self.listening = True
         try:
@@ -207,23 +132,11 @@ class KeyListener():
             self.listening = False
 
     @to_be_enabled
-    def listen_direct(self):
-        """Start direct mode event loop in a thread. Nonblocking."""
-        self.socket_mode = False
+    def listen(self):
+        """Starts event loop in a thread. Nonblocking."""
         if debug: print "started listening"
         self.stop_flag = False
-        self.listener_thread = threading.Thread(target = self.direct_event_loop) 
-        self.listener_thread.daemon = True
-        self.listener_thread.start()
-        return True
-
-    @to_be_enabled
-    def listen_socket(self):
-        """Start socket mode event loop in a thread. Nonblocking."""
-        self.socket_mode = True
-        if debug: print "started listening"
-        self.stop_flag = False
-        self.listener_thread = threading.Thread(target = self.socket_event_loop) 
+        self.listener_thread = threading.Thread(target = self.event_loop) 
         self.listener_thread.daemon = True
         self.listener_thread.start()
         return True
