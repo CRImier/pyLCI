@@ -23,7 +23,7 @@ class KeyListener():
     listening = False
     keymap = {}
     stop_flag = False
-
+    interface = None
 
     def __init__(self, path=None, name=None, keymap={}):
         """Init function for creating KeyListener object. Checks all the arguments and sets keymap if supplied."""
@@ -144,6 +144,21 @@ class KeyListener():
                 print("That error again. Need to learn to ignore it somehow.")
         finally:
             self.listening = False
+
+    def reset(self):
+        self.generate_keymap()
+
+    def signal_interface_addition(self):
+        self.listener.stop_listen()
+        self.listener.keymap.clear()
+        self.listener.keymap = self.interface.keymap
+        self.listener.listen()
+
+    def signal_interface_removal(self):
+        self.listener.stop_listen()
+        self.listener.keymap.clear()
+        self.listener.keymap = self.keymap
+        self.listener.listen()
 
     @to_be_enabled
     def listen(self):
