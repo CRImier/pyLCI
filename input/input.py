@@ -4,6 +4,7 @@ import time
 import os
 import importlib
 from config_parse import read_config
+import Pyro4
 
 def to_be_enabled(func):
     """Decorator for KeyListener class. Is used on functions which require enabled KeyListener to be executed. 
@@ -22,6 +23,7 @@ class KeyListener():
     listening = False
     keymap = {}
     stop_flag = False
+
 
     def __init__(self, path=None, name=None, keymap={}):
         """Init function for creating KeyListener object. Checks all the arguments and sets keymap if supplied."""
@@ -81,29 +83,36 @@ class KeyListener():
         self.device.ungrab()
         self.enabled = False
 
+    @Pyro4.expose()
     def get_available_keys(self):
+        """Returns a list of available keys from the device"""
         dict_key = ('EV_KEY', 1L)
         capabilities = self.device.capabilities(verbose=True, absinfo=False)
         keys = [lst[0] for lst in capabilities[dict_key]]
         return keys
 
+    @Pyro4.expose()
     def set_callback(self, key_name, callback):
         """Sets a single callback of the listener"""
         self.keymap[key_name] = callback
 
+    @Pyro4.expose()
     def remove_callback(self, key_name):
         """Sets a single callback of the listener"""
         self.keymap.remove(key_name)
 
+    @Pyro4.expose()
     def set_keymap(self, keymap):
         """Sets all the callbacks supplied, removing previously set"""
         self.keymap = keymap
 
+    @Pyro4.expose()
     def replace_keymap_entries(self, keymap):
         """Sets all the callbacks supplied, not removing previously set"""
         for key in keymap.keys:
             set_callback(key, keymap[key])
 
+    @Pyro4.expose()
     def clear_keymap(self):
         """Removes all the callbacks set"""
         self.keymap.clear()
