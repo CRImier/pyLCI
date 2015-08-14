@@ -4,7 +4,6 @@ import time
 import os
 import importlib
 from config_parse import read_config
-import Pyro4
 
 def to_be_enabled(func):
     """Decorator for KeyListener class. Is used on functions which require enabled KeyListener to be executed. 
@@ -19,11 +18,12 @@ def to_be_enabled(func):
 
 class KeyListener():
     """A class which listens for input device events and calls according callbacks if set"""
-    enabled = False
-    listening = False
+    _enabled = False
+    _listening = False
     keymap = {}
-    stop_flag = False
-    interface = None
+    _stop_flag = False
+    _interface = None
+    _device = None
 
     def __init__(self, path=None, name=None, keymap={}):
         """Init function for creating KeyListener object. Checks all the arguments and sets keymap if supplied."""
@@ -38,9 +38,9 @@ class KeyListener():
         self.path = path
         self.name = name
         self.set_keymap(keymap)
-        self.enable()
+        self._enable()
 
-    def enable(self):
+    def _enable(self):
         """Enables listener - sets all the flags and creates devices. Does not start a listening or a listener thread."""
         #TODO: make it re-check path if name was used for the constructor
         #keep in mind that this will get called every time if there's something wrong
@@ -48,83 +48,77 @@ class KeyListener():
         #__init__ function remake is needed for this
         if debug: print "enabling listener"
         try:
-            self.device = InputDevice(self.path)
+            self._device = InputDevice(self.path)
         except OSError:
             raise
         try:
-            self.device.grab() #Catch exception if device is already grabbed
+            self._device.grab() #Catch exception if device is already grabbed
         except IOError:
             pass
-        self.enabled = True
+        self._enabled = True
         return True
 
     @to_be_enabled
-    def force_disable(self):
+    def _force_disable(self):
         """Disables listener, is useful when device is unplugged and errors may occur when doing it the right way
            Does not unset flags - assumes that they're already unset."""
         if debug: print "forcefully disabling listener"
-        self.stop_listen()
+        self._stop_listen()
         #Exception possible at this stage if device does not exist anymore
         #Of course, nothing can be done about this =)
         try:
-            self.device.ungrab() 
+            self._device.ungrab() 
         except IOError:
             pass #Maybe log that device disappeared?
-        self.enabled = False
+        self._enabled = False
 
     @to_be_enabled
-    def disable(self):
+    def _disable(self):
         """Disables listener - makes it stop listening and ungrabs the device"""
         if debug: print "disabling listener"
-        self.stop_listen()
-        while self.listening:
+        self._stop_listen()
+        while self._listening:
             if debug: print "still listening"
             time.sleep(0.01)
-        self.device.ungrab()
-        self.enabled = False
+        self._device.ungrab()
+        self._enabled = False
 
-    @Pyro4.expose()
     def get_available_keys(self):
         """Returns a list of available keys from the device"""
         dict_key = ('EV_KEY', 1L)
-        capabilities = self.device.capabilities(verbose=True, absinfo=False)
+        capabilities = self._device.capabilities(verbose=True, absinfo=False)
         keys = [lst[0] for lst in capabilities[dict_key]]
         return keys
 
-    @Pyro4.expose()
     def set_callback(self, key_name, callback):
         """Sets a single callback of the listener"""
         self.keymap[key_name] = callback
 
-    @Pyro4.expose()
     def remove_callback(self, key_name):
         """Sets a single callback of the listener"""
         self.keymap.remove(key_name)
 
-    @Pyro4.expose()
     def set_keymap(self, keymap):
         """Sets all the callbacks supplied, removing previously set"""
         self.keymap = keymap
 
-    @Pyro4.expose()
     def replace_keymap_entries(self, keymap):
         """Sets all the callbacks supplied, not removing previously set"""
         for key in keymap.keys:
             set_callback(key, keymap[key])
 
-    @Pyro4.expose()
     def clear_keymap(self):
         """Removes all the callbacks set"""
         self.keymap.clear()
 
     @to_be_enabled
-    def event_loop(self):
+    def _event_loop(self):
         """Blocking event loop which just calls supplied callbacks in the keymap."""
         #TODO: describe callback interpretation ways
-        self.listening = True
+        self._listening = True
         try:
-            for event in self.device.read_loop():
-                if self.stop_flag:
+            for event in self._device.read_loop():
+                if self._stop_flag:
                     break
                 if event.type == ecodes.EV_KEY:
                     key = ecodes.keys[event.code]
@@ -137,42 +131,40 @@ class KeyListener():
                         else:
                             print ""
         except KeyError as e:
-            self.force_disable()
+            self._force_disable()
         except IOError as e: 
             if e.errno == 11:
                 #Okay, this error sometimes appears out of blue when I press buttons on a keyboard. Moreover, it's uncaught but due to some logic I don't understand yet the whole thing keeps running. I need to research it.
                 print("That error again. Need to learn to ignore it somehow.")
         finally:
-            self.listening = False
+            self._listening = False
 
-    def reset(self):
-        self.generate_keymap()
+    def _reset(self):
+        self._generate_keymap()
 
-    def signal_interface_addition(self):
-        self.listener.stop_listen()
-        self.listener.keymap.clear()
-        self.listener.keymap = self.interface.keymap
-        self.listener.listen()
+    def _signal_interface_addition(self):
+        self._stop_listen()
+        self.keymap.clear()
+        self.keymap = self._interface.keymap
+        self._listen()
 
     def signal_interface_removal(self):
-        self.listener.stop_listen()
-        self.listener.keymap.clear()
-        self.listener.keymap = self.keymap
-        self.listener.listen()
+        self._stop_listen()
+        self.keymap.clear()
 
     @to_be_enabled
-    def listen(self):
+    def _listen(self):
         """Starts event loop in a thread. Nonblocking."""
         if debug: print "started listening"
-        self.stop_flag = False
-        self.listener_thread = threading.Thread(target = self.event_loop) 
-        self.listener_thread.daemon = True
-        self.listener_thread.start()
+        self._stop_flag = False
+        self._listener_thread = threading.Thread(target = self._event_loop) 
+        self._listener_thread.daemon = True
+        self._listener_thread.start()
         return True
 
     @to_be_enabled
-    def stop_listen(self):
-        self.stop_flag = True
+    def _stop_listen(self):
+        self._stop_flag = True
         return True
 
 def get_input_devices():
