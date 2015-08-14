@@ -4,7 +4,6 @@ import time
 import os
 import importlib
 from config_parse import read_config
-#TODO: add a function getting all the keys of listener
 
 def to_be_enabled(func):
     """Decorator for KeyListener class. Is used on functions which require enabled KeyListener to be executed. 
@@ -81,6 +80,12 @@ class KeyListener():
             time.sleep(0.01)
         self.device.ungrab()
         self.enabled = False
+
+    def get_available_keys(self):
+        dict_key = ('EV_KEY', 1L)
+        capabilities = self.device.capabilities(verbose=True, absinfo=False)
+        keys = [lst[0] for lst in capabilities[dict_key]]
+        return keys
 
     def set_callback(self, key_name, callback):
         """Sets a single callback of the listener"""
