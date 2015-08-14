@@ -4,6 +4,7 @@ import time
 import os
 import importlib
 from config_parse import read_config
+import logging
 
 def to_be_enabled(func):
     """Decorator for KeyListener class. Is used on functions which require enabled KeyListener to be executed. 
@@ -46,7 +47,7 @@ class KeyListener():
         #keep in mind that this will get called every time if there's something wrong
         #and input device file nodes aren't strictly mapped to their names
         #__init__ function remake is needed for this
-        if debug: print "enabling listener"
+        logging.debug("enabling listener")
         try:
             self._device = InputDevice(self.path)
         except OSError:
@@ -62,7 +63,7 @@ class KeyListener():
     def _force_disable(self):
         """Disables listener, is useful when device is unplugged and errors may occur when doing it the right way
            Does not unset flags - assumes that they're already unset."""
-        if debug: print "forcefully disabling listener"
+        logging.debug("force disabling listener")
         self._stop_listen()
         #Exception possible at this stage if device does not exist anymore
         #Of course, nothing can be done about this =)
@@ -75,10 +76,9 @@ class KeyListener():
     @to_be_enabled
     def _disable(self):
         """Disables listener - makes it stop listening and ungrabs the device"""
-        if debug: print "disabling listener"
+        logging.debug("disabling listener")
         self._stop_listen()
         while self._listening:
-            if debug: print "still listening"
             time.sleep(0.01)
         self._device.ungrab()
         self._enabled = False
@@ -124,9 +124,9 @@ class KeyListener():
                     key = ecodes.keys[event.code]
                     value = event.value
                     if value == 0:
-                        if debug: print "processing an event: ",
+                        logging.debug("processing an event")
                         if key in self.keymap:
-                            if debug: print "event has callback, calling it"
+                            logging.debug("event has a callback attached, calling it")
                             self.keymap[key]()
                         else:
                             print ""
@@ -135,7 +135,7 @@ class KeyListener():
         except IOError as e: 
             if e.errno == 11:
                 #Okay, this error sometimes appears out of blue when I press buttons on a keyboard. Moreover, it's uncaught but due to some logic I don't understand yet the whole thing keeps running. I need to research it.
-                print("That error again. Need to learn to ignore it somehow.")
+                logging.debug("That IOError errno=11 again. Need to learn to ignore it somehow.")
         finally:
             self._listening = False
 
@@ -155,7 +155,7 @@ class KeyListener():
     @to_be_enabled
     def _listen(self):
         """Starts event loop in a thread. Nonblocking."""
-        if debug: print "started listening"
+        logging.debug("started listening")
         self._stop_flag = False
         self._listener_thread = threading.Thread(target = self._event_loop) 
         self._listener_thread.daemon = True
@@ -164,6 +164,7 @@ class KeyListener():
 
     @to_be_enabled
     def _stop_listen(self):
+        logging.debug("stopped listening")
         self._stop_flag = True
         return True
 
