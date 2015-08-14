@@ -5,6 +5,7 @@ import os
 import importlib
 from config_parse import read_config
 import logging
+import Pyro4
 
 def to_be_enabled(func):
     """Decorator for KeyListener class. Is used on functions which require enabled KeyListener to be executed. 
@@ -90,23 +91,31 @@ class KeyListener():
         keys = [lst[0] for lst in capabilities[dict_key]]
         return keys
 
+    @Pyro4.oneway
     def set_callback(self, key_name, callback):
         """Sets a single callback of the listener"""
         self.keymap[key_name] = callback
 
+    @Pyro4.oneway
     def remove_callback(self, key_name):
         """Sets a single callback of the listener"""
-        self.keymap.remove(key_name)
+        try:
+            self.keymap.remove(key_name)
+        except AttributeError:
+            pass
 
+    @Pyro4.oneway
     def set_keymap(self, keymap):
         """Sets all the callbacks supplied, removing previously set"""
         self.keymap = keymap
 
+    @Pyro4.oneway
     def replace_keymap_entries(self, keymap):
         """Sets all the callbacks supplied, not removing previously set"""
         for key in keymap.keys:
             set_callback(key, keymap[key])
 
+    @Pyro4.oneway
     def clear_keymap(self):
         """Removes all the callbacks set"""
         self.keymap.clear()
@@ -143,17 +152,18 @@ class KeyListener():
         self._generate_keymap()
 
     def _signal_interface_addition(self):
-        self._stop_listen()
+        self.stop_listen()
         self.keymap.clear()
         self.keymap = self._interface.keymap
-        self._listen()
+        self.listen()
 
-    def signal_interface_removal(self):
-        self._stop_listen()
+    def _signal_interface_removal(self):
+        self.stop_listen()
         self.keymap.clear()
 
+    @Pyro4.oneway
     @to_be_enabled
-    def _listen(self):
+    def listen(self):
         """Starts event loop in a thread. Nonblocking."""
         logging.debug("started listening")
         self._stop_flag = False
@@ -162,8 +172,9 @@ class KeyListener():
         self._listener_thread.start()
         return True
 
+    @Pyro4.oneway
     @to_be_enabled
-    def _stop_listen(self):
+    def stop_listen(self):
         logging.debug("stopped listening")
         self._stop_flag = True
         return True
