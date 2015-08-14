@@ -18,10 +18,10 @@ class Application():
         pass
 
     def get_window(self, name):
-        window = Window(name)
-        self.wm.register_window(window)
-        self._pyroDaemon.register(window)
-        return window
+        self.window = Window(name)
+        self._pyroDaemon.register(self.window)
+        self.wm.register_window(self.window)
+        return self.window
 
     def open_window(self, window):
         pass
@@ -47,6 +47,9 @@ class OutputInterface():
     def deactivate(self):
         pass
 
+    def display_data(self, *args):
+        pass
+
 
 class InputInterface():
 
@@ -62,15 +65,21 @@ class InputInterface():
 
 class Window():
 
-    input_interface = InputInterface()
-    output_interface = OutputInterface()
-
     def __init__(self, name):
         self._name = name
+        #self.input_interface = InputInterface()
+        self._output_interface = OutputInterface()
+
+    def init(self):
+        self._pyroDaemon.register(self._output_interface)
 
     @property
     def name(self):
         return self._name
+
+    @property
+    def output_interface(self):
+        return self._output_interface
 
 
 @Pyro4.expose(instance_mode="single")
@@ -81,9 +90,14 @@ class WindowManager():
     _input_driver = None
     _output_driver = None
 
+    active_app = None
+
     def __init__(self, input, output):
-        self._input_driver = input
+#        self._input_driver = input
         self._output_driver = output
+
+    def init(self):
+        self._pyroDaemon.register(self._output_driver)
 
     def get_application(self, name):
         app = Application(name, self)
@@ -93,33 +107,47 @@ class WindowManager():
     def register_application(self, app):
         #Generate UID for app number
         self.applications.append(app)
+        self.active_app = len(self.applications)-1
         print("Application {0} is registered".format(app.name))
 
     def register_window(self, window):
+        window.init()
         print("Window {0} is registered".format(window.name))
 
     def destroy_window(self, window):
         print("Window {0} is destroyed".format(window.name))
 
-    def open_window(self):
-        self.plug_interface_to_driver(self._input_driver, window.input_interface)
-        self.plug_interface_to_driver(self._output_driver, window.output_interface)
+    @Pyro4.oneway
+    def activate_current_window(self):
+#        self.plug_interface_to_driver(self._input_driver, window.input_interface)
+        self.plug_interface_to_driver(self._output_driver, self.get_active_window().output_interface)
 
-    def close_window(self): 
-        self.unplug_interface(self._input_driver)
+    def deactivate_window(self): 
+#        self.unplug_interface(self._input_driver)
         self.unplug_interface(self._output_driver)
         
     def plug_interface_to_driver(self, driver, interface):
         driver.interface = interface
+        driver._signal_interface_addition()
 
     def unplug_interface(self, driver):
         driver.interface = None
+        driver._signal_interface_removal()
+
+    def activate_app(self, number):
+        self.active_app = number
+        window = self.applications[self.active_app].window
+        self.activate_window(window)
+
+    def deactivate_active_app(self):
+        self.active_app = 0
+        self.deactivate_current_window()
 
     def get_active_application(self):
         return self.applications[self.active_app]
 
     def get_active_window(self):
-        return self.applications[self.active_app].window
+        return self.get_active_application().window
 
     def get_app_list(self):
         #app_list = []
@@ -147,6 +175,7 @@ class WindowManagerRunner():
         self.app.wm = self.wm
         self.ns = Pyro4.locateNS()
         self.uri = self.daemon.register(self.wm)
+        self.wm.init()
         self.ns.register("wcs.window_manager", self.uri)
         self.thread.start()
         self.app.activate()
