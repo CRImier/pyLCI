@@ -53,13 +53,37 @@ class OutputInterface():
 
 class InputInterface():
 
+    keymap = {}
+    callback_object = None
+
     def __init__(self):
         pass
 
-    def activate(self):
+    def get_available_keys(self):
         pass
 
-    def deactivate(self):
+    def set_callback_object(self, object):
+        pass
+
+    def set_callback(self, key_name, callback):
+        pass
+
+    def remove_callback(self, key_name):
+        pass
+
+    def set_keymap(self, keymap):
+        pass
+
+    def replace_keymap_entries(self, keymap):
+        pass
+
+    def clear_keymap(self):
+        pass
+
+    def listen(self):
+        pass
+
+    def stop_listen(self):
         pass
 
 
@@ -67,10 +91,11 @@ class Window():
 
     def __init__(self, name):
         self._name = name
-        #self.input_interface = InputInterface()
+        self._input_interface = InputInterface()
         self._output_interface = OutputInterface()
 
     def init(self):
+        self._pyroDaemon.register(self._input_interface)
         self._pyroDaemon.register(self._output_interface)
 
     @property
@@ -80,6 +105,10 @@ class Window():
     @property
     def output_interface(self):
         return self._output_interface
+
+    @property
+    def input_interface(self):
+        return self._input_interface
 
 
 @Pyro4.expose(instance_mode="single")
@@ -93,11 +122,12 @@ class WindowManager():
     active_app = None
 
     def __init__(self, input, output):
-#        self._input_driver = input
+        self._input_driver = input
         self._output_driver = output
 
     def init(self):
         self._pyroDaemon.register(self._output_driver)
+        self._pyroDaemon.register(self._input_driver)
 
     def get_application(self, name):
         app = Application(name, self)
@@ -119,15 +149,15 @@ class WindowManager():
 
     @Pyro4.oneway
     def activate_current_window(self):
-#        self.plug_interface_to_driver(self._input_driver, window.input_interface)
+        self.plug_interface_to_driver(self._input_driver, self.get_active_window().input_interface)
         self.plug_interface_to_driver(self._output_driver, self.get_active_window().output_interface)
 
     def deactivate_window(self): 
-#        self.unplug_interface(self._input_driver)
+        self.unplug_interface(self._input_driver)
         self.unplug_interface(self._output_driver)
         
     def plug_interface_to_driver(self, driver, interface):
-        driver.interface = interface
+        driver._interface = interface
         driver._signal_interface_addition()
 
     def unplug_interface(self, driver):

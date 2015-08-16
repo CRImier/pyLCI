@@ -1,7 +1,7 @@
 from time import sleep
-debug = True
-
+from threading import Thread
 import logging
+import Pyro4
 
 def to_be_foreground(func):
     def wrapper(self, *args, **kwargs):
@@ -11,12 +11,6 @@ def to_be_foreground(func):
             return False
     return wrapper
 
-#def menu_name(func):
-#    def wrapper(self, *args, **kwargs):
-#        print self.name+":",
-#        return func(self, *args, **kwargs)
-#    return wrapper
-
 class Menu():
     contents = []
     pointer = 0
@@ -25,12 +19,13 @@ class Menu():
     in_foreground = False
     exit_flag = False
     name = ""
+    _keymap = None
 
-
-    def __init__(self, contents, screen, listener, name):
+    def __init__(self, contents, screen, listener, name, daemon = None):
         self.generate_keymap()
         self.name = name
         self.listener = listener
+        self._daemon = daemon
         self.contents = contents
         self.process_contents()
         self.screen = screen
@@ -49,6 +44,7 @@ class Menu():
         self.in_foreground = False
         logging.info("menu {0} disabled".format(self.name))    
 
+    @Pyro4.callback
     def activate(self):
         logging.info("menu {0} activated".format(self.name))    
         self.to_foreground()
@@ -57,17 +53,21 @@ class Menu():
         logging.debug(self.name+" exited")
         return True
 
+    @Pyro4.callback
     def deactivate(self):
         logging.info("menu {0} deactivated".format(self.name))    
         self.to_background()
         self.in_background = False
 
+    @Pyro4.callback
     def print_contents(self):
         logging.info(self.contents)
 
+    @Pyro4.callback
     def print_name(self):
         logging.info("Active menu is {0}".format(self.name))    
 
+    @Pyro4.callback
     @to_be_foreground
     def move_down(self):
         if self.pointer < (len(self.contents)-1):
@@ -78,6 +78,7 @@ class Menu():
         else: 
             return False
 
+    @Pyro4.callback
     @to_be_foreground
     def move_up(self):
         if self.pointer != 0:
@@ -88,6 +89,7 @@ class Menu():
         else: 
             return False
 
+    @Pyro4.callback
     @to_be_foreground
     def select_element(self):
         logging.debug("element selected")
@@ -102,15 +104,16 @@ class Menu():
 
     def generate_keymap(self):
         keymap = {
-            "KEY_LEFT":lambda: self.deactivate(),
-            "KEY_RIGHT":lambda: self.print_name(),
-            "KEY_UP":lambda: self.move_up(),
-            "KEY_DOWN":lambda: self.move_down(),
-            "KEY_KPENTER":lambda: self.select_element(),
-            "KEY_ENTER":lambda: self.select_element()
-            }
-        self.keymap = keymap
+            "KEY_LEFT":"deactivate",
+            "KEY_RIGHT":"print_name",
+            "KEY_UP":"move_up",
+            "KEY_DOWN":"move_down",
+            "KEY_KPENTER":"select_element",
+            "KEY_ENTER":"select_element"
+        }
+        self._keymap = keymap
 
+    @Pyro4.callback
     def process_contents(self):
         for entry in self.contents:
             if entry[1] == "exit":
@@ -120,10 +123,11 @@ class Menu():
     @to_be_foreground
     def set_keymap(self):
         self.generate_keymap()
+        self.listener.set_callback_object(self)
         self.listener.stop_listen()
-        self.listener.keymap.clear()
-        self.listener.keymap = self.keymap
-        self.listener.listen_direct()
+        self.listener.clear_keymap()
+        self.listener.set_keymap(self._keymap)
+        self.listener.listen()
 
     @to_be_foreground
     def get_displayed_data(self):
@@ -136,6 +140,7 @@ class Menu():
         else:
             return (" "+self.contents[self.pointer-1][0], "*"+self.contents[self.pointer][0])
 
+    @Pyro4.callback
     @to_be_foreground
     def refresh(self):
         logging.debug("{0}: refreshed data on display".format(self.name))

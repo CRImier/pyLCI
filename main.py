@@ -19,7 +19,7 @@ def start_io():
     global screen
     listener = input.listener
     screen = output.screen
-    listener.listen_direct()
+    listener.listen()
 
 def run_wm(app_object):
     wmr = window_manager.WindowManagerRunner(listener, screen)

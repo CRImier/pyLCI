@@ -1,6 +1,8 @@
 import smbus
 from time import sleep
 
+from output.output import BaseScreen
+
 def delay(time):
     sleep(time/1000.0)
 
@@ -8,7 +10,7 @@ def delayMicroseconds(time):
     sleep(time/1000000.0)
 
 
-class Screen():
+class Screen(BaseScreen):
 
     enable_mask = 0x04
     rw_mask = 0x02

@@ -11,8 +11,8 @@ def to_be_enabled(func):
     """Decorator for KeyListener class. Is used on functions which require enabled KeyListener to be executed. 
        Currently assumes there has been an error and tries to re-enable the listener."""
     def wrapper(self, *args, **kwargs):
-        if not self.enabled:
-            if not self.enable():
+        if not self._enabled:
+            if not self._enable():
                 return None #TODO: think what's appropriate and what are the times something like that might happen
         else:
             return func(self, *args, **kwargs)
@@ -23,6 +23,7 @@ class KeyListener():
     _enabled = False
     _listening = False
     keymap = {}
+    _callback_object = None
     _stop_flag = False
     _interface = None
     _device = None
@@ -94,13 +95,18 @@ class KeyListener():
     @Pyro4.oneway
     def set_callback(self, key_name, callback):
         """Sets a single callback of the listener"""
-        self.keymap[key_name] = callback
+        self._keymap[key_name] = callback
+
+    #@Pyro4.oneway
+    def set_callback_object(self, object):
+        """Sets the object which is the base object of callbacks"""
+        self._callback_object = object
 
     @Pyro4.oneway
     def remove_callback(self, key_name):
         """Sets a single callback of the listener"""
         try:
-            self.keymap.remove(key_name)
+            self._keymap.remove(key_name)
         except AttributeError:
             pass
 
@@ -136,7 +142,7 @@ class KeyListener():
                         logging.debug("processing an event")
                         if key in self.keymap:
                             logging.debug("event has a callback attached, calling it")
-                            self.keymap[key]()
+                            getattr(self._callback_object, self.keymap[key])()
                         else:
                             print ""
         except KeyError as e:
@@ -154,7 +160,10 @@ class KeyListener():
     def _signal_interface_addition(self):
         self.stop_listen()
         self.keymap.clear()
-        self.keymap = self._interface.keymap
+        interface_methods = [method for method in dir(self._interface) if callable(getattr(self._interface, method))]
+        for method_name in interface_methods:
+            setattr(self._interface, method_name, getattr(self, method_name))
+        self.set_keymap(self._interface.keymap)
         self.listen()
 
     def _signal_interface_removal(self):
