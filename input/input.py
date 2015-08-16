@@ -18,6 +18,16 @@ def to_be_enabled(func):
             return func(self, *args, **kwargs)
     return wrapper
 
+def comm_fail_possible(func):
+    """Decorator for KeyListener class. Is used on functions which require enabled KeyListener to be executed. 
+       Currently assumes there has been an error and tries to re-enable the listener."""
+    def wrapper(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except (Pyro4.errors.CommunicationError, Pyro4.errors.ConnectionClosedError):
+            self.comm_error_func()
+    return wrapper
+
 class KeyListener():
     """A class which listens for input device events and calls according callbacks if set"""
     _enabled = False
@@ -127,6 +137,7 @@ class KeyListener():
         self.keymap.clear()
 
     @to_be_enabled
+    @comm_fail_possible
     def _event_loop(self):
         """Blocking event loop which just calls supplied callbacks in the keymap."""
         #TODO: describe callback interpretation ways

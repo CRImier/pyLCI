@@ -124,6 +124,7 @@ class WindowManager():
     def __init__(self, input, output):
         self._input_driver = input
         self._output_driver = output
+        input.comm_error_func = self.handle_crash
 
     def init(self):
         self._pyroDaemon.register(self._output_driver)
@@ -149,6 +150,7 @@ class WindowManager():
 
     @Pyro4.oneway
     def activate_current_window(self):
+        self.deactivate_wm_menu()
         self.plug_interface_to_driver(self._input_driver, self.get_active_window().input_interface)
         self.plug_interface_to_driver(self._output_driver, self.get_active_window().output_interface)
 
@@ -170,8 +172,12 @@ class WindowManager():
         self.activate_window(window)
 
     def deactivate_active_app(self):
-        self.active_app = 0
-        self.deactivate_current_window()
+        self.active_app = None
+        self.deactivate_window()
+
+    def handle_crash(self, *args):
+        self.deactivate_active_app()
+        self.activate_wm_menu()
 
     def get_active_application(self):
         return self.applications[self.active_app]
@@ -208,4 +214,5 @@ class WindowManagerRunner():
         self.wm.init()
         self.ns.register("wcs.window_manager", self.uri)
         self.thread.start()
+        self.app.init()
         self.app.activate()

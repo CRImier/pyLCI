@@ -4,6 +4,10 @@ Menu = menu.Menu
 
 class WindowManagerMenu(Menu):
 
+    def init(self):
+        self.wm.activate_wm_menu = self.to_foreground
+        self.wm.deactivate_wm_menu = self.to_background
+
     def refresh_elements(self):
         self.contents = self.make_menu_items()
 
