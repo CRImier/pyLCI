@@ -28,6 +28,19 @@ def comm_fail_possible(func):
             self.comm_error_func()
     return wrapper
 
+def preserve_interface_keymap(func):
+    def wrapper(self, *args, **kwargs):
+        func(self, *args, **kwargs)
+        if self._interface:
+            print "-----------------------"
+            print func.__name__
+            print self._interface.keymap
+            self._interface.keymap = self.keymap
+            print "-----------------------"
+            print self.keymap
+            print "-----------------------"
+    return wrapper
+
 class KeyListener():
     """A class which listens for input device events and calls according callbacks if set"""
     _enabled = False
@@ -37,6 +50,8 @@ class KeyListener():
     _stop_flag = False
     _interface = None
     _device = None
+
+    _wm_callback = {"KEY_NOTEXISTENT":["no_func", None]}
 
     def __init__(self, path=None, name=None, keymap={}):
         """Init function for creating KeyListener object. Checks all the arguments and sets keymap if supplied."""
@@ -102,39 +117,60 @@ class KeyListener():
         keys = [lst[0] for lst in capabilities[dict_key]]
         return keys
 
+    @preserve_interface_keymap
     @Pyro4.oneway
-    def set_callback(self, key_name, callback):
+    def set_callback(self, key_name, function_name, object):
         """Sets a single callback of the listener"""
-        self._keymap[key_name] = callback
+        self.keymap[key_name] = [function_name, object]
+        #self.set_keymap(self.keymap)
 
-    #@Pyro4.oneway
-    def set_callback_object(self, object):
-        """Sets the object which is the base object of callbacks"""
-        self._callback_object = object
+    def _set_wm_callback(self, key, function_name, object):
+        self._wm_callback = {key:[function_name, object]}
 
-    @Pyro4.oneway
+    def _apply_wm_callback(self):
+        cb = self._wm_callback
+        key = cb.keys()[0]
+        function_name = cb[key][0]
+        object = cb[key][1]
+        self.set_callback(key, function_name, object)
+
+    @preserve_interface_keymap
     def remove_callback(self, key_name):
         """Sets a single callback of the listener"""
         try:
-            self._keymap.remove(key_name)
+            self.keymap.remove(key_name)
         except AttributeError:
-            pass
-
+            return False
+        else:
+            self.set_keymap(self.keymap) #Avoids WM menu callback being deleted
+            return True
+        
+    @preserve_interface_keymap
     @Pyro4.oneway
     def set_keymap(self, keymap):
-        """Sets all the callbacks supplied, removing previously set"""
-        self.keymap = keymap
+        """Sets all the callbacks supplied, removing previously set. Preserves WM menu callback"""
+        self.clear_keymap()
+        wm_key = self._wm_callback.keys()[0]
+        if wm_key in keymap.keys(): #Removes all keymap keys that overrride a WM menu key mapping
+            for key in keymap.keys():
+                if key == wm_key:
+                    keymap.pop(key)
+        self._apply_wm_callback()
+        self.keymap.update(keymap)
 
+    @preserve_interface_keymap
     @Pyro4.oneway
     def replace_keymap_entries(self, keymap):
         """Sets all the callbacks supplied, not removing previously set"""
         for key in keymap.keys:
-            set_callback(key, keymap[key])
+            set_callback(key, *keymap[key])
 
+    @preserve_interface_keymap
     @Pyro4.oneway
     def clear_keymap(self):
         """Removes all the callbacks set"""
         self.keymap.clear()
+        self._apply_wm_callback()
 
     @to_be_enabled
     @comm_fail_possible
@@ -153,7 +189,9 @@ class KeyListener():
                         logging.debug("processing an event")
                         if key in self.keymap:
                             logging.debug("event has a callback attached, calling it")
-                            getattr(self._callback_object, self.keymap[key])()
+                            function_name, object = self.keymap[key]
+                            callback = getattr(object, function_name)
+                            callback()
                         else:
                             print ""
         except KeyError as e:
@@ -178,8 +216,9 @@ class KeyListener():
         self.listen()
 
     def _signal_interface_removal(self):
+        self._interface = None
         self.stop_listen()
-        self.keymap.clear()
+        self.clear_keymap()
 
     @Pyro4.oneway
     @to_be_enabled

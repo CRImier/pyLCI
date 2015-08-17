@@ -1,20 +1,11 @@
 from __future__ import print_function
+import wcs
 from menu.menu import Menu
 
-import time
-import threading
+wm = wcs.wm
 
-import Pyro4
-import Pyro4.util
+application = wm.create_new_application("Application 1")
 
-#Pyro4.config.REQUIRE_EXPOSE = True
-
-wm = Pyro4.Proxy("PYRONAME:wcs.window_manager")
-
-#name = raw_input("Input application name:")
-application = wm.get_application("Application 1")
-
-#name = raw_input("Input window name:")
 window = application.get_window("Window 1")
 
 input = window.input_interface
@@ -27,28 +18,11 @@ main_menu_contents = [
 ["Shutdown", lambda: print("Shutting down")]
 ]
 
-daemon = Pyro4.Daemon()
+menu = Menu(main_menu_contents, output, input, "Main menu", daemon = wcs._daemon)
 
-menu = Menu(main_menu_contents, output, input, "Main menu", daemon = daemon)
+wcs.register_object(menu)
+wcs.start_daemon_thread()
 
-daemon.register(menu)
+wm.activate_app(0)
 
-wm.activate_current_window()
-
-thread = threading.Thread(target=daemon.requestLoop)
-thread.daemon = True
-thread.start()
-
-time.sleep(2)
-
-print(dir(menu))
-print(dir(menu.listener))
-print(dir(menu.screen))
-
-try:
-    menu.activate()
-except Exception:
-    print("Pyro traceback:")
-    print("".join(Pyro4.util.getPyroTraceback()))
-
-application.destroy_window(window)
+wcs.run(menu.activate, application.shutdown) 

@@ -41,6 +41,7 @@ class Menu():
 
     @to_be_foreground
     def to_background(self):
+        self.listener.clear_keymap()
         self.in_foreground = False
         logging.info("menu {0} disabled".format(self.name))    
 
@@ -95,21 +96,21 @@ class Menu():
         logging.debug("element selected")
         self.to_background()
         if len(self.contents) == 0:
-            self.deactivate()
+            pass
         else:
             self.contents[self.pointer][1]()
-        self.set_keymap()        
         if self.in_background:
             self.to_foreground()
+            self.set_keymap()        
 
     def generate_keymap(self):
         keymap = {
-            "KEY_LEFT":"deactivate",
-            "KEY_RIGHT":"print_name",
-            "KEY_UP":"move_up",
-            "KEY_DOWN":"move_down",
-            "KEY_KPENTER":"select_element",
-            "KEY_ENTER":"select_element"
+            "KEY_LEFT":["deactivate", self],
+            "KEY_RIGHT":["print_name", self],
+            "KEY_UP":["move_up",self],
+            "KEY_DOWN":["move_down",self],
+            "KEY_KPENTER":["select_element",self],
+            "KEY_ENTER":["select_element",self]
         }
         self._keymap = keymap
 
@@ -123,7 +124,6 @@ class Menu():
     @to_be_foreground
     def set_keymap(self):
         self.generate_keymap()
-        self.listener.set_callback_object(self)
         self.listener.stop_listen()
         self.listener.clear_keymap()
         self.listener.set_keymap(self._keymap)

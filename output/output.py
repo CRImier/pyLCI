@@ -5,22 +5,25 @@ import importlib
 
 #Currently only 16x2 char displays are tested with all the drivers and software, as I simply don't have access to a bigger display yet -_-
 
+def _wrap(func, interface):
+    def wrapper(*args, **kwargs):
+        interface.displayed_data = args
+        print args
+        return func(*args, **kwargs)
+    return wrapper
+
+
 class BaseScreen():
     interface = None
 
     #TODO: make it secure
     def _signal_interface_addition(self):
-        self.set_display_func(self.display_data)
+        self._interface.display_data = _wrap(self.display_data, self._interface)
+        self.display_data(*self._interface.displayed_data)
 
     def _signal_interface_removal(self):
         pass
 
-    def expose(self):
-        print "Exposing"
-        self._pyroDaemon.register(self.display_data) 
-
-    def set_display_func(self, func):
-        self._interface.display_data = func
 
 if "__name__" != "__main__":
     config = read_config()
