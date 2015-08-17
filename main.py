@@ -9,9 +9,7 @@ import logging
 from time import sleep
 from subprocess import call
 
-level = logging.INFO
-
-logging.basicConfig(level=level)
+logging.basicConfig(level=logging.DEBUG)
 
 def start_io():
     logging.info("Starting IO drivers.")

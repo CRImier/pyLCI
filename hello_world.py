@@ -34,6 +34,6 @@ helloworld = HelloWorld(input, output)
 wcs.register_object(helloworld)
 wcs.start_daemon_thread()
 
-wcs.wm.activate_app(0) #WM-side - to remove
+wcs.wm.activate_app(application.number) #WM-side - to remove
 
 wcs.run(helloworld.run, application.shutdown) 

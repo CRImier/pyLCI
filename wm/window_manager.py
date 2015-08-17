@@ -4,6 +4,8 @@ from threading import Thread
 
 import logging
 
+logging.basicConfig(level=logging.DEBUG)
+
 class Application():
     window = None
 
@@ -191,6 +193,7 @@ class WindowManager():
 
     def deactivate_active_app(self):
         self.deactivate_app(self.active_app)
+        self.active_app = None
 
     def get_active_application(self):
         return self.applications[self.active_app]

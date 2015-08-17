@@ -13,6 +13,7 @@ class WindowManagerMenu(Menu):
         self.listener._set_wm_callback('KEY_KPSLASH', 'deactivate_active_app', self.wm)
 
     def activate(self):
+        self.refresh_elements()
         Menu.activate(self)
 
     def refresh_elements(self):
@@ -50,6 +51,3 @@ class WindowManagerMenu(Menu):
             sleep(1)
         print "Finished, going back to menu"
         self.refresh()
-
-    def activate(self):
-        Menu.activate(self)        
