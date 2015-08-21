@@ -46,8 +46,10 @@ class WindowManagerMenu(Menu):
 
     def select_app(self, number):
         print("App number {0} selected".format(number))
+        self.to_background
         self.wm.activate_app(number)
         while self.wm.active_app != None:
             sleep(1)
         print "Finished, going back to menu"
+        self.refresh_elements()
         self.refresh()

@@ -7,20 +7,26 @@ from config_parse import read_config
 import logging
 import Pyro4
 
+from copy import copy
+
 def to_be_enabled(func):
     """Decorator for KeyListener class. Is used on functions which require enabled KeyListener to be executed. 
        Currently assumes there has been an error and tries to re-enable the listener."""
     def wrapper(self, *args, **kwargs):
-        if not self._enabled:
-            if not self._enable():
-                return None #TODO: think what's appropriate and what are the times something like that might happen
+        if self._enabled: #Clearly, there has been an error and we're most probably in the middle of force_disable
+            if func.__name__ == '_force_disable':
+                try:
+                    self._enable() #Try to enable it once again
+                except (IOError):
+                    print "Device can't be enabled after a failure! =(" #TODO: think what's appropriate and what are the times something like that might happen
+                    func(self, *args, **kwargs) #Calling force_disable after all
+            else:
+                return func(self, *args, **kwargs) #Just normal behaviour
         else:
-            return func(self, *args, **kwargs)
+            return None #listener not enabled, method shoudln't be called
     return wrapper
 
 def comm_fail_possible(func):
-    """Decorator for KeyListener class. Is used on functions which require enabled KeyListener to be executed. 
-       Currently assumes there has been an error and tries to re-enable the listener."""
     def wrapper(self, *args, **kwargs):
         try:
             return func(self, *args, **kwargs)
@@ -31,14 +37,8 @@ def comm_fail_possible(func):
 def preserve_interface_keymap(func):
     def wrapper(self, *args, **kwargs):
         func(self, *args, **kwargs)
-        if self._interface:
-            print "-----------------------"
-            print func.__name__
-            print self._interface.keymap
-            self._interface.keymap = self.keymap
-            print "-----------------------"
-            print self.keymap
-            print "-----------------------"
+        if self._interface and self._interface.keymap != self.keymap:
+            self._interface.keymap = copy(self.keymap)
     return wrapper
 
 class KeyListener():
@@ -91,7 +91,7 @@ class KeyListener():
         """Disables listener, is useful when device is unplugged and errors may occur when doing it the right way
            Does not unset flags - assumes that they're already unset."""
         logging.debug("force disabling listener")
-        self._stop_listen()
+        self.stop_listen()
         #Exception possible at this stage if device does not exist anymore
         #Of course, nothing can be done about this =)
         try:
@@ -122,7 +122,6 @@ class KeyListener():
     def set_callback(self, key_name, function_name, object):
         """Sets a single callback of the listener"""
         self.keymap[key_name] = [function_name, object]
-        #self.set_keymap(self.keymap)
 
     def _set_wm_callback(self, key, function_name, object):
         self._wm_callback = {key:[function_name, object]}
@@ -155,8 +154,8 @@ class KeyListener():
             for key in keymap.keys():
                 if key == wm_key:
                     keymap.pop(key)
+        self.keymap = keymap
         self._apply_wm_callback()
-        self.keymap.update(keymap)
 
     @preserve_interface_keymap
     @Pyro4.oneway
@@ -198,9 +197,11 @@ class KeyListener():
             self._force_disable()
         except IOError as e: 
             if e.errno == 11:
-                #Okay, this error sometimes appears out of blue when I press buttons on a keyboard. Moreover, it's uncaught but due to some logic I don't understand yet the whole thing keeps running. I need to research it.
-                logging.debug("That IOError errno=11 again. Need to learn to ignore it somehow.")
+                #Okay, this error sometimes appears out of blue when I press buttons on a keyboard. Moreover, it's uncaught but due to some logic I don't understand yet the whole thing keeps running. I might need to research it.
+                logging.debug("That IOError errno=11 again. Need to research it.")
+                #raise #Uncomment only if you have nothing better to do 
         finally:
+            logging.debug("stopped listening")
             self._listening = False
 
     def _reset(self):
@@ -209,14 +210,14 @@ class KeyListener():
     def _signal_interface_addition(self):
         self.stop_listen()
         self.keymap.clear()
+        self.set_keymap(copy(self._interface.keymap))
         interface_methods = [method for method in dir(self._interface) if callable(getattr(self._interface, method))]
         for method_name in interface_methods:
-            setattr(self._interface, method_name, getattr(self, method_name))
-        self.set_keymap(self._interface.keymap)
+            if not method_name.startswith("_"): # "_" - see, that guy's not happy when I mess with magic methods
+                setattr(self._interface, method_name, getattr(self, method_name))
         self.listen()
 
     def _signal_interface_removal(self):
-        self._interface = None
         self.stop_listen()
         self.clear_keymap()
 
@@ -234,7 +235,6 @@ class KeyListener():
     @Pyro4.oneway
     @to_be_enabled
     def stop_listen(self):
-        logging.debug("stopped listening")
         self._stop_flag = True
         return True
 

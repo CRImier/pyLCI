@@ -71,7 +71,15 @@ class OutputInterface():
 
 class InputInterface():
 
-    keymap = {}
+    _keymap = {}
+
+    @property
+    def keymap(self):
+        return self._keymap
+
+    @keymap.setter
+    def keymap(self, keymap):
+        self._keymap = keymap
 
     def __init__(self):
         pass
@@ -231,14 +239,12 @@ class WindowManager():
         driver._signal_interface_addition()
 
     def unplug_interface(self, driver):
-        print "WM - unplugging interfaces"
         driver._interface = None
         driver._signal_interface_removal()
 
     def deactivate_driver_interfaces(self): 
         self.unplug_interface(self._input_driver)
         self.unplug_interface(self._output_driver)
-        
 
 class WindowManagerRunner():
 
@@ -247,7 +253,7 @@ class WindowManagerRunner():
         self.output = output
         self.wm = WindowManager(input, output)
         self.daemon = Pyro4.Daemon()
-        self.thread = Thread(target=self.daemon.requestLoop)
+        self.thread = Thread(target=self.daemon.requestLoop, name = "WM runner thread")
         self.thread.daemon = True
 
     def run(self, app_object):
@@ -255,7 +261,7 @@ class WindowManagerRunner():
         self.app.wm = self.wm
         self.ns = Pyro4.locateNS()
         self.uri = self.daemon.register(self.wm)
-        self.wm.init() #The call isn't necessaey for normal operation
+        self.wm.init() 
         self.ns.register("wcs.window_manager", self.uri)
         self.thread.start()
         self.app.init()
