@@ -12,8 +12,8 @@ screen = output.screen
 listener.listen_direct()
 
 #For testing only
-from wlan import wicd_int
-wicd_int.Menu = Menu
+#from wlan import wicd_int
+#wicd_int.Menu = Menu
 
 def send_sms(name):
     screen.display_data("Sending SMS to:", name)
@@ -43,9 +43,9 @@ music_menu = Menu(music_menu_contents, screen, listener, "Music menu")
 
 main_menu_contents = [
 ["Send SMS", sms_menu.activate],
-["Connect to WiFi", lambda: wicd_int.WicdUserInterface(screen, listener).choose_networks()],
+#["Connect to WiFi", lambda: wicd_int.WicdUserInterface(screen, listener).choose_networks()],
 ["Music control", music_menu.activate],
-["Shutdown", lambda:call("/home/wearable/WCS/halt.sh")],
+["Shutdown", lambda:call("/root/WCS/halt.sh")],
 ]
 
 main_menu = Menu(main_menu_contents, screen, listener, "Main menu")
@@ -54,7 +54,10 @@ def start():
     try:
         main_menu.activate()
     except:
-        input.driver.deactivate()
+        try:
+            input.driver.deactivate()
+        except:
+            pass
 
 if __name__ == "__main__":
     start()

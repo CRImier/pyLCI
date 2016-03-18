@@ -275,5 +275,9 @@ if "__name__" != "__main__":
         device_name = config["input"][0]["device_name"]
     except:
         device_name = driver.name
+    while get_path_by_name(device_name) == None:
+          print("Device {} not yet available, waiting...".format(device_name))
+          print("Available input devices: {}".format([device.name for device in get_input_devices()]))
+          time.sleep(1)
     listener = KeyListener(name=device_name)
 
