@@ -45,7 +45,7 @@ main_menu_contents = [
 ["Send SMS", sms_menu.activate],
 #["Connect to WiFi", lambda: wicd_int.WicdUserInterface(screen, listener).choose_networks()],
 ["Music control", music_menu.activate],
-["Shutdown", lambda:call("/root/WCS/halt.sh")],
+["Shutdown", lambda:call(['shutdown', '-h', 'now'])],
 ]
 
 main_menu = Menu(main_menu_contents, screen, listener, "Main menu")
