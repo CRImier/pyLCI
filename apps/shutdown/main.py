@@ -1,5 +1,3 @@
-
-
 menu_name = "Shutdown&reboot"
 
 from subprocess import call
@@ -7,10 +5,12 @@ from menu.menu import Menu
 
 
 def shutdown():
+    o.clear()
     o.display_data("Shutting down")
     call(['shutdown', '-h', 'now'])
 
 def reboot():
+    o.clear()
     o.display_data("Rebooting")
     call(['reboot'])
 
