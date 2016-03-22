@@ -12,6 +12,9 @@ except ImportError:
 import socket
 debug = True
 
+listener = None
+driver = None
+
 #TODO: add server-client communication for requesting listeners and getting listener info
 #TODO: add a function getting all the keys of listener
 
@@ -253,7 +256,8 @@ def get_name_by_path(path):
             name = dev.name
     return name
 
-if "__name__" != "__main__":
+def init(output):
+    global listener, driver
     config = read_config()
     try:
         driver_name = config["input"][0]["driver"]
@@ -276,6 +280,7 @@ if "__name__" != "__main__":
     except:
         device_name = driver.name
     while get_path_by_name(device_name) == None:
+          output.display_data("y no {}".format(device_name), "i wait")
           print("Device {} not yet available, waiting...".format(device_name))
           print("Available input devices: {}".format([device.name for device in get_input_devices()]))
           time.sleep(1)
