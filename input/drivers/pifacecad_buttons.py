@@ -42,8 +42,5 @@ class InputDevice():
         self.thread.daemon = False
         self.thread.start()
 
-    def deactivate(self):
-       self.stop()
-
     def __del__(self):
        self.deactivate()
