@@ -42,7 +42,7 @@ class Screen():
         self.command(0x80|(offsets[row]+col))
     
     def clear(self):
-        self.command(0x10)
+        self.command(0x01)
 
     def println(self, line):
         for char in line:
