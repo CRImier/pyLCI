@@ -4,7 +4,7 @@ import time
 import os
 import importlib
 import select
-from config_parse import read_config
+from helpers.config_parse import read_config
 try:
     import cPickle as pickle
 except ImportError:

@@ -3,7 +3,7 @@ import socket
 import pickle
 import select
 import threading
-from config_parse import read_config
+from helpers.config_parse import read_config
 import importlib
 
 #Currently only 16x2 char displays are fully supported and tested, as I simply don't have access to a bigger one yet -_-
