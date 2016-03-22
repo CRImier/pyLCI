@@ -8,14 +8,14 @@ import threading
 
 class InputDevice():
     mapping = [
-    ecodes.KEY_LEFT,
-    ecodes.KEY_RIGHT,
+    ecodes.KEY_DOWN,
+    ecodes.KEY_UP,
     ecodes.KEY_KPENTER,
+    ecodes.KEY_LEFT,
     ecodes.KEY_HOME,
     ecodes.KEY_END,
-    ecodes.KEY_DELETE,
-    ecodes.KEY_UP,
-    ecodes.KEY_DOWN]
+    ecodes.KEY_RIGHT,
+    ecodes.KEY_DELETE]
     stop_flag = False
     previous_data = 0;
 
