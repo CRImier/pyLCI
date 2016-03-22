@@ -2,7 +2,6 @@ import evdev
 from evdev import ecodes
 import smbus
 from time import sleep
-import RPi.GPIO as GPIO
 import threading
 
 
@@ -29,7 +28,6 @@ class InputDevice():
 
     def start(self):
         self.stop_flag = False
-        GPIO.setmode(GPIO.BCM) # Broadcom pin-numbering scheme
         self.bus.write_byte(self.addr, 0xff)
         if self.int_pin is None:
             self.loop_polling()
@@ -37,6 +35,8 @@ class InputDevice():
             self.loop_interrupts()
 
     def loop_interrupts(self):
+        import RPi.GPIO as GPIO
+        GPIO.setmode(GPIO.BCM) # Broadcom pin-numbering scheme
         GPIO.setup(self.int_pin, GPIO.IN)
         button_states = []
         try:
@@ -88,12 +88,3 @@ class InputDevice():
 if __name__ == "__main__":
     id = InputDevice(addr = 0x3e, int_pin = 4)
     id.start()
-
-#    def __del__(self):
-#       self.stop()
-
-"""        else: # button is pressed:
-            GPIO.output(ledPin, GPIO.HIGH)
-            time.sleep(0.075)
-"""
-
