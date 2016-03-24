@@ -18,7 +18,7 @@ class InputDevice():
     
     def __init__(self, name='piface-uinput'):
         self.name = name
-        self.uinput = evdev.UInput(name=name, devnode='/dev/uinput')
+        self.uinput = evdev.UInput({ecodes.EV_KEY:self.mapping}, name=self.name, devnode='/dev/uinput')
         self.cad = pifacecad.PiFaceCAD()
         self.listener = pifacecad.SwitchEventListener(chip=self.cad)
         atexit.register(self.listener.deactivate)
@@ -41,6 +41,3 @@ class InputDevice():
         self.thread = threading.Thread(target=self.start)
         self.thread.daemon = False
         self.thread.start()
-
-    def __del__(self):
-       self.deactivate()
