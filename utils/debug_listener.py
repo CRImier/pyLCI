@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from evdev import InputDevice, list_devices, categorize, ecodes
+from time import sleep
 import threading
 
 def listen_for_events(dev):
@@ -12,8 +13,8 @@ print devices
 for dev in devices:
     print dev.name+" - "+dev.fn
     thread = threading.Thread(target=listen_for_events, args=(dev,))
-    thread.daemon = False
+    thread.daemon = True
     thread.start()
 
-#while True:
-#    pass
+while True:
+    sleep(1)
