@@ -31,7 +31,7 @@ class Menu():
         self.generate_keymap()
         self.name = name
         self.listener = listener
-        self.contents = contents
+        self.set_contents(contents)
         self.process_contents()
         self.screen = screen
         self.display_callback = screen.display_data
@@ -110,6 +110,10 @@ class Menu():
             "KEY_ENTER":lambda: self.select_element()
             }
         self.keymap = keymap
+
+    def set_contents(self, contents):
+        self.contents = contents
+        self.process_contents()
 
     def process_contents(self):
         for entry in self.contents:
