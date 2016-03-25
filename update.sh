@@ -5,6 +5,6 @@ if (( $EUID != 0 )); then
     SUDO='sudo'
 fi
 git pull
-$SUDO /bin/cp -Rrf ./. $INSTALL_DIR 
+$SUDO rsync -av ./  $INSTALL_DIR
 $SUDO systemctl restart lcs.service
 
