@@ -5,7 +5,7 @@ volume_up_value = "400+"
 volume_down_value = "400-"
 
 from subprocess import call
-from menu.menu import Menu
+from ui.menu import Menu
 
 #amixer commands
 def amixer_command(*command):

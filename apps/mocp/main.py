@@ -1,7 +1,7 @@
 menu_name = "MOCP control"
 
 from subprocess import call
-from menu.menu import Menu
+from ui.menu import Menu
 
 #Some globals for LCS
 main_menu = None

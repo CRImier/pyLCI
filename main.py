@@ -12,7 +12,7 @@ o.display_data("Welcome to", "pyLCS")
 try:
     #All the LCS-related modules are imported here
     from input import input
-    from menu.menu import Menu
+    from ui.menu import Menu
     #Now we init the input.
     input.init(o)
     i = input.listener
@@ -37,18 +37,24 @@ app_list = {}
 def launch(name=None):
     if name != None:
         app = load_app(name)
-        ctrl_c_wrapper(app.callback)
+        exception_wrapper(app.callback)
     else:
         app_menu_contents = load_all_apps()
         app_menu = Menu(app_menu_contents, o, i, "App menu")
-        ctrl_c_wrapper(app_menu.activate)
+        exception_wrapper(app_menu.activate)
 
-def ctrl_c_wrapper(callback):
+def exception_wrapper(callback):
     try:
         callback()
     except KeyboardInterrupt:
-        input.driver.stop() #Might be needed for some input drivers, such as PiFaceCAD. 
         o.display_data("Does Ctrl+C", "hurt scripts?")
+    except:
+        o.display_data("A wild exception", "appears!")
+        raise
+    else:
+        o.display_data("Exiting pyLCS")
+    finally:
+        input.driver.stop() #Might be needed for some input drivers, such as PiFaceCAD. 
         sys.exit(1)
 
 def load_all_apps():

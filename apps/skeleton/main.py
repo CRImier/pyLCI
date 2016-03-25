@@ -1,7 +1,7 @@
 menu_name = "App name as seen in main menu"
 
 from subprocess import call
-from menu.menu import Menu
+from ui.menu import Menu
 from time import sleep
 
 def call_internal():

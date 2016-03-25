@@ -1,7 +1,7 @@
 menu_name = "I2C tools"
 
 from subprocess import call
-from menu.menu import Menu
+from ui.menu import Menu
 
 from time import sleep
 
