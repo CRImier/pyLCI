@@ -1,21 +1,14 @@
 from time import sleep
-debug = True
 
 import logging
 
-def to_be_foreground(func):
+def to_be_foreground(func): #A safety check wrapper so that certain checks don't get called if menu is not the one active
     def wrapper(self, *args, **kwargs):
         if self.in_foreground:
             return func(self, *args, **kwargs)
         else:
             return False
     return wrapper
-
-#def menu_name(func):
-#    def wrapper(self, *args, **kwargs):
-#        print self.name+":",
-#        return func(self, *args, **kwargs)
-#    return wrapper
 
 class Menu():
     contents = []
@@ -25,17 +18,17 @@ class Menu():
     in_foreground = False
     exit_flag = False
     name = ""
+    first_displayed_entry = 0
+    last_displayed_entry = None
 
-
-    def __init__(self, contents, screen, listener, name):
-        self.generate_keymap()
+    def __init__(self, contents, o, i, name="Menu", entry_height=1):
+        self.i = i
+        self.o = o
+        self.entry_height = entry_height
         self.name = name
-        self.listener = listener
+        self.generate_keymap()
         self.set_contents(contents)
-        self.process_contents()
-        self.screen = screen
-        self.display_callback = screen.display_data
-        self.set_display_callback(self.display_callback)
+        self.set_display_callback(o.display_data)
 
     def to_foreground(self):
         logging.info("menu {0} enabled".format(self.name))    
@@ -51,16 +44,16 @@ class Menu():
 
     def activate(self):
         logging.info("menu {0} activated".format(self.name))    
-        self.to_foreground()
-        while self.in_background:
+        self.to_foreground() 
+        while self.in_background: #All the work is done in input callbacks
             sleep(1)
         logging.debug(self.name+" exited")
         return True
 
     def deactivate(self):
-        logging.info("menu {0} deactivated".format(self.name))    
-        self.to_background()
+        self.in_foreground = False
         self.in_background = False
+        logging.info("menu {0} deactivated".format(self.name))    
 
     def print_contents(self):
         logging.info(self.contents)
@@ -114,31 +107,82 @@ class Menu():
     def set_contents(self, contents):
         self.contents = contents
         self.process_contents()
+        #Calculating the highest element displayed
+        if len(contents) == 0:
+            self.last_displayed_entry = 0
+            self.first_displayed_entry = 0
+            return True
+        full_entries_shown = self.o.rows/self.entry_height
+        entry_count = len(self.contents)
+        if full_entries_shown > entry_count: #Display is capable of showing more entries than we have, so the last displayed entry is the last menu entry
+            print("There are more display rows than entries can take, correcting")
+            self.last_displayed_entry = entry_count-1
+        else:
+            print("There are no empty spaces on the display")
+            self.last_displayed_entry = full_entries_shown-1 #We start numbering elements with 0, so 4-row screen would show elements 0-3
+        print("First displayed entry is {}".format(self.first_displayed_entry))
+        print("Last displayed entry is {}".format(self.last_displayed_entry))
+        self.pointer = 0 #Resetting pointer to avoid confusions between changing menu contents
 
     def process_contents(self):
         for entry in self.contents:
             if entry[1] == "exit":
                 entry[1] = self.deactivate
-        logging.debug("{0}: menu contents processed".format(self.name))
+        logging.debug("{}: menu contents processed".format(self.name))
 
     @to_be_foreground
     def set_keymap(self):
         self.generate_keymap()
-        self.listener.stop_listen()
-        self.listener.keymap.clear()
-        self.listener.keymap = self.keymap
-        self.listener.listen_direct()
+        self.i.stop_listen()
+        self.i.keymap.clear()
+        self.i.keymap = self.keymap
+        self.i.listen_direct()
 
-    @to_be_foreground
     def get_displayed_data(self):
+        displayed_data = []
         if len(self.contents) == 0:
-            return ("No menu entries", " ")
-        elif len(self.contents) == 1:
-            return ("*"+self.contents[0][0], " ")
-        elif self.pointer < (len(self.contents)-1):
-            return ("*"+self.contents[self.pointer][0], " "+self.contents[self.pointer+1][0])
+            return ["No menu entries"]
+        if self.pointer < self.first_displayed_entry:
+            print("Pointer went too far to top, correcting")
+            self.last_displayed_entry -=  self.first_displayed_entry - self.pointer #The difference will mostly be 1 but I reckon it might be more in case of concurrency issues
+            self.first_displayed_entry = self.pointer
+            print("First displayed entry is {}".format(self.first_displayed_entry))
+            print("Last displayed entry is {}".format(self.last_displayed_entry))
+        if self.pointer > self.last_displayed_entry:
+            print("Pointer went too far to bottom, correcting")
+            self.first_displayed_entry += self.pointer - self.last_displayed_entry 
+            self.last_displayed_entry = self.pointer
+            print("First displayed entry is {}".format(self.first_displayed_entry))
+            print("Last displayed entry is {}".format(self.last_displayed_entry))
+        disp_entry_positions = range(self.first_displayed_entry, self.last_displayed_entry+1)
+        print("Displayed entries: {}".format(disp_entry_positions))
+        for entry_num in disp_entry_positions:
+            displayed_entry = self.render_displayed_entry(entry_num, active=entry_num == self.pointer)
+            displayed_data += displayed_entry
+        print("Displayed data: {}".format(displayed_data))
+        return displayed_data
+
+    def render_displayed_entry(self, entry_num, active=False):
+        rendered_entry = []
+        entry_content = self.contents[entry_num][0]
+        display_columns = self.o.cols
+        if type(entry_content) == str:
+            if active:
+                rendered_entry.append("*"+entry_content[:display_columns-1]) #First part of string displayed
+                entry_content = entry_content[display_columns-1:] #Shifting through the part we just displayed
+            else:
+                rendered_entry.append(" "+entry_content[:display_columns-1])
+                entry_content = entry_content[display_columns-1:]
+            for row_num in range(self.entry_height-1): #First part of string done, if there are more rows to display, we give them the remains of string
+                rendered_entry.append(entry_content[:display_columns])
+                entry_content = entry_content[display_columns:]
+        elif type(entry_content) == list:
+            return entry_content
+            #raise NotImplementedException # Sorry, was hella tired TODO
         else:
-            return (" "+self.contents[self.pointer-1][0], "*"+self.contents[self.pointer][0])
+            raise Exception("Entries may contain either strings or lists of strings as their contents")
+        print("Rendered entry: {}".format(rendered_entry))
+        return rendered_entry
 
     @to_be_foreground
     def refresh(self):
