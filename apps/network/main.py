@@ -14,9 +14,9 @@ from if_info import parse_ip_addr
 
 def show_ifc_data(ifc_name, ifc_data):
     ifd_menu_contents = [
-    ["state: "+ifc_data['state'], lambda: True],
-    ["IP: "+ifc_data['addr'], lambda: True],
-    ["IP6: "+ifc_data['addr6'], lambda: True],
+    ["state: "+str(ifc_data['state']), lambda: True],
+    ["IP: "+str(ifc_data['addr']), lambda: True],
+    ["IP6: "+str(ifc_data['addr6']), lambda: True],
     ["MAC: "+str(ifc_data['ph_addr']), lambda: True]
     ]
     ifd_menu = Menu(ifd_menu_contents, o, i, "{} interface data menu".format(ifc_name), entry_height=2)
