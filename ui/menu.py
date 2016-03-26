@@ -114,6 +114,7 @@ class Menu():
             return True
         full_entries_shown = self.o.rows/self.entry_height
         entry_count = len(self.contents)
+        self.last_displayed_entry = 0
         if full_entries_shown > entry_count: #Display is capable of showing more entries than we have, so the last displayed entry is the last menu entry
             print("There are more display rows than entries can take, correcting")
             self.last_displayed_entry = entry_count-1
