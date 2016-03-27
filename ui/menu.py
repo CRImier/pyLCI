@@ -88,7 +88,8 @@ class Menu():
         if len(self.contents) == 0:
             self.deactivate()
         else:
-            self.contents[self.pointer][1]()
+            if len(self.contents[self.pointer]) > 1:
+                self.contents[self.pointer][1]()
         self.set_keymap()        
         if self.in_background:
             self.to_foreground()
@@ -127,8 +128,9 @@ class Menu():
 
     def process_contents(self):
         for entry in self.contents:
-            if entry[1] == "exit":
-                entry[1] = self.deactivate
+            if len(entry) > 1:
+                if entry[1] == "exit":
+                    entry[1] = self.deactivate
         logging.debug("{}: menu contents processed".format(self.name))
 
     @to_be_foreground
