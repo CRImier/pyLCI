@@ -30,7 +30,7 @@ def i2c_detect():
             num_screens += 1
         for screen_num in range(num_screens):
             shown_element_numbers = [(screen_num*screen_rows)+i for i in range(screen_rows)]
-            screen_data = [found_devices[i] for i in shown_element_numbers] 
+            screen_data = [found_devices[i] for i in shown_element_numbers if i in range(len(found_devices))] 
             o.clear()
             o.display_data(*screen_data)
             sleep(1)
