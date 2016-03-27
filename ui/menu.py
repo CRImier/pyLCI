@@ -178,8 +178,10 @@ class Menu():
                 rendered_entry.append(entry_content[:display_columns])
                 entry_content = entry_content[display_columns:]
         elif type(entry_content) == list:
+            entry_content = entry_content[:self.entry_height] #Can't have more arguments in the list argument than maximum entry height
+            while len(entry_content) < self.entry_height: #Can't have less either, padding with empty strings if necessary
+                entry_content.append('')
             return entry_content
-            #raise NotImplementedException # Sorry, was hella tired TODO
         else:
             raise Exception("Entries may contain either strings or lists of strings as their contents")
         print("Rendered entry: {}".format(rendered_entry))
