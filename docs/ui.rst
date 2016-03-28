@@ -13,9 +13,10 @@ and initialising them, passing your UI element contents and parameters, as well 
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   ui_menu.rst
+   ui/menu.rst
+   ui/printer.rst
 
 Indices and tables
 ==================
