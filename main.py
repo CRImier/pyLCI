@@ -7,19 +7,20 @@ from output import output
 
 #These lines are here so that welcome screen stays on a little longer:
 o = output.screen
-o.display_data("Welcome to", "pyLCI")
+from ui import Printer
+Printer(["Welcome to", "pyLCI"], None, o, 0)
 
 try:
     #All the LCI-related modules are imported here
     from input import input
-    from ui.menu import Menu
+    from ui import Menu
     #Now we init the input.
     input.init(o)
     i = input.listener
     i.listen_direct()
     #from apps import app_list
 except:
-    o.display_data("Oops. :(", "y u make mistake") #Yeah, that's about all the debug data. 
+    Printer("Oops. :(", "y u make mistake", i, o, 0) #Yeah, that's about all the debug data. 
     #import time;time.sleep(3) #u make mi sad i go to slip
     #o.clear()
     raise
@@ -47,26 +48,28 @@ def exception_wrapper(callback):
     try:
         callback()
     except KeyboardInterrupt:
-        o.display_data("Does Ctrl+C", "hurt scripts?")
+        Printer(["Does Ctrl+C", "hurt scripts?"], i, o, 0)
+        sys.exit(1)
     except:
-        o.display_data("A wild exception", "appears!")
+        Printer(["A wild exception", "appears!"], i, o, 0)
         raise
     else:
-        o.display_data("Exiting pyLCI")
+        Printer("Exiting pyLCI", i, o, 0)
+        sys.exit(0)
     finally:
         input.driver.stop() #Might be needed for some input drivers, such as PiFaceCAD. 
-        sys.exit(1)
 
 def load_all_apps():
     menu_contents = []
     app_names = apps.module_names
     for app_name in app_names:
-        print(app_name)
+        print("Loading {}".format(app_name))
         try:
             app = load_app(app_name)
             menu_contents.append([app.menu_name, app.callback])
         except Exception as e:
-            o.display_data("Failed to import", app_name)
+            Printer(["Failed to load", app_name], i, o, 0)
+            print("Failed to load {}".format(app_name))
             print(e)
             sleep(3)
             #raise
