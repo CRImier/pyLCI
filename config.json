@@ -1,12 +1,19 @@
 {
  "input":
     [{
-      "device_name":"HID 04d9:1603"
+      "driver":"pcf8574_buttons",
+      "kwargs":
+       {
+        "addr":62,
+        "int_pin":4
+       }
     }],
  "output":
     [{
       "driver":"pcf8574_lcd",
-      "driver_args":[],
-      "driver_kwargs":{}
+      "kwargs":
+      {
+        "addr":38
+      }
     }]
 }
