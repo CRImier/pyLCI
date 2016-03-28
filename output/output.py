@@ -5,14 +5,9 @@ import importlib
 
 if "__name__" != "__main__":
     config = read_config()
-    driver_name = config["output"][0]["driver"]
+    output_config = config["output"][0]
+    driver_name = output_config["driver"]
     driver_module = importlib.import_module("output.drivers."+driver_name)
-    try:
-        driver_args = config["output"][0]["driver_args"]
-    except KeyError:
-        driver_args = []
-    try:
-        driver_kwargs = config["output"][0]["driver_kwargs"]
-    except KeyError:
-        driver_kwargs = {}
-    screen = driver_module.Screen(*driver_args, **driver_kwargs)
+    args = output_config["args"] if "args" in output_config else []
+    kwargs = output_config["kwargs"] if "kwargs" in output_config else {}
+    screen = driver_module.Screen(*args, **kwargs)
