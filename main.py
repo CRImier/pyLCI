@@ -15,12 +15,12 @@ try:
     from input import input
     from ui import Menu
     #Now we init the input.
-    input.init(o)
+    input.init()
     i = input.listener
-    i.listen_direct()
+    i.listen()
     #from apps import app_list
 except:
-    Printer("Oops. :(", "y u make mistake", i, o, 0) #Yeah, that's about all the debug data. 
+    #Printer("Oops. :(", "y u make mistake", i, o, 0) #Yeah, that's about all the debug data. 
     #import time;time.sleep(3) #u make mi sad i go to slip
     #o.clear()
     raise
@@ -41,7 +41,7 @@ def launch(name=None):
         exception_wrapper(app.callback)
     else:
         app_menu_contents = load_all_apps()
-        app_menu = Menu(app_menu_contents, i, o, "App menu")
+        app_menu = Menu(app_menu_contents, i, o, "App menu", append_exit=False)
         exception_wrapper(app_menu.activate)
 
 def exception_wrapper(callback):
@@ -49,15 +49,16 @@ def exception_wrapper(callback):
         callback()
     except KeyboardInterrupt:
         Printer(["Does Ctrl+C", "hurt scripts?"], i, o, 0)
+        i.stop_listen()
         sys.exit(1)
     except:
         Printer(["A wild exception", "appears!"], i, o, 0)
+        i.stop_listen()
         raise
     else:
         Printer("Exiting pyLCI", i, o, 0)
+        i.stop_listen()
         sys.exit(0)
-    finally:
-        input.driver.stop() #Might be needed for some input drivers, such as PiFaceCAD. 
 
 def load_all_apps():
     menu_contents = []

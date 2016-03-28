@@ -26,7 +26,7 @@ def Printer(message, i, o, sleep_time=1, skippable=False):
         i.clear_keymap()
         for keycode in skip_keys:
             i.set_callback(keycode, skip_screen)
-        i.listen_direct()
+        i.listen()
 
     #Now onto rendering the message
     rendered_message = []

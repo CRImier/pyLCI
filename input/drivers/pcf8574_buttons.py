@@ -1,30 +1,25 @@
-import evdev
-from evdev import ecodes
 import smbus
 from time import sleep
 import threading
 
-
 class InputDevice():
     mapping = [
-    ecodes.KEY_DOWN,
-    ecodes.KEY_UP,
-    ecodes.KEY_KPENTER,
-    ecodes.KEY_LEFT,
-    ecodes.KEY_HOME,
-    ecodes.KEY_END,
-    ecodes.KEY_RIGHT,
-    ecodes.KEY_DELETE]
+    "KEY_DOWN",
+    "KEY_UP",
+    "KEY_KPENTER",
+    "KEY_LEFT",
+    "KEY_HOME",
+    "KEY_END",
+    "KEY_RIGHT",
+    "KEY_DELETE"]
     stop_flag = False
-    previous_data = 0;
+    previous_data = 0
 
-    def __init__(self, name='pcf8574-uinput', addr = 0x27, bus = 1, int_pin = None):
-        self.name = name
+    def __init__(self, addr = 0x27, bus = 1, int_pin = None):
         self.bus_num = bus
         self.bus = smbus.SMBus(self.bus_num)
         self.addr = 0x3e
         self.int_pin = int_pin
-        self.uinput = evdev.UInput({ecodes.EV_KEY:self.mapping}, name=name, devnode='/dev/uinput')
 
     def start(self):
         self.stop_flag = False
@@ -71,20 +66,18 @@ class InputDevice():
                 changed_buttons.append(i)
         for button_number in changed_buttons:
             if not data & 1<<button_number:
-                self.press_key(self.mapping[button_number])
-
+                self.send_key(self.mapping[button_number])
 
     def stop(self):
         self.stop_flag = True
 
-    def press_key(self, key):
-        self.uinput.write(ecodes.EV_KEY, key, 1)
-        self.uinput.write(ecodes.EV_KEY, key, 0)
-        self.uinput.syn()
+    def send_key(self, key):
+        """Is meant to be overridden by InputListener. Otherwise, is useful for debugging."""
+        print(key)
 
     def activate(self):
         self.thread = threading.Thread(target=self.start)
-        self.thread.daemon = True
+        self.thread.daemon = False
         self.thread.start()
 
 

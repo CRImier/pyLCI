@@ -196,7 +196,7 @@ class Menu():
         self.i.stop_listen()
         self.i.keymap.clear()
         self.i.keymap = self.keymap
-        self.i.listen_direct()
+        self.i.listen()
 
     def get_displayed_data(self):
         """Generates the displayed data in a way that the output device accepts. The output of this function can be fed in the o.display_data function.

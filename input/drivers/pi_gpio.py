@@ -7,19 +7,18 @@ import atexit
 class InputDevice():
     button_pins = [18, 23, 24, 25, 22, 27, 17, 4]
     mapping = [
-    ecodes.KEY_LEFT,
-    ecodes.KEY_RIGHT,
-    ecodes.KEY_HOME,
-    ecodes.KEY_END,
-    ecodes.KEY_DELETE,
-    ecodes.KEY_KPENTER,
-    ecodes.KEY_UP,
-    ecodes.KEY_DOWN]
+    "KEY_LEFT",
+    "KEY_RIGHT",
+    "KEY_HOME",
+    "KEY_END",
+    "KEY_DELETE",
+    "KEY_KPENTER",
+    "KEY_UP",
+    "KEY_DOWN"]
     stop_flag = False
     
-    def __init__(self, name='gpio-uinput'):
-        self.name = name
-        self.uinput = evdev.UInput({ecodes.EV_KEY:self.mapping}, name=name, devnode='/dev/uinput')
+    def __init__(self):
+        pass
 
     def start(self):
         self.stop_flag = False
@@ -39,36 +38,20 @@ class InputDevice():
                         else:
                             print("Button {} pressed".format(i+1))
                             key = self.mapping[i]
-                            self.press_key(key)
+                            self.send_key(key)
                         button_states[i] = button_state
         except:
             raise
         finally:
-            try:
-                GPIO.cleanup()
-            except:
-                pass #Often fails here but it seems to be harmless and clutters the output
+            GPIO.cleanup()
 
     def stop(self):
         self.stop_flag = True
 
-    def press_key(self, key):
-        self.uinput.write(ecodes.EV_KEY, key, 1)
-        self.uinput.write(ecodes.EV_KEY, key, 0)
-        self.uinput.syn()
+    def send_key(self, key):
+        print(key)
 
     def activate(self):
         self.thread = threading.Thread(target=self.start)
         self.thread.daemon = True
         self.thread.start()
-
-#    def __del__(self):
-#       self.stop()
-
-
-
-
-"""        else: # button is pressed:
-            GPIO.output(ledPin, GPIO.HIGH)
-            time.sleep(0.075)"""
-
