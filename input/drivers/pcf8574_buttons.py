@@ -49,7 +49,10 @@ class InputDevice():
         except:
             raise
         finally:
-            GPIO.cleanup()
+            try:
+                GPIO.cleanup()
+            except:
+                pass #Often fails like that when system terminates, doesn't seem to be harmful
 
     def loop_polling(self):
         button_states = []

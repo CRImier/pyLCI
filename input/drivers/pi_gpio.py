@@ -44,7 +44,10 @@ class InputDevice():
         except:
             raise
         finally:
-            GPIO.cleanup()
+            try:
+                GPIO.cleanup()
+            except:
+                pass #Often fails here but it seems to be harmless and clutters the output
 
     def stop(self):
         self.stop_flag = True
