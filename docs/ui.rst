@@ -1,0 +1,26 @@
+####################
+UI element reference
+####################
+
+UI elements are used in applications and some core system functions to interace with the user. For example, the Menu element is used for making menus, and can as well be used to show lists of items.
+
+Using UI elements in your applications is as easy as doing:
+
+``from ui import ElementName``
+
+and initialising them, passing your UI element contents and parameters, as well as input and output device objects as initialisation arguments.
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   ui_menu.rst
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
