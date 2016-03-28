@@ -1,5 +1,4 @@
 from time import sleep
-
 import logging
 
 def to_be_foreground(func): #A safety check wrapper so that certain checks don't get called if menu is not the one active
@@ -10,24 +9,27 @@ def to_be_foreground(func): #A safety check wrapper so that certain checks don't
             return False
     return wrapper
 
+
 class Menu():
-    """Implements a menu which can be used to navigate through your application, output a list of values or select actions to perform. 
-    Is one of the most used elements, used both in system core and in most of the applications.
+    """Implements a menu which can be used to navigate through your application, output a list of values or select actions to perform. Is one of the most used elements, used both in system core and in most of the applications.
 
     Attributes:
-        contents: list of menu elements
-           Menu element structure is a list, where:
-           -element[0] (element's representation) is either a string, which simply has the element's value as it'll be displayed, such as "Menu element 1",
-               or, in case of entry_height > 1, can be a list of strings, each of which represents a corresponding display row occupied by the element.
-           -element[1] (element's callback) is a function which is called when menu's element is activated (such as pressing ENTER button when menu's element is selected). 
-               Can be omitted if you don't need to have any actions taken upon activation of the element.
-               Can be specified as 'exit' if you want a menu element that exits the menu upon activation.
-           !If you want to set contents after the initalisation, please, use self.set_contents() method.
-        pointer: currently selected menu element's number in self.contents.
-        in_background: a flag which indicates if menu is currently active, either if being displayed or being in background (if a sub-menu of this menu is currently active)
-        in_foreground: a flag which indicates if menu is currently displayed. If it's not active, inhibits any of menu's actions which can interfere with other menu or UI element being displayed.
-        first_displayed_entry: Internal flag which points to the number of self.contents element which is at the topmost position of the menu as it's currently displayed on the screen
-        last_displayed_entry: Internal flag which points to the number of self.contents element which is at the lowest position of the menu as it's currently displayed on the screen
+
+    * ``contents``: list of menu elements
+       
+      Menu element structure is a list, where:
+         * ``element[0]`` (element's representation) is either a string, which simply has the element's value as it'll be displayed, such as "Menu element 1", or, in case of entry_height > 1, can be a list of strings, each of which represents a corresponding display row occupied by the element.
+         * ``element[1]`` (element's callback) is a function which is called when menu's element is activated (such as pressing ENTER button when menu's element is selected). 
+           * Can be omitted if you don't need to have any actions taken upon activation of the element.
+           * Can be specified as 'exit' if you want a menu element that exits the menu upon activation.
+
+      *If you want to set contents after the initalisation, please, use set_contents() method.*
+    * ``pointer``: currently selected menu element's number in ``self.contents``.
+    * ``in_background``: a flag which indicates if menu is currently active, either if being displayed or being in background (for example, if a sub-menu of this menu is currently active)
+    * ``in_foreground`` : a flag which indicates if menu is currently displayed. If it's not active, inhibits any of menu's actions which can interfere with other menu or UI element being displayed.
+    * ``first_displayed_entry`` : Internal flag which points to the number of ``self.contents`` element which is at the topmost position of the menu as it's currently displayed on the screen
+    * ``last_displayed_entry`` : Internal flag which points to the number of ``self.contents`` element which is at the lowest position of the menu as it's currently displayed on the screen
+
     """
     contents = []
     pointer = 0
@@ -43,11 +45,11 @@ class Menu():
         """Initialises the Menu object.
         
         Args:
-            contents: a list of values, which can be constructed as described in the Menu object's docstring.
-            i, o: input&output device objects
+            *``contents``: a list of values, which can be constructed as described in the Menu object's docstring.
+            *``i``, ``o``: input&output device objects
         Kwargs:
-            name: Menu name which can be used internally and for debugging.
-            entry_height: number of display rows one menu element occupies.
+            *``name``: Menu name which can be used internally and for debugging.
+            *``entry_height``: number of display rows one menu element occupies.
         """
         self.i = i
         self.o = o
@@ -58,7 +60,7 @@ class Menu():
         self.set_display_callback(o.display_data)
 
     def to_foreground(self):
-        """ Is called when menu's activate() method is used to set flags and perform all the actions so that menu can display its contents and receive keypresses. Also, updates the output device with rendered currently displayed menu elements."""
+        """ Is called when menu's ``activate()`` method is used, sets flags and performs all the actions so that menu can display its contents and receive keypresses. Also, updates the output device with rendered currently displayed menu elements."""
         logging.info("menu {0} enabled".format(self.name))    
         self.in_background = True
         self.in_foreground = True
@@ -67,12 +69,12 @@ class Menu():
 
     @to_be_foreground
     def to_background(self):
-        """ Signals menu.activate to finish executing """
+        """ Signals ``activate`` to finish executing """
         self.in_foreground = False
         logging.info("menu {0} disabled".format(self.name))    
 
     def activate(self):
-        """ A method which is called when menu needs to start operating. Is blocking, sets up input&output devices, renders the menu and waits until self.to_background is called, while menu callbacks are executed from the input device thread."""
+        """ A method which is called when menu needs to start operating. Is blocking, sets up input&output devices, renders the menu and waits until self.in_background is False, while menu callbacks are executed from the input device thread."""
         logging.info("menu {0} activated".format(self.name))    
         self.to_foreground() 
         while self.in_background: #All the work is done in input callbacks
@@ -97,8 +99,8 @@ class Menu():
     @to_be_foreground
     def move_down(self):
         """ Moves the pointer one element down, if possible. 
-        Is typically used as a callback from input event processing thread.
-        TODO: support going from bottom to top when pressing "down" with last menu element selected."""
+        |Is typically used as a callback from input event processing thread.
+        |TODO: support going from bottom to top when pressing "down" with last menu element selected."""
         if self.pointer < (len(self.contents)-1):
             logging.debug("moved down")
             self.pointer += 1  
@@ -110,8 +112,8 @@ class Menu():
     @to_be_foreground
     def move_up(self):
         """ Moves the pointer one element up, if possible. 
-        Is typically used as a callback from input event processing thread.
-        TODO: support going from top to bottom when pressing "up" with first menu element selected."""
+        |Is typically used as a callback from input event processing thread.
+        |TODO: support going from top to bottom when pressing "up" with first menu element selected."""
         if self.pointer != 0:
             logging.debug("moved up")
             self.pointer -= 1
@@ -123,9 +125,9 @@ class Menu():
     @to_be_foreground
     def select_element(self):
         """ Gets the currently specified element's description from self.contents and executes the callback, if set.
-        Is typically used as a callback from input event processing thread.
-        Re-sets the keymap and 
-        If menu has no elements, exits the menu."""
+        |Is typically used as a callback from input event processing thread.
+        |After callback's execution is finished, sets the keymap again and refreshes the screen.
+        |If menu has no elements, exits the menu."""
         logging.debug("element selected")
         self.to_background()
         if len(self.contents) == 0:
@@ -149,7 +151,7 @@ class Menu():
         self.keymap = keymap
 
     def set_contents(self, contents):
-        """Sets the menu contents, as well as additionally re-sets last&first_displayed_entry pointers and calculates the value for last_displayed_entry pointer."""
+        """Sets the menu contents, as well as additionally re-sets ``last`` & ``first_displayed_entry`` pointers and calculates the value for ``last_displayed_entry`` pointer."""
         self.contents = contents
         self.process_contents()
         #Calculating the pointer to last element displayed
@@ -189,8 +191,8 @@ class Menu():
 
     def get_displayed_data(self):
         """Generates the displayed data in a way that the output device accepts. The output of this function can be fed in the o.display_data function.
-        Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed elements' numbers, renders each one of them and concatenates them into one big list which it returns.
-        Doesn't support partly-rendering entries yet."""
+        |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed elements' numbers, renders each one of them and concatenates them into one big list which it returns.
+        |Doesn't support partly-rendering entries yet."""
         displayed_data = []
         if len(self.contents) == 0:
             return ["No menu entries"]
