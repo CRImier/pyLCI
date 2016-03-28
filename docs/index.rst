@@ -31,8 +31,9 @@ The pyLCI framework consists of 5 parts:
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
+   ui.rst
 
 Indices and tables
 ==================
