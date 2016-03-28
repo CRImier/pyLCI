@@ -41,7 +41,7 @@ class Menu():
     first_displayed_entry = 0
     last_displayed_entry = None
 
-    def __init__(self, contents, o, i, name="Menu", entry_height=1):
+    def __init__(self, contents, o, i, name="Menu", entry_height=1, append_exit=True):
         """Initialises the Menu object.
         
         Args:
@@ -53,12 +53,14 @@ class Menu():
 
             * ``name``: Menu name which can be used internally and for debugging.
             * ``entry_height``: number of display rows one menu element occupies.
+            * ``append_exit``: Appends an "Exit" alement to menu elements. Doesn't do it if any of elements has callback set as 'exit'.
 
         """
         self.i = i
         self.o = o
         self.entry_height = entry_height
         self.name = name
+        self.append_exit = append_exit
         self.generate_keymap()
         self.set_contents(contents)
         self.set_display_callback(o.display_data)
@@ -156,6 +158,9 @@ class Menu():
 
     def set_contents(self, contents):
         """Sets the menu contents, as well as additionally re-sets ``last`` & ``first_displayed_entry`` pointers and calculates the value for ``last_displayed_entry`` pointer."""
+        if self.append_exit: 
+            if 'exit' not in [element[1] for element in contents if len(element)>1]: #Checking if 'exit' is alread there
+                contents.append(["Exit", 'exit')
         self.contents = contents
         self.process_contents()
         #Calculating the pointer to last element displayed
