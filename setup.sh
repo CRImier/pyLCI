@@ -1,4 +1,4 @@
-INSTALL_DIR="/opt/lcs"
+INSTALL_DIR="/opt/pylci"
 SUDO=''
 if (( $EUID != 0 )); then
     SUDO='sudo'
@@ -8,8 +8,8 @@ $SUDO pip install evdev
 $SUDO mkdir -p $INSTALL_DIR
 $SUDO cp ./. $INSTALL_DIR -R
 cd $INSTALL_DIR
-$SUDO cp lcs.service /etc/systemd/system/
+$SUDO cp pylci.service /etc/systemd/system/
 $SUDO systemctl daemon-reload
-$SUDO systemctl enable lcs.service
+$SUDO systemctl enable pylci.service
 #Start it maybe?
 

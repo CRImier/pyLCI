@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 import sys
-#Welcome to pyLCS innards
+#Welcome to pyLCI innards
 #Here, things are about i and o, which are input and output
 #And we output things for debugging, so o goes first.
 from output import output
 
 #These lines are here so that welcome screen stays on a little longer:
 o = output.screen
-o.display_data("Welcome to", "pyLCS")
+o.display_data("Welcome to", "pyLCI")
 
 try:
-    #All the LCS-related modules are imported here
+    #All the LCI-related modules are imported here
     from input import input
     from ui.menu import Menu
     #Now we init the input.
@@ -52,7 +52,7 @@ def exception_wrapper(callback):
         o.display_data("A wild exception", "appears!")
         raise
     else:
-        o.display_data("Exiting pyLCS")
+        o.display_data("Exiting pyLCI")
     finally:
         input.driver.stop() #Might be needed for some input drivers, such as PiFaceCAD. 
         sys.exit(1)
@@ -80,7 +80,7 @@ def load_app(name):
     return app    
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="pyLCS runner")
-    parser.add_argument('-a', '--app', action="store", help="Launch pyLCS with a single app loaded (useful for testing)", default=None)
+    parser = argparse.ArgumentParser(description="pyLCI runner")
+    parser.add_argument('-a', '--app', action="store", help="Launch pyLCI with a single app loaded (useful for testing)", default=None)
     args = parser.parse_args()
     launch(name=args.app)

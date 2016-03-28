@@ -1,0 +1,12 @@
+[Unit]
+Description=Python-based Linux Control Interface
+
+[Service]
+User=root
+Group=root
+PIDFile=/run/pylci.pid
+ExecStart=/opt/pylci/main.py 
+WorkingDirectory=/opt/pylci
+
+[Install]
+WantedBy=graphical.target

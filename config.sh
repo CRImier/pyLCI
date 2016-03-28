@@ -62,7 +62,7 @@ def radio_choice(strings, prompt="Choose one:"):
             break
     return choice
 
-print("Hello! I'm glad that you've chosen pyLCS")
+print("Hello! I'm glad that you've chosen pyLCI")
 print("Let me help you out with installing necessary Python modules and utilities.")
 print("Feel free to restart this script if you screwed up")
 
