@@ -13,9 +13,6 @@ Contents:
 
 .. autofunction:: Printer
 
-Indices and tables
-==================
-
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`

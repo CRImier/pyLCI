@@ -10,16 +10,13 @@ Using UI elements in your applications is as easy as doing:
 
 and initialising them, passing your UI element contents and parameters, as well as input and output device objects as initialisation arguments.
 
-Contents:
+UI elements:
 
 .. toctree::
    :maxdepth: 1
 
    ui/menu.rst
    ui/printer.rst
-
-Indices and tables
-==================
 
 * :ref:`genindex`
 * :ref:`modindex`
