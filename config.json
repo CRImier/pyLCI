@@ -1,7 +1,7 @@
 {
  "input":
     [{
-      "driver":"pcf8574_buttons",
+      "driver":"pcf8574",
       "kwargs":
        {
         "addr":62,
