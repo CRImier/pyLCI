@@ -1,17 +1,16 @@
 #####################
-Printer UI element
+PCF8574 input driver
 #####################
 
-``from ui import Printer``
 
 Contents:
 
 .. toctree::
-   :maxdepth: 2
 
-.. automodule:: ui.printer
-
-.. autofunction:: Printer
+.. automodule:: input.drivers.pcf8574
+ 
+.. autoclass:: InputDevice
+    :members:
 
 * :ref:`genindex`
 * :ref:`modindex`

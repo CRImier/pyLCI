@@ -14,7 +14,7 @@ It can be used on:
 Guides:
 =================================
 
-* Setup and configuration guide
+* :doc:`Setup and configuration guide <setup>`
 * Debugging issues
 * Managing applications
 * Developing applications
@@ -23,7 +23,7 @@ It has two parts - the software part (pyLCI daemon) and the hardware part - typi
 
 The pyLCI framework consists of 5 parts:
 
-#. Input modules
+#. :doc:`Input modules <input>`
 #. Output modules
 #. :doc:`UI elements <ui>`
 #. Applications
@@ -33,7 +33,6 @@ The pyLCI framework consists of 5 parts:
 .. toctree::
    :maxdepth: 1
 
-   ui.rst
 
 Indices and tables
 ==================
