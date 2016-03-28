@@ -53,23 +53,23 @@ class Screen():
         self.send(char_code, self.rs_mask)
 
     def display_init(self, bl=True):
-        delay(1.0)
+        delay(20)
         self.write4bits(0x30)
-        delay(4.5)
+        delay(20)
         self.write4bits(0x30)
-        delay(4.5)
+        delay(20)
         self.write4bits(0x30)
-        delay(0.15)
+        delay(20)
         self.write4bits(0x20)
         self.command(0x20|0x08)
-        self.command(0x04|0x08, delay=80.0)
+        self.command(0x04|0x08, delay=100)
         self.clear()
         self.command(0x04|0x02)
-        delay(3)
+        delay(20)
         if bl:
             self.enable_backlight()
 
-    def command(self, value, delay = 50.0):
+    def command(self, value, delay = 300.0):
         self.send(value, 0)
         delayMicroseconds(delay)
         
