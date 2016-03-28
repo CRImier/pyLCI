@@ -90,8 +90,7 @@ class Menu():
         else:
             if len(self.contents[self.pointer]) > 1:
                 self.contents[self.pointer][1]()
-        self.set_keymap()        
-        if self.in_background:
+        if self.in_background: #This check is in place so that you can have an 'exit' element
             self.to_foreground()
 
     def generate_keymap(self):
