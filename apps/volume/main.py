@@ -5,7 +5,7 @@ volume_up_value = "400+"
 volume_down_value = "400-"
 
 from subprocess import call
-from ui.menu import Menu
+from ui import Menu
 
 #amixer commands
 def amixer_command(*command):
@@ -39,6 +39,6 @@ main_menu_contents = [
 def init_app(input, output):
     global main_menu, callback, i, o
     i = input; o = output
-    main_menu = Menu(main_menu_contents, o, i, "Volume menu")
+    main_menu = Menu(main_menu_contents, i, o, "Volume menu")
     callback = main_menu.activate
 

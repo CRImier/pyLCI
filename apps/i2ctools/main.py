@@ -1,7 +1,7 @@
 menu_name = "I2C tools"
 
 from subprocess import call
-from ui.menu import Menu
+from ui import Menu
 
 from time import sleep
 
@@ -51,6 +51,6 @@ main_menu_contents = [
 def init_app(input, output):
     global main_menu, callback, i, o
     i = input; o = output
-    main_menu = Menu(main_menu_contents, o, i, "I2C tools")
+    main_menu = Menu(main_menu_contents, i, o, "I2C tools")
     callback = main_menu.activate
 

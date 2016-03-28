@@ -8,7 +8,7 @@ o = None
 
 from time import sleep
 
-from ui.menu import Menu
+from ui import Menu
 
 import wpa_cli
 
@@ -18,7 +18,7 @@ def show_networks():
     for network in networks:
         network_menu_contents.append([network['ssid'], lambda x=network: network_info_menu(x)])
     network_menu_contents.append(["Exit", 'exit'])
-    network_menu = Menu(network_menu_contents, o, i, "Wireless network menu")
+    network_menu = Menu(network_menu_contents, i, o, "Wireless network menu")
     network_menu.activate()
 
 def network_info_menu(network_info):
@@ -29,7 +29,7 @@ def network_info_menu(network_info):
     #["Open" if wpa_cli.is_open_network(network_info) else "Secured", lambda x=network_info['flags']: print_to_display(x, sleep_time=5)],
     ["Open" if wpa_cli.is_open_network(network_info) else "Secured"],
     ["Exit", 'exit']]
-    network_info_menu = Menu(network_info_contents, o, i, "Wireless network info")
+    network_info_menu = Menu(network_info_contents, i, o, "Wireless network info")
     network_info_menu.activate()
 
 """    
@@ -95,7 +95,7 @@ def wireless_status():
     status_menu_contents.append([['IP address:',w_status['ip_address'] if 'ip_address' in w_status else 'None']])
     #We also always have WiFi MAC address as 'address'
     status_menu_contents.append(['MAC: '+w_status['address']])
-    status_menu = Menu(status_menu_contents, o, i, "Wireless status menu", entry_height=2)
+    status_menu = Menu(status_menu_contents, i, o, "Wireless status menu", entry_height=2)
     status_menu.activate()
 
 def change_interface():
@@ -105,7 +105,7 @@ def change_interface():
     for interface in interfaces:
         menu_contents.append([interface, lambda x=interface: change_current_interface(x)])
     menu_contents.append(["Exit", 'exit'])
-    interface_menu = Menu(menu_contents, o, i, "Interface change menu")
+    interface_menu = Menu(menu_contents, i, o, "Interface change menu")
     interface_menu.activate()
 
 def change_current_interface(interface):
@@ -128,18 +128,6 @@ def init_app(input, output):
     #["Saved networks", manage_saved_networks],
     ["Exit", 'exit']]
     i = input; o = output
-    main_menu = Menu(main_menu_contents, o, i, "wpa_cli main menu")
+    main_menu = Menu(main_menu_contents, i, o, "wpa_cli main menu")
     callback = main_menu.activate
     
-
-#main_menu.activate = activate_wrapper(main_menu.activate)
-
-"""def activate_wrapper(activate_cb):
-    def wrapper():
-        update_if_menu_contents()
-        try:
-            activate_cb()
-        except wpa_cli
-            wpa_cli.()
-    return wrapper"""
-

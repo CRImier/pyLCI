@@ -1,7 +1,7 @@
 menu_name = "MOCP control"
 
 from subprocess import call
-from ui.menu import Menu
+from ui import Menu
 
 #Some globals for LCS
 main_menu = None
@@ -36,6 +36,6 @@ main_menu_contents = [
 def init_app(input, output):
     global main_menu, callback, i, o
     i = input; o = output
-    main_menu = Menu(main_menu_contents, o, i, "MOCP menu")
+    main_menu = Menu(main_menu_contents, i, o, "MOCP menu")
     callback = main_menu.activate
 

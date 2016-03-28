@@ -1,7 +1,7 @@
 menu_name = "App name as seen in main menu"
 
 from subprocess import call
-from ui.menu import Menu
+from ui import Menu
 from time import sleep
 
 def call_internal():
@@ -30,6 +30,6 @@ main_menu_contents = [
 def init_app(input, output):
     global main_menu, callback, i, o
     i = input; o = output
-    main_menu = Menu(main_menu_contents, o, i, "Skeleton app menu")
+    main_menu = Menu(main_menu_contents, i, o, "Skeleton app menu")
     callback = main_menu.activate
 

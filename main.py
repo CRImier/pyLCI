@@ -41,7 +41,7 @@ def launch(name=None):
         exception_wrapper(app.callback)
     else:
         app_menu_contents = load_all_apps()
-        app_menu = Menu(app_menu_contents, o, i, "App menu")
+        app_menu = Menu(app_menu_contents, i, o, "App menu")
         exception_wrapper(app_menu.activate)
 
 def exception_wrapper(callback):

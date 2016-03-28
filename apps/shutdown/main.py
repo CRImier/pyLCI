@@ -1,7 +1,7 @@
 menu_name = "Shutdown&reboot"
 
 from subprocess import call
-from ui.menu import Menu
+from ui import Menu
 
 
 def shutdown():
@@ -30,6 +30,6 @@ main_menu_contents = [
 def init_app(input, output):
     global main_menu, callback, i, o
     i = input; o = output
-    main_menu = Menu(main_menu_contents, o, i, "Shutdown menu")
+    main_menu = Menu(main_menu_contents, i, o, "Shutdown menu")
     callback = main_menu.activate
 

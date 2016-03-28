@@ -9,17 +9,17 @@ o = None
 from subprocess import call
 from time import sleep
 
-from ui.menu import Menu
+from ui import Menu
 from if_info import parse_ip_addr
 
 def show_ifc_data(ifc_name, ifc_data):
     ifd_menu_contents = [
-    ["state: "+str(ifc_data['state']), lambda: True],
-    ["IP: "+str(ifc_data['addr']), lambda: True],
-    ["IP6: "+str(ifc_data['addr6']), lambda: True],
-    ["MAC: "+str(ifc_data['ph_addr']), lambda: True]
+    ["state: "+str(ifc_data['state'])],
+    ["IP: "+str(ifc_data['addr'])],
+    ["IP6: "+str(ifc_data['addr6'])],
+    ["MAC: "+str(ifc_data['ph_addr'])]
     ]
-    ifd_menu = Menu(ifd_menu_contents, o, i, "{} interface data menu".format(ifc_name), entry_height=2)
+    ifd_menu = Menu(ifd_menu_contents, i, o, "{} interface data menu".format(ifc_name), entry_height=2)
     ifd_menu.activate()
 
 def update_if_menu_contents():
@@ -42,7 +42,7 @@ def activate_wrapper(activate_cb):
 def init_app(input, output):
     global if_menu, callback, i, o
     i = input; o = output
-    if_menu = Menu([], o, i, "Interface selection menu")
+    if_menu = Menu([], i, o, "Interface selection menu")
     if_menu.activate = activate_wrapper(if_menu.activate) #Decorating around the menu.activate module so that every time menu is activated interface data is refreshed
     callback = if_menu.activate
     

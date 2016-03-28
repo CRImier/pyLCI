@@ -41,7 +41,7 @@ class Menu():
     first_displayed_entry = 0
     last_displayed_entry = None
 
-    def __init__(self, contents, o, i, name="Menu", entry_height=1, append_exit=True):
+    def __init__(self, contents, i, o, name="Menu", entry_height=1, append_exit=True):
         """Initialises the Menu object.
         
         Args:
