@@ -160,7 +160,7 @@ class Menu():
         """Sets the menu contents, as well as additionally re-sets ``last`` & ``first_displayed_entry`` pointers and calculates the value for ``last_displayed_entry`` pointer."""
         if self.append_exit: 
             if 'exit' not in [element[1] for element in contents if len(element)>1]: #Checking if 'exit' is alread there
-                contents.append(["Exit", 'exit')
+                contents.append(["Exit", 'exit'])
         self.contents = contents
         self.process_contents()
         #Calculating the pointer to last element displayed
@@ -206,23 +206,23 @@ class Menu():
         if len(self.contents) == 0:
             return ["No menu entries"]
         if self.pointer < self.first_displayed_entry:
-            print("Pointer went too far to top, correcting")
+            #print("Pointer went too far to top, correcting")
             self.last_displayed_entry -=  self.first_displayed_entry - self.pointer #The difference will mostly be 1 but I guess it might be more in case of concurrency issues
             self.first_displayed_entry = self.pointer
-            print("First displayed entry is {}".format(self.first_displayed_entry))
-            print("Last displayed entry is {}".format(self.last_displayed_entry))
+            #print("First displayed entry is {}".format(self.first_displayed_entry))
+            #print("Last displayed entry is {}".format(self.last_displayed_entry))
         if self.pointer > self.last_displayed_entry:
-            print("Pointer went too far to bottom, correcting")
+            #print("Pointer went too far to bottom, correcting")
             self.first_displayed_entry += self.pointer - self.last_displayed_entry 
             self.last_displayed_entry = self.pointer
-            print("First displayed entry is {}".format(self.first_displayed_entry))
-            print("Last displayed entry is {}".format(self.last_displayed_entry))
+            #print("First displayed entry is {}".format(self.first_displayed_entry))
+            #print("Last displayed entry is {}".format(self.last_displayed_entry))
         disp_entry_positions = range(self.first_displayed_entry, self.last_displayed_entry+1)
-        print("Displayed entries: {}".format(disp_entry_positions))
+        #print("Displayed entries: {}".format(disp_entry_positions))
         for entry_num in disp_entry_positions:
             displayed_entry = self.render_displayed_entry(entry_num, active=entry_num == self.pointer)
             displayed_data += displayed_entry
-        print("Displayed data: {}".format(displayed_data))
+        #print("Displayed data: {}".format(displayed_data))
         return displayed_data
 
     def render_displayed_entry(self, entry_num, active=False):
