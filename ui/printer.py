@@ -6,7 +6,7 @@ def Printer(message, i, o, sleep_time=1, skippable=False):
     Args:                                                                    
                                                                              
         * ``message``: A string or list of strings to display. A string will be split into a list, a list will not be modified. The resulting list is then displayed string-by-string.
-        * ``i``, ``o``: input&output device objects                          
+        * ``i``, ``o``: input&output device objects. If you're not using skippable=True, feel free to pass None as i.
                                                                              
     Kwargs:                                                                  
                                                                                  
