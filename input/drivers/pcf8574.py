@@ -31,7 +31,7 @@ class InputDevice():
         """
         self.bus_num = bus
         self.bus = smbus.SMBus(self.bus_num)
-        self.addr = 0x3e
+        self.addr = addr
         self.int_pin = int_pin
 
     def start(self):
@@ -66,10 +66,11 @@ class InputDevice():
         button_states = []
         while not self.stop_flag:
             data = (~self.bus.read_byte(self.addr)&0xFF)
+            print(data)
             if data != self.previous_data:
                 self.process_data(data)
                 self.previous_data = data
-            sleep(0.1)
+            sleep(0.01)
 
     def process_data(self, data):
         """Checks data received from IO expander and classifies changes as either "button up" or "button down" events. On "button up", calls send_key with the corresponding button name from ``self.mapping``. """
@@ -98,5 +99,5 @@ class InputDevice():
 
 
 if __name__ == "__main__":
-    id = InputDevice(addr = 0x3e, int_pin = 4)
+    id = InputDevice(addr = 0x3f)
     id.start()
