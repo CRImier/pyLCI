@@ -10,7 +10,7 @@ try:
 except ImportError:
     import pickle
 import socket
-debug = True
+debug = False
 
 listener = None
 driver = None
@@ -205,7 +205,7 @@ class KeyListener():
         except IOError as e: 
             if e.errno == 11:
                 #Okay, this error sometimes appears out of blue when I press buttons on a keyboard. Moreover, it's uncaught but due to some logic I don't understand yet the whole thing keeps running. I need to research it.
-                print("That error again. Need to learn to ignore it somehow.")
+                if debug: print("That error again. Need to learn to ignore it somehow.")
         finally:
             self.listening = False
 
