@@ -46,7 +46,7 @@ class Menu():
         logging.info("menu {0} activated".format(self.name))    
         self.to_foreground() 
         while self.in_background: #All the work is done in input callbacks
-            sleep(1)
+            sleep(0.1)
         logging.debug(self.name+" exited")
         return True
 
