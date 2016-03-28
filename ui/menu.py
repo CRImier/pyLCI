@@ -45,11 +45,15 @@ class Menu():
         """Initialises the Menu object.
         
         Args:
-            *``contents``: a list of values, which can be constructed as described in the Menu object's docstring.
-            *``i``, ``o``: input&output device objects
+
+            * ``contents``: a list of values, which can be constructed as described in the Menu object's docstring.
+            * ``i``, ``o``: input&output device objects
+
         Kwargs:
-            *``name``: Menu name which can be used internally and for debugging.
-            *``entry_height``: number of display rows one menu element occupies.
+
+            * ``name``: Menu name which can be used internally and for debugging.
+            * ``entry_height``: number of display rows one menu element occupies.
+
         """
         self.i = i
         self.o = o
