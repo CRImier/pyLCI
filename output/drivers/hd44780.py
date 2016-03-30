@@ -68,11 +68,12 @@ class HD44780():
     displaycontrol = 0x0c
     displaymode = 0x07
 
-    def __init__(self, cols=16, rows=2, debug=False):
+    def __init__(self, cols = 16, rows=2, debug = False):
         self.cols = cols
         self.rows = rows
+        self.debug = debug
 
-    def init_display(self):
+    def init_display(self, autoscroll=True):
         self.write_byte(0x30)  # initialization
         delay(20)
         self.write_byte(0x30)  # initialization
@@ -83,6 +84,10 @@ class HD44780():
         self.write_byte(self.display_function)
         self.write_byte(0x08)
         self.display()
+        if autoscroll:
+            self.autoscroll()
+        else:
+            self.noAutoscroll()
         self.clear()
 
     def display_data(self, *args):
@@ -95,12 +100,6 @@ class HD44780():
     def println(self, line):
         for char in line:
             self.write_byte(ord(char), char_mode=True)     
-
-    def write_byte(self, byte, char_mode=False):
-        if self.debug and not char_mode:
-            print(hex(byte))
-        self.write4bits(byte >> 4, char_mode)
-        self.write4bits(byte & 0x0F, char_mode)
 
     def home(self):
         self.write_byte(self.LCD_RETURNHOME)  # set cursor position to zero
