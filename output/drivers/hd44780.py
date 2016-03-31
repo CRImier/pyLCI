@@ -73,7 +73,7 @@ class HD44780():
         self.rows = rows
         self.debug = debug
 
-    def init_display(self, autoscroll=True):
+    def init_display(self, autoscroll=False):
         self.write_byte(0x30)  # initialization
         delay(20)
         self.write_byte(0x30)  # initialization
