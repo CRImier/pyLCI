@@ -19,15 +19,16 @@ class Screen(HD44780):
 
     data_mask = 0x00
 
-    def __init__(self, cols = 16, rows = 2, addr=0x27, bus=1):
-        self.cols = cols
-        self.rows = rows        
-        self.bus_num = bus
-        HD44780.__init__(self, rows=rows, cols=cols, debug=True)
+    def __init__(self, **kwargs):
+        self.bus_num = kwargs.pop("bus", 1)
         self.bus = smbus.SMBus(self.bus_num)
-        self.addr = addr
-        #self.display_init(bl=True)
-        self.init_display(autoscroll=False)
+        self.addr = kwargs.pop("addr", 0x27)
+        self.debug = kwargs.pop("debug", False)
+        rows = kwargs.pop("rows", 2)
+        cols = kwargs.pop("cols", 16)
+        HD44780.__init__(self, rows = rows, cols = cols, debug = self.debug)
+        self.init_display(**kwargs)
+        self.enable_backlight()
         
     def enable_backlight(self):
         self.data_mask = self.data_mask|self.backlight_mask
@@ -35,23 +36,6 @@ class Screen(HD44780):
     def disable_backlight(self):
         self.data_mask = self.data_mask& ~self.backlight_mask
        
-    def display_init(self, bl=True):
-        delay(20)
-        self.write_byte(0x30)
-        delay(20)
-        self.write_byte(0x30)
-        delay(20)
-        self.write_byte(0x30)
-        delay(20)
-        self.write_byte(0x02)
-        self.write_byte(0x20|0x08)
-        self.write_byte(0x04|0x08)
-        self.clear()
-        self.write_byte(0x04|0x02)
-        delay(20)
-        if bl:
-            self.enable_backlight()
-
     def write_byte(self, data, char_mode = False):
         if self.debug and not char_mode:
             print(hex(data))
@@ -71,11 +55,13 @@ class Screen(HD44780):
        
 
 if __name__ == "__main__":
-    screen = Screen(bus=1, addr=0x26, cols=16, rows=2)
+    screen = Screen(bus=1, addr=0x26, cols=16, rows=2, autoscroll=False)
     line = "01234567890123456789"
-    screen.enable_backlight()
     while True:
         screen.display_data(line, line[::-1])
         sleep(1)      
         screen.display_data(line[::-1], line)
         sleep(1)      
+
+
+

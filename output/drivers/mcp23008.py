@@ -12,12 +12,12 @@ from hd44780 import HD44780
 class Screen(HD44780):
 
     def __init__(self, **kwargs):
-        self.bus_num = kwargs.pop("bus")
+        self.bus_num = kwargs.pop("bus", 1)
         self.bus = smbus.SMBus(self.bus_num)
-        self.addr = kwargs.pop("addr")
-        self.debug = kwargs.pop("debug")
-        rows = kwargs.pop("rows")
-        cols = kwargs.pop("cols")
+        self.addr = kwargs.pop("addr", 0x27)
+        self.debug = kwargs.pop("debug", False)
+        rows = kwargs.pop("rows", 2)
+        cols = kwargs.pop("cols", 16)
         HD44780.__init__(self, rows = rows, cols = cols, debug = self.debug)
         self.i2c_init()
         self.init_display(**kwargs)
