@@ -8,17 +8,18 @@ Sample config.json section:
 
 .. code:: json
 
-    "input":
+    "output":
        [{
          "driver":"pfcad"
        }]
 
 
+
 .. toctree::
 
-.. automodule:: input.drivers.pfcad
+.. automodule:: output.drivers.pfcad
  
-.. autoclass:: InputDevice
+.. autoclass:: Screen
     :members:
     :special-members:
 

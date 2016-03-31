@@ -19,6 +19,7 @@ def delay(milliseconds):
 
 
 class HD44780():
+    """An object that provides high-level functions for interaction with display. It contains all the high-level logic and exposes an interface for system and applications to use."""
 
     # commands
     LCD_CLEARDISPLAY        = 0x01
@@ -69,11 +70,24 @@ class HD44780():
     displaymode = 0x07
 
     def __init__(self, cols = 16, rows=2, debug = False):
+        """ Sets variables for high-level functions.
+        
+        Kwargs:
+
+           * ``rows`` (default=2): rows of the connected display
+           * ``cols`` (default=16): columns of the connected display
+           * ``debug`` (default=False): debug mode which prints out the commands sent to display"""
         self.cols = cols
         self.rows = rows
         self.debug = debug
 
     def init_display(self, autoscroll=False):
+        """Initializes HD44780 controller. 
+
+        Kwargs:
+        
+        * ``autoscroll``: Controls whether autoscroll-on-char-print is enabled upon initialization. 
+        """
         self.write_byte(0x30)  # initialization
         delay(20)
         self.write_byte(0x30)  # initialization
@@ -91,6 +105,9 @@ class HD44780():
         self.clear()
 
     def display_data(self, *args):
+        """Displays data on display.
+        
+        ``*args`` is a list of strings, where each string fills each row of the display, starting with 0."""
         self.clear()
         args = args[:self.rows]
         for line, arg in enumerate(args):
@@ -98,19 +115,22 @@ class HD44780():
             self.println(arg[:self.cols].ljust(self.cols))
 
     def println(self, line):
+        """Prints a line on the screen (assumes position is set as intended)"""
         for char in line:
             self.write_byte(ord(char), char_mode=True)     
 
     def home(self):
+        """Returns cursor to home position. If the display is being scrolled, reverts scrolled data to initial position.."""
         self.write_byte(self.LCD_RETURNHOME)  # set cursor position to zero
         delayMicroseconds(3000)  # this command takes a long time!
 
     def clear(self):
+        """Clears the display."""
         self.write_byte(self.LCD_CLEARDISPLAY)  # command to clear display
         delayMicroseconds(3000)  # 3000 microsecond sleep, clearing the display takes a long time
 
     def setCursor(self, row, col):
-        """ Set current input cursor to row and column specified """
+        """ Set current input cursor to ``row`` and ``column`` specified """
         self.write_byte(self.LCD_SETDDRAMADDR | (col + self.row_offsets[row]))
 
     def noDisplay(self):

@@ -23,8 +23,8 @@ It has two parts - the software part (pyLCI daemon) and the hardware part - typi
 
 The pyLCI framework consists of 5 parts:
 
-#. :doc:`Input modules <input>`
-#. Output modules
+#. :doc:`Input system <input>`
+#. :doc:`Output system <output>`
 #. :doc:`UI elements <ui>`
 #. Applications
 #. Glue logic (mostly main.py)

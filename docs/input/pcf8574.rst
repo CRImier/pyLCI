@@ -2,8 +2,20 @@
 PCF8574 input driver
 #####################
 
+It works with PCF8574 IO expanders. You can see an guide on modifying them and connecting them to buttons & I2C `here. <http://www.instructables.com/id/Raspberry-Pi-Using-1-I2C-LCD-Backpacks-for-1602-Sc/>`__
 
-Contents:
+.. code:: json
+
+    "input":
+       [{
+         "driver":"pcf8574",
+         "kwargs":
+          {
+           "addr":63,
+           "int_pin":4
+          }
+       }]
+
 
 .. toctree::
 
@@ -11,6 +23,7 @@ Contents:
  
 .. autoclass:: InputDevice
     :members:
+    :special-members:
 
 * :ref:`genindex`
 * :ref:`modindex`

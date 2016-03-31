@@ -8,14 +8,14 @@ class InputDevice():
     It supports both interrupt-driven mode (as fr now, RPi-only) and polling mode."""
 
     mapping = [
+    "KEY_KPENTER",
+    "KEY_DELETE",
+    "KEY_END",
     "KEY_DOWN",
     "KEY_UP",
-    "KEY_KPENTER",
-    "KEY_LEFT",
     "KEY_HOME",
-    "KEY_END",
-    "KEY_RIGHT",
-    "KEY_DELETE"]
+    "KEY_LEFT",
+    "KEY_RIGHT"]
     stop_flag = False
     previous_data = 0
 
@@ -25,8 +25,8 @@ class InputDevice():
         Kwargs:                                                                  
                                                                                  
             * ``bus``: I2C bus number.
-            * ``sleep_time``: I2C address of the expander.
-            * ``skippable``: GPIO pin to which INT pin of the expander is connected. If supplied, interrupt-driven mode is used, otherwise, library reverts to polling mode.
+            * ``addr``: I2C address of the expander.
+            * ``int_pin``: GPIO pin to which INT pin of the expander is connected. If supplied, interrupt-driven mode is used, otherwise, library reverts to polling mode.
 
         """
         self.bus_num = bus

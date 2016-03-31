@@ -2,16 +2,20 @@
 Raspberry Pi GPIO input driver
 ##############################
 
+This driver works with HD44780-screens connected to Raspberry Pi GPIO. The screen connected has to have its RW pin tied to ground.
+
 Sample config.json:
 
 .. code:: json
 
-    "input":
+    "output":
        [{
          "driver":"pi_gpio",
          "kwargs":
           {
-           "button_pins":[25, 24, 23, 18, 22, 27, 17, 4]
+           "pins":[25, 24, 23, 18],
+           "en_pin":4,
+           "en_pin":17
           }
        }]
 
@@ -19,9 +23,9 @@ Sample config.json:
 
 .. toctree::
 
-.. automodule:: input.drivers.pi_gpio
+.. .. automodule:: output.drivers.pi_gpio
  
-.. autoclass:: InputDevice
+.. .. autoclass:: Screen
     :members:
     :special-members:
 

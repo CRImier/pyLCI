@@ -5,8 +5,6 @@ from time import sleep
 import Queue
 from helpers.config_parse import read_config
 
-
-
 listener = None
 driver = None
 
@@ -24,6 +22,7 @@ class InputListener():
         self.set_keymap(keymap)
 
     def receive_key(self, key):
+        """ This is the method that receives keypresses from drivers and puts them into ``self.queue`` for ``self.event_loop`` to receive """
         try:
             self.queue.put(key)
         except:
@@ -34,11 +33,11 @@ class InputListener():
         self.keymap[key_name] = callback
 
     def remove_callback(self, key_name):
-        """Sets a single callback of the listener"""
+        """Removes a single callback of the listener"""
         self.keymap.remove(key_name)
 
     def set_keymap(self, keymap):
-        """Sets all the callbacks supplied, removing previously set"""
+        """Sets all the callbacks supplied, removing the previously set keymap completely"""
         self.keymap = keymap
 
     def replace_keymap_entries(self, keymap):
@@ -51,7 +50,7 @@ class InputListener():
         self.keymap.clear()
 
     def event_loop(self):
-        """Blocking event loop which just calls supplied callbacks in the keymap."""
+        """Blocking event loop which just calls callbacks in the keymap once corresponding keys are received in the ``self.queue``."""
         self.listening = True
         try:
             while not self.stop_flag:
@@ -80,12 +79,17 @@ class InputListener():
         return True
 
     def stop_listen(self):
+        """This sets a flag for ``event_loop`` to stop. It also calls a ``stop`` method of the input driver ``InputListener`` is using."""
         self.stop_flag = True
         self.driver.stop()
+        print("Stopped InputListener")
         return True
 
 
 def init():
+    """ This function is called by main.py to read the input configuration, pick the corresponding driver and initialize InputListener.
+ 
+    It also sets ``driver`` and ``listener`` globals of ``input`` module with driver and listener respectively, as well as registers ``listener.stop()`` function to be called when script exits since it's in a blocking non-daemon thread."""
     global listener, driver
     config = read_config()
     input_config = config["input"][0]

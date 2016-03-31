@@ -3,24 +3,28 @@ import threading
 from time import sleep
 
 class InputDevice():
-    """ A driver for pushbuttons attached to Raspberry Pi GPIO. It uses RPi.GPIO library. First button's pin has to be attached to ground, second has to be attached to the GPIO pin and pulled up to 3.3V with a 1-10K resistor."""
+    """ A driver for pushbuttons attached to Raspberry Pi GPIO. It uses RPi.GPIO library. Button's first pin has to be attached to ground, second has to be attached to the GPIO pin and pulled up to 3.3V with a 1-10K resistor."""
 
-    button_pins = [18, 23, 24, 25, 22, 27, 17, 4]
     mapping = [
     "KEY_LEFT",
     "KEY_RIGHT",
+    "KEY_KPENTER",
     "KEY_HOME",
     "KEY_END",
     "KEY_DELETE",
-    "KEY_KPENTER",
     "KEY_UP",
     "KEY_DOWN"]
     stop_flag = False
     
-    def __init__(self):
-        """Initialises the ``InputDevice`` object. """
-        pass
+    def __init__(self, button_pins=[]):
+        """Initialises the ``InputDevice`` object. 
 
+        Kwargs:
+        
+        * ``button_pins``: GPIO mubers which to treat as buttons (GPIO.BCM numbering)
+        """
+        self.button_pins = button_pins
+        pass
 
     def start(self):
         """Polling loop. Stops when ``stop_flag`` is set to True."""

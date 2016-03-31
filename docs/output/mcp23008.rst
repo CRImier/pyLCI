@@ -1,0 +1,35 @@
+################################
+MCP23008 I2C LCD backpack driver
+################################
+
+This driver was written for wide.hk I2C LCD backpacks `(picture). <http://www.wide.hk/img/_MG_4713.JPG>`_ 
+They are very small and slim and don't have any means to configure their I2C address. If you have another backpack and the driver doesn't work with this one, please `send me an e-mail <mailto:crimier@yandex.ru>`_ with a link to your backpack and its drivers. 
+
+Sample config.json:
+
+.. code:: json
+
+    "input":                
+       [{                   
+         "driver":"mcp23008",
+         "kwargs":          
+          {                 
+           "addr":62 
+          }                 
+       }]                  
+
+.. note:: Remember that you need to provide backpack's I2C address in decimal system for the ``config.json`` file.
+
+To test your screen, you can just run ``python output/driver/mcp23008.py`` while your screen is connected to I2C bus (you might want to adjust parameters in driver's ``if __name__ == "__main__"`` section). It will initialize the screen and show some text on it.
+
+.. automodule:: output.drivers.mcp23008
+ 
+.. autoclass:: Screen
+    :members:
+    :special-members:
+
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+

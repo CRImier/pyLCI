@@ -1,0 +1,34 @@
+###############################
+PCF8574 I2C LCD backpack driver
+###############################
+
+This driver works with PCF8574 IO expanders. You can see an guide on modifying them and connecting them to LCD screens & I2C `here. <http://www.instructables.com/id/Raspberry-Pi-Using-1-I2C-LCD-Backpacks-for-1602-Sc/>`__
+
+.. code:: json
+
+    "output":
+       [{
+         "driver":"pcf8574",
+         "kwargs":
+          {
+           "addr":62
+          }
+       }]
+
+
+.. note:: Remember that you need to provide backpack's I2C address in decimal system for the ``config.json`` file.
+
+To test your screen, you can just run ``python output/driver/pcf8574.py`` while your screen is connected to I2C bus (you might want to adjust parameters in driver's ``if __name__ == "__main__"`` section). It will initialize the screen and show some text on it.
+
+.. toctree::
+
+.. .. automodule:: output.drivers.pcf8574
+ 
+.. .. autoclass:: Screen
+    :members:
+    :special-members:
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
