@@ -5,7 +5,8 @@ import sys
 #And we output things for debugging, so o goes first.
 from output import output
 
-#These lines are here so that welcome screen stays on a little longer:
+#These lines are here so that welcome message stays on the screen a little longer:
+output.init()
 o = output.screen
 from ui import Printer
 Printer(["Welcome to", "pyLCI"], None, o, 0)
@@ -14,13 +15,12 @@ try:
     #All the LCI-related modules are imported here
     from input import input
     from ui import Menu
-    #Now we init the input.
+    #Now we init the input subsystem.
     input.init()
     i = input.listener
     i.listen()
-    #from apps import app_list
 except:
-    #Printer("Oops. :(", "y u make mistake", i, o, 0) #Yeah, that's about all the debug data. 
+    Printer(["Oops. :(", "y u make mistake"], None, o, 0) #Yeah, that's about all the debug data. 
     #import time;time.sleep(3) #u make mi sad i go to slip
     #o.clear()
     raise
