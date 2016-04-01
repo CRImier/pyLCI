@@ -10,6 +10,8 @@ def to_be_foreground(func): #A safety check wrapper so that certain checks don't
     return wrapper
 
 
+
+
 class Menu():
     """Implements a menu which can be used to navigate through your application, output a list of values or select actions to perform. Is one of the most used elements, used both in system core and in most of the applications.
 
@@ -138,11 +140,14 @@ class Menu():
         self.to_background()
         if len(self.contents) == 0:
             self.deactivate()
-        else:
-            if len(self.contents[self.pointer]) > 1:
+        elif len(self.contents[self.pointer]) > 1:
+            try:
                 self.contents[self.pointer][1]()
-        if self.in_background: #This check is in place so that you can have an 'exit' element
-            self.to_foreground()
+            except:
+                raise
+            finally:
+                if self.in_background: #This check is in place so that you can have an 'exit' element
+                    self.to_foreground()
 
     def generate_keymap(self):
         """Sets the keymap. In future, will allow per-system keycode-to-callback tweaking. """

@@ -59,7 +59,7 @@ class InputListener():
                 except Queue.Empty:
                     sleep(0.05)
                 except AttributeError:
-                    print("Heh, caught that.")
+                    print("Heh, caught that.") #Typically gets printed if InputListener exits abnormally upon program termination
                 else:
                     self.process_key(key)
         except:
@@ -74,6 +74,8 @@ class InputListener():
                 callback()
             except Exception as e:
                 self.handle_callback_exception(key, callback, e)
+            finally:
+                return
         
     def handle_callback_exception(self, key, callback, e):
         print("Exception caused by callback {} when key {} was received".format(callback, key))
@@ -102,6 +104,7 @@ class InputListener():
         driver = self.driver
         if getattr(driver, "atexit"):
             driver.atexit()
+
 
 def init():
     """ This function is called by main.py to read the input configuration, pick the corresponding driver and initialize InputListener.
