@@ -10,7 +10,7 @@
     }],
  "output":
     [{
-      "driver":"pcf8574_lcd",
+      "driver":"pcf8574",
       "kwargs":
       {
         "addr":38
