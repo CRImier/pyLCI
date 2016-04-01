@@ -8,7 +8,8 @@ o = None
 
 from time import sleep
 
-from ui import Menu
+
+from ui import Menu, Printer
 
 import wpa_cli
 
@@ -118,16 +119,31 @@ def change_current_interface(interface):
     finally:
         sleep(1) #Leave some time to see the message
         
+def launch():
+    try:
+       current_interface = wpa_cli.get_current_interface()
+    except OSError as e:
+       if e.errno == 2:
+           Printer(["Do you have", "wpa_cli?"], i, o, 3, skippable=True)
+           return
+       else:
+           raise e
+    except wpa_cli.WPAException:
+        Printer(["Do you have", "wireless cards?", "Is wpa_supplicant", "running?"], i, o, 3, skippable=True)
+        return
+    else:
+        main_menu_contents = [
+        [current_interface, change_interface],
+        ["Scan", scan],
+        ["Networks", show_networks],
+        ["Status", wireless_status],
+        #["Saved networks", manage_saved_networks],
+        ["Exit", 'exit']]
+        main_menu = Menu(main_menu_contents, i, o, "wpa_cli main menu")
+        main_menu.activate()
+
+
 def init_app(input, output):
     global callback, main_menu, i, o
-    main_menu_contents = [
-    [wpa_cli.get_current_interface(), change_interface],
-    ["Scan", scan],
-    ["Networks", show_networks],
-    ["Status", wireless_status],
-    #["Saved networks", manage_saved_networks],
-    ["Exit", 'exit']]
     i = input; o = output
-    main_menu = Menu(main_menu_contents, i, o, "wpa_cli main menu")
-    callback = main_menu.activate
-    
+    callback = launch

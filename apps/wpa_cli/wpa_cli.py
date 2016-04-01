@@ -1,12 +1,15 @@
-from subprocess import check_output
+from subprocess import check_output, CalledProcessError
 from time import sleep
 
 #wpa_cli related functions and objects
 def wpa_cli_command(*command):
-    return check_output(['wpa_cli'] + list(command))
+    try:
+        return check_output(['wpa_cli'] + list(command))
+    except CalledProcessError as e:
+        raise WPAException(command[0], e.returncode, output=e.output, args=command[1:])
 
 class WPAException(Exception):
-    def __init__(self, command, exit_code, args=None):
+    def __init__(self, command, exit_code, args=None, output=None):
         self.command = command
         self.code = exit_code
         self.args = args
@@ -14,6 +17,8 @@ class WPAException(Exception):
             message = "'wpa_cli {}' returned {}".format(self.command, self.code)
         else:
             message = "'wpa_cli {} {}' returned {}".format(self.command, ' '.join(args), self.code)
+        if output:
+            message += "\n Output: {}".format(output)
         super(WPAException, self).__init__(message)
 
 #wpa_cli command wrappers and their helpers
