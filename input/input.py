@@ -102,7 +102,7 @@ class InputListener():
         """Exits driver (if necessary) if something wrong happened or pyLCI exits. Also, stops the listener"""
         self.stop_listen()
         driver = self.driver
-        if getattr(driver, "atexit"):
+        if hasattr(driver, "atexit"):
             driver.atexit()
 
 
