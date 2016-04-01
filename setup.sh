@@ -3,6 +3,7 @@ SUDO=''
 if (( $EUID != 0 )); then
     SUDO='sudo'
 fi
+cp config.json.example config.json
 $SUDO apt-get install python python-pip
 $SUDO mkdir -p $INSTALL_DIR
 $SUDO cp ./. $INSTALL_DIR -R
