@@ -107,5 +107,5 @@ if apt_get:
     call_interactive(['apt-get', '--ignore-missing', 'install'] + apt_get)
 
 if pip:
-    call_interactive(['pip', 'install'] + apt_get)
+    call_interactive(['pip', 'install'] + pip)
 
