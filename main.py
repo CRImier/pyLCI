@@ -18,7 +18,6 @@ try:
     #Now we init the input subsystem.
     input.init()
     i = input.listener
-    i.listen()
 except:
     Printer(["Oops. :(", "y u make mistake"], None, o, 0) #Yeah, that's about all the debug data. 
     #import time;time.sleep(3) #u make mi sad i go to slip
@@ -49,15 +48,15 @@ def exception_wrapper(callback):
         callback()
     except KeyboardInterrupt:
         Printer(["Does Ctrl+C", "hurt scripts?"], i, o, 0)
-        i.stop_listen()
+        i.atexit()
         sys.exit(1)
     except:
         Printer(["A wild exception", "appears!"], i, o, 0)
-        i.stop_listen()
+        i.atexit()
         raise
     else:
         Printer("Exiting pyLCI", i, o, 0)
-        i.stop_listen()
+        i.atexit()
         sys.exit(0)
 
 def load_all_apps():
@@ -69,10 +68,9 @@ def load_all_apps():
             app = load_app(app_name)
             menu_contents.append([app.menu_name, app.callback])
         except Exception as e:
-            Printer(["Failed to load", app_name], i, o, 0)
             print("Failed to load {}".format(app_name))
             print(e)
-            sleep(3)
+            Printer(["Failed to load", app_name], i, o, 3)
             #raise
     return menu_contents
 

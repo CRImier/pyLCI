@@ -61,13 +61,25 @@ class InputListener():
                 except AttributeError:
                     print("Heh, caught that.")
                 else:
-                    if key in self.keymap:
-                        callback = self.keymap[key]
-                        callback()
+                    self.process_key(key)
         except:
             raise
         finally:
             self.listening = False
+
+    def process_key(self, key):
+        if key in self.keymap:
+            callback = self.keymap[key]
+            try:
+                callback()
+            except Exception as e:
+                self.handle_callback_exception(key, callback, e)
+        
+    def handle_callback_exception(self, key, callback, e):
+        print("Exception caused by callback {} when key {} was received".format(callback, key))
+        print("Exception: {}".format(e))
+        #raise e
+        import pdb;pdb.set_trace()
 
     def listen(self):
         """Start  event_loop in a thread. Nonblocking."""
@@ -82,9 +94,14 @@ class InputListener():
         """This sets a flag for ``event_loop`` to stop. It also calls a ``stop`` method of the input driver ``InputListener`` is using."""
         self.stop_flag = True
         self.driver.stop()
-        print("Stopped InputListener")
         return True
 
+    def atexit(self):
+        """Exits driver (if necessary) if something wrong happened or pyLCI exits. Also, stops the listener"""
+        self.stop_listen()
+        driver = self.driver
+        if getattr(driver, "atexit"):
+            driver.atexit()
 
 def init():
     """ This function is called by main.py to read the input configuration, pick the corresponding driver and initialize InputListener.
@@ -99,4 +116,4 @@ def init():
     kwargs = input_config["kwargs"] if "kwargs" in input_config else {}
     driver = driver_module.InputDevice(*args, **kwargs)
     listener = InputListener(driver)
-    atexit.register(listener.stop_listen)
+    atexit.register(listener.atexit)
