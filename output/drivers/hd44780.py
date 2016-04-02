@@ -96,13 +96,13 @@ class HD44780():
         delay(20)
         self.home()
         self.write_byte(self.display_function)
-        self.write_byte(0x08)
-        self.display()
+        self.noDisplay()
         if autoscroll:
             self.autoscroll()
         else:
             self.noAutoscroll()
         self.clear()
+        self.display()
 
     def display_data(self, *args):
         """Displays data on display.

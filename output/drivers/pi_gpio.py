@@ -20,6 +20,10 @@ from hd44780 import HD44780
 class Screen(HD44780):
 
     def __init__(self, **kwargs):
+        """ Initializes the GPIO-driven HD44780 display
+        
+        Kwargs:
+           * ``pins``: list of GPIO pins for driving display data bits: [DB4, DB5, DB6, DB7]"""
         self.debug = kwargs.pop("debug", False)
         self.rs_pin=kwargs.pop("rs_pin")
         self.en_pin=kwargs.pop("en_pin")
