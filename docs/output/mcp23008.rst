@@ -5,7 +5,9 @@ MCP23008 I2C LCD backpack driver
 ################################
 
 This driver was written for wide.hk I2C LCD backpacks `(picture). <http://www.wide.hk/img/_MG_4713.JPG>`_ 
-They are very small and slim and don't have any means to configure their I2C address. If you have another backpack and the driver doesn't work with this one, please `send me an e-mail <mailto:crimier@yandex.ru>`_ with a link to your backpack and its drivers. 
+They are very small and slim and don't have any means to configure their I2C address. 
+
+If you have another backpack and the driver doesn't work with this one, please open an issue on GitHub with a link to the backpack and its drivers for Arduino/Raspberry Pi
 
 Sample config.json:
 

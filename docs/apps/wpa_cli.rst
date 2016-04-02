@@ -19,5 +19,5 @@ It's capable of:
 * Saving configuration changes to wpa_supplicant.conf file
 
 
-If you're not running wpa_supplicant as a daemon and you want to do it, you should follow this guide for adjusting your /etc/network/interfaces and this guide for contents of your /etc/wpa_supplicant/wpa_supplicant.conf.
+If you're not running wpa_supplicant as a daemon and you want to do it, you should follow `this guide <https://learn.sparkfun.com/tutorials/using-pcduinos-wifi-dongle-with-the-pi/edit-interfaces>` for adjusting your /etc/network/interfaces and `this guide<https://learn.sparkfun.com/tutorials/using-pcduinos-wifi-dongle-with-the-pi/edit-wpasupplicantconf>` for creating contents of your /etc/wpa_supplicant/wpa_supplicant.conf.
 

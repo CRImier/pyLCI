@@ -304,5 +304,5 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
             return Mock()
 
-MOCK_MODULES = ['evdev', 'smbus', 'pifacecad', 'RPi.GPIO', 'serial']
+MOCK_MODULES = ['evdev', 'smbus', 'pifacecad', 'RPi', 'RPi.GPIO' 'serial']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)

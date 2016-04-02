@@ -8,8 +8,6 @@ Installing and updating pyLCI
    Directory separation is good for being able to experiment with configuration options without breaking the current install, as well as for developing applications for the system.
 
 
-Installation:
-
 Git
 ===
 

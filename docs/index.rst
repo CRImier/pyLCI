@@ -31,6 +31,10 @@ The pyLCI daemon consists of 5 parts:
 
 :doc:`Development plans <plans>`
 
+:doc:`FAQ&contacts <faq_contact>`
+
+
+
 .. toctree::
    :maxdepth: 1
    :hidden:
@@ -43,6 +47,7 @@ The pyLCI daemon consists of 5 parts:
    apps.rst
    app_mgmt.rst
    plans.rst
+   faq_contact.rst
 
 
 Indices and tables
