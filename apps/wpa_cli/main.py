@@ -8,7 +8,6 @@ o = None
 
 from time import sleep
 
-
 from ui import Menu, Printer
 
 import wpa_cli
@@ -25,35 +24,28 @@ def show_networks():
 def network_info_menu(network_info):
     network_info_contents = [
     ["Connect", lambda x=network_info: connect_to_network(x)],
-    #["BSSID", lambda x=network_info['bssid']: print_to_display(x, sleep_time=5)],
-    #["Frequency", lambda x=network_info['frequency']: print_to_display(x, sleep_time=5)],
-    #["Open" if wpa_cli.is_open_network(network_info) else "Secured", lambda x=network_info['flags']: print_to_display(x, sleep_time=5)],
-    ["Open" if wpa_cli.is_open_network(network_info) else "Secured"],
+    ["BSSID", lambda x=network_info['bssid']: Printer(x, i, o, 5, skippable=True)],
+    ["Frequency", lambda x=network_info['frequency']: Printer(x, i, o, 5, skippable=True)],
+    ["Open" if wpa_cli.is_open_network(network_info) else "Secured", lambda x=network_info['flags']: Printer(x, i, o, 5, skippable=True)],
     ["Exit", 'exit']]
     network_info_menu = Menu(network_info_contents, i, o, "Wireless network info")
     network_info_menu.activate()
-
-"""    
-def print_to_display(value, sleep_time=1):
-    o.display_data(value[:o.cols], value[o.cols:][o.cols])
-    sleep(sleep_time)
-"""
 
 def connect_to_network(network_info):
     #First, looking in the known networks
     configured_networks = wpa_cli.list_configured_networks()
     for network in configured_networks:
         if network_info['ssid'] == network['ssid']:
-            o.display_data(network_info['ssid'], "already set up")
+            Printer([network_info['ssid'], "already set up"], i, o, 1)
             wpa_cli.select_network(network['network id'])
             return True
     #Then, if it's an open network, just connecting
     if wpa_cli.is_open_network(network_info):
         network_id = wpa_cli.add_network()
-        o.display_data("Network is open", "adding to known")
+        Printer(["Network is open", "adding to known"], i, o, 1)
         wpa_cli.set_network(network_id, 'ssid', '"'+network_info['ssid']+'"')
         wpa_cli.set_network(network_id, 'key_mgmt', 'NONE')
-        o.display_data("Connecting to", network_info['ssid'])
+        Printer(["Connecting to", network_info['ssid']], i, o, 1)
         wpa_cli.select_network(network_id)
         return True
     #No passkey/WPS PIN input possible yet and I cannot yet test WPS button functionality.
@@ -67,11 +59,11 @@ def scan():
         wpa_cli.initiate_scan()
     except wpa_cli.WPAException as e:
         if e.code=="FAIL-BUSY":
-            o.display_data("Still scanning...")
+            Printer("Still scanning...", i, o, 1)
         else:
             raise
     else:
-        o.display_data("Scanning...")
+        Printer("Scanning...", i, o, 1)
     finally:
         sleep(1)
 
@@ -113,11 +105,20 @@ def change_current_interface(interface):
     try:
         wpa_cli.set_active_interface(interface)
     except wpa_cli.WPAException:
-        o.display_data('Failed to change', 'interface')
+        Printer(['Failed to change', 'interface'], i, o, skippable=True)
     else:
+        Printer(['Changed to', interface], i, o, skippable=True)
         o.display_data('Changed to', interface)
     finally:
         sleep(1) #Leave some time to see the message
+        
+def save_changes():
+    try:
+        wpa_cli.save_config()
+    except wpa_cli.WPAException:
+        Printer(['Failed to save', 'changes'], i, o, skippable=True)
+    else:
+        Printer(['Saved changes'], i, o, skippable=True)
         
 def launch():
     try:
@@ -137,6 +138,7 @@ def launch():
         ["Scan", scan],
         ["Networks", show_networks],
         ["Status", wireless_status],
+        ["Save changes", save_changes],
         #["Saved networks", manage_saved_networks],
         ["Exit", 'exit']]
         main_menu = Menu(main_menu_contents, i, o, "wpa_cli main menu")
