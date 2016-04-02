@@ -12,8 +12,12 @@ and initialising them, passing your UI element contents and parameters, as well 
 
 UI elements:
 
+   * :ref:`ui_menu`
+   * :ref:`ui_printer`
+
 .. toctree::
    :maxdepth: 1
+   :hidden:
 
    ui/menu.rst
    ui/printer.rst

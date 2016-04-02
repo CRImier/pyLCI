@@ -1,3 +1,5 @@
+.. _output_pi_gpio:
+
 ##############################
 Raspberry Pi GPIO input driver
 ##############################

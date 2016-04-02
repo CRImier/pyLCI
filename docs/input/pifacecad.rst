@@ -1,3 +1,5 @@
+.. _input_pifacecad:
+
 ######################
 PiFaceCAD input driver
 ######################

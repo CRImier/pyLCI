@@ -1,19 +1,16 @@
-#############
-Input drivers
-#############
+###############
+Input subsystem
+###############
 
 These are the devices that receive key commands from some external source and route them to your applications. 
 At the input system core, there's ``InputListener``. It receives key events from drivers you use and routes them to currently active application.
 
 Available input drivers:
 
-.. toctree::
-   :maxdepth: 1
-
-   input/hid.rst
-   input/pcf8574.rst
-   input/pifacecad.rst
-   input/pi_gpio.rst
+   * :ref:`input_hid`
+   * :ref:`input_pcf8574`
+   * :ref:`input_pifacecad`
+   * :ref:`input_pi_gpio`
 
 =============
 InputListener
@@ -45,14 +42,22 @@ If you do set callbacks/keymap yourself (very useful for making your own UI elem
    i.set_callback("KEY_ENTER", my_function)
    i.listen()
 
-=====================
-Glue logic functions:
-=====================
+====================
+Glue logic functions
+====================
 
 .. warning:: Not for user interaction, are called by ``main.py``, which is pyLCI main script.
 
 .. autofunction:: init
 
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   input/hid.rst
+   input/pcf8574.rst
+   input/pifacecad.rst
+   input/pi_gpio.rst
 
 
 

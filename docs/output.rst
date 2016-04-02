@@ -1,17 +1,14 @@
-##############
-Output devices
-##############
+################
+Output subsystem
+################
 
 Currently pyLCI uses HD44780-compatible screens as output devices. Minimum screen size is 16x2.
 Available output drivers:
 
-.. toctree::
-   :maxdepth: 1
-
-   output/mcp23008.rst
-   output/pcf8574.rst
-   output/pifacecad.rst
-   output/pi_gpio.rst
+   * :ref:`output_pcf8574`
+   * :ref:`output_pifacecad`
+   * :ref:`output_pi_gpio`
+   * :ref:`output_mcp23008`
 
 =============
 Screen object
@@ -25,14 +22,22 @@ Most of drivers just provide low-level functions for ``HD44780`` object, which, 
     :members:
     :special-members:
 
-=====================
-Glue logic functions:
-=====================
+====================
+Glue logic functions
+====================
 
 .. warning:: Not for user interaction, are called by ``main.py``, which is pyLCI main script.
 
 .. autofunction:: output.output.init
 
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   output/mcp23008.rst
+   output/pcf8574.rst
+   output/pifacecad.rst
+   output/pi_gpio.rst
 
 * :ref:`genindex`
 * :ref:`modindex`

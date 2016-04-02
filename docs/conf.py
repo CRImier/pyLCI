@@ -295,3 +295,14 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     import sphinx_rtd_theme
     html_theme = "sphinx_rtd_theme"
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
+
+from unittest.mock import MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+            return Mock()
+
+MOCK_MODULES = ['evdev', 'smbus', 'pifacecad', 'RPi.GPIO', 'serial']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)

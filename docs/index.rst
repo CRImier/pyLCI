@@ -15,23 +15,34 @@ Guides:
 =================================
 
 * :doc:`Setup and configuration guide <setup>`
-* Debugging issues
-* Managing applications
-* Developing applications
+* :doc:`Debugging issues <debugging>`
+* :doc:`Managing and developing applications <app_mgmt>`
 
-It has two parts - the software part (pyLCI daemon) and the hardware part - typically consisting of a character LCD and a keypad of some sort. 
+pyLCI system - the software part (pyLCI daemon) and the hardware part - typically consisting of a character LCD and a keypad of some sort. 
 
-The pyLCI framework consists of 5 parts:
+The pyLCI daemon consists of 5 parts:
 
 #. :doc:`Input system <input>`
 #. :doc:`Output system <output>`
 #. :doc:`UI elements <ui>`
-#. Applications
-#. Glue logic (mostly main.py)
+#. :doc:`Applications <apps>`
+#. Glue logic (mostly main.py launcher)
 
+
+:doc:`Development plans <plans>`
 
 .. toctree::
    :maxdepth: 1
+   :hidden:
+
+   setup.rst
+   debugging.rst
+   input.rst
+   output.rst
+   ui.rst
+   apps.rst
+   app_mgmt.rst
+   plans.rst
 
 
 Indices and tables
