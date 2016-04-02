@@ -1,7 +1,7 @@
 menu_name = "I2C tools"
 
 from subprocess import call
-from ui import Menu
+from ui import Menu, Printer
 
 from time import sleep
 
@@ -19,22 +19,12 @@ def i2c_detect():
          pass
       else:
          found_devices.append(str(hex(device)))
+    
     device_count = len(found_devices)
     if device_count == 0:
-        o.display_data("No devices found")
-        sleep(2)
+        Printer("No devices found", i, o, 2, skippable=True)
     else:
-        screen_rows = o.rows
-        num_screens = device_count/screen_rows
-        if device_count%screen_rows != 0: #There is one more screen, it's just not full but we need to add one more.
-            num_screens += 1
-        for screen_num in range(num_screens):
-            shown_element_numbers = [(screen_num*screen_rows)+i for i in range(screen_rows)]
-            screen_data = [found_devices[i] for i in shown_element_numbers if i in range(len(found_devices))] 
-            o.clear()
-            o.display_data(*screen_data)
-            sleep(1)
-
+        Printer(found_devices, i, o, 2, skippable=True)
 
 #Some globals for LCS
 main_menu = None
