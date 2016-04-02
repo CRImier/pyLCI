@@ -14,9 +14,9 @@ Applications bundled with the default install are:
    * :ref:`apps_shutdown`
    * :ref:`apps_i2ctools`
 
-Developing applications
+* :ref:`Developing and managing applications <app_mgmt>`
 
-* Skeleton application
+* :ref:`Skeleton application <skeleton_app>`
 
 .. toctree::
    :maxdepth: 1
@@ -28,6 +28,7 @@ Developing applications
    apps/volume.rst
    apps/shutdown.rst
    apps/i2ctools.rst
+   apps/skeleton.rst
 
 * :ref:`genindex`
 * :ref:`modindex`

@@ -1,4 +1,3 @@
-import RPi.GPIO as GPIO
 import threading
 from time import sleep
 
@@ -28,6 +27,7 @@ class InputDevice():
 
     def start(self):
         """Polling loop. Stops when ``stop_flag`` is set to True."""
+        import RPi.GPIO as GPIO
         self.stop_flag = False
         GPIO.setmode(GPIO.BCM) # Broadcom pin-numbering scheme
         for pin_num in self.button_pins:

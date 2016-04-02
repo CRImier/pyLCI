@@ -1,35 +1,34 @@
-menu_name = "App name as seen in main menu"
+menu_name = "Skeleton app" #App name as seen in main menu while using the system
 
 from subprocess import call
-from ui import Menu
 from time import sleep
 
+from ui import Menu, Printer
+
 def call_internal():
-    o.display_data("Calling internal", "command")
+    Printer(["Calling internal", "command"], i, o, 1)
     print("Success")
     sleep(3)
 
 def call_external():
-    o.display_data("Calling external", "command")
+    Printer(["Calling external", "command"], i, o, 1)
     call(['echo', 'Success'])
     sleep(3)
 
-#Some globals for LCS
-main_menu = None
+#Callback global for pyLCI. It gets called when application is activated in the main menu
 callback = None
-#Some globals for us
-i = None
-o = None
 
-main_menu_contents = [
-["Internal command", call_internal],
-["External command", call_external],
-["Exit", 'exit']
-]
+#Some globals for us
+i = None #Input device
+o = None #Output device
 
 def init_app(input, output):
-    global main_menu, callback, i, o
-    i = input; o = output
+    global callback, i, o
+    i = input; o = output #Getting references to output and input device objects and saving them as globals
+    main_menu_contents = [
+    ["Internal command", call_internal],
+    ["External command", call_external],
+    ["Exit", 'exit']]
     main_menu = Menu(main_menu_contents, i, o, "Skeleton app menu")
     callback = main_menu.activate
 

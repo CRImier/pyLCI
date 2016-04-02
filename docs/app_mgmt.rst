@@ -1,3 +1,5 @@
+.. _app_mgmt:
+                    
 ####################################
 Managing and developing applications
 ####################################
@@ -12,5 +14,6 @@ General information
 Development tips
 ================
 
+* For starters, take a look at the :ref:`skeleton app <skeleton_app>`
 * You can launch pyLCI with a single application using ``main.py -a app_folder_name``. There'll be no pyLCI main menu constructed, exiting the application exits pyLCI.
 * You should not set input callbacks or output to screen while your application is not the one active.
