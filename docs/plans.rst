@@ -10,6 +10,7 @@ Global system changes
 
 * Make hotplug of input/output devices possible
 * Make nested folders for applications
+* Include a notification system
 
 .. rubric:: Hardware
 
@@ -47,6 +48,7 @@ Applications
 * Calculator app
 * Mount/unmount partitions app
 * OpenHAB console
+* Systemctl menu
 * Twitter reader
 * NMap app
 
@@ -54,10 +56,12 @@ Applications
 UI elements
 ============
 
-.. rubric:: Adding input elements
+* Dialog box
+* File choice dialog (possibly, assisted by character input)
+
+.. rubric:: Adding input UI elements
 
 * Date/time picker
 * Simple number input
 * Character input using left/down/up/right
-* Character input using keypads
-* File choice dialog (possibly, assisted by character input)
+* Character input using keypads and keyboards
