@@ -7,6 +7,7 @@ Group=root
 PIDFile=/run/pylci.pid
 ExecStart=/opt/pylci/main.py 
 WorkingDirectory=/opt/pylci
+Restart=always
 
 [Install]
 WantedBy=graphical.target
