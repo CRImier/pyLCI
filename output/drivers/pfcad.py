@@ -23,10 +23,12 @@ class Screen():
         self.lcd.clear()
 
     def display_data(self, *args):
-        if self.backlight:
-            self.lcd.backlight_on() 
         while self.busy_flag:
             sleep(0.01)
+        self.lcd.blink_off()
+        self.lcd.cursor_off()
+        if self.backlight:
+            self.lcd.backlight_on() 
         self.busy_flag = False
         self.lcd.clear()
         for arg in args:
