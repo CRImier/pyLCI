@@ -48,7 +48,7 @@ class Menu():
     last_displayed_entry = None
     exit_exception = False
 
-    def __init__(self, contents, i, o, name="Menu", entry_height=1, append_exit=True, catch_exit=True):
+    def __init__(self, contents, i, o, name="Menu", entry_height=1, append_exit=True, catch_exit=True, exitable=True):
         """Initialises the Menu object.
         
         Args:
@@ -69,10 +69,11 @@ class Menu():
         self.entry_height = entry_height
         self.name = name
         self.append_exit = append_exit
-        self.generate_keymap()
         self.set_contents(contents)
         self.set_display_callback(o.display_data)
         self.catch_exit = catch_exit
+        self.exitable = exitable
+        self.generate_keymap()
 
     def to_foreground(self):
         """ Is called when menu's ``activate()`` method is used, sets flags and performs all the actions so that menu can display its contents and receive keypresses. Also, updates the output device with rendered currently displayed menu elements."""
@@ -168,13 +169,14 @@ class Menu():
     def generate_keymap(self):
         """Sets the keymap. In future, will allow per-system keycode-to-callback tweaking. """
         keymap = {
-            "KEY_LEFT":lambda: self.deactivate(),
             "KEY_RIGHT":lambda: self.print_name(),
             "KEY_UP":lambda: self.move_up(),
             "KEY_DOWN":lambda: self.move_down(),
             "KEY_KPENTER":lambda: self.select_element(),
             "KEY_ENTER":lambda: self.select_element()
             }
+        if self.exitable:
+            keymap["KEY_LEFT"] = lambda: self.deactivate()
         self.keymap = keymap
 
     def set_contents(self, contents):

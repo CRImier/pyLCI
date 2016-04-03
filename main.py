@@ -83,7 +83,7 @@ def load_all_apps():
     'apps/media_apps/volume': <module 'apps.media_apps.volume.main' from '/root/WCS/apps/media_apps/volume/main.py'>, 
     'apps/network_apps/network': <module 'apps.network_apps.network.main' from '/root/WCS/apps/network_apps/network/main.py'>}
     """
-    base_menu = Menu([], i, o, "Main app menu")
+    base_menu = Menu([], i, o, "Main app menu", exitable=False)
     subdir_menus[app_directory] = base_menu
     for path, subdirs, modules in apps.app_walk(app_directory):
         #print("Loading path {} with modules {} and subdirs {}".format(path, modules, subdirs))
