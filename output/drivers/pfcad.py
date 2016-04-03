@@ -1,4 +1,5 @@
 import pifacecad
+from time import sleep
 
 class Screen():
     type = "char"
@@ -8,6 +9,7 @@ class Screen():
         self.cols = cols
         self.lcd = pifacecad.PiFaceCAD().lcd
         self.backlight = True
+        self.busy_flag = False
 
     def enable_backlight(self): 
         #A complicated flag system is necessary because otherwise it conflicts with the later registered pifacecad input device
@@ -15,6 +17,7 @@ class Screen():
 
     def disable_backlight(self):
         self.backlight = False
+        self.lcd.backlight_off()
 
     def clear(self):
         self.lcd.clear()
@@ -22,9 +25,11 @@ class Screen():
     def display_data(self, *args):
         if self.backlight:
             self.lcd.backlight_on() 
-        else:
-            self.lcd.backlight_off() 
+        while self.busy_flag:
+            sleep(0.01)
+        self.busy_flag = False
         self.lcd.clear()
         for arg in args:
             arg = arg[:self.cols].ljust(self.cols)
         self.lcd.write('\n'.join(args))
+        self.busy_flag = False
