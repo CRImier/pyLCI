@@ -48,7 +48,6 @@ def Printer(message, i, o, sleep_time=1, skippable=False):
         Printer.skip_screen_flag = False
         shown_element_numbers = [(screen_num*screen_rows)+i for i in range(screen_rows)]
         screen_data = [rendered_message[i] for i in shown_element_numbers if i in range(render_length)] 
-        o.clear()
         o.display_data(*screen_data)
         if skippable:
             poll_period = 0.1
