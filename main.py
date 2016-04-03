@@ -35,44 +35,17 @@ import argparse
 app_directory = "apps"
 import apps
 
-def launch(name=None):
-    if name != None:
-        name = name.rstrip('/') #If using autocompletion from main folder, it might append a / at the name end, which isn't acceptable for load_app
-        app = load_app(name)
-        exception_wrapper(app.callback)
-    else:
-        app_menu = load_all_apps()
-        exception_wrapper(app_menu.activate)
-
-def exception_wrapper(callback):
-    try:
-        callback()
-    except KeyboardInterrupt:
-        Printer(["Does Ctrl+C", "hurt scripts?"], i, o, 0)
-        i.atexit()
-        sys.exit(1)
-    except:
-        Printer(["A wild exception", "appears!"], i, o, 0)
-        i.atexit()
-        sys.exit(1)
-    else:
-        Printer("Exiting pyLCI", i, o, 0)
-        i.atexit()
-        sys.exit(0)
-
-
 def load_all_apps():
     subdir_menus = {}
-    """
+    """ Example of subdir_menus:
     {'apps/network_apps': <ui.menu.Menu instance at 0x7698ac10>, 
     'apps/ee_apps': <ui.menu.Menu instance at 0x7698ab48>, 
     'apps/media_apps': <ui.menu.Menu instance at 0x7698ab70>, 
     'apps/ee_apps/ee_apps': <ui.menu.Menu instance at 0x7695dfa8>, 
     'apps/system_apps': <ui.menu.Menu instance at 0x7698abc0>}
     """
-    menu_contents = []
     app_list = {}
-    """
+    """Example of app_list:
     {'apps/network_apps/wpa_cli': <module 'apps.network_apps.wpa_cli.main' from '/root/WCS/apps/network_apps/wpa_cli/main.py'>, 
     'apps/system_apps/system': <module 'apps.system_apps.system.main' from '/root/WCS/apps/system_apps/system/main.py'>, 
     'apps/skeleton': <module 'apps.skeleton.main' from '/root/WCS/apps/skeleton/main.pyc'>, 
@@ -83,14 +56,24 @@ def load_all_apps():
     'apps/media_apps/volume': <module 'apps.media_apps.volume.main' from '/root/WCS/apps/media_apps/volume/main.py'>, 
     'apps/network_apps/network': <module 'apps.network_apps.network.main' from '/root/WCS/apps/network_apps/network/main.py'>}
     """
-    base_menu = Menu([], i, o, "Main app menu", exitable=False)
+    base_menu = Menu([], i, o, "Main app menu", exitable=False) #Main menu for all applications.
     subdir_menus[app_directory] = base_menu
-    for path, subdirs, modules in apps.app_walk(app_directory):
+    for path, subdirs, modules in apps.app_walk(app_directory): 
+        """Example of apps.app_walk(directory):  
+        [('./apps', ['ee_apps', 'media_apps', 'test', 'system_apps', 'skeleton', 'network_apps'], ['__init__.pyc', '__init__.py']),
+        ('./apps/ee_apps', ['i2ctools'], ['__init__.pyc', '__init__.py']),
+        ('./apps/ee_apps/i2ctools', [], ['__init__.pyc', '__init__.py', 'main.pyc', 'main.py']),
+        ('./apps/media_apps', ['mocp', 'volume'], ['__init__.pyc', '__init__.py']),
+        ('./apps/media_apps/mocp', [], ['__init__.pyc', '__init__.py', 'main.pyc', 'main.py']),
+        ('./apps/media_apps/volume', [], ['__init__.pyc', '__init__.py', 'main.pyc', 'main.py'])]
+        """
         #print("Loading path {} with modules {} and subdirs {}".format(path, modules, subdirs))
         for subdir in subdirs:
+            #First, we create subdir menus (not yet linking because they're not created in correct order) and put them in subdir_menus.
             subdir_path = os.path.join(path, subdir)
             subdir_menus[subdir_path] = Menu([], i, o, subdir_path)
         for module in modules:
+            #Then, we load modules and store them along with their paths
             try:
                 module_path = os.path.join(path, module)
                 app = load_app(module_path)
@@ -101,17 +84,19 @@ def load_all_apps():
                 print(e)
                 Printer(["Failed to load", app_name], i, o, 2)
     for subdir_path in subdir_menus:
+        #Now it's time to link menus to parent menus
         if subdir_path == app_directory:
             continue
         parent_path = os.path.split(subdir_path)[0]
         #print("Adding subdir {} to parent {}".format(subdir_path, parent_path))
         parent_menu = subdir_menus[parent_path]
         subdir_menu = subdir_menus[subdir_path]
-        parent_menu_contents = parent_menu.contents
         subdir_menu_name = get_subdir_menu_name(subdir_path)
+        parent_menu_contents = parent_menu.contents
         parent_menu_contents.append([subdir_menu_name, subdir_menu.activate])
         parent_menu.set_contents(parent_menu_contents)
     for app_path in app_list:
+        #Last thing is adding applications to menus.
         app = app_list[app_path]
         subdir_path = os.path.split(app_path)[0]
         #print("Adding app {} to subdir {}".format(app_path, subdir_path))
@@ -130,13 +115,44 @@ def load_app(app_path):
     return app
 
 def get_subdir_menu_name(subdir_path):
+    """This function gets a subdirectory path and imports __init__.py from it. It then gets _menu_name attribute from __init__.py and returns it. 
+    If failed to either import __init__.py or get the _menu_name attribute, it returns the subdirectory name."""
     subdir_import_path = subdir_path.replace('/', '.')
     try:
         subdir_object = importlib.import_module(subdir_import_path+'.__init__')
         return subdir_object._menu_name
-    except:
+    except Exception as e:
         print("Exception while loading __init__.py for subdir {}".format(subdir_path))
-        return subdir_path
+        print(e)
+        return os.path.split(subdir_path)[1]
+
+def exception_wrapper(callback):
+    """This is a wrapper for all applications and menus. It catches exceptions and stops the system the right way when something bad happens, be that a Ctrl+c or an exception in one of the applications."""
+    try:
+        callback()
+    except KeyboardInterrupt:
+        Printer(["Does Ctrl+C", "hurt scripts?"], i, o, 0)
+        i.atexit()
+        sys.exit(1)
+    except:
+        #raise
+        Printer(["A wild exception", "appears!"], i, o, 0)
+        i.atexit()
+        sys.exit(1)
+    else:
+        Printer("Exiting pyLCI", i, o, 0)
+        i.atexit()
+        sys.exit(0)
+
+def launch(name=None):
+    """Function that launches pyLCI, either in full mode or single-app mode (if ``name`` kwarg is passed)."""
+    if name != None:
+        name = name.rstrip('/') #If using autocompletion from main folder, it might append a / at the name end, which isn't acceptable for load_app
+        app = load_app(name)
+        exception_wrapper(app.callback)
+    else:
+        app_menu = load_all_apps()
+        exception_wrapper(app_menu.activate)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="pyLCI runner")

@@ -20,7 +20,7 @@ class Menu():
 
     Attributes:
 
-    * ``contents``: list of menu elements
+    * ``contents``: list of menu elements which was passed either to ``Menu`` constructor or to ``menu.set_contents()``.
        
       Menu element structure is a list, where:
          * ``element[0]`` (element's representation) is either a string, which simply has the element's value as it'll be displayed, such as "Menu element 1", or, in case of entry_height > 1, can be a list of strings, each of which represents a corresponding display row occupied by the element.
@@ -29,6 +29,7 @@ class Menu():
            * Can be specified as 'exit' if you want a menu element that exits the menu upon activation.
 
       *If you want to set contents after the initalisation, please, use set_contents() method.*
+    * ``_contents``: "Working copy" of menu contents, basically, a ``contents`` attribute which has been processed by ``self.process_contents``. 
     * ``pointer``: currently selected menu element's number in ``self._contents``.
     * ``in_background``: a flag which indicates if menu is currently active, either if being displayed or being in background (for example, if a sub-menu of this menu is currently active)
     * ``in_foreground`` : a flag which indicates if menu is currently displayed. If it's not active, inhibits any of menu's actions which can interfere with other menu or UI element being displayed.
@@ -62,6 +63,7 @@ class Menu():
             * ``entry_height``: number of display rows one menu element occupies.
             * ``append_exit``: Appends an "Exit" alement to menu elements. Doesn't do it if any of elements has callback set as 'exit'.
             * ``catch_exit``: If ``MenuExitException`` is received and catch_exit is False, it passes ManuExitException to the underlying menu so that the parent menu exits, too. If catch_exit is True, MenuExitException is not passed along.
+            * ``exitable``: Decides if menu can exit at all by pressing ``KEY_LEFT``. Set by default and disables ``KEY_LEFT`` callback if unset. Is used for pyLCI main menu, not advised to be used in other settings.
 
         """
         self.i = i
@@ -90,7 +92,8 @@ class Menu():
         logging.info("menu {0} disabled".format(self.name))    
 
     def activate(self):
-        """ A method which is called when menu needs to start operating. Is blocking, sets up input&output devices, renders the menu and waits until self.in_background is False, while menu callbacks are executed from the input device thread."""
+        """ A method which is called when menu needs to start operating. Is blocking, sets up input&output devices, renders the menu and waits until self.in_background is False, while menu callbacks are executed from the input device thread.
+        This method also raises MenuExitException if menu exited due to it and ``catch_exit`` i set to False."""
         logging.info("menu {0} activated".format(self.name))    
         self.exit_exception = False
         self.to_foreground() 
@@ -167,7 +170,7 @@ class Menu():
             self.to_foreground()
 
     def generate_keymap(self):
-        """Sets the keymap. In future, will allow per-system keycode-to-callback tweaking. """
+        """Sets the keymap. In future, will allow per-system keycode-to-callback tweaking using a config file. """
         keymap = {
             "KEY_RIGHT":lambda: self.print_name(),
             "KEY_UP":lambda: self.move_up(),
@@ -202,7 +205,10 @@ class Menu():
         self.pointer = 0 #Resetting pointer to avoid confusions between changing menu contents
 
     def process_contents(self, contents):
-        """Processes contents for custom callbacks. Currently, just searches for "exit" in callback and replaces it with self.deactivate()"""
+        """Processes contents for custom callbacks. Currently, only 'exit' calbacks are supported.
+
+        If ``self.append_exit`` is set, it goes through the menu and removes every callback which either is ``self.deactivate`` or is just a string 'exit'. 
+        |Then, it appends a single ["Exit", 'exit'] element at the end of menu contents. It makes dynamically appending elements to menu easier and makes sure there's only one "Exit" callback, at the bottom of the menu."""
         self._contents = contents
         if self.append_exit: 
             element_callbacks = [element[1] if len(element)>1 else None for element in copy(self._contents)]
