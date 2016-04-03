@@ -87,6 +87,17 @@ class InputDevice():
         """A hook to be overridden by ``InputListener``. Otherwise, prints out key names as soon as they're pressed so is useful for debugging."""
         print(key)
 
+    def atexit(self):
+        try:
+            self.device.ungrab()
+        except:
+            pass
+        try:
+            self.thread.join()
+        except:
+            raise
+
+
     def activate(self):
         """Starts a thread with ``start`` function as target."""
         self.thread = threading.Thread(target=self.start)

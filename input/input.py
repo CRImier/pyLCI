@@ -104,6 +104,8 @@ class InputListener():
         driver = self.driver
         if hasattr(driver, "atexit"):
             driver.atexit()
+        self.listener_thread.join()
+        
 
 
 def init():
