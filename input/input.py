@@ -57,7 +57,7 @@ class InputListener():
                 try:
                     key = self.queue.get(False, 0.1)
                 except Queue.Empty:
-                    sleep(0.05)
+                    sleep(0.1)
                 except AttributeError:
                     print("Heh, caught that.") #Typically gets printed if InputListener exits abnormally upon program termination
                 else:
