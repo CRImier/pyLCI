@@ -227,7 +227,7 @@ class Menu():
         """Generate and sets the input device's keycode-to-callback mapping. Re-starts the input device because ofpassing-variables-between-threads issues."""
         self.generate_keymap()
         self.i.stop_listen()
-        self.i.keymap.clear()
+        self.i.clear_keymap()
         self.i.keymap = self.keymap
         self.i.listen()
 

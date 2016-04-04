@@ -47,7 +47,7 @@ class InputListener():
 
     def clear_keymap(self):
         """Removes all the callbacks set"""
-        self.keymap.clear()
+        self.keymap = {}
 
     def event_loop(self):
         """Blocking event loop which just calls callbacks in the keymap once corresponding keys are received in the ``self.queue``."""
