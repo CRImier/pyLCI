@@ -44,11 +44,11 @@ class Screen():
         ``*args`` is a list of strings, where each string fills each row of the display, starting with 0."""
         while self.busy_flag:
             sleep(0.01)
+        self.busy_flag = False
         self.lcd.blink_off()
         self.lcd.cursor_off()
         if self.backlight:
             self.lcd.backlight_on() 
-        self.busy_flag = False
         self.lcd.clear()
         for arg in args:
             arg = arg[:self.cols].ljust(self.cols)
