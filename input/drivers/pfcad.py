@@ -15,6 +15,7 @@ class InputDevice():
     "KEY_UP",
     "KEY_DOWN"]
     active=False
+    busy=False
     
     def __init__(self):
         """Initialises the ``InputDevice`` object and starts ``pifacecad.SwitchEventListener``. Also, registers callbacks to ``press_key`` method. """
@@ -37,7 +38,11 @@ class InputDevice():
         """Converts event numbers to keycodes using ``mapping`` and sends them to ``send_key``. Is a callback for ``SwitchEventListener``."""
         if self.active:
             keycode = self.mapping[event.pin_num]
+            while self.busy:
+                sleep(0.01)
+            self.busy = True
             self.send_key(keycode)
+            self.busy = False
 
     def send_key(self, keycode):
         """A hook to be overridden by ``InputListener``. Otherwise, prints out key names as soon as they're pressed so is useful for debugging."""
