@@ -71,7 +71,6 @@ def get_interfaces():
 def set_active_interface(interface_name):
     #TODO output check
     output = process_output(wpa_cli_command("interface", interface_name))
-    print(output)
     #if output == "Connected to interface '{}'".format(interface_name):
         
 def get_current_interface():
