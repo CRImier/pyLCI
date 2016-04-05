@@ -148,6 +148,8 @@ class Menu():
             finally:
                 if self.in_background: #This check is in place so that you can have an 'exit' element
                     self.to_foreground()
+        else:
+            self.to_foreground()
 
     def generate_keymap(self):
         """Sets the keymap. In future, will allow per-system keycode-to-callback tweaking. """
