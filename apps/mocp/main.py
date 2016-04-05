@@ -1,7 +1,7 @@
 menu_name = "MOCP control"
 
 from subprocess import call
-from ui import Menu
+from ui import Menu, Printer
 
 #Some globals for LCS
 main_menu = None
@@ -15,7 +15,7 @@ def mocp_command(*command):
     try:
         return call(['mocp'] + list(command))
     except:
-        o.display_data("Oops", "Is mocp installed?")
+        Printer(["Oops", "Is mocp there?"], i, o, 1)
 
 def mocp_toggle_play():
     mocp_command("-G")
