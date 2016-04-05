@@ -1,2 +1,2 @@
-from menu import Menu
+from menu import Menu, MenuExitException
 from printer import Printer

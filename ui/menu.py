@@ -9,7 +9,9 @@ def to_be_foreground(func): #A safety check wrapper so that certain checks don't
             return False
     return wrapper
 
-
+class MenuExitException(Exception):
+    """An exception that you can throw from a menu callback to exit the menu that callback was called from"""
+    pass
 
 
 class Menu():
@@ -42,8 +44,9 @@ class Menu():
     name = ""
     first_displayed_entry = 0
     last_displayed_entry = None
+    exit_exception = False
 
-    def __init__(self, contents, i, o, name="Menu", entry_height=1, append_exit=True):
+    def __init__(self, contents, i, o, name="Menu", entry_height=1, append_exit=True, catch_exit=True):
         """Initialises the Menu object.
         
         Args:
@@ -56,6 +59,7 @@ class Menu():
             * ``name``: Menu name which can be used internally and for debugging.
             * ``entry_height``: number of display rows one menu element occupies.
             * ``append_exit``: Appends an "Exit" alement to menu elements. Doesn't do it if any of elements has callback set as 'exit'.
+            * ``catch_exit``: If ``MenuExitException`` is received and catch_exit is False, it passes ManuExitException to the underlying menu so that the parent menu exits, too. If catch_exit is True, MenuExitException is not passed along.
 
         """
         self.i = i
@@ -66,6 +70,7 @@ class Menu():
         self.generate_keymap()
         self.set_contents(contents)
         self.set_display_callback(o.display_data)
+        self.catch_exit = catch_exit
 
     def to_foreground(self):
         """ Is called when menu's ``activate()`` method is used, sets flags and performs all the actions so that menu can display its contents and receive keypresses. Also, updates the output device with rendered currently displayed menu elements."""
@@ -84,9 +89,13 @@ class Menu():
     def activate(self):
         """ A method which is called when menu needs to start operating. Is blocking, sets up input&output devices, renders the menu and waits until self.in_background is False, while menu callbacks are executed from the input device thread."""
         logging.info("menu {0} activated".format(self.name))    
+        self.exit_exception = False
         self.to_foreground() 
         while self.in_background: #All the work is done in input callbacks
             sleep(0.1)
+        if self.exit_exception:
+            if self.catch_exit == False:
+                raise MenuExitException
         logging.debug(self.name+" exited")
         return True
 
@@ -135,7 +144,8 @@ class Menu():
         """ Gets the currently specified element's description from self.contents and executes the callback, if set.
         |Is typically used as a callback from input event processing thread.
         |After callback's execution is finished, sets the keymap again and refreshes the screen.
-        |If menu has no elements, exits the menu."""
+        |If menu has no elements, exits the menu.
+        |If MenuExitException is returned from the callback, exits menu, too."""
         logging.debug("element selected")
         self.to_background()
         if len(self.contents) == 0:
@@ -143,10 +153,12 @@ class Menu():
         elif len(self.contents[self.pointer]) > 1:
             try:
                 self.contents[self.pointer][1]()
-            except:
-                raise
+            except MenuExitException:
+                self.exit_exception = True
             finally:
-                if self.in_background: #This check is in place so that you can have an 'exit' element
+                if self.exit_exception:
+                    self.deactivate() 
+                elif self.in_background: #This check is in place so that you can have an 'exit' element
                     self.to_foreground()
         else:
             self.to_foreground()
