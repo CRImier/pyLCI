@@ -8,7 +8,7 @@ o = None
 
 from time import sleep
 
-from ui import Menu, Printer
+from ui import Menu, Printer, MenuExitException
 
 import wpa_cli
 
@@ -36,7 +36,7 @@ def connect_to_network(network_info):
     configured_networks = wpa_cli.list_configured_networks()
     for network in configured_networks:
         if network_info['ssid'] == network['ssid']:
-            Printer([network_info['ssid'], "already set up"], i, o, 1)
+            Printer([network_info['ssid'], "known,connecting"], i, o, 1)
             wpa_cli.select_network(network['network id'])
             return True
     #Then, if it's an open network, just connecting
@@ -108,9 +108,8 @@ def change_current_interface(interface):
         Printer(['Failed to change', 'interface'], i, o, skippable=True)
     else:
         Printer(['Changed to', interface], i, o, skippable=True)
-        o.display_data('Changed to', interface)
     finally:
-        sleep(1) #Leave some time to see the message
+        raise MenuExitException
         
 def save_changes():
     try:
