@@ -61,11 +61,11 @@ def exception_wrapper(callback):
 
 def load_all_apps():
     menu_contents = []
-    app_names = apps.module_names
-    for app_name in app_names:
+    app_descs = apps.module_list
+    for app_name, app_import in app_descs:
         print("Loading {}".format(app_name))
         try:
-            app = load_app(app_name)
+            app = load_app(app_name, app_import)
             menu_contents.append([app.menu_name, app.callback])
         except Exception as e:
             print("Failed to load {}".format(app_name))
@@ -74,12 +74,12 @@ def load_all_apps():
             #raise
     return menu_contents
 
-def load_app(name):
+def load_app(app_name, app_import):
     global app_list
-    app = importlib.import_module('apps.'+name+'.main')
+    app = importlib.import_module('apps.'+app_import+'.main')
     app.init_app(i, o)
-    app_list[name] = app
-    return app    
+    app_list[app_name] = app_import
+    return app
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="pyLCI runner")
