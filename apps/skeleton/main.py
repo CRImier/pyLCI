@@ -8,12 +8,10 @@ from ui import Menu, Printer
 def call_internal():
     Printer(["Calling internal", "command"], i, o, 1)
     print("Success")
-    sleep(3)
 
 def call_external():
     Printer(["Calling external", "command"], i, o, 1)
     call(['echo', 'Success'])
-    sleep(3)
 
 #Callback global for pyLCI. It gets called when application is activated in the main menu
 callback = None
