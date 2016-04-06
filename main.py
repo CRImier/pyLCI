@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+import os
 #Welcome to pyLCI innards
 #Here, things are about i and o, which are input and output
 #And we output things for debugging, so o goes first.
@@ -16,8 +17,8 @@ try:
     from input import input
     from ui import Menu
     #Now we init the input subsystem.
-    input.init()
-    i = input.listener
+    #input.init()
+    i = None
 except:
     Printer(["Oops. :(", "y u make mistake"], None, o, 0) #Yeah, that's about all the debug data. 
     #import time;time.sleep(3) #u make mi sad i go to slip
@@ -32,7 +33,6 @@ import argparse
 
 #Now we go and import all the apps.
 import apps
-app_list = {}
 
 def launch(name=None):
     if name != None:
@@ -40,8 +40,9 @@ def launch(name=None):
         exception_wrapper(app.callback)
     else:
         app_menu_contents = load_all_apps()
-        app_menu = Menu(app_menu_contents, i, o, "App menu", append_exit=False)
-        exception_wrapper(app_menu.activate)
+        print(app_menu_contents)
+        #app_menu = Menu(app_menu_contents, i, o, "App menu", append_exit=False)
+        #exception_wrapper(app_menu.activate)
 
 def exception_wrapper(callback):
     try:
@@ -59,26 +60,38 @@ def exception_wrapper(callback):
         i.atexit()
         sys.exit(0)
 
+
 def load_all_apps():
     menu_contents = []
-    app_descs = apps.module_list
-    for app_name, app_import in app_descs:
-        print("Loading {}".format(app_name))
-        try:
-            app = load_app(app_name, app_import)
-            menu_contents.append([app.menu_name, app.callback])
-        except Exception as e:
-            print("Failed to load {}".format(app_name))
-            print(e)
-            Printer(["Failed to load", app_name], i, o, 3)
-            #raise
-    return menu_contents
+    app_walk = apps.app_walk('apps')
+    app_list = {}
+    for path, subdirs, modules in app_walk:
+        print("Loading path {} with modules {} and subdirs {}".format(path, modules, subdirs))
+        current_menu = None
+        current_menu_contents = []
+        for module in modules:
+            try:
+                module_path = os.path.join(path, module)
+                module_import_path = module_path.replace('/', '.')
+                print(module_import_path)
+                app = load_app(module_import_path)
+                app_list[module_path] = app
+                #menu_contents.append([app.menu_name, app.callback])
+            except Exception as e:
+                print("Failed to load {}".format(module_path))
+                print(e)
+                #Printer(["Failed to load", app_name], i, o, 2)
+                raise
+            
+        for subdir in subdirs:
+            pass        
+    return app_list
 
-def load_app(app_name, app_import):
-    global app_list
-    app = importlib.import_module('apps.'+app_import+'.main')
+def load_app(app_import_path):
+    #global app_list
+    app = importlib.import_module(app_import_path+'.main', package='apps')
     app.init_app(i, o)
-    app_list[app_name] = app_import
+    #app_list[app_name] = app_import
     return app
 
 if __name__ == "__main__":
