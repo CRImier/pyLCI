@@ -29,6 +29,8 @@ Output devices
 ==============
 
 * Make an output emulator for development tasks
+* Add a way to automatically turn off the backlight after a set interval
+* Eliminate unnecessary redraws of the screen
 
 .. rubric:: Supporting graphical displays
 
@@ -52,6 +54,7 @@ Applications
 * Tvservice menu (configuring Raspberry Pi video output modes)
 * Twitter reader
 * NMap app
+* Gammu app - sending SMS and receiving making calls using moble phones
 
 ============
 UI elements
