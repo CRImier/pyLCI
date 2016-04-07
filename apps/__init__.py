@@ -3,9 +3,9 @@ import os
 def is_module_dir(dir_path):
     contents = os.listdir(dir_path)
     if "main.py" in contents:
-        return True
-    else:
-        return False
+        if 'do_not_load' not in contents:
+            return True
+    return False
     
 def is_subdir(dir_path):
     contents = os.listdir(dir_path)

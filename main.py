@@ -37,6 +37,7 @@ import apps
 
 def launch(name=None):
     if name != None:
+        name = name.rstrip('/') #If using autocompletion from main folder, it might append a / at the name end, which isn't acceptable for load_app
         app = load_app(name)
         exception_wrapper(app.callback)
     else:
@@ -52,8 +53,8 @@ def exception_wrapper(callback):
         sys.exit(1)
     except:
         Printer(["A wild exception", "appears!"], i, o, 0)
-        raise
         i.atexit()
+        sys.exit(1)
     else:
         Printer("Exiting pyLCI", i, o, 0)
         i.atexit()
@@ -93,6 +94,7 @@ def load_all_apps():
             try:
                 module_path = os.path.join(path, module)
                 app = load_app(module_path)
+                print("Loaded app {}".format(module_path))
                 app_list[module_path] = app
             except Exception as e:
                 print("Failed to load app {}".format(module_path))
