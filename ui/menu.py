@@ -1,4 +1,5 @@
 from time import sleep
+from copy import copy
 import logging
 
 def to_be_foreground(func): #A safety check wrapper so that certain checks don't get called if menu is not the one active
@@ -28,14 +29,15 @@ class Menu():
            * Can be specified as 'exit' if you want a menu element that exits the menu upon activation.
 
       *If you want to set contents after the initalisation, please, use set_contents() method.*
-    * ``pointer``: currently selected menu element's number in ``self.contents``.
+    * ``pointer``: currently selected menu element's number in ``self._contents``.
     * ``in_background``: a flag which indicates if menu is currently active, either if being displayed or being in background (for example, if a sub-menu of this menu is currently active)
     * ``in_foreground`` : a flag which indicates if menu is currently displayed. If it's not active, inhibits any of menu's actions which can interfere with other menu or UI element being displayed.
-    * ``first_displayed_entry`` : Internal flag which points to the number of ``self.contents`` element which is at the topmost position of the menu as it's currently displayed on the screen
-    * ``last_displayed_entry`` : Internal flag which points to the number of ``self.contents`` element which is at the lowest position of the menu as it's currently displayed on the screen
+    * ``first_displayed_entry`` : Internal flag which points to the number of ``self._contents`` element which is at the topmost position of the menu as it's currently displayed on the screen
+    * ``last_displayed_entry`` : Internal flag which points to the number of ``self._contents`` element which is at the lowest position of the menu as it's currently displayed on the screen
 
     """
     contents = []
+    _contents = []
     pointer = 0
     display_callback = None
     in_background = True
@@ -107,7 +109,7 @@ class Menu():
 
     def print_contents(self):
         """ A debug method. Useful for hooking up to an input event so that you can see the representation of menu's contents. """
-        logging.info(self.contents)
+        logging.info(self._contents)
 
     def print_name(self):
         """ A debug method. Useful for hooking up to an input event so that you can see which menu is currently processing input events. """
@@ -118,7 +120,7 @@ class Menu():
         """ Moves the pointer one element down, if possible. 
         |Is typically used as a callback from input event processing thread.
         |TODO: support going from bottom to top when pressing "down" with last menu element selected."""
-        if self.pointer < (len(self.contents)-1):
+        if self.pointer < (len(self._contents)-1):
             logging.debug("moved down")
             self.pointer += 1  
             self.refresh()    
@@ -141,18 +143,18 @@ class Menu():
 
     @to_be_foreground
     def select_element(self):
-        """ Gets the currently specified element's description from self.contents and executes the callback, if set.
+        """ Gets the currently specified element's description from self._contents and executes the callback, if set.
         |Is typically used as a callback from input event processing thread.
         |After callback's execution is finished, sets the keymap again and refreshes the screen.
         |If menu has no elements, exits the menu.
         |If MenuExitException is returned from the callback, exits menu, too."""
         logging.debug("element selected")
         self.to_background()
-        if len(self.contents) == 0:
+        if len(self._contents) == 0:
             self.deactivate()
-        elif len(self.contents[self.pointer]) > 1:
+        elif len(self._contents[self.pointer]) > 1:
             try:
-                self.contents[self.pointer][1]()
+                self._contents[self.pointer][1]()
             except MenuExitException:
                 self.exit_exception = True
             finally:
@@ -177,18 +179,15 @@ class Menu():
 
     def set_contents(self, contents):
         """Sets the menu contents, as well as additionally re-sets ``last`` & ``first_displayed_entry`` pointers and calculates the value for ``last_displayed_entry`` pointer."""
-        if self.append_exit: 
-            if 'exit' not in [element[1] for element in contents if len(element)>1]: #Checking if 'exit' is alread there
-                contents.append(["Exit", 'exit'])
         self.contents = contents
-        self.process_contents()
+        self.process_contents(self.contents)
         #Calculating the pointer to last element displayed
-        if len(contents) == 0:
+        if len(self._contents) == 0:
             self.last_displayed_entry = 0
             self.first_displayed_entry = 0
             return True
         full_entries_shown = self.o.rows/self.entry_height
-        entry_count = len(self.contents)
+        entry_count = len(self._contents)
         self.first_displayed_entry = 0
         if full_entries_shown > entry_count: #Display is capable of showing more entries than we have, so the last displayed entry is the last menu entry
             #print("There are more display rows than entries can take, correcting")
@@ -200,9 +199,16 @@ class Menu():
         #print("Last displayed entry is {}".format(self.last_displayed_entry))
         self.pointer = 0 #Resetting pointer to avoid confusions between changing menu contents
 
-    def process_contents(self):
+    def process_contents(self, contents):
         """Processes contents for custom callbacks. Currently, just searches for "exit" in callback and replaces it with self.deactivate()"""
-        for entry in self.contents:
+        self._contents = contents
+        if self.append_exit: 
+            element_callbacks = [element[1] if len(element)>1 else None for element in copy(self._contents)]
+            for index, callback in enumerate(element_callbacks):
+                if callback == 'exit' or callback == self.deactivate:
+                    self._contents.pop(index)
+            self._contents.append(["Exit", 'exit'])
+        for entry in self._contents:
             if len(entry) > 1:
                 if entry[1] == "exit":
                     entry[1] = self.deactivate
@@ -222,7 +228,7 @@ class Menu():
         |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed elements' numbers, renders each one of them and concatenates them into one big list which it returns.
         |Doesn't support partly-rendering entries yet."""
         displayed_data = []
-        if len(self.contents) == 0:
+        if len(self._contents) == 0:
             return ["No menu entries"]
         if self.pointer < self.first_displayed_entry:
             #print("Pointer went too far to top, correcting")
@@ -245,14 +251,14 @@ class Menu():
         return displayed_data
 
     def render_displayed_entry(self, entry_num, active=False):
-        """Renders a menu element by its position number in self.contents, determined also by display width, self.entry_height and element's representation type.
+        """Renders a menu element by its position number in self._contents, determined also by display width, self.entry_height and element's representation type.
         If element's representation is a string, splits it into parts as long as the display's width in characters.
            If active flag is set, appends a "*" as the first entry's character. Otherwise, appends " ".
            TODO: omit " " and "*" if element height matches the display's row count.
         If element's representation is a list, it returns that list as the rendered entry, trimming its elements down or padding the list with empty strings to match the element's height as defined.
         """
         rendered_entry = []
-        entry_content = self.contents[entry_num][0]
+        entry_content = self._contents[entry_num][0]
         display_columns = self.o.cols
         if type(entry_content) == str:
             if active:
