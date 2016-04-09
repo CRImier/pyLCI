@@ -33,8 +33,6 @@ class InputDevice():
         self.bus = smbus.SMBus(self.bus_num)
         if type(addr) in [str, unicode]:
             addr = int(addr, 16)
-        print(addr)
-        print(type(addr))
         self.addr = addr
         self.int_pin = int_pin
 
