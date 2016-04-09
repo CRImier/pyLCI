@@ -19,15 +19,14 @@ class Screen(HD44780):
 
     data_mask = 0x00
 
-    def __init__(self, **kwargs):
-        self.bus_num = kwargs.pop("bus", 1)
+    def __init__(self, bus=1, addr=0x27, debug=False, **kwargs):
+        self.bus_num = bus
         self.bus = smbus.SMBus(self.bus_num)
-        self.addr = kwargs.pop("addr", 0x27)
-        self.debug = kwargs.pop("debug", False)
-        rows = kwargs.pop("rows", 2)
-        cols = kwargs.pop("cols", 16)
-        HD44780.__init__(self, rows = rows, cols = cols, debug = self.debug)
-        self.init_display(**kwargs)
+        if type(addr) in [str, unicode]:
+            addr = int(addr, 16)
+        self.addr = addr
+        self.debug = debug
+        HD44780.__init__(self, debug = self.debug, **kwargs)
         self.enable_backlight()
         
     def enable_backlight(self):
