@@ -71,7 +71,7 @@ class HD44780():
 
     busy_flag = False
 
-    def __init__(self, cols = 16, rows=2, debug = False):
+    def __init__(self, cols = 16, rows=2, debug = False, **kwargs):
         """ Sets variables for high-level functions.
         
         Kwargs:
@@ -82,8 +82,9 @@ class HD44780():
         self.cols = cols
         self.rows = rows
         self.debug = debug
+        self.init_display(**kwargs)
 
-    def init_display(self, autoscroll=False):
+    def init_display(self, autoscroll=False, **kwargs):
         """Initializes HD44780 controller. 
 
         Kwargs:

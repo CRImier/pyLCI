@@ -11,23 +11,19 @@ from hd44780 import HD44780
 
 class Screen(HD44780):
 
-    def __init__(self, **kwargs):
-        self.bus_num = kwargs.pop("bus", 1)
+    def __init__(self, bus=1, addr=0x27, debug=False, **kwargs):
+        self.bus_num = bus
         self.bus = smbus.SMBus(self.bus_num)
-        self.addr = kwargs.pop("addr", 0x27)
-        self.debug = kwargs.pop("debug", False)
-        rows = kwargs.pop("rows", 2)
-        cols = kwargs.pop("cols", 16)
-        HD44780.__init__(self, rows = rows, cols = cols, debug = self.debug)
+        if type(addr) == str:
+            addr = int(addr, 16)
+        self.addr = addr
+        self.debug = debug
         self.i2c_init()
-        self.init_display(**kwargs)
+        HD44780.__init__(self, debug=self.debug, **kwargs)
         
     def i2c_init(self):
         self.setMCPreg(0x05, 0x0c)
         self.setMCPreg(0x00, 0x00)
-
-    def setMCPreg(self, reg, val):
-        self.bus.write_byte_data(self.addr, reg, val)
 
     def write_byte(self, byte, char_mode=False):
         if self.debug and not char_mode:        
@@ -47,6 +43,9 @@ class Screen(HD44780):
         self.setMCPreg(0x0a, data)
         delay(1.0)
         
+    def setMCPreg(self, reg, val):
+        self.bus.write_byte_data(self.addr, reg, val)
+
 
 if __name__ == "__main__":
     screen = Screen(bus=1, addr=0x27, cols=16, rows=2, debug=True, autoscroll=False)
