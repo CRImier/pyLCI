@@ -62,7 +62,7 @@ class Menu():
             * ``name``: Menu name which can be used internally and for debugging.
             * ``entry_height``: number of display rows one menu element occupies.
             * ``append_exit``: Appends an "Exit" alement to menu elements. Doesn't do it if any of elements has callback set as 'exit'.
-            * ``catch_exit``: If ``MenuExitException`` is received and catch_exit is False, it passes ManuExitException to the underlying menu so that the parent menu exits, too. If catch_exit is True, MenuExitException is not passed along.
+            * ``catch_exit``: If ``MenuExitException`` is received and catch_exit is False, it passes ``MenuExitException`` to the parent menu so that it exits, too. If catch_exit is True, MenuExitException is not passed along.
             * ``exitable``: Decides if menu can exit at all by pressing ``KEY_LEFT``. Set by default and disables ``KEY_LEFT`` callback if unset. Is used for pyLCI main menu, not advised to be used in other settings.
 
         """
@@ -93,7 +93,7 @@ class Menu():
 
     def activate(self):
         """ A method which is called when menu needs to start operating. Is blocking, sets up input&output devices, renders the menu and waits until self.in_background is False, while menu callbacks are executed from the input device thread.
-        This method also raises MenuExitException if menu exited due to it and ``catch_exit`` i set to False."""
+        This method also raises MenuExitException if menu exited due to it and ``catch_exit`` is set to False."""
         logging.info("menu {0} activated".format(self.name))    
         self.exit_exception = False
         self.to_foreground() 
