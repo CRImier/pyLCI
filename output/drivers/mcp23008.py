@@ -14,7 +14,7 @@ class Screen(HD44780):
     def __init__(self, bus=1, addr=0x27, debug=False, **kwargs):
         self.bus_num = bus
         self.bus = smbus.SMBus(self.bus_num)
-        if type(addr) == str:
+        if type(addr) in [str, unicode]:
             addr = int(addr, 16)
         self.addr = addr
         self.debug = debug
