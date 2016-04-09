@@ -69,6 +69,8 @@ class HD44780():
     displaycontrol = 0x0c
     displaymode = 0x07
 
+    busy_flag = False
+
     def __init__(self, cols = 16, rows=2, debug = False):
         """ Sets variables for high-level functions.
         
@@ -108,11 +110,15 @@ class HD44780():
         """Displays data on display.
         
         ``*args`` is a list of strings, where each string fills each row of the display, starting with 0."""
+        while self.busy_flag:
+            sleep(0.01)
+        self.busy_flag = True
         self.clear()
         args = args[:self.rows]
         for line, arg in enumerate(args):
             self.setCursor(line, 0)
             self.println(arg[:self.cols].ljust(self.cols))
+        self.busy_flag = False
 
     def println(self, line):
         """Prints a line on the screen (assumes position is set as intended)"""
