@@ -4,7 +4,7 @@
       "driver":"pcf8574",
       "kwargs":
        {
-        "addr":62,
+        "addr":"0x3f",
         "int_pin":4
        }
     }],
@@ -13,7 +13,7 @@
       "driver":"pcf8574",
       "kwargs":
       {
-        "addr":38
+        "addr":"0x27"
       }
     }]
 }
