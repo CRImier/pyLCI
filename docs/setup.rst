@@ -11,7 +11,7 @@ Installing and updating pyLCI
 Git
 ===
 
-``git clone https://github.com/CRImier/WCS``
+``git clone https://github.com/CRImier/pyLCI``
 
 Setup
 =====
