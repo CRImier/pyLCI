@@ -19,18 +19,15 @@ from hd44780 import HD44780
 
 class Screen(HD44780):
 
-    def __init__(self, **kwargs):
+    def __init__(self, pins = [], rs_pin = None, en_pin = None, debug = False, **kwargs):
         """ Initializes the GPIO-driven HD44780 display
         
         Kwargs:
            * ``pins``: list of GPIO pins for driving display data bits: [DB4, DB5, DB6, DB7]"""
-        self.debug = kwargs.pop("debug", False)
-        self.rs_pin=kwargs.pop("rs_pin")
-        self.en_pin=kwargs.pop("en_pin")
-        self.pins=kwargs.pop("pins")
-        rows = kwargs.pop("rows", 2)
-        cols = kwargs.pop("cols", 16)
-        HD44780.__init__(self, rows = rows, cols = cols, debug = self.debug)
+        self.debug = debug
+        self.rs_pin = rs_pin
+        self.en_pin = en_pin
+        self.pins = pins
         GPIO.setmode(GPIO.BCM)
         if not self.debug:
             GPIO.setwarnings(False)
@@ -38,7 +35,7 @@ class Screen(HD44780):
         GPIO.setup(self.rs_pin, GPIO.OUT)
         for pin in self.pins:
             GPIO.setup(pin, GPIO.OUT)
-        self.init_display(**kwargs)
+        HD44780.__init__(self, debug = self.debug, **kwargs)
         
     def write_byte(self, byte, char_mode=False):
         if self.debug and not char_mode:        
