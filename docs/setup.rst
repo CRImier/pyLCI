@@ -8,10 +8,19 @@ Installing and updating pyLCI
    Directory separation is good for being able to experiment with configuration options without breaking the current install, as well as for developing applications for the system.
 
 
-Git
-===
+Install sequence
+================
 
-``git clone https://github.com/CRImier/pyLCI``
+.. code-block:: bash
+
+    git clone https://github.com/CRImier/pyLCI
+    cd pyLCI/
+    ./setup.sh #Install main dependencies and create a install directory
+    ./config.sh #Install dependencies for your input&output devices
+    nano config.json #Describe your input&outputdevices
+    python main.py #Start the system to test your configuration
+    #Once configured:
+    ./update.sh #Transfer changes to your install directory
 
 Setup
 =====
