@@ -2,7 +2,7 @@
 Output subsystem
 ################
 
-Currently pyLCI uses HD44780-compatible screens as output devices. Minimum screen size is 16x2.
+Currently pyLCI uses HD44780-compatible screens as output devices. Minimum screen size is 16x2, 20x4 screens are tested and working.
 Available output drivers:
 
    * :ref:`output_pcf8574`
