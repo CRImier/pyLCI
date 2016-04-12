@@ -60,7 +60,7 @@ Also, I'd like to remind about ``LCDproc`` project, which is all about displayin
 Does the system need to run as root?
 ------------------------------------
 
-It does not *need* to, but it doesn't make much sense. System needs all kinds of different privileges for various tasks, and it's run as a single application, so it either needs to be run as root or to be run as a user with enough privileges to do management tasks, which is not that far away from root in terms of danger.
+It does not *need* to, but it doesn't make much sense otherwise. pyLCI drivers&apps need all kinds of different privileges for various tasks, and it's run as a single application, so it either needs to be run as root or to be run as a user with enough privileges to do management tasks, which is not that far away from root in terms of danger.
 
 However, from some point there will be a split between pyLCI core and applications, where only core will need to run as a user privileged enough to access input/output devices, and applications will be able to run under separate users. 
 .. _openwrt_possible:
