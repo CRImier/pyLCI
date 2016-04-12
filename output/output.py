@@ -1,8 +1,6 @@
 from helpers.config_parse import read_config
 import importlib
 
-#Currently only 16x2 char displays are fully tested, as I simply don't have access to a bigger one yet -_- However, the libraries are all build keeping displays from 16x2 and higher.
-
 screen = None
 
 def init():
