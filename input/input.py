@@ -104,7 +104,10 @@ class InputListener():
         driver = self.driver
         if hasattr(driver, "atexit"):
             driver.atexit()
-        self.listener_thread.join()
+        try:
+            self.listener_thread.join()
+        except AttributeError:
+            pass #Driver not initialised properly, all working OK though
         
 
 

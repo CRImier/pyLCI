@@ -94,6 +94,8 @@ class InputDevice():
             pass
         try:
             self.thread.join()
+        except AttributeError:
+            pass #Too early, thread not started yet
         except:
             raise
 
