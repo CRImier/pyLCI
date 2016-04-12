@@ -11,6 +11,8 @@ Installing and updating pyLCI
 Install sequence
 ================
 
+.. note:: The system typically runs as root, and therefore is to be run as sudo/root user. Curious about the reasons? It's :doc:`explained in the FAQ <faq_contact>`.
+
 .. code-block:: bash
 
     git clone https://github.com/CRImier/pyLCI
