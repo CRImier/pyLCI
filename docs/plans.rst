@@ -55,7 +55,7 @@ Applications
 * Tvservice menu (configuring Raspberry Pi video output modes)
 * Twitter reader
 * NMap app
-* SMS and call app - using gammu to interface to mobile phones and GSM/3G modems
+* SMS and call app - interfacing to mobile phones and GSM/3G modems
 ============
 UI elements
 ============
