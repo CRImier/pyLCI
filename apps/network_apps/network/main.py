@@ -1,4 +1,4 @@
-menu_name = "Networking"
+menu_name = "Interfaces"
 #Some globals for LCS
 callback = None
 #Some globals for us
