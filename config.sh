@@ -13,7 +13,9 @@ from time import sleep
 #Translation of choices to apt-get and pip modules which need to be installed
 #Choice names shouldn't be the same in different modules!
 preassembled_modules ={
-'pifacecad':{'apt-get':['python-pifacecad']}
+'pifacecad':{'apt-get':['python-pifacecad']},
+'adafruit':{'apt-get':['python-smbus', 'i2c-tools']},
+'chinafruit':{'apt-get':['python-smbus', 'i2c-tools']}
 }
 
 separate_modules ={
@@ -24,8 +26,18 @@ separate_modules ={
 }
 #Radio menu translations:
 preassembled_module_names ={
-"PiFaceCAD":'pifacecad'
+"PiFaceCAD":'pifacecad',
+"Adafruit I2C LCD&button shield based on MCP23017 (RGB or other bl)":'adafruit',
+"\"LCD RGB KEYPAD ForRPi\", based on MCP23017 (with RGB LED)":'chinafruit'
 }
+
+preassembled_module_confs = {
+'pifacecad':'{"input":[{"driver":"pfcad"}],"output":[{"driver":"pfcad"}]}',
+'adafruit':'{"input":[{"driver":"adafruit_plate"}],"output":[{"driver":"adafruit_plate","kwargs":{"chinese":false}}]}',
+'chinafruit':'{"input":[{"driver":"adafruit_plate"}],"output":[{"driver":"adafruit_plate"}]}'
+}
+
+
 
 def call_interactive(command):
     p = Popen(command, stdout=sys.stdout, stdin=sys.stdin, stderr=sys.stderr)
@@ -35,6 +47,11 @@ def call_interactive(command):
         except KeyboardInterrupt:
             p.terminate()
             break
+
+
+def uniq(list_to_uniq):
+    seen = set()
+    return [x for x in list_to_uniq if not (x in seen or seen.add(x))]
 
 
 def yes_or_no(string, default=False):
@@ -53,7 +70,10 @@ def radio_choice(strings, prompt="Choose one:"):
     while True:
         for index, string in enumerate(strings):
             print "{} - {}".format(index, string)
-        choice_str = raw_input(prompt+" ")
+        try:
+            choice_str = raw_input(prompt+" ")
+        except KeyboardInterrupt:
+            return None
         try:
             choice = int(choice_str)
         except ValueError:
@@ -67,16 +87,22 @@ print("Let me help you out with installing necessary Python modules and utilitie
 print("Feel free to restart this script if you screwed up")
 
 options = []
+preassembled_module = None
 
-if yes_or_no("Do you use any of pre-assembled I/O modules, such as PiFaceCAD (the only supported right now)?"):
+if yes_or_no("Do you use any of pre-assembled I/O modules, such as PiFaceCAD, one of character LCD&button shields or others?"):
+   print("Ctrl^C if your module is not found")
    pretty_names = preassembled_module_names.keys()
    answer = radio_choice(pretty_names)
-   module_pname = pretty_names[answer]
-   module_name = preassembled_module_names[module_pname]
-   options.append(module_name)
+   if answer is not None:
+       module_pname = pretty_names[answer]
+       module_name = preassembled_module_names[module_pname]
+       preassembled_module = module_name
+       options.append(module_name)
+   else:
+       print("You might still be able to use it. Do open an issue on GitHub, or, alternatively, try GPIO driver if it's based on GPIO")
 if yes_or_no("Do you connect any of your I/O devices by I2C?"):
    options.append('i2c')
-if yes_or_no("Do you connect any of your I/O devices by serial, either hardware or serial over USB?"):
+if yes_or_no("Do you connect any of your I/O devices by serial (UART), either hardware or serial over USB?"):
    options.append('serial')
 if yes_or_no("Do you use HID devices, such as keyboards and keypads?"):
    options.append('hid')
@@ -91,16 +117,16 @@ both_dicts.update(separate_modules)
 apt_get = []
 pip = []
 for option in options:
-   option_desc = both_dicts[option]
-   apt_get_packages = option_desc['apt-get'] if 'apt-get' in option_desc else []
-   pip_modules = option_desc['pip'] if 'pip' in option_desc else []
-   for package in apt_get_packages:
-       apt_get.append(package)
-   for module in pip_modules:
-       pip.append(module)
+    option_desc = both_dicts[option]
+    apt_get_packages = option_desc['apt-get'] if 'apt-get' in option_desc else []
+    pip_modules = option_desc['pip'] if 'pip' in option_desc else []
+    for package in apt_get_packages:
+        apt_get.append(package)
+    for module in pip_modules:
+        pip.append(module)
 
-print(apt_get)
-print(pip)
+apt_get = uniq(apt_get)
+pip = uniq(pip)
 
 if apt_get:
     call_interactive(['apt-get', 'update'])
@@ -109,3 +135,14 @@ if apt_get:
 if pip:
     call_interactive(['pip', 'install'] + pip)
 
+print("")
+print("-"*30)
+print("")
+
+if preassembled_module:
+    f = open('config.json', 'w')
+    f.write(preassembled_module_confs[preassembled_module])
+    f.close()
+    print("Your config.json is set. Run 'python main.py' to start the system and check your hardware.")
+else:
+    print("You'll need to change your config.json according to I/O devices you're using (refer to the documentation!)")
