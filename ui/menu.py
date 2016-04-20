@@ -268,7 +268,7 @@ class Menu():
         rendered_entry = []
         entry_content = self._contents[entry_num][0]
         display_columns = self.o.cols
-        if type(entry_content) == str:
+        if type(entry_content) in [str, unicode]:
             if active:
                 rendered_entry.append("*"+entry_content[:display_columns-1]) #First part of string displayed
                 entry_content = entry_content[display_columns-1:] #Shifting through the part we just displayed

@@ -30,7 +30,7 @@ def Printer(message, i, o, sleep_time=1, skippable=False):
 
     #Now onto rendering the message
     rendered_message = []
-    if type(message) == str: #Dividing the string into screen-sized chunks
+    if type(message) in (str, unicode): #Dividing the string into screen-sized chunks
         screen_width = o.cols
         while message:
            rendered_message.append(message[:screen_width])
