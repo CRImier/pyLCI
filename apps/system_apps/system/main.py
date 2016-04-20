@@ -37,7 +37,17 @@ def show_memory():
     ["Buffers {}MB".format(memory_info["Buffers"])]]
     Menu(menu_contents, i, o).activate()
 
-#Some globals for LCS
+def show_linux_info():
+    linux_info = sys_info.linux_info()
+    menu_contents = [
+    [["Hostname:", linux_info["hostname"]]],
+    [["Kernel version:", linux_info["k_release"]]],
+    [["Architecture:", linux_info["machine"]]],
+    [["Distribution:", " ".join(linux_info["distribution"])]]
+    ]
+    Menu(menu_contents, i, o, entry_height=2).activate()
+
+#Some globals for pyLCI
 callback = None
 #Some globals for us
 i = None
@@ -51,7 +61,8 @@ def init_app(input, output):
     menu_contents = [
     ["Uptime&load", show_uptime_load],
     #["CPU", show_cpu],
-    ["Memory", show_memory]
+    ["Memory", show_memory],
+    ["Linux info", show_linux_info]
     #["Processes", show_processes]
     ]
 
