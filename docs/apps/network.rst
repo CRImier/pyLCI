@@ -1,7 +1,7 @@
 .. _apps_network:
 
 ===========================
-Network connection info app
+Network interface info app
 ===========================
 
 This application shows you network connection information. Under the hood, it uses "ip" command.
