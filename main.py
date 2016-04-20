@@ -82,7 +82,7 @@ def load_all_apps():
             except Exception as e:
                 print("Failed to load app {}".format(module_path))
                 print(e)
-                Printer(["Failed to load", app_name], i, o, 2)
+                Printer(["Failed to load", os.path.split(module_path)[1]], i, o, 2)
     for subdir_path in subdir_menus:
         #Now it's time to link menus to parent menus
         if subdir_path == app_directory:
