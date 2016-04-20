@@ -60,6 +60,7 @@ UI elements
 
 * Dialog box
 * File choice dialog (possibly, assisted by character input)
+* Window with contents which would periodically refresh, but only when active (imagine a clock display)
 
 .. rubric:: Adding input UI elements
 
