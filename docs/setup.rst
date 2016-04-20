@@ -32,12 +32,14 @@ Setup
 Installing dependencies for hardware
 ====================================
 
-``config.sh`` is the script that installs all the necessary packages and python libraries, depending on which hardware you're using. 
+``config.sh`` is the script that installs all the necessary packages and python libraries, depending on which hardware you're using. It will also set proper ``config.json`` contents if you're using a shield which has a driver in pyLCI and doesn't need any special init parameters.
 
 Configuring input and output devices
 ====================================
 
 ``config.json`` is the file currently responsible for input and output hardware module configuration. It's JSON, so if you launch the system manually and see ``JSONError`` exceptions in the output, you know you have misspelled something. 
+
+.. note:: Generally, you won't need to edit ``config.json`` if you're using any shields recognised by ``config.sh``  because the configuration will be done automatically.
 
 Its format is as follows: 
 
