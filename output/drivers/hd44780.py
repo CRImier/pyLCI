@@ -78,7 +78,8 @@ class HD44780():
 
            * ``rows`` (default=2): rows of the connected display
            * ``cols`` (default=16): columns of the connected display
-           * ``debug`` (default=False): debug mode which prints out the commands sent to display"""
+           * ``debug`` (default=False): debug mode which prints out the commands sent to display
+           * ``**kwargs``: all the other arguments, get passed further to HD44780.init_display() function"""
         self.cols = cols
         self.rows = rows
         self.debug = debug

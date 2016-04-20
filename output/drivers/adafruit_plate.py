@@ -25,7 +25,7 @@ class Screen(HD44780):
                                                                                  
             * ``bus``: I2C bus number.
             * ``addr``: I2C address of the board.
-            * ``debug``: enabes printing out LCD commands.
+            * ``debug``: enalbes printing out LCD commands.
             * ``chinese``: flag enabling workarounds necessary for Chinese boards to enable LCD backlight.
 
         """
