@@ -1,4 +1,4 @@
-menu_name = "lsusb"
+menu_name = "USB devices"
 
 from ui import Menu, Printer
 
