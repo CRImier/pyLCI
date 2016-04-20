@@ -13,7 +13,11 @@ def ellipsize(string, length):
 
 def show_devices():
     menu_contents = []
-    usb_devices = lsusb.lsusb()
+    try:
+        usb_devices = lsusb.lsusb()
+    except OSError:
+        Printer(["Do you have", "lsusb?"], i, o, 2)
+        return False
     for bus, dev, vid_pid, name in usb_devices:   
         ell_name = ellipsize(name, o.cols)
         menu_contents.append([["{}{},{}".format(bus, dev, vid_pid), ell_name], lambda x=name: Printer(x, i, o, skippable=True)])
