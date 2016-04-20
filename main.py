@@ -134,7 +134,8 @@ def exception_wrapper(callback):
         Printer(["Does Ctrl+C", "hurt scripts?"], i, o, 0)
         i.atexit()
         sys.exit(1)
-    except:
+    except Exception as e:
+        print(e)
         #raise
         Printer(["A wild exception", "appears!"], i, o, 0)
         i.atexit()
