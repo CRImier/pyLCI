@@ -29,6 +29,10 @@ Most of drivers just provide low-level functions for ``HD44780`` object, which, 
 
 .. autofunction:: output.output.init
 
+=========
+Contents:
+=========
+
 .. toctree::
    :maxdepth: 2
 
