@@ -10,6 +10,8 @@ from time import sleep
 
 from ui import Menu, Printer, MenuExitException
 
+from subprocess import check_output, CalledProcessError
+
 import tvservice
 
 def show_status():
@@ -61,7 +63,22 @@ def set_mode(mode_desc):
     mode = mode_desc["code"]
     tvservice.set_mode(group, mode, drive)
     Printer(['Changed to', "{},{},{}".format(group, mode, drive)], i, o, skippable=True)
-    raise MenuExitException
+    status = tvservice.status()
+    try:
+        x, y = status["resolution"]
+    except KeyError:
+        Printer(["Can't get", "resolution!"], i, o, skippable=True)
+    else:
+        try:
+            check_output(["fbset", "-depth", "8"])        
+            check_output(["fbset", "-g", x, y, x, y, "16"])
+            check_output(["chvt", "1"]) #HAAAAAAAAAX - we need to switch VTs for changes to appear
+            check_output(["chvt", "7"]) #This relies on the fact that GUI is mostly on VT7 and most people will want GUI resolutionto change.
+            #TODO: Restart X... Maybe?
+        except:
+            Printer(["Refresh failed!", "Try Ctrl-Alt-F1", "and Ctrl-Alt-F7"], i, o, skippable=True)
+        else:
+            raise MenuExitException #Alright, post-resolution-change triggers executed, nothing to do here
         
 def display_off():
     tvservice.display_off()
@@ -70,7 +87,21 @@ def display_off():
 def display_on():
     tvservice.display_on()
     Printer(['Enabled display', 'with defaults'], i, o, skippable=True)
-        
+    status = tvservice.status()
+    try:
+        x, y = status["resolution"]
+    except KeyError:
+        Printer(["Can't get", "resolution!"], i, o, skippable=True)
+    else:
+        try:
+            check_output(["fbset", "-depth", "8"])        
+            check_output(["fbset", "-g", x, y, x, y, "16"])
+            check_output(["chvt", "1"]) #HAAAAAAAAAX - we need to switch VTs for changes to appear
+            check_output(["chvt", "7"]) #This relies on the fact that GUI is mostly on VT7
+        except:
+            Printer(["Refresh failed!", "Try Ctrl-Alt-F1", "and Ctrl-Alt-F7"], i, o, skippable=True)
+        else:
+            pass #All successful.
 
 def launch():
     try:
