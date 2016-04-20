@@ -10,6 +10,7 @@ Available input drivers:
    * :ref:`input_hid`
    * :ref:`input_pcf8574`
    * :ref:`input_pifacecad`
+   * :ref:`input_adafruit`
    * :ref:`input_pi_gpio`
 
 =============
@@ -52,11 +53,11 @@ Glue logic functions
 
 .. toctree::
    :maxdepth: 1
-   :hidden:
 
    input/hid.rst
    input/pcf8574.rst
    input/pifacecad.rst
+   input/adafruit.rst
    input/pi_gpio.rst
 
 

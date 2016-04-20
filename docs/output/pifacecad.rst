@@ -16,6 +16,7 @@ Sample config.json section:
        }]
 
 
+.. note:: Generally, you won't need to edit ``config.json`` if you're using this shield because it'll be done automatically by ``config.sh``.
 
 .. toctree::
 

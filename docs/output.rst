@@ -7,6 +7,7 @@ Available output drivers:
 
    * :ref:`output_pcf8574`
    * :ref:`output_pifacecad`
+   * :ref:`output_adafruit`
    * :ref:`output_pi_gpio`
    * :ref:`output_mcp23008`
 
@@ -32,11 +33,11 @@ Glue logic functions
 
 .. toctree::
    :maxdepth: 1
-   :hidden:
 
    output/mcp23008.rst
    output/pcf8574.rst
    output/pifacecad.rst
+   output/adafruit.rst
    output/pi_gpio.rst
 
 * :ref:`genindex`
