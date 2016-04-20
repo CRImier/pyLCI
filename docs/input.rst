@@ -43,16 +43,14 @@ If you do set callbacks/keymap yourself (very useful for making your own UI elem
    i.set_callback("KEY_ENTER", my_function)
    i.listen()
 
-====================
-Glue logic functions
-====================
+.. rubric:: Glue logic functions
 
-.. warning:: Not for user interaction, are called by ``main.py``, which is pyLCI main script.
+.. warning:: Not for user interaction, are called by ``main.py``, which is pyLCI launcher.
 
 .. autofunction:: init
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    input/hid.rst
    input/pcf8574.rst
