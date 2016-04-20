@@ -23,7 +23,7 @@ Defining applications is done in ``config.json`` file which is located in the ap
      "args":["-a"]} #Again, command-line arguments
    ]
 
-.. note:: #-starting comments aren't accepted in JSON and are provided solely for visual 
+.. note:: #-starting comments aren't accepted in JSON and are provided solely for explanation purposes
 
 It also gets all the scripts in ``s/`` folder in application's directory and adds them to the script menu, if they're not available in ``config.json``.
-If name is not provided, it falls back to using script's filename.
+If "name" parameter is not provided or is not available, it falls back to using script's filename.
