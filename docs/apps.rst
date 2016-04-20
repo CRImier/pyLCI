@@ -9,6 +9,7 @@ Applications bundled with the default install are:
 
    * :ref:`apps_wpa_cli`
    * :ref:`apps_tvservice`
+   * :ref:`apps_system_info`
    * :ref:`apps_network`
    * :ref:`apps_mocp`
    * :ref:`apps_volume`
