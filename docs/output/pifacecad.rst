@@ -1,8 +1,8 @@
 .. _output_pifacecad:
 
-######################
-PiFaceCAD input driver
-######################
+#######################
+PiFaceCAD output driver
+#######################
 
 This driver works with `PiFace Control and Display <www.piface.org.uk/products/piface_control_and_display/>`_ Raspberry Pi shields. 
 

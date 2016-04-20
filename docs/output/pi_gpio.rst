@@ -1,8 +1,8 @@
 .. _output_pi_gpio:
 
-##############################
-Raspberry Pi GPIO input driver
-##############################
+###############################
+Raspberry Pi GPIO output driver
+###############################
 
 This driver works with HD44780-screens connected to Raspberry Pi GPIO. The screen connected has to have its RW pin tied to ground.
 
