@@ -52,7 +52,6 @@ Applications
 * Mount/unmount partitions app
 * OpenHAB console
 * Systemctl menu
-* Tvservice menu (configuring Raspberry Pi video output modes)
 * Twitter reader
 * NMap app
 * SMS and call app - interfacing to mobile phones and GSM/3G modems
