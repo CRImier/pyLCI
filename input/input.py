@@ -3,7 +3,7 @@ import importlib
 import atexit
 from time import sleep
 import Queue
-from helpers.config_parse import read_config
+from helpers import read_config
 
 listener = None
 driver = None

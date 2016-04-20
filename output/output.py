@@ -1,4 +1,4 @@
-from helpers.config_parse import read_config
+from helpers import read_config
 import importlib
 
 screen = None
