@@ -44,7 +44,6 @@ Applications
 * Bluetooth app (involves a lot of DBus work)
 * "Quick reading" app (word-by-word)
 * Camera app
-* lsusb app
 * Stopwatch/timer app
 * UCI management app
 * Counter app
