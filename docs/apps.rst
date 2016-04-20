@@ -8,6 +8,7 @@ There can be an application for any goal that wants to achieve.
 Applications bundled with the default install are:
 
    * :ref:`apps_wpa_cli`
+   * :ref:`apps_tvservice`
    * :ref:`apps_network`
    * :ref:`apps_mocp`
    * :ref:`apps_volume`
