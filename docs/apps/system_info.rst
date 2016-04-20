@@ -4,7 +4,7 @@
 System information app
 ######################
 
-This application gitves you information about various system parameters. 
+This application gives you information about various system parameters. 
 
 It can list:
 
