@@ -25,9 +25,9 @@ Sample config.json:
 
 .. toctree::
 
-.. .. automodule:: output.drivers.pi_gpio
+.. automodule:: output.drivers.pi_gpio
  
-.. .. autoclass:: Screen
+.. autoclass:: Screen
     :members:
     :special-members:
 

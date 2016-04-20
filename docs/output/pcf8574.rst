@@ -24,9 +24,9 @@ To test your screen, you can just run ``python output/driver/pcf8574.py`` while 
 
 .. toctree::
 
-.. .. automodule:: output.drivers.pcf8574
+.. automodule:: output.drivers.pcf8574
  
-.. .. autoclass:: Screen
+.. autoclass:: Screen
     :members:
     :special-members:
 
