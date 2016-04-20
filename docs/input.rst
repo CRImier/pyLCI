@@ -49,9 +49,9 @@ If you do set callbacks/keymap yourself (very useful for making your own UI elem
 
 .. autofunction:: init
 
-=========
-Contents:
-=========
+========
+Drivers:
+========
 
 .. toctree::
    :maxdepth: 2
