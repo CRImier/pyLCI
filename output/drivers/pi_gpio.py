@@ -31,8 +31,8 @@ class Screen(HD44780):
 
         Kwargs:
            * ``pins``: list of GPIO pins for driving display data bits in format [DB4, DB5, DB6, DB7]
-           * ``en_pin``: EN pin GPIO number
-           * ``rs_pin``: RS pin GPIO number
+           * ``en_pin``: EN pin GPIO number. Please, make sure it's pulled down to GND (10K is OK). Otherwise, block might start filling up the screen unexpectedly.
+           * ``rs_pin``: RS pin GPIO number,
            * ``debug``: enables printing out LCD commands.
            * ``**kwargs``: all the other arguments, get passed further to HD44780 constructor
 
