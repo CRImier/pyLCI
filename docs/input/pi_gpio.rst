@@ -4,6 +4,7 @@
 Raspberry Pi GPIO input driver
 ##############################
 
+Driver for buttons connected to GPIO. Up to 8 button are supported now.
 Sample config.json:
 
 .. code:: json
@@ -16,8 +17,6 @@ Sample config.json:
            "button_pins":[25, 24, 23, 18, 22, 27, 17, 4]
           }
        }]
-
-
 
 .. toctree::
 

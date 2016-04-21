@@ -2,8 +2,9 @@ import threading
 from time import sleep
 
 class InputDevice():
-    """ A driver for pushbuttons attached to Raspberry Pi GPIO. It uses RPi.GPIO library. Button's first pin has to be attached to ground, second has to be attached to the GPIO pin and pulled up to 3.3V with a 1-10K resistor."""
+    """ A driver for pushbuttons attached to Raspberry Pi GPIO. It uses RPi.GPIO library. Button's first pin has to be attached to ground, second pin has to be attached to the GPIO pin and pulled up to 3.3V with a 1-10K resistor.
 
+    Pins are mapped to keys in this way: ["KEY_UP", "KEY_DOWN", "KEY_LEFT", "KEY_RIGHT", "KEY_KPENTER", "KEY_DELETE", "KEY_HOME", "KEY_END"]"""
     mapping = [
     "KEY_UP",
     "KEY_DOWN",
@@ -21,6 +22,7 @@ class InputDevice():
         Kwargs:
         
         * ``button_pins``: GPIO mubers which to treat as buttons (GPIO.BCM numbering)
+        * ``debug``: enables printing button press and release events when set to True
         """
         self.button_pins = button_pins
         self.debug = debug
