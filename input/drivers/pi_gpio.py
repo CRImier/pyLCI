@@ -55,8 +55,6 @@ class InputDevice():
                 sleep(0.01)
         except:
             raise
-        finally:
-            GPIO.cleanup()
 
     def stop(self):
         """Sets the ``stop_flag`` for loop functions."""
