@@ -9,9 +9,9 @@ def update():
     try:
         output = check_output(["git", "pull"])
         if "Already up-to-date." in output:
-            Printer(["All up-to-date", i, o, 1)
+            Printer("All up-to-date", i, o, 1)
         else:
-            Printer(["Updated pyLCI", i, o, 1)
+            Printer("Updated pyLCI", i, o, 1)
     except OSError as e:
         if e.errno == 2:
             Printer("git not found!", i, o, 1)
