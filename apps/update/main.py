@@ -1,4 +1,4 @@
-menu_name = "Update"
+menu_name = "Update pyLCI"
 
 from subprocess import check_output, CalledProcessError
 
