@@ -7,19 +7,21 @@ from ui import Printer
 def update():
     Printer("Updating...", i, o, 1)
     try:
-        print(check_output(["git", "pull"]))
+        output = check_output(["git", "pull"])
+        if "Already up-to-date." in output:
+            Printer(["All up-to-date", i, o, 1)
+        else:
+            Printer(["Updated pyLCI", i, o, 1)
     except OSError as e:
         if e.errno == 2:
             Printer("git not found!", i, o, 1)
         else:
-            Printer("Unknown error!", i, o, 1)
+            Printer("Unknown OSError!", i, o, 1)
     except CalledProcessError as e:
         if e.returncode == 1:
             Printer(["Can't connect", "to GitHub!"], i, o, 1)
         else:
             Printer(["Failed with", "code {}".format(e.returncode)], i, o, 1)
-    else:
-        Printer("Success!", i, o, 1)
 
 callback = update
 i = None #Input device
