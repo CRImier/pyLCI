@@ -19,7 +19,7 @@ def update():
             Printer("Unknown OSError!", i, o, 1)
     except CalledProcessError as e:
         if e.returncode == 1:
-            Printer(["Can't connect", "to GitHub!"], i, o, 1)
+            Printer(["Can't connect", "to GitHub?"], i, o, 1) #Need to check output - can also be "Conflicting local changes" and similar
         else:
             Printer(["Failed with", "code {}".format(e.returncode)], i, o, 1)
 
