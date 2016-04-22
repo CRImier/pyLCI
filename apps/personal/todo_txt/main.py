@@ -38,8 +38,6 @@ class TaskStorage():
         self.contexts = list(set(self.contexts))
         f.seek(0)
         self.file_contents = f.read()
-        print(self.projects)
-        print(self.contexts)
 
 def uncomplete_task(task):
     task.setPending()
@@ -76,18 +74,24 @@ def projects_menu():
         menu_contents.append([description, lambda x=task: make_task_menu(x)])
     Menu(menu_contents, i, o, "Tasks menu").activate()
 
-callback = None
-
-def init_app(input, output):
+def launch():
+    global storage
+    try:
+        storage = TaskStorage(tasklist_filename)
+    except IOError:
+        Printer(["TODO.txt file","not found!"], i, o, 1)
+        return
     main_menu_contents = []
-    global i, o, storage, callback
-    i = input
-    o = output
-    storage = TaskStorage(tasklist_filename)
     main_menu_contents.append(["Uncompleted tasks", lambda: tasks_menu(uncompleted=True)])
     main_menu_contents.append(["All tasks", tasks_menu])
     main_menu_contents.append(["Projects", projects_menu])
-    main_menu_contents.append(["Contexts", contexts_menu])
-    callback = Menu(main_menu_contents, i, o, "Main menu").activate
+    Menu(main_menu_contents, i, o, "Main menu").activate()
+
+callback = launch
+
+def init_app(input, output):
+    global i, o
+    i = input
+    o = output
 
 #['_highest_priority', '_lowerCompleteness', '_lowest_priority', '_parseDate', '_parseWord', '_reset', 'completion_date', 'creation_date', 'decreasePriority', 'due', 'due_error', 'increasePriority', 'is_complete', 'is_future', 'keywords', 'priority', 'threshold', 'threshold_error']
