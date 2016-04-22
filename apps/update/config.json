@@ -1,0 +1,10 @@
+[
+ {"path":"./s/login.sh",
+  "name":"Hotspot login"},
+ {"path":"/root/backup.sh",
+  "name":"Backup things",
+  "args":["--everything", "--now"]},
+ {"path":"mount",
+  "name":"'mount' with -a",
+  "args":["-a"]}
+]
