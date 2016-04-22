@@ -15,7 +15,8 @@ class InputDevice():
     "KEY_HOME",
     "KEY_END"]
     stop_flag = False
-    
+    running = False
+
     def __init__(self, button_pins=[], debug=False):
         """Initialises the ``InputDevice`` object. 
 
@@ -30,10 +31,13 @@ class InputDevice():
     def start(self):
         """Polling loop. Stops when ``stop_flag`` is set to True."""
         import RPi.GPIO as GPIO
+        while self.running == True:
+            sleep(0.1) #Preventing a race condition where previous loop would not have time to end before the next one would start
         self.stop_flag = False
+        self.running = True
         GPIO.setmode(GPIO.BCM) # Broadcom pin-numbering scheme
         for pin_num in self.button_pins:
-            GPIO.setup(pin_num, GPIO.IN) # Button pin set as input
+            GPIO.setup(pin_num, GPIO.IN)
         button_states = []
         for i, pin_num in enumerate(self.button_pins):
             button_states.append(GPIO.input(pin_num))
@@ -55,6 +59,8 @@ class InputDevice():
                 sleep(0.01)
         except:
             raise
+        finally:
+            self.running = False
 
     def stop(self):
         """Sets the ``stop_flag`` for loop functions."""
