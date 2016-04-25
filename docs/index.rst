@@ -14,6 +14,7 @@ It can be used on:
 Guides:
 =================================
 
+* :doc:`Hardware guide <hardware>`
 * :doc:`Setup and configuration guide <setup>`
 * :doc:`Debugging issues <debugging>`
 * :doc:`Managing and developing applications <app_mgmt>`
@@ -39,6 +40,7 @@ The pyLCI daemon consists of 5 parts:
    :maxdepth: 1
    :hidden:
 
+   hardware.rst
    setup.rst
    debugging.rst
    input.rst
