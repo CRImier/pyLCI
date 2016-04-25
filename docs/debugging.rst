@@ -19,8 +19,8 @@ Currently pyLCI uses HD44780-compatible screens as output devices. Minimum scree
 
 * Check your connections. Seriously. Like, once again. Some breakouts might use same ICs but have different pinouts, even *slightly* different pinouts.
 * Try and tie D0-D3 lines to GND. Those lines floating freely may cause instabilities. 
-* You can try to tie the R/W line to GND, too. It's even necessary in some cases, like Pi GPIO driver.
-* Put a ~100pF capacitor between GND and EN.
+* You can try to tie the R/W line to GND, too. It's even necessary in some cases, like Pi GPIO driver. 
+* Put a ~100pF capacitor between GND and EN. If screen starts quickly filling up with blocks after some time, pull the EN line down with a 10K resistor.
 
 .. rubric:: Screen characters being shifted incorrectly
 
@@ -35,12 +35,6 @@ Currently pyLCI uses HD44780-compatible screens as output devices. Minimum scree
 * Is first row of blocks shown? If not, regulate the contrast with a potentiometer. You can also try to tie the contrast pin to GND.
 * Does screen receive 5V (not 3.3V) as VCC? Unless it's a screen that's capable of doing 3.3V (must be stated in screen's description), that's a no-go.
 * Is the driver even correct? See the config.json and documentation for the driver you're using. 
-
-============
-Input issues
-============
-
-
 
 * :ref:`genindex`
 * :ref:`modindex`
