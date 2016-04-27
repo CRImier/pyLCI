@@ -12,6 +12,7 @@ Applications bundled with the default install are:
    * :ref:`apps_lsusb`
    * :ref:`apps_mocp`
    * :ref:`apps_network`
+   * :ref:`apps_partitions`
    * :ref:`apps_scripts`
    * :ref:`apps_shutdown`
    * :ref:`apps_system_info`
@@ -35,6 +36,7 @@ Some information on maintaining and writing applications:
    apps/lsusb.rst
    apps/mocp.rst
    apps/network.rst
+   apps/partitions.rst
    apps/scripts.rst
    apps/shutdown.rst
    apps/skeleton.rst
