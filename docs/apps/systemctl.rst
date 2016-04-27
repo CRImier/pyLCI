@@ -1,7 +1,7 @@
 .. _apps_systemctl:
 
 #############
-systemctl app
+Systemctl app
 #############
 
 This application lists all systemd units available and lets you manage them.
