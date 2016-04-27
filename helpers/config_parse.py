@@ -2,19 +2,24 @@
 import os 
 import json 
 
-config_path = os.path.relpath("config.json")
-config = None
-
-def read_config(config_path=config_path):
+def read_config(config_path):
     try:
-        f = open(config_path, 'r')
-        data = json.load(f)
-        f.close()
+        with open(config_path, 'r') as f:
+            data = json.load(f)
+    except (IOError, ValueError) as e:
+        raise
+    else:
+        return data
+     
+def write_config(config, config_path):
+    try:
+        with open(config_path, 'w') as f:
+            data = json.dump(config, f)
     except (IOError, ValueError) as e:
         raise
     else:
         return data
      
 if __name__ == "__main__":
-    config = read_config()
+    config = read_config("../config.json")
     print config

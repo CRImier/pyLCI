@@ -8,7 +8,7 @@ def init():
 
     It also sets ``screen`` global of ``output`` module with created ``Screen`` object."""
     global screen
-    config = read_config()
+    config = read_config("config.json")
     output_config = config["output"][0]
     driver_name = output_config["driver"]
     driver_module = importlib.import_module("output.drivers."+driver_name)

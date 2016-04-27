@@ -116,7 +116,7 @@ def init():
  
     It also sets ``driver`` and ``listener`` globals of ``input`` module with driver and listener respectively, as well as registers ``listener.stop()`` function to be called when script exits since it's in a blocking non-daemon thread."""
     global listener, driver
-    config = read_config()
+    config = read_config("config.json")
     input_config = config["input"][0]
     driver_name = input_config["driver"]
     driver_module = importlib.import_module("input.drivers."+driver_name)
