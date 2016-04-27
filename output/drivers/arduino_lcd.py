@@ -1,6 +1,8 @@
 from serial import Serial
 from time import sleep
 
+#Firmware: TODO
+
 def delay(time):
     sleep(time/1000.0)
 
