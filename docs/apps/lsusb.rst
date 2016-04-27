@@ -1,8 +1,8 @@
 .. _apps_lsusb:
 
-#########
-Lsusb app
-#########
+###################
+USB device info app
+###################
 
 This application gives you information about connected USB devices.
 

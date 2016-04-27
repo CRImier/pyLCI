@@ -1,8 +1,8 @@
 .. _apps_wpa_cli:
 
-#############################
-Wireless (wpa_supplicant) app
-#############################
+########################
+Wireless connections app
+########################
 
 This application lets you connect to wireless networks and manage connections. Under the hood, it uses ``wpa_cli`` to connect to a running ``wpa_supplicant`` instance. 
 
