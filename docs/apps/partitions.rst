@@ -13,5 +13,5 @@ It's capable of:
 * Ejecting them
 * Unmounting them lazily
 
-:: note.. Lazy unmounting means the filesystem is unmounted as soon as it stops being busy
+.. note:: Lazy unmounting means the filesystem is unmounted as soon as it stops being busy
 
