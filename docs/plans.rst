@@ -50,17 +50,16 @@ Applications
 * Calculator app
 * Mount/unmount partitions app
 * OpenHAB console
-* Systemctl menu
 * Twitter reader
 * NMap app
 * SMS and call app - interfacing to mobile phones and GSM/3G modems
+
 ============
 UI elements
 ============
 
 * Dialog box
 * File choice dialog (possibly, assisted by character input)
-* Window with contents which would periodically refresh, but only when active (imagine a clock display)
 
 .. rubric:: Adding input UI elements
 
