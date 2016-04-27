@@ -9,14 +9,19 @@ o = None
 from subprocess import call
 from time import sleep
 
-from ui import Menu
+from ui import Menu, Printer
 from if_info import parse_ip_addr
 
 def show_ifc_data(ifc_name, ifc_data):
+    ip, mask = str(ifc_data['addr']).rsplit('/', 1)
+    ip_header = "IP: "
+    mask_str = "/{}".format(mask)
+    ip_header_str = ip_header + mask_str.rjust(o.cols-len(ip_header)) #Magic to make it beautiful
+    print(ip_header_str)
     ifd_menu_contents = [
     ["state: "+str(ifc_data['state'])],
-    ["IP: "+str(ifc_data['addr'])],
-    ["IP6: "+str(ifc_data['addr6'])],
+    [[ip_header_str, ip]],
+    ["IP6: "+str(ifc_data['addr6']), lambda: Printer(str(ifc_data['addr6']), i, o, 3)],
     ["MAC: "+str(ifc_data['ph_addr'])]
     ]
     ifd_menu = Menu(ifd_menu_contents, i, o, "{} interface data menu".format(ifc_name), entry_height=2)
