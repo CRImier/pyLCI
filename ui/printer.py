@@ -6,7 +6,7 @@ def Printer(message, i, o, sleep_time=1, skippable=False):
     Args:                                                                    
                                                                              
         * ``message``: A string or list of strings to display. A string will be split into a list, a list will not be modified. The resulting list is then displayed string-by-string.
-        * ``i``, ``o``: input&output device objects. If you're not using skippable=True, feel free to pass None as i.
+        * ``i``, ``o``: input&output device objects. If you're not using skippable=True and don't need exit on KEY_LEFT, feel free to pass None as i.
                                                                              
     Kwargs:                                                                  
                                                                                  
@@ -14,18 +14,24 @@ def Printer(message, i, o, sleep_time=1, skippable=False):
         * ``skippable``: If set, allows skipping message screens by presing ENTER.
                                                                                  
     """                                                                      
-    skip_keys = ["KEY_ENTER", "KEY_KPENTER"]
     Printer.skip_screen_flag = False #A flag which is set for skipping screens and is polled while printer is displaying things
+    Printer.exit_flag = False #A flag which is set for stopping exiting the printing process completely
+
     #I need to make it this function's attribute because this is a nonlocal variable and AFAIK the only neat way to change it reliably
     def skip_screen():
         Printer.skip_screen_flag = True
 
+    def exit_printer():
+        Printer.exit_flag = True
+
     #If skippable option is enabled, etting input callbacks on keys we use for skipping screens
-    if skippable:
+    if i is not None: #Can be on boot or whenever
         i.stop_listen()
         i.clear_keymap()
-        for keycode in skip_keys:
-            i.set_callback(keycode, skip_screen)
+        if skippable:
+            i.set_callback("KEY_KPENTER", skip_screen)
+            i.set_callback("KEY_ENTER", skip_screen)
+        i.set_callback("KEY_LEFT", exit_printer)
         i.listen()
 
     #Now onto rendering the message
@@ -53,8 +59,12 @@ def Printer(message, i, o, sleep_time=1, skippable=False):
             poll_period = 0.1
             sleep_periods = sleep_time/poll_period
             for period in range(int(sleep_periods)):
-                if Printer.skip_screen_flag == True:
+                if Printer.exit_flag:
+                    return #Exiting the function completely
+                if Printer.skip_screen_flag:
                      break #Going straight to the next screen
                 sleep(poll_period)
         else:
+            if Printer.exit_flag:
+                return
             sleep(sleep_time)
