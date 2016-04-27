@@ -14,6 +14,8 @@ UI elements:
 
    * :ref:`ui_menu`
    * :ref:`ui_printer`
+   * :ref:`ui_refresher`
+   * :ref:`ui_checkbox`
 
 .. toctree::
    :maxdepth: 1

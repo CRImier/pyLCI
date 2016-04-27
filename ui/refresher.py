@@ -31,6 +31,7 @@ class Refresher():
 
         Kwargs:
 
+            * ``keymap``: Keymap entries you want to set while Refresher is active
             * ``name``: Refresher name which can be used internally and for debugging.
 
         """
@@ -85,7 +86,7 @@ class Refresher():
         logging.info("Active menu is {0}".format(self.name))    
 
     def process_callback(self, function):
-        """ Decorates a function.
+        """ Decorates a function to be used by Refresher element.
         |Is typically used as a wrapper for a callback from input event processing thread.
         |After callback's execution is finished, sets the keymap again and refreshes the refresher."""
         def wrapper(*args, **kwargs):
@@ -114,7 +115,7 @@ class Refresher():
         self.i.listen()
 
     def set_function(self, function):
-        """Sets ``refresh_function`` attribute."""
+        """Sets the function to be used by the Refresher."""
         self.refresh_function = function
 
     @to_be_foreground
