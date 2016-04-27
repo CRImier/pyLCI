@@ -1,14 +1,18 @@
 menu_name = "Scripts" #App name as seen in main menu while using the system
 
+scripts_dir = "s/"
+config_filename = "config.json"
+
 from subprocess import check_output, CalledProcessError
 from time import sleep
-import os
-
-base_dir = "apps/scripts"
-scripts_dir = "s/"
+import os, sys
 
 from helpers.config_parse import read_config
 from ui import Menu, Printer
+
+base_dir = os.path.dirname(sys.modules[__name__].__file__)
+config_path = os.path.join(base_dir, config_filename)
+
 
 def call_external(script_list):
     Printer("Calling {}".format(os.path.split(script_list[0])[1]), i, o, 1)
@@ -28,18 +32,22 @@ def call_external(script_list):
         
 def show_menu():
     script_menu_contents = []
-    config = read_config(os.path.join(base_dir, "config.json"))
     scripts_in_config = []
-    for script_def in config:
-        script_path = script_def["path"]
-        if script_path.startswith('./'):
-            script_path = script_path.lstrip('.').lstrip('/')
-            script_path = os.path.join(base_dir, script_path)
-            scripts_in_config.append(script_path)
-        args = script_def["args"] if "args" in script_def else []
-        script_name = script_def["name"] if "name" in script_def else os.path.split(script_path)[1]
-        script_list = [script_path]+args
-        script_menu_contents.append([script_name, lambda x=script_list: call_external(x)])
+    try:
+        config = read_config(config_path)
+    except ValueError:
+        Printer("Invalid config!", i, o)
+    else:
+        for script_def in config:
+            script_path = script_def["path"]
+            if script_path.startswith('./'):
+                script_path = script_path.lstrip('.').lstrip('/')
+                script_path = os.path.join(base_dir, script_path)
+                scripts_in_config.append(script_path)
+            args = script_def["args"] if "args" in script_def else []
+            script_name = script_def["name"] if "name" in script_def else os.path.split(script_path)[1]
+            script_list = [script_path]+args
+            script_menu_contents.append([script_name, lambda x=script_list: call_external(x)])
     other_scripts = os.listdir(os.path.join(base_dir, scripts_dir))
     for script in other_scripts:
         relpath = os.path.join(base_dir, scripts_dir, script)
