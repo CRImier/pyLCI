@@ -7,16 +7,19 @@ There can be an application for any task you want to use pyLCI for - you only ne
 
 Applications bundled with the default install are:
 
-   * :ref:`apps_wpa_cli`
-   * :ref:`apps_tvservice`
-   * :ref:`apps_system_info`
-   * :ref:`apps_lsusb`
-   * :ref:`apps_network`
-   * :ref:`apps_mocp`
-   * :ref:`apps_volume`
-   * :ref:`apps_shutdown`
-   * :ref:`apps_scripts`
+   * :ref:`apps_clock`
    * :ref:`apps_i2ctools`
+   * :ref:`apps_lsusb`
+   * :ref:`apps_mocp`
+   * :ref:`apps_network`
+   * :ref:`apps_scripts`
+   * :ref:`apps_shutdown`
+   * :ref:`apps_system_info`
+   * :ref:`apps_systemctl`
+   * :ref:`apps_tvservice`
+   * :ref:`apps_update`
+   * :ref:`apps_volume`
+   * :ref:`apps_wpa_cli`
 
 Some information on maintaining and writing applications:
 
@@ -27,17 +30,20 @@ Some information on maintaining and writing applications:
    :maxdepth: 1
    :hidden:
 
-   apps/wpa_cli.rst
-   apps/tvservice.rst
-   apps/system_info.rst
-   apps/lsusb.rst
-   apps/network.rst
-   apps/mocp.rst
-   apps/volume.rst
-   apps/shutdown.rst
-   apps/scripts.rst
+   apps/clock.rst
    apps/i2ctools.rst
+   apps/lsusb.rst
+   apps/mocp.rst
+   apps/network.rst
+   apps/scripts.rst
+   apps/shutdown.rst
    apps/skeleton.rst
+   apps/system_info.rst
+   apps/systemctl.rst
+   apps/tvservice.rst
+   apps/update.rst
+   apps/volume.rst
+   apps/wpa_cli.rst
 
 * :ref:`genindex`
 * :ref:`modindex`
