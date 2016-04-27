@@ -48,7 +48,7 @@ Applications
 * UCI management app
 * Counter app
 * Calculator app
-* Mount/unmount partitions app
+* Mount partitions app
 * OpenHAB console
 * Twitter reader
 * NMap app
