@@ -33,8 +33,9 @@ class Menu():
     * ``pointer``: currently selected menu element's number in ``self._contents``.
     * ``in_background``: a flag which indicates if menu is currently active, either if being displayed or being in background (for example, if a sub-menu of this menu is currently active)
     * ``in_foreground`` : a flag which indicates if menu is currently displayed. If it's not active, inhibits any of menu's actions which can interfere with other menu or UI element being displayed.
-    * ``first_displayed_entry`` : Internal flag which points to the number of ``self._contents`` element which is at the topmost position of the menu as it's currently displayed on the screen
-    * ``last_displayed_entry`` : Internal flag which points to the number of ``self._contents`` element which is at the lowest position of the menu as it's currently displayed on the screen
+    * ``first_displayed_entry`` : Internal pointer which points to the number of ``self._contents`` element which is at the topmost position of the menu as it's currently displayed on the screen
+    * ``last_displayed_entry`` : Internal pointer which points to the number of ``self._contents`` element which is at the lowest position of the menu as it's currently displayed on the screen
+    * ``no_entry_message`` : The entry displayed in case menu has no elements
 
     """
     contents = []
@@ -48,6 +49,7 @@ class Menu():
     first_displayed_entry = 0
     last_displayed_entry = None
     exit_exception = False
+    no_entry_message = "No menu entries"
 
     def __init__(self, contents, i, o, name="Menu", entry_height=1, append_exit=True, catch_exit=True, exitable=True):
         """Initialises the Menu object.
@@ -237,7 +239,7 @@ class Menu():
         |Doesn't support partly-rendering entries yet."""
         displayed_data = []
         if len(self._contents) == 0:
-            return ["No menu entries"]
+            return [self.no_entry_message]
         if self.pointer < self.first_displayed_entry:
             #print("Pointer went too far to top, correcting")
             self.last_displayed_entry -=  self.first_displayed_entry - self.pointer #The difference will mostly be 1 but I guess it might be more in case of concurrency issues
