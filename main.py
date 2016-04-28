@@ -131,17 +131,17 @@ def exception_wrapper(callback):
     try:
         callback()
     except KeyboardInterrupt:
-        Printer(["Does Ctrl+C", "hurt scripts?"], i, o, 0)
+        Printer(["Does Ctrl+C", "hurt scripts?"], None, o, 0)
         i.atexit()
         sys.exit(1)
     except Exception as e:
         print(e)
         #raise
-        Printer(["A wild exception", "appears!"], i, o, 0)
+        Printer(["A wild exception", "appears!"], None, o, 0)
         i.atexit()
         sys.exit(1)
     else:
-        Printer("Exiting pyLCI", i, o, 0)
+        Printer("Exiting pyLCI", None, o, 0)
         i.atexit()
         sys.exit(0)
 
