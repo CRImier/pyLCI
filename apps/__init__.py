@@ -9,7 +9,7 @@ def is_module_dir(dir_path):
     
 def is_subdir(dir_path):
     contents = os.listdir(dir_path)
-    if "__init__.py" in contents and "main.py" not in contents:
+    if "__init__.py" in contents and "main.py" not in contents and "do_not_load" not in contents:
         return True
     else:
         return False
