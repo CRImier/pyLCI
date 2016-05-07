@@ -94,11 +94,8 @@ class InputDevice():
             pass
         try:
             self.thread.join()
-        except AttributeError:
+        except (AttributeError, KeyboardInterrupt):
             pass #Too early, thread not started yet
-        except:
-            raise
-
 
     def activate(self):
         """Starts a thread with ``start`` function as target."""
