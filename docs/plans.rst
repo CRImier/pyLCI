@@ -2,7 +2,9 @@
 Future plans
 #########################
 
-.. note:: This list is not by any means complete. What's listed here is bound to appear sooner or later. What's not listed is either not yet considered or not going to be implemented.
+A TODO document, if you will
+
+.. note:: This list is not by any means complete. What's listed here is bound to appear sooner or later. What's not listed is either not yet considered or not going to be implemented - feel free to ask me at GitHub!
 
 =====================
 Global system changes
@@ -41,7 +43,7 @@ Output devices
 Applications
 ============
 
-* Bluetooth app (involves a lot of DBus work)
+* Bluetooth app (delayed, involves a lot of DBus work)
 * "Quick reading" app (word-by-word)
 * Camera app
 * Stopwatch/timer app
@@ -67,3 +69,14 @@ UI elements
 * Simple number input
 * Character input using left/down/up/right
 * Character input using keypads and keyboards
+
+============
+Development
+============
+
+* More example apps & examples for UI elements
+* An app development course
+
+.. rubric:: Integration into projects
+
+* RPC API wrapper (+examples) for integration in any projects running in separate threads
