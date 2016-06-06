@@ -16,6 +16,7 @@ UI elements:
    * :ref:`ui_printer`
    * :ref:`ui_refresher`
    * :ref:`ui_checkbox`
+   * :ref:`ui_number_input`
 
 .. toctree::
    :maxdepth: 1
@@ -23,6 +24,9 @@ UI elements:
 
    ui/menu.rst
    ui/printer.rst
+   ui/refresher.rst
+   ui/checkbox.rst
+   ui/number_input.rst
 
 * :ref:`genindex`
 * :ref:`modindex`
