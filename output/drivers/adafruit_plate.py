@@ -1,6 +1,9 @@
 import smbus
 from time import sleep
 
+import socket
+import threading
+
 def delay(time):
     sleep(time/1000.0)
 
@@ -87,14 +90,35 @@ class Screen(HD44780):
         """Sets the MCP23017 register."""
         self.bus.write_byte_data(self.addr, reg, val)
 
+    def set_rgb(self, red, green, blue):
+        port_a = 0 | ((not green) << 7)
+        port_a |= ((not red) << 6)
+        if self.chinese: 
+            port_a |= ((not self._backlight) << 5)
+            self.setMCPreg(0x14, port_a) 
+            self.setMCPreg(0x15, ((not blue) << 0))
+        else:
+            port_a |= ((not blue) << 5)
+            self.setMCPreg(0x14, port_a)
 
 if __name__ == "__main__":
     screen = Screen(bus=1, addr=0x20, cols=16, rows=2, debug=True, chinese=True)
     line = "0123456789012345"
-    if True:
+    """if True:
         screen.display_data(line, line[::-1])
         sleep(1)
         screen.disable_backlight()
         screen.display_data(line[::-1], line)
         sleep(1)
-        screen.clear()
+        screen.clear()"""
+    screen.set_rgb(1, 1, 1)
+    sleep(1)
+    screen.set_rgb(0, 0, 0)
+    sleep(1)
+    screen.set_rgb(1, 0, 0)
+    sleep(1)
+    screen.set_rgb(0, 1, 0)
+    sleep(1)
+    screen.set_rgb(0, 0, 1)
+    sleep(1)
+    screen.set_rgb(0, 0, 0) 
