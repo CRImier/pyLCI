@@ -14,6 +14,7 @@ class InputDevice():
     "KEY_UP",
     "KEY_LEFT"]
     stop_flag = False
+    running = False
     previous_data = 0
 
     def __init__(self, addr = 0x20, bus = 1):
@@ -33,10 +34,14 @@ class InputDevice():
 
     def start(self):
         """Starts listening on the input device. Also, initialises the IO expander."""
+        while self.running: #Avoiding starting a new loop while the previous one is active
+            sleep(0.01)
         self.stop_flag = False
+        self.running = True
         self.setMCPreg(0x00, 0x1F)
         self.setMCPreg(0x0C, 0x1F)
         self.loop_polling()
+        self.running = False
 
     def loop_polling(self):
         """Polling loop. Stops when ``stop_flag`` is set to True."""
@@ -72,6 +77,10 @@ class InputDevice():
         self.thread = threading.Thread(target=self.start)
         self.thread.daemon = False
         self.thread.start()
+
+    def deactivate(self):
+        """Starts a thread with ``start`` function as target."""
+        self.stop()
 
     def setMCPreg(self, reg, val):
         """Sets the MCP23017 register."""
