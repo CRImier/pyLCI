@@ -68,7 +68,6 @@ class InputDevice():
         button_states = []
         while not self.stop_flag:
             data = (~self.bus.read_byte(self.addr)&0xFF)
-            print(data)
             if data != self.previous_data:
                 self.process_data(data)
                 self.previous_data = data
