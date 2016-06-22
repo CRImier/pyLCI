@@ -284,7 +284,7 @@ class Menu():
             entry_content = entry_content[:self.entry_height] #Can't have more arguments in the list argument than maximum entry height
             while len(entry_content) < self.entry_height: #Can't have less either, padding with empty strings if necessary
                 entry_content.append('')
-            return entry_content
+            return [str(element) for element in entry_content]
         else:
             raise Exception("Entries may contain either strings or lists of strings as their representations")
         #print("Rendered entry: {}".format(rendered_entry))
