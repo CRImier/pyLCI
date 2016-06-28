@@ -144,6 +144,21 @@ class HD44780():
         """ Set current input cursor to ``row`` and ``column`` specified """
         self.write_byte(self.LCD_SETDDRAMADDR | (col + self.row_offsets[row]))
 
+    def createChar(self, char_num, char_contents):
+        """Stores a character in the LCD memory so that it can be used later.
+        char_num has to be between 0 and 7 (including)
+        char_contents is a list of 8 bytes (only 5 LSBs are used)"""
+        if type(char_num) != int or not char_num in range(8):
+            raise ValueError("Invalid char_num!")
+        self.write_byte(self.LCD_SETCGRAMADDR | (char_num << 3))
+        try:
+            for i in range(8):
+                self.write_byte(char_contents[i], char_mode=True)
+        except IndexError:
+            raise ValueError("Invalid char_contents!")
+        finally:
+            self.setCursor(0, 0)
+
     def noDisplay(self):
         """ Turn the display off (quickly) """
         self.displaycontrol &= ~self.LCD_DISPLAYON
