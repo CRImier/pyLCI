@@ -8,7 +8,7 @@ class Screen():
 
     TODO: rewrite it to remove dependency on PiFaceCAD library."""
 
-    type = "char" #For future compatibility with graphical displays
+    type = ["char"] #For future compatibility with graphical displays
 
     def __init__(self, rows=2, cols=16):
         """Initialises the ``Screen`` object.  

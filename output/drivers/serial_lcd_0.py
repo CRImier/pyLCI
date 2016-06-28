@@ -12,7 +12,7 @@ from serial import Serial
 """
 class Screen():
     """Class that has all the screen control functions and defines"""
-    type = "char"
+    type = ["char"]
 
     def __init__(self, ser_port=None, ser_speed=115200, rows=2, cols=16):
         self.rows = rows

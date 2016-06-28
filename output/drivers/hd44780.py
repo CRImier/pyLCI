@@ -71,7 +71,7 @@ class HD44780():
 
     busy_flag = False
 
-    type = "char" #Variable for future compatibility with graphical displays
+    type = ["char"] #Variable for future compatibility with graphical displays
 
     def __init__(self, cols = 16, rows=2, do_init = True, debug = False, **kwargs):
         """ Sets variables for high-level functions.
