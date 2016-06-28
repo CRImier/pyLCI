@@ -19,6 +19,8 @@ class Screen(HD44780):
        Tested on hardware compatible with Adafruit schematic and working with Adafruit libraries, but not on genuine Adafruit hardware. Thus, you may have issues with backlight, as that's the 'gray area'.
     """
 
+    type = ["char", "rgb_led"]
+
     _backlight = False
 
     def __init__(self, bus=1, addr=0x20, debug=False, chinese=True, **kwargs):
