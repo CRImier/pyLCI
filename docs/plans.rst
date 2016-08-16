@@ -32,7 +32,6 @@ Output devices
 
 * Make an output emulator for development tasks
 * Add a way to automatically turn off the backlight after a set interval
-* Eliminate unnecessary redraws of the screen
 
 .. rubric:: Supporting graphical displays
 
