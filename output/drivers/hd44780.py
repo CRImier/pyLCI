@@ -70,10 +70,12 @@ class HD44780():
     displaymode = 0x07
 
     busy_flag = False
+    buffer = " "
 
+    redraw_coefficient = 0.5
     type = ["char"] #Variable for future compatibility with graphical displays
 
-    def __init__(self, cols = 16, rows=2, do_init = True, debug = False, **kwargs):
+    def __init__(self, cols = 16, rows=2, do_init = True, debug = False, buffering = True, **kwargs):
         """ Sets variables for high-level functions.
         
         Kwargs:
@@ -85,6 +87,9 @@ class HD44780():
         self.cols = cols
         self.rows = rows
         self.debug = debug
+        self.buffering = buffering
+        if self.buffering: #Init the buffer
+            self.buffer = [" "*self.cols for i in range(self.rows)]
         if do_init:
             self.init_display(**kwargs)
 
@@ -112,9 +117,35 @@ class HD44780():
         self.display()
 
     def display_data(self, *args):
-        """Displays data on display.
+        """Displays data on display. This function checks if the display contents can be redrawn faster by buffering them and checking the output, then either changes characters one-by-one or redraws the screen completely.
         
-        ``*args`` is a list of strings, where each string fills each row of the display, starting with 0."""
+        ``*args`` is a list of strings, where each string corresponds to a row of the display, starting with 0."""
+        #Formatting the args list to simplify the processing
+        args = list(args[:self.rows]) #Cut it to our max length and convert to list so we can change it
+        for i, string in enumerate(args): #Pad each string
+            args[i] = string[:self.cols].ljust(self.cols)
+        if len(args) < self.rows: #Pad with empty strings if it's not yet padded
+            for i in range(self.rows-len(args)): 
+                args.append(" "*self.cols)
+        diffs = [[] for i in range(self.rows)]
+        for i, string in enumerate(args):
+            for j, char in enumerate(string):
+                if self.buffer[i][j] != char:
+                    diffs[i].append(j)
+        if float(sum([len(diff) for diff in diffs]))/(self.rows*self.cols) > self.redraw_coefficient:
+            self._display_data(*args) #Redrawing the display
+            self.buffer = args
+        else:
+            for row_num, row_diffs in enumerate(diffs):
+                for i, char_cpos in enumerate(row_diffs):
+                    self.setCursor(row_num, char_cpos)
+                    self.write_byte(ord(args[row_num][char_cpos]), char_mode=True)
+            self.buffer = args
+
+    def _display_data(self, *args):
+        """Displays data on display. This function does the actual work of printing things to display.
+        
+        ``*args`` is a list of strings, where each string corresponds to a row of the display, starting with 0."""
         while self.busy_flag:
             sleep(0.01)
         self.busy_flag = True
