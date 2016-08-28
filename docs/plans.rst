@@ -11,7 +11,6 @@ Global system changes
 =====================
 
 * Make hotplug of input/output devices possible
-* Make nested folders for applications
 * Include a notification system
 
 .. rubric:: Hardware
@@ -78,4 +77,4 @@ Development
 
 .. rubric:: Integration into projects
 
-* RPC API wrapper (+examples) for integration in any projects running in separate threads
+* Examples for RPC API wrapper (for integration in any projects running in separate threads)
