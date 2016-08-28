@@ -17,6 +17,7 @@ UI elements:
    * :ref:`ui_refresher`
    * :ref:`ui_checkbox`
    * :ref:`ui_number_input`
+   * :ref:`ui_char_input`
 
 .. toctree::
    :maxdepth: 1
@@ -27,6 +28,7 @@ UI elements:
    ui/refresher.rst
    ui/checkbox.rst
    ui/number_input.rst
+   ui/char_input.rst
 
 * :ref:`genindex`
 * :ref:`modindex`
