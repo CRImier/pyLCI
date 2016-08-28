@@ -30,7 +30,7 @@ class IntegerInDecrementInput():
     selected_number = None
 
     def __init__(self, number, i, o, message="Pick a number:", interval=1, name="IntegerInDecrementInput"):
-        """Initialises the Menu object.
+        """Initialises the IntegerInDecrementInput object.
         
         Args:
 
@@ -64,7 +64,7 @@ class IntegerInDecrementInput():
         self.set_keymap()
 
     def activate(self):
-        """ A method which is called when input element needs to start operating. Is blocking, sets up input&output devices, renders the menu and waits until self.in_background is False, while menu callbacks are executed from the input device thread.
+        """ A method which is called when input element needs to start operating. Is blocking, sets up input&output devices, renders the UI element and waits until self.in_background is False, while callbacks are executed from the input device thread.
         This method returns the selected number if KEY_ENTER was pressed, thus accepting the selection.
         This method returns None when the UI element was exited by KEY_LEFT and thus it's assumed changes to the number were not accepted."""
         logging.info("{0} activated".format(self.name))    
