@@ -8,7 +8,7 @@ o = None
 
 from time import sleep
 
-from ui import Menu, Printer, MenuExitException
+from ui import Menu, Printer, MenuExitException, CharArrowKeysInput
 
 import wpa_cli
 
@@ -43,16 +43,30 @@ def connect_to_network(network_info):
     if wpa_cli.is_open_network(network_info):
         network_id = wpa_cli.add_network()
         Printer(["Network is open", "adding to known"], i, o, 1)
-        wpa_cli.set_network(network_id, 'ssid', '"'+network_info['ssid']+'"')
+        ssid = network_info['ssid']
+        wpa_cli.set_network(network_id, 'ssid', '"{}"'.format(ssid))
         wpa_cli.set_network(network_id, 'key_mgmt', 'NONE')
         Printer(["Connecting to", network_info['ssid']], i, o, 1)
         wpa_cli.select_network(network_id)
         return True
-    #No passkey/WPS PIN input possible yet and I cannot yet test WPS button functionality.
+    #Offering to enter a password
     else:
-        o.display_data("Network password", "unknown")
-        sleep(1)
-        return False
+        input = CharArrowKeysInput(i, o, message="Password:", name="WiFi password enter UI element")
+        password = input.activate()
+        if password is None:
+            o.display_data("Network password", "unknown")
+            sleep(1)
+            return False
+        network_id = wpa_cli.add_network()
+        Printer(["Password entered", "adding to known"], i, o, 1)
+        ssid = network_info['ssid']
+        wpa_cli.set_network(network_id, 'ssid', '"{}"'.format(ssid))
+        wpa_cli.set_network(network_id, 'psk', '"{}"'.format(password))
+        Printer(["Connecting to", network_info['ssid']], i, o, 1)
+        wpa_cli.select_network(network_id)
+        return True
+    #No WPS PIN input possible yet and I cannot yet test WPS button functionality.
+        
 
 def scan():
     try:
