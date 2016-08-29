@@ -67,8 +67,7 @@ class PathPickerMenu(Menu):
         self.path = path
         self.name = "PathPickerMenu-{}".format(self.path)
         self.display_hidden = display_hidden
-        self.set_contents(self.path) #As a side effect, self.contents is set to self.path (self._contents is properly set)
-        self.set_display_callback(o.display_data)
+        self.set_contents([]) #Method inherited from Menu and needs an argument, but context is not right
         self.generate_keymap()
 
     def activate(self):
@@ -114,7 +113,7 @@ class PathPickerMenu(Menu):
             }
         self.keymap = keymap
 
-    def process_contents(self, path):
+    def process_contents(self):
         """ """
         self._contents = []
         path_contents = os.listdir(self.path)
