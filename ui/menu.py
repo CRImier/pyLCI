@@ -185,7 +185,7 @@ class Menu():
     def set_contents(self, contents):
         """Sets the menu contents, as well as additionally re-sets ``last`` & ``first_displayed_entry`` pointers and calculates the value for ``last_displayed_entry`` pointer."""
         self.contents = contents
-        self.process_contents(self.contents)
+        self.process_contents()
         #Calculating the pointer to last element displayed
         if len(self._contents) == 0:
             self.last_displayed_entry = 0
@@ -204,12 +204,12 @@ class Menu():
         #print("Last displayed entry is {}".format(self.last_displayed_entry))
         self.pointer = 0 #Resetting pointer to avoid confusions between changing menu contents
 
-    def process_contents(self, contents):
+    def process_contents(self):
         """Processes contents for custom callbacks. Currently, only 'exit' calbacks are supported.
 
         If ``self.append_exit`` is set, it goes through the menu and removes every callback which either is ``self.deactivate`` or is just a string 'exit'. 
         |Then, it appends a single ["Exit", 'exit'] element at the end of menu contents. It makes dynamically appending elements to menu easier and makes sure there's only one "Exit" callback, at the bottom of the menu."""
-        self._contents = contents
+        self._contents = self.contents
         if self.append_exit: 
             element_callbacks = [element[1] if len(element)>1 else None for element in copy(self._contents)]
             for index, callback in enumerate(element_callbacks):
