@@ -41,7 +41,6 @@ class Menu():
     contents = []
     _contents = []
     pointer = 0
-    display_callback = None
     in_background = True
     in_foreground = False
     exit_flag = False
@@ -74,7 +73,6 @@ class Menu():
         self.name = name
         self.append_exit = append_exit
         self.set_contents(contents)
-        self.set_display_callback(o.display_data)
         self.catch_exit = catch_exit
         self.exitable = exitable
         self.generate_keymap()
@@ -293,9 +291,4 @@ class Menu():
     @to_be_foreground
     def refresh(self):
         logging.debug("{0}: refreshed data on display".format(self.name))
-        self.display_callback(*self.get_displayed_data())
-
-    def set_display_callback(self, callback):
-        logging.debug("{0}: display callback set".format(self.name))
-        self.display_callback = callback
-
+        self.o.display_data(*self.get_displayed_data())
