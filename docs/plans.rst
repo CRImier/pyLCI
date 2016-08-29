@@ -65,7 +65,6 @@ UI elements
 
 * Date/time picker
 * Simple number input
-* Character input using left/down/up/right
 * Character input using keypads and keyboards
 
 ============
