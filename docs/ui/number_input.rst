@@ -4,7 +4,7 @@
 Numeric input UI elements
 #########################
 
-``from ui import IntegerInDecrementInput``
+``from ui import IntegerAdjustInput``
 
 Contents:
 
@@ -13,7 +13,7 @@ Contents:
 
 .. automodule:: ui.number_input
 
-.. autoclass:: IntegerInDecrementInput
+.. autoclass:: IntegerAdjustInput
     :members: __init__,activate,increment,decrement,reset,select_number,deactivate,print_number,print_name
 
 * :ref:`genindex`

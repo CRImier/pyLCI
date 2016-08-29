@@ -10,7 +10,7 @@ def to_be_foreground(func): #A safety check wrapper so that certain checks don't
             return False
     return wrapper
 
-class IntegerInDecrementInput():
+class IntegerAdjustInput():
     """Implements a simple number input dialog which allows you to increment/decrement a number using  which can be used to navigate through your application, output a list of values or select actions to perform. Is one of the most used elements, used both in system core and in most of the applications.
 
     Attributes:
@@ -29,8 +29,8 @@ class IntegerInDecrementInput():
     number = 0
     selected_number = None
 
-    def __init__(self, number, i, o, message="Pick a number:", interval=1, name="IntegerInDecrementInput"):
-        """Initialises the IntegerInDecrementInput object.
+    def __init__(self, number, i, o, message="Pick a number:", interval=1, name="IntegerAdjustInput"):
+        """Initialises the IntegerAdjustInput object.
         
         Args:
 
@@ -47,7 +47,7 @@ class IntegerInDecrementInput():
         self.i = i
         self.o = o
         if type(number) != int:
-            raise ValueError("NumberInputIncrement operates on integers!")
+            raise ValueError("IntegerAdjustInput operates on integers!")
         self.initial_number = number
         self.number = number
         self.message = message
@@ -116,7 +116,7 @@ class IntegerInDecrementInput():
     @to_be_foreground
     def exit(self):
         """Exits discarding all the changes to the number."""
-        logging.debug("Number menu exited without changes")
+        logging.debug("{} exited without changes".format(self.name))
         self.deactivate()
 
     def generate_keymap(self):
