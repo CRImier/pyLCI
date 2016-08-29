@@ -1,15 +1,8 @@
 menu_name = "USB devices"
 
-from ui import Menu, Printer
+from ui import Menu, Printer, ellipsize
 
 import lsusb
-
-def ellipsize(string, length):
-    ellipsis = "..."
-    if len(string) <= length:
-        return string
-    string = string[:(length-len(ellipsis))]
-    return string+ellipsis
 
 def show_devices():
     menu_contents = []
@@ -22,7 +15,6 @@ def show_devices():
         ell_name = ellipsize(name, o.cols)
         menu_contents.append([["{}{},{}".format(bus, dev, vid_pid), ell_name], lambda x=name: Printer(x, i, o, skippable=True)])
     Menu(menu_contents, i, o, entry_height=2).activate()
-
 
 #Some globals for pyLCI
 callback = show_devices
