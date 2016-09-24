@@ -2,6 +2,8 @@ from time import sleep
 from copy import copy
 import logging
 
+from threading import Event
+
 def to_be_foreground(func): #A safety check wrapper so that certain functions don't get called if refresher is not the one active
     def wrapper(self, *args, **kwargs):
         if self.in_foreground:
@@ -16,7 +18,7 @@ class Refresher():
     refresh_function = None
     refresh_interval = 0
     display_callback = None
-    in_background = True
+    in_background = Event()
     in_foreground = False
     name = ""
     keymap = None
@@ -46,7 +48,7 @@ class Refresher():
     def to_foreground(self):
         """ Is called when refresher's ``activate()`` method is used, sets flags and performs all the actions so that refresher can display its contents and receive keypresses."""
         logging.info("menu {0} enabled".format(self.name))    
-        self.in_background = True
+        self.in_background.set()
         self.in_foreground = True
         self.refresh()
         self.activate_keymap()
@@ -64,7 +66,7 @@ class Refresher():
         sleep_time = 0.1
         counter = 0
         rts_ratio = self.refresh_interval/sleep_time
-        while self.in_background: 
+        while self.in_background.isSet(): 
             if self.in_foreground:
                 if counter == rts_ratio:
                     counter = 0
@@ -78,7 +80,7 @@ class Refresher():
     def deactivate(self):
         """ Deactivates the refresher completely, exiting it."""
         self.in_foreground = False
-        self.in_background = False
+        self.in_background.clear()
         logging.info("menu {0} deactivated".format(self.name))    
 
     def print_name(self):
