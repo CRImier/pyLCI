@@ -14,7 +14,7 @@ Contents:
 .. automodule:: ui.refresher
 
 .. autoclass:: Refresher
-    :members: __init__,activate,deactivate,set_function,print_name,
+    :members: __init__,activate,deactivate,print_name
 
 * :ref:`genindex`
 * :ref:`modindex`
