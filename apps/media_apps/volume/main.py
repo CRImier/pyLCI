@@ -5,6 +5,7 @@ default_config = '{"card":0, "channel":"Master", "adjust_amount":5, "adjust_type
 
 i = None
 o = None
+callback = None
 
 from helpers import read_config, write_config
 
@@ -105,14 +106,13 @@ def change_adjust_amount():
     config["adjust_amount"] = value
     write_config(config, config_path)
 
-def callback():
+def init_app(input, output):
+    global i, o, callback
+    i = input; o = output
     main_menu_contents = [ 
     ["Increase volume", plus_volume],
     ["Decrease volume", minus_volume],
     ["Toggle mute", toggle_mute],
     ["Settings", settings_menu]]
-    Menu(main_menu_contents, i, o, "Volume menu").activate()
+    callback = Menu(main_menu_contents, i, o, "Volume menu").activate
 
-def init_app(input, output):
-    global i, o
-    i = input; o = output
