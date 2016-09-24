@@ -77,7 +77,9 @@ class InputDevice():
         """Polling loop. Stops when ``stop_flag`` is set to True."""
         button_states = []
         while not self.stop_flag:
-            data = (~self.bus.read_byte(self.addr)&0xFF)
+            data0 = (~self.bus.read_byte_data(self.addr, 0x00)&0xFF)
+            data1 = (~self.bus.read_byte_data(self.addr, 0x01)&0xFF)
+            data = data0 | (data1 << 8) 
             if data != self.previous_data:
                 self.process_data(data)
                 self.previous_data = data
