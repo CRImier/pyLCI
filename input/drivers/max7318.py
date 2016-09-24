@@ -26,7 +26,7 @@ class InputDevice():
     "KEY_DELETE"]
 
     stop_flag = False
-    previous_data = 0
+    previous_data = 0x00
 
     def __init__(self, addr = 0x20, bus = 1, int_pin = None):
         """Initialises the ``InputDevice`` object.  
@@ -48,7 +48,11 @@ class InputDevice():
     def start(self):
         """Starts listening on the input device. Initialises the IO expander and runs either interrupt-driven or polling loop."""
         self.stop_flag = False
-        self.bus.write_byte(self.addr, 0xff)
+        self.bus.write_byte(self.addr, 0xff) #Init
+        #Now setting previous_data to a sensible value (assuming no buttons are pressed on init)
+        data0 = (~self.bus.read_byte_data(self.addr, 0x00)&0xFF)
+        data1 = (~self.bus.read_byte_data(self.addr, 0x01)&0xFF)
+        self.previous_data = data0 | (data1 << 8) 
         if self.int_pin is None:
             self.loop_polling()
         else:
