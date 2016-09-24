@@ -41,7 +41,7 @@ class Refresher():
         self.o = o
         self.name = name
         self.refresh_interval = refresh_interval
-        self.set_function(refresh_function)
+        self.refresh_function = refresh_function
         self.set_keymap(keymap)
         self.set_display_callback(self.o.display_data)
 
@@ -115,10 +115,6 @@ class Refresher():
         self.i.clear_keymap()
         self.i.keymap = self.keymap
         self.i.listen()
-
-    def set_function(self, function):
-        """Sets the function to be used by the Refresher."""
-        self.refresh_function = function
 
     @to_be_foreground
     def refresh(self):
