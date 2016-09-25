@@ -26,7 +26,7 @@ def network_info_menu(network_info):
     ["Frequency", lambda x=network_info['frequency']: Printer(x, i, o, 5, skippable=True)],
     ["Open" if wpa_cli.is_open_network(network_info) else "Secured", lambda x=network_info['flags']: Printer(x, i, o, 5, skippable=True)],
     ["Exit", 'exit']]
-    network_info_menu = Menu(network_info_contents, i, o, "Wireless network info")
+    network_info_menu = Menu(network_info_contents, i, o, "Wireless network info", catch_exit=False)
     network_info_menu.activate()
 
 def connect_to_network(network_info):
@@ -36,7 +36,7 @@ def connect_to_network(network_info):
         if network_info['ssid'] == network['ssid']:
             Printer([network_info['ssid'], "known,connecting"], i, o, 1)
             wpa_cli.select_network(network['network id'])
-            return True
+            raise MenuExitException
     #Then, if it's an open network, just connecting
     if wpa_cli.is_open_network(network_info):
         network_id = wpa_cli.add_network()
@@ -46,7 +46,7 @@ def connect_to_network(network_info):
         wpa_cli.set_network(network_id, 'key_mgmt', 'NONE')
         Printer(["Connecting to", network_info['ssid']], i, o, 1)
         wpa_cli.select_network(network_id)
-        return True
+        raise MenuExitException
     #Offering to enter a password
     else:
         input = CharArrowKeysInput(i, o, message="Password:", name="WiFi password enter UI element")
@@ -62,7 +62,7 @@ def connect_to_network(network_info):
         wpa_cli.set_network(network_id, 'psk', '"{}"'.format(password))
         Printer(["Connecting to", network_info['ssid']], i, o, 1)
         wpa_cli.select_network(network_id)
-        return True
+        raise MenuExitException
     #No WPS PIN input possible yet and I cannot yet test WPS button functionality.
         
 
