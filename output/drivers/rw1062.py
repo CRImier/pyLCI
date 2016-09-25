@@ -8,15 +8,14 @@ def delayMicroseconds(time):
     sleep(time/1000000.0)
 
 from hd44780 import HD44780
+from backlight import *
 
-class Screen(HD44780):
+class Screen(HD44780, BacklightManager):
     """A driver for Adafruit-developed Raspberry Pi character LCD&button shields based on MCP23017, either Adafruit-made or Chinese-made.
        Has workarounds for Chinese plates with LED instead of RGB backlight and LCD backlight on a separate I2C GPIO expander pin.
        
        Tested on hardware compatible with Adafruit schematic and working with Adafruit libraries, but not on genuine Adafruit hardware. Thus, you may have issues with backlight, as that's the 'gray area'.
     """
-
-    _backlight = False
 
     def __init__(self, bus=1, addr=0x20, debug=False, **kwargs):
         """Initialises the ``Screen`` object.  
@@ -35,6 +34,7 @@ class Screen(HD44780):
             addr = int(addr, 16)
         self.addr = addr
         self.debug = debug
+        BacklightManager.init_backlight(self, **kwargs)
         HD44780.__init__(self, debug=self.debug, **kwargs)
         
     def init_display(self, **kwargs):
@@ -67,6 +67,7 @@ class Screen(HD44780):
     def println(self, line):
         self.bus.write_i2c_block_data(self.addr, 0x40, [ord(char) for char in line])
 
+    @activate_backlight_wrapper
     def write_byte(self, data, char_mode=False):
 	if char_mode:
             self.bus.write_byte_data(self.addr, 0x40, data)
