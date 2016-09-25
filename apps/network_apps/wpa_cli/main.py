@@ -106,9 +106,12 @@ def wireless_status():
         status_menu_contents.append([['Security:', key_mgmt]])
         #If we have WPA in key_mgmt, we also have pairwise_cipher and group_cipher set to something other than NONE so we can show them
         if key_mgmt != 'NONE':
-            group = w_status['group_cipher']
-            pairwise = w_status['pairwise_cipher']
-            status_menu_contents.append([['Group/Pairwise:', group+"/"+pairwise]])
+            try: #What if?
+                group = w_status['group_cipher']
+                pairwise = w_status['pairwise_cipher']
+                status_menu_contents.append([['Group/Pairwise:', group+"/"+pairwise]])
+            except:
+                pass
     elif state in ['AUTHENTICATING', 'SCANNING', 'ASSOCIATING']:
         pass #These states don't have much information
     #In any case, we might or might not have IP address info
