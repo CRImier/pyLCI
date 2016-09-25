@@ -8,8 +8,8 @@ sensor = MLX90614()
 
 def show_temp():
     try:
-        amb_temp = sensor.read_amb_temp()
-        obj_temp = sensor.read_obj_temp()
+        amb_temp = round(sensor.read_amb_temp(), 1)
+        obj_temp = round(sensor.read_obj_temp(), 1)
     except IOError:
         amb_temp = None
         obj_temp = None
