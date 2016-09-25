@@ -1,7 +1,5 @@
 menu_name = "Wireless"
-#Some globals for LCS
 callback = None
-#Some globals for us
 main_menu = None
 i = None
 o = None
