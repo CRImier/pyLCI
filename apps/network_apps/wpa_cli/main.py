@@ -8,7 +8,7 @@ o = None
 
 from time import sleep
 
-from ui import Menu, Printer, MenuExitException, CharArrowKeysInput
+from ui import Menu, Printer, MenuExitException, CharArrowKeysInput, Refresher
 
 import wpa_cli
 
@@ -81,6 +81,21 @@ def scan():
     finally:
         sleep(1)
 
+def status_refresher_data():
+    try:
+        w_status = wpa_cli.connection_status()
+    except:
+        return ["wpa_cli fail"]
+    state = w_status['wpa_state']
+    ip = w_status['ip_address'] if 'ip_address' in w_status else 'None'
+    ap = w_status['ssid'] if 'ssid' in w_status else 'None'
+    return [ap.rjust(o.cols), ip.rjust(o.cols)]    
+
+def status_monitor():
+    keymap = {"KEY_ENTER":wireless_status, "KEY_KPENTER":wireless_status}
+    refresher = Refresher(status_refresher_data, i, o, 0.5, keymap, "Wireless monitor")
+    refresher.activate()
+
 def wireless_status():
     w_status = wpa_cli.connection_status()
     state = w_status['wpa_state']
@@ -150,7 +165,7 @@ def launch():
         [current_interface, change_interface],
         ["Scan", scan],
         ["Networks", show_networks],
-        ["Status", wireless_status],
+        ["Status", status_monitor],
         ["Save changes", save_changes],
         #["Saved networks", manage_saved_networks],
         ["Exit", 'exit']]
