@@ -94,7 +94,8 @@ class Refresher():
         def wrapper(*args, **kwargs):
             self.to_background() 
             function(*args, **kwargs)
-            self.to_foreground() 
+            if self.in_background.isSet():
+                self.to_foreground() 
         return wrapper
 
     def process_keymap(self, keymap):
@@ -102,7 +103,8 @@ class Refresher():
         for key in keymap:
             callback = self.process_callback(keymap[key])
             keymap[key] = callback
-        keymap["KEY_LEFT"] = lambda: self.deactivate()
+        if not "KEY_LEFT" in keymap:
+            keymap["KEY_LEFT"] = lambda: self.deactivate()
         return keymap
 
     def set_keymap(self, keymap):
