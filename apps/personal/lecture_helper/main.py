@@ -52,7 +52,6 @@ class LectureHelper():
 
     def move_left(self):
         if self.position == 0:
-            print("Deactivating refresher")
             self.refresher.deactivate()
             return
         self.position -= 1
