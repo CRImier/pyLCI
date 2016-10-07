@@ -7,5 +7,6 @@ from path_picker import PathPicker
 from number_input import IntegerAdjustInput
 IntegerInDecrementInput = IntegerAdjustInput #Compatibility with old ugly name
 from char_input import CharArrowKeysInput
+from dialog import DialogBox
 
 from funcs import ellipsize
