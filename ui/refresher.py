@@ -53,7 +53,6 @@ class Refresher():
         self.refresh()
         self.activate_keymap()
 
-    @to_be_foreground
     def to_background(self):
         """ Signals ``activate`` to finish executing """
         self.in_foreground = False
