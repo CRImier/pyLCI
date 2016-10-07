@@ -33,8 +33,8 @@ class DialogBox():
         elif values == 'ync':
             self.values = [["Yes", True], ["No", False], ["Cancel", None]]
         else:
-            assert(type(values) in (list, tuple), "Unsupported 'values' argument!")
-            assert(values, "DialogBox: Empty/invalid 'values' argument!")
+            assert type(values) in (list, tuple), "Unsupported 'values' argument!"
+            assert values, "DialogBox: Empty/invalid 'values' argument!"
             self.values = values
         self.message = message
         self.process_values()
