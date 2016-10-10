@@ -9,4 +9,4 @@ IntegerInDecrementInput = IntegerAdjustInput #Compatibility with old ugly name
 from char_input import CharArrowKeysInput
 from dialog import DialogBox
 
-from funcs import ellipsize
+from funcs import ellipsize, format_for_screen
