@@ -3,7 +3,7 @@ import logging
 from time import sleep
 from threading import Event
 
-from menu import Menu, to_be_foreground
+from menu import Menu, MenuExitException, to_be_foreground
 from printer import Printer
 
 class PathPicker():
@@ -16,39 +16,20 @@ class PathPicker():
         self.name = name
     
     def activate(self):
-        """ A method that activates PathPicker. Returns path chosen in the end - or None if there wasn't."""
+        """ A method that activates PathPicker. Returns path chosen or None if no path was chosen."""
         path = PathPickerMenu(self.path, self.i, self.o).activate()
         return path
 
 class PathPickerMenu(Menu):
-    """Implements a menu which can be used to navigate through your application, output a list of values or select actions to perform. Is one of the most used elements, used both in system core and in most of the applications.
-
-    Attributes:
-
-    * ``contents``: list of menu elements which was passed either to ``Menu`` constructor or to ``menu.set_contents()``.
-       
-      Menu element structure is a list, where:
-         * ``element[0]`` (element's representation) is either a string, which simply has the element's value as it'll be displayed, such as "Menu element 1", or, in case of entry_height > 1, can be a list of strings, each of which represents a corresponding display row occupied by the element.
-         * ``element[1]`` (element's callback) is a function which is called when menu's element is activated (such as pressing ENTER button when menu's element is selected). 
-           * Can be omitted if you don't need to have any actions taken upon activation of the element.
-           * Can be specified as 'exit' if you want a menu element that exits the menu upon activation.
-
-      *If you want to set contents after the initalisation, please, use set_contents() method.*
-    * ``_contents``: "Working copy" of menu contents, basically, a ``contents`` attribute which has been processed by ``self.process_contents``. 
-    * ``pointer``: currently selected menu element's number in ``self._contents``.
-    * ``in_background``: a flag which indicates if menu is currently active, either if being displayed or being in background (for example, if a sub-menu of this menu is currently active)
-    * ``in_foreground`` : a flag which indicates if menu is currently displayed. If it's not active, inhibits any of menu's actions which can interfere with other menu or UI element being displayed.
-    * ``first_displayed_entry`` : Internal flag which points to the number of ``self._contents`` element which is at the topmost position of the menu as it's currently displayed on the screen
-    * ``last_displayed_entry`` : Internal flag which points to the number of ``self._contents`` element which is at the lowest position of the menu as it's currently displayed on the screen
+    """#Short description
 
     """
     no_entry_message = "Empty directory"
-    path_chosen = False
+    path_chosen = None
     exitable = True
     append_exit = False
     entry_height = 1
     catch_exit = True
-    exit_flag = False
 
     def __init__(self, path, i, o, display_hidden = False):
         """Initialises the Menu object.
@@ -76,9 +57,8 @@ class PathPickerMenu(Menu):
         """ A method which is called when menu needs to start operating. Is blocking, sets up input&output devices, renders the menu and waits until self.in_background is False, while menu callbacks are executed from the input device thread."""
         logging.info("{0} activated".format(self.name))    
         self.to_foreground() 
-        while self.in_background and not self.exit_flag: #All the work is done in input callbacks
+        while self.in_background: #All the work is done in input callbacks
             sleep(0.1)
-        self.deactivate()
         logging.debug(self.name+" exited")
         return self.path_chosen
 
@@ -91,17 +71,15 @@ class PathPickerMenu(Menu):
         |If MenuExitException is returned from the callback, exits menu, too."""
         logging.debug("element selected")
         if len(self._contents) == 0:
-            self.exit_flag = True
+            self.deactivate()
         else:
             self.to_background()
-            path = self._contents[self.pointer][1]()
-            if path:
-                self.path_chosen = path
+            self._contents[self.pointer][1]()
+            self.to_foreground()
+            if self.path_chosen:
                 self.deactivate()
-            elif self.path_chosen:
-                exit_flag = True
             else:
-                 self.to_foreground()
+                self.to_foreground()
 
     def generate_keymap(self):
         """Sets the keymap. In the future, will allow per-system keycode-to-callback tweaking using a config file. """
@@ -111,12 +89,18 @@ class PathPickerMenu(Menu):
             "KEY_DOWN":lambda: self.move_down(),
             "KEY_KPENTER":lambda: self.select_element(),
             "KEY_ENTER":lambda: self.select_element(),
-            "KEY_LEFT": lambda: self.deactivate()
+            "KEY_LEFT": lambda: self.go_back()
             }
         self.keymap = keymap
 
+    def go_back(self):
+        if self.path == '/':
+            self.deactivate()
+            return
+        parent_path = os.path.split(self.path)[0]
+        self.goto_dir(parent_path)
+
     def process_contents(self):
-        """ """
         self._contents = []
         path_contents = os.listdir(self.path)
         files = []
@@ -126,46 +110,48 @@ class PathPickerMenu(Menu):
             if os.path.isdir(full_path):
                 if not self.display_hidden or not item.startswith('.'):
                     dirs.append(item)
-            elif os.path.isfile(full_path):
+            else:
                 if not self.display_hidden or not item.startswith('.'):
                     files.append(item)
-            else:
-                print("PathPicker: WUUUUUUUT is dis: {}".format(full_path))
         dirs.sort()
         files.sort()
         for dir in dirs:
             full_path = os.path.join(self.path, dir)
-            self._contents.append([dir, lambda x=full_path: self.path_menu(x)])
+            self._contents.append([dir, lambda x=full_path: self.goto_dir(x)])
         for file in files:
             full_path = os.path.join(self.path, file)
             self._contents.append([file, lambda x=full_path: self.select_path(x)])
-        logging.debug("{}: contents processed".format(self.name))
 
     @to_be_foreground
     def options_menu(self):
+        self.to_background()
         current_item = self._contents[self.pointer][0]
         full_path = os.path.join(self.path, current_item)
-        contents = [["Select path",lambda x=full_path: self.select_path(x)],
-                    ["See full name",lambda x=full_path: Printer(current_item, self.i, self.o)]]
+        contents = [["Select path",lambda x=full_path: self.option_select(x)],
+                    ["See full name",lambda x=full_path: Printer(current_item, self.i, self.o)],
+                    ["See full path",lambda x=full_path: Printer(x, self.i, self.o)],
+                    ["Exit PathPicker", self.option_exit]]
         Menu(contents, self.i, self.o).activate()
-        self.set_keymap()
+        if self.in_background:
+            self.to_foreground()
+
+    def option_exit(self):
+        self.deactivate()
+        raise MenuExitException #Menu needs to exit when PathPicker exits. It doesn't, of course, as it's in the main loop, so the app's left hanging. 
+        #One of the reasons MenuExitExceptions are there.
+
+    def option_select(self, path):
+        self.select_path(path)
+        self.deactivate()
+        raise MenuExitException 
+
+    #@to_be_foreground
+    def goto_dir(self, dir):
+        self.path = dir
+        self.pointer = 0
+        self.set_contents([])
         self.refresh()
 
     #@to_be_foreground
-    def path_menu(self, path):
-        return PathPickerMenu(path, self.i, self.o).activate()
-
-    #@to_be_foreground
     def select_path(self, path):
-        self.set_keymap()
         self.path_chosen = path
-        self.exit_flag = True
-
-    @to_be_foreground
-    def set_keymap(self):
-        """Generate and sets the input device's keycode-to-callback mapping. Re-starts the input device because ofpassing-variables-between-threads issues."""
-        self.generate_keymap()
-        self.i.stop_listen()
-        self.i.clear_keymap()
-        self.i.keymap = self.keymap
-        self.i.listen()
