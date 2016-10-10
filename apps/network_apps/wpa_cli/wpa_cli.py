@@ -116,7 +116,7 @@ def initiate_scan():
     return ok_fail_command("scan")
     
 def get_scan_results():
-    #Currently I know of no way to know if the scan results got updated
+    #Currently I know of no way to know if the scan results got updated since last time scan was initiated
     output = process_output(wpa_cli_command("scan_results"))
     #As of wpa_supplicant 2.3-1, header elements are ['bssid', 'frequency', 'signal level', 'flags', 'ssid']
     networks = process_table(output[0], output[1:])
