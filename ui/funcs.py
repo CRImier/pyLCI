@@ -4,7 +4,7 @@ def ellipsize(string, length, ellipsis="..."):
     string = string[:(length-len(ellipsis))]
     return string+ellipsis
 
-def format_for_screen(data, screen_width, linebreak=None):
+def format_for_screen(data, screen_width, break_words=True, linebreak=None):
     strings = data.split('\n')
     #Filter \n's
     data = ' \n '.join(strings) #Making sure linebreaks are surrounded by space characters so that when splitting by space you don't have to scan for linebreaks and just can compare
@@ -22,6 +22,9 @@ def format_for_screen(data, screen_width, linebreak=None):
                 screen_data.append(linebreak) 
         elif len(word) <= screen_width-len(current_data): #Word fits on current line
             current_data += word+" "
+        elif not break_words and len(word) <= screen_width:
+            screen_data.append(current_data)
+            current_data = word+" "
         else:
             space_on_current_line = screen_width-len(current_data)
             screen_data.append(current_data+word[:space_on_current_line])
