@@ -49,8 +49,6 @@ def connect_to_network(network_info):
         input = CharArrowKeysInput(i, o, message="Password:", name="WiFi password enter UI element")
         password = input.activate()
         if password is None:
-            o.display_data("Network password", "unknown")
-            sleep(1)
             return False
         network_id = wpa_cli.add_network()
         Printer(["Password entered", "adding to known"], i, o, 1)
