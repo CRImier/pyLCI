@@ -1,6 +1,5 @@
 menu_name = "Wireless"
-callback = None
-main_menu = None
+
 i = None
 o = None
 
@@ -10,12 +9,11 @@ from ui import Menu, Printer, MenuExitException, CharArrowKeysInput, Refresher
 
 import wpa_cli
 
-def show_networks():
+def show_scan_results():
     network_menu_contents = []
     networks = wpa_cli.get_scan_results()
     for network in networks:
         network_menu_contents.append([network['ssid'], lambda x=network: network_info_menu(x)])
-    network_menu_contents.append(["Exit", 'exit'])
     network_menu = Menu(network_menu_contents, i, o, "Wireless network menu")
     network_menu.activate()
 
@@ -24,8 +22,7 @@ def network_info_menu(network_info):
     ["Connect", lambda x=network_info: connect_to_network(x)],
     ["BSSID", lambda x=network_info['bssid']: Printer(x, i, o, 5, skippable=True)],
     ["Frequency", lambda x=network_info['frequency']: Printer(x, i, o, 5, skippable=True)],
-    ["Open" if wpa_cli.is_open_network(network_info) else "Secured", lambda x=network_info['flags']: Printer(x, i, o, 5, skippable=True)],
-    ["Exit", 'exit']]
+    ["Open" if wpa_cli.is_open_network(network_info) else "Secured", lambda x=network_info['flags']: Printer(x, i, o, 5, skippable=True)]]
     network_info_menu = Menu(network_info_contents, i, o, "Wireless network info", catch_exit=False)
     network_info_menu.activate()
 
@@ -127,7 +124,6 @@ def change_interface():
     interfaces = wpa_cli.get_interfaces()
     for interface in interfaces:
         menu_contents.append([interface, lambda x=interface: change_current_interface(x)])
-    menu_contents.append(["Exit", 'exit'])
     interface_menu = Menu(menu_contents, i, o, "Interface change menu")
     interface_menu.activate()
 
@@ -149,7 +145,10 @@ def save_changes():
     else:
         Printer(['Saved changes'], i, o, skippable=True)
         
-def launch():
+def manage_networks():
+    pass
+
+def callback():
     try:
        current_interface = wpa_cli.get_current_interface()
     except OSError as e:
@@ -165,7 +164,7 @@ def launch():
         main_menu_contents = [
         [current_interface, change_interface],
         ["Scan", scan],
-        ["Networks", show_networks],
+        ["Networks", show_scan_results],
         ["Status", status_monitor],
         ["Save changes", save_changes],
         #["Saved networks", manage_saved_networks],
@@ -175,6 +174,5 @@ def launch():
 
 
 def init_app(input, output):
-    global callback, main_menu, i, o
+    global i, o
     i = input; o = output
-    callback = launch
