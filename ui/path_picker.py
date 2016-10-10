@@ -68,7 +68,7 @@ class PathPickerMenu(Menu):
         self.path = path
         self.name = "PathPickerMenu-{}".format(self.path)
         self.display_hidden = display_hidden
-        self.in_background = Event()
+        self._in_background = Event()
         self.set_contents([]) #Method inherited from Menu and needs an argument, but context is not right
         self.generate_keymap()
 
@@ -76,7 +76,7 @@ class PathPickerMenu(Menu):
         """ A method which is called when menu needs to start operating. Is blocking, sets up input&output devices, renders the menu and waits until self.in_background is False, while menu callbacks are executed from the input device thread."""
         logging.info("{0} activated".format(self.name))    
         self.to_foreground() 
-        while self.in_background.isSet() and not self.exit_flag: #All the work is done in input callbacks
+        while self.in_background and not self.exit_flag: #All the work is done in input callbacks
             sleep(0.1)
         self.deactivate()
         logging.debug(self.name+" exited")

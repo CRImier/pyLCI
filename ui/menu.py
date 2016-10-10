@@ -76,13 +76,23 @@ class Menu():
         self.catch_exit = catch_exit
         self.exitable = exitable
         self.generate_keymap()
-        self.in_background = Event()
+        self._in_background = Event()
 
+    @property
+    def in_background(self):
+        return self._in_background.isSet()
+
+    @in_background.setter
+    def in_background(self, value):
+        if value == True:
+            self._in_background.set()
+        elif value == False:
+            self._in_background.clear()
 
     def to_foreground(self):
         """ Is called when menu's ``activate()`` method is used, sets flags and performs all the actions so that menu can display its contents and receive keypresses. Also, updates the output device with rendered currently displayed menu elements."""
         logging.info("menu {0} enabled".format(self.name))    
-        self.in_background.set()
+        self.in_background = True
         self.in_foreground = True
         self.refresh()
         self.set_keymap()
@@ -99,7 +109,7 @@ class Menu():
         logging.info("menu {0} activated".format(self.name))    
         self.exit_exception = False
         self.to_foreground() 
-        while self.in_background.isSet(): #All the work is done in input callbacks
+        while self.in_background: #All the work is done in input callbacks
             sleep(0.1)
         if self.exit_exception:
             if self.catch_exit == False:
@@ -110,7 +120,7 @@ class Menu():
     def deactivate(self):
         """ Deactivates the menu completely, exiting it. As for now, pointer state is preserved through menu activations/deactivations """
         self.in_foreground = False
-        self.in_background.clear()
+        self.in_background = False
         logging.info("menu {0} deactivated".format(self.name))    
 
     def print_contents(self):
@@ -166,7 +176,7 @@ class Menu():
             finally:
                 if self.exit_exception:
                     self.deactivate() 
-                elif self.in_background.isSet(): #This check is in place so that you can have an 'exit' element
+                elif self.in_background: #This check is in place so that you can have an 'exit' element
                     self.to_foreground()
         else:
             self.to_foreground()
