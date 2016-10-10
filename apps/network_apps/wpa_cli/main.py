@@ -5,7 +5,7 @@ o = None
 
 from time import sleep
 
-from ui import Menu, Printer, MenuExitException, CharArrowKeysInput, Refresher
+from ui import Menu, Printer, MenuExitException, CharArrowKeysInput, Refresher, DialogBox
 
 import wpa_cli
 
@@ -41,6 +41,7 @@ def connect_to_network(network_info):
         ssid = network_info['ssid']
         wpa_cli.set_network(network_id, 'ssid', '"{}"'.format(ssid))
         wpa_cli.set_network(network_id, 'key_mgmt', 'NONE')
+        wpa_cli.save_config()
         Printer(["Connecting to", network_info['ssid']], i, o, 1)
         wpa_cli.select_network(network_id)
         raise MenuExitException
@@ -55,6 +56,7 @@ def connect_to_network(network_info):
         ssid = network_info['ssid']
         wpa_cli.set_network(network_id, 'ssid', '"{}"'.format(ssid))
         wpa_cli.set_network(network_id, 'psk', '"{}"'.format(password))
+        wpa_cli.save_config()
         Printer(["Connecting to", network_info['ssid']], i, o, 1)
         wpa_cli.select_network(network_id)
         raise MenuExitException
@@ -143,8 +145,84 @@ def save_changes():
     else:
         Printer(['Saved changes'], i, o, skippable=True)
         
+saved_networks = None #I'm a well-hidden global
+
 def manage_networks():
-    pass
+    global saved_networks
+    saved_networks = wpa_cli.list_configured_networks()
+    network_menu_contents = []
+    #As of wpa_supplicant 2.3-1, header elements are ['network id', 'ssid', 'bssid', 'flags']
+    for num, network in enumerate(saved_networks):
+        network_menu_contents.append(["{0[network id]}: {0[ssid]}".format(network), lambda x=num: saved_network_menu(saved_networks[x])])
+    network_menu = Menu(network_menu_contents, i, o, "Saved network menu", catch_exit=False)
+    network_menu.activate()
+
+def saved_network_menu(network_info):
+    global saved_networks
+    id = network_info['network id']
+    bssid = network_info['bssid']
+    network_status = network_info["flags"] if network_info["flags"] else "[ENABLED]"
+    network_info_contents = [
+    [network_status],
+    ["Select", lambda x=id: select_network(x)],
+    ["Enable", lambda x=id: enable_network(x)],
+    ["Disable", lambda x=id: disable_network(x)],
+    ["Remove", lambda x=id: remove_network(x)],
+    ["Set password", lambda x=id: set_password(x)],
+    ["BSSID", lambda x=bssid: Printer(x, i, o, 5, skippable=True)]]
+    network_info_menu = Menu(network_info_contents, i, o, "Wireless network info", catch_exit=False)
+    network_info_menu.activate() 
+    #After menu exits, we'll request the status again and update the 
+    saved_networks = wpa_cli.list_configured_networks()
+
+def select_network(id):
+    try:
+        wpa_cli.select_network(id)
+    except wpa_cli.WPAException:
+        Printer(['Failed to', 'select network'], i, o, skippable=True)
+    else:
+        wpa_cli.save_config()
+        Printer(['Selected network', str(id)], i, o, skippable=True)
+    
+def enable_network(id):
+    try:
+        wpa_cli.enable_network(id)
+    except wpa_cli.WPAException:
+        Printer(['Failed to', 'enable network'], i, o, skippable=True)
+    else:
+        wpa_cli.save_config()
+        Printer(['Enabled network', str(id)], i, o, skippable=True)
+    
+def disable_network(id):
+    try:
+        wpa_cli.disable_network(id)
+    except wpa_cli.WPAException:
+        Printer(['Failed to', 'disable network'], i, o, skippable=True)
+    else:
+        wpa_cli.save_config()
+        Printer(['Disabled network', str(id)], i, o, skippable=True)
+
+def remove_network(id):
+    want_to_remove = DialogBox("yn", i, o, message="Remove network?").activate()
+    if not want_to_remove:
+        return 
+    try:
+        wpa_cli.remove_network(id)
+    except wpa_cli.WPAException:
+        Printer(['Failed to', 'remove network'], i, o, skippable=True)
+    else:
+        wpa_cli.save_config()
+        Printer(['Removed network', str(id)], i, o, skippable=True)
+        raise MenuExitException
+
+def set_password(id):    
+    input = CharArrowKeysInput(i, o, message="Password:", name="WiFi password enter UI element")
+    password = input.activate()
+    if password is None:
+        return False
+    wpa_cli.set_network(id, 'psk', '"{}"'.format(password))
+    wpa_cli.save_config()
+    Printer(["Password entered"], i, o, 1)
 
 def callback():
     try:
@@ -164,9 +242,7 @@ def callback():
         ["Scan", scan],
         ["Networks", show_scan_results],
         ["Status", status_monitor],
-        ["Save changes", save_changes],
-        #["Saved networks", manage_saved_networks],
-        ["Exit", 'exit']]
+        ["Saved networks", manage_networks]]
         main_menu = Menu(main_menu_contents, i, o, "wpa_cli main menu")
         main_menu.activate()
 
