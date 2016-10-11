@@ -123,7 +123,6 @@ def init():
     drivers = []
     for input_config in input_configs:
         driver_name = input_config["driver"]
-        print(driver_name)
         driver_module = importlib.import_module("input.drivers."+driver_name)
         args = input_config["args"] if "args" in input_config else []
         kwargs = input_config["kwargs"] if "kwargs" in input_config else {}
