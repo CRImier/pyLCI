@@ -1,13 +1,14 @@
 import smbus
 from time import sleep
-import threading
 
-class InputDevice():
+from skeleton import InputSkeleton
+
+class InputDevice(InputSkeleton):
     """ A driver for PCF8574-based I2C IO expanders. They have 8 IO pins available as well as an interrupt pin. This driver treats all 8 pins as button pins, which is often the case. 
 
     It supports both interrupt-driven mode (as fr now, RPi-only) and polling mode."""
 
-    mapping = [
+    default_mapping = [
     "KEY_KPENTER",
     "KEY_DELETE",
     "KEY_END",
@@ -16,10 +17,10 @@ class InputDevice():
     "KEY_HOME",
     "KEY_LEFT",
     "KEY_RIGHT"]
-    stop_flag = False
+
     previous_data = 0
 
-    def __init__(self, addr = 0x27, bus = 1, int_pin = None):
+    def __init__(self, addr = 0x27, bus = 1, int_pin = None, **kwargs):
         """Initialises the ``InputDevice`` object.  
                                                                                
         Kwargs:                                                                  
@@ -35,11 +36,20 @@ class InputDevice():
             addr = int(addr, 16)
         self.addr = addr
         self.int_pin = int_pin
+        self.init_expander()
+        InputSkeleton.__init__(self, **kwargs)
 
-    def start(self):
+    def init_expander(self):
+        try:
+            self.bus.write_byte(self.addr, 0xff)
+        except IOError:
+            return True
+        else:
+            return False
+
+    def runner(self):
         """Starts listening on the input device. Initialises the IO expander and runs either interrupt-driven or polling loop."""
         self.stop_flag = False
-        self.bus.write_byte(self.addr, 0xff)
         if self.int_pin is None:
             self.loop_polling()
         else:
@@ -51,27 +61,23 @@ class InputDevice():
         GPIO.setmode(GPIO.BCM) # Broadcom pin-numbering scheme
         GPIO.setup(self.int_pin, GPIO.IN)
         button_states = []
-        try:
-            while not self.stop_flag:
-                while GPIO.input(self.int_pin) == False:
-                    data = (~self.bus.read_byte(self.addr)&0xFF)
-                    self.process_data(data)
-                    self.previous_data = data
-                sleep(0.1)
-        except:
-            raise
-        finally:
-            GPIO.cleanup()
+        while not self.stop_flag:
+            while GPIO.input(self.int_pin) == False and self.enabled:
+                data = (~self.bus.read_byte(self.addr)&0xFF)
+                self.process_data(data)
+                self.previous_data = data
+            sleep(0.1)
 
     def loop_polling(self):
         """Polling loop. Stops when ``stop_flag`` is set to True."""
         button_states = []
         while not self.stop_flag:
-            data = (~self.bus.read_byte(self.addr)&0xFF)
-            if data != self.previous_data:
-                self.process_data(data)
-                self.previous_data = data
-            sleep(0.01)
+            if self.enabled:
+                data = (~self.bus.read_byte(self.addr)&0xFF)
+                if data != self.previous_data:
+                    self.process_data(data)
+                    self.previous_data = data
+            sleep(0.1)
 
     def process_data(self, data):
         """Checks data received from IO expander and classifies changes as either "button up" or "button down" events. On "button up", calls send_key with the corresponding button name from ``self.mapping``. """
@@ -84,21 +90,7 @@ class InputDevice():
             if not data & 1<<button_number:
                 self.send_key(self.mapping[button_number])
 
-    def stop(self):
-        """Sets the ``stop_flag`` for loop functions."""
-        self.stop_flag = True
-
-    def send_key(self, key):
-        """A hook to be overridden by ``InputListener``. Otherwise, prints out key names as soon as they're pressed so is useful for debugging."""
-        print(key)
-
-    def activate(self):
-        """Starts a thread with ``start`` function as target."""
-        self.thread = threading.Thread(target=self.start)
-        self.thread.daemon = False
-        self.thread.start()
-
 
 if __name__ == "__main__":
-    id = InputDevice(addr = 0x3f)
-    id.start()
+    id = InputDevice(addr = 0x23, threaded=False)
+    id.runner()

@@ -1,8 +1,8 @@
 from evdev import InputDevice as HID, list_devices, ecodes
 from time import sleep
-import threading
 import time
 
+from skeleton import InputSkeleton
 
 def get_input_devices():
     """Returns list of all the available InputDevices"""
@@ -25,13 +25,10 @@ def get_name_by_path(path):
     return name
 
 
-class InputDevice():
-    """ A driver for HID devices. As for now, supports keyboards and numpads.
-    Not yet capable of mapping keys to another keycodes, simply sends the keycodes as they are."""
+class InputDevice(InputSkeleton):
+    """ A driver for HID devices. As for now, supports keyboards and numpads."""
 
-    stop_flag = False
-
-    def __init__(self, path=None, name=None):
+    def __init__(self, path=None, name=None, **kwargs):
         """Initialises the ``InputDevice`` object.  
                                                                                
         Kwargs:                                                                  
@@ -54,18 +51,10 @@ class InputDevice():
             self.device = HID(self.path)
         except OSError:
             raise
-        self.device.grab() #Catch exception if device is already grabbed
+        self.device.grab() #Can throw exception if already grabbed
+        InputSkeleton.__init__(self, mapping = [], **kwargs)
 
-    def start(self):
-        """Starts listening on the input device. Initialises the IO expander and runs either interrupt-driven or polling loop."""
-        self.stop_flag = False
-        self.event_loop()
-
-    def stop(self):
-        """Sets the ``stop_flag`` for loop functions."""
-        self.stop_flag = True
-
-    def event_loop(self):
+    def runner(self):
         """Blocking event loop which just calls supplied callbacks in the keymap."""
         try:
             for event in self.device.read_loop():
@@ -78,14 +67,10 @@ class InputDevice():
                         self.send_key(key)
         except IOError as e: 
             if e.errno == 11:
-                #raise #Uncomment only if you have nothing better to do 
+                #raise #Uncomment only if you have nothing better to do - error seems to appear at random
                 pass
         finally:
             self.listening = False
-
-    def send_key(self, key):
-        """A hook to be overridden by ``InputListener``. Otherwise, prints out key names as soon as they're pressed so is useful for debugging."""
-        print(key)
 
     def atexit(self):
         try:
@@ -97,15 +82,10 @@ class InputDevice():
         except (AttributeError, KeyboardInterrupt):
             pass #Too early, thread not started yet
 
-    def activate(self):
-        """Starts a thread with ``start`` function as target."""
-        self.thread = threading.Thread(target=self.start)
-        self.thread.daemon = False
-        self.thread.start()
 
 
 if __name__ == "__main__":
     print("Available device names:")
     print([dev.name for dev in get_input_devices()])
-    #id = InputDevice(name = "HID 04d9:1603")
-    #id.start()
+    #id = InputDevice(name = get_input_devices()[0].name, threaded=False)
+    #id.runner()

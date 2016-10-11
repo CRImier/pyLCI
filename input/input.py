@@ -6,7 +6,6 @@ import Queue
 from helpers import read_config
 
 listener = None
-driver = None
 
 class InputListener():
     """A class which listens for input device events and calls according callbacks if set"""
@@ -14,11 +13,12 @@ class InputListener():
     keymap = {}
     stop_flag = False
 
-    def __init__(self, driver, keymap={}):
+    def __init__(self, drivers, keymap={}):
         """Init function for creating KeyListener object. Checks all the arguments and sets keymap if supplied."""
-        self.driver = driver
+        self.drivers = drivers
         self.queue = Queue.Queue()
-        self.driver.send_key = self.receive_key #Overriding the send_key method so that keycodes get sent to InputListener
+        for driver, _ in self.drivers:
+            driver.send_key = self.receive_key #Overriding the send_key method so that keycodes get sent to InputListener
         self.set_keymap(keymap)
 
     def receive_key(self, key):
@@ -86,7 +86,8 @@ class InputListener():
     def listen(self):
         """Start  event_loop in a thread. Nonblocking."""
         self.stop_flag = False
-        self.driver.activate()
+        for driver, _ in self.drivers:
+            driver.start()
         self.listener_thread = threading.Thread(target = self.event_loop) 
         self.listener_thread.daemon = False
         self.listener_thread.start()
@@ -95,33 +96,38 @@ class InputListener():
     def stop_listen(self):
         """This sets a flag for ``event_loop`` to stop. It also calls a ``stop`` method of the input driver ``InputListener`` is using."""
         self.stop_flag = True
-        self.driver.stop()
+        for driver, _ in self.drivers:
+            driver.stop()
         return True
 
     def atexit(self):
         """Exits driver (if necessary) if something wrong happened or pyLCI exits. Also, stops the listener"""
         self.stop_listen()
-        driver = self.driver
-        if hasattr(driver, "atexit"):
-            driver.atexit()
+        for driver, _ in self.drivers:
+            if hasattr(driver, "atexit"):
+                driver.atexit()
         try:
             self.listener_thread.join()
         except AttributeError:
-            pass #Driver not initialised properly, all working OK though
+            pass
         
 
 
 def init():
-    """ This function is called by main.py to read the input configuration, pick the corresponding driver and initialize InputListener.
+    """ This function is called by main.py to read the input configuration, pick the corresponding drivers and initialize InputListener.
  
-    It also sets ``driver`` and ``listener`` globals of ``input`` module with driver and listener respectively, as well as registers ``listener.stop()`` function to be called when script exits since it's in a blocking non-daemon thread."""
-    global listener, driver
+    It also sets ``listener`` globals of ``input`` module with driver and listener respectively, as well as registers ``listener.stop()`` function to be called when script exits since it's in a blocking non-daemon thread."""
+    global listener
     config = read_config("config.json")
-    input_config = config["input"][0]
-    driver_name = input_config["driver"]
-    driver_module = importlib.import_module("input.drivers."+driver_name)
-    args = input_config["args"] if "args" in input_config else []
-    kwargs = input_config["kwargs"] if "kwargs" in input_config else {}
-    driver = driver_module.InputDevice(*args, **kwargs)
-    listener = InputListener(driver)
+    input_configs = config["input"]
+    drivers = []
+    for input_config in input_configs:
+        driver_name = input_config["driver"]
+        print(driver_name)
+        driver_module = importlib.import_module("input.drivers."+driver_name)
+        args = input_config["args"] if "args" in input_config else []
+        kwargs = input_config["kwargs"] if "kwargs" in input_config else {}
+        driver = driver_module.InputDevice(*args, **kwargs)
+        drivers.append([driver, driver_name])
+    listener = InputListener(drivers)
     atexit.register(listener.atexit)

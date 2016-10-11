@@ -1,23 +1,23 @@
 import smbus
 from time import sleep
-import threading
 
-class InputDevice():
+from skeleton import InputSkeleton
+
+class InputDevice(InputSkeleton):
     """A driver for Adafruit-developed Raspberry Pi character LCD&button shields based on MCP23017, either Adafruit-made or Chinese-made.
  
        Tested on hardware compatible with Adafruit schematic and working with Adafruit libraries, but not on genuine Adafruit hardware. 
     """
-    mapping = [
+    default_mapping = [
     "KEY_KPENTER",
     "KEY_RIGHT",
     "KEY_DOWN",
     "KEY_UP",
     "KEY_LEFT"]
-    stop_flag = False
-    running = False
+
     previous_data = 0
 
-    def __init__(self, addr = 0x20, bus = 1):
+    def __init__(self, addr = 0x20, bus = 1, **kwargs):
         """Initialises the ``InputDevice`` object.  
                                                                                
         Kwargs:                                                                  
@@ -31,26 +31,23 @@ class InputDevice():
         if type(addr) in [str, unicode]:
             addr = int(addr, 16)
         self.addr = addr
+        InputSkeleton.__init__(self, **kwargs)
+        self.init_expander()
 
-    def start(self):
-        """Starts listening on the input device. Also, initialises the IO expander."""
-        while self.running: #Avoiding starting a new loop while the previous one is active
-            sleep(0.01)
-        self.stop_flag = False
-        self.running = True
+    def init_expander(self):
+        """Initialises the IO expander."""
         self.setMCPreg(0x00, 0x1F)
         self.setMCPreg(0x0C, 0x1F)
-        self.loop_polling()
-        self.running = False
 
-    def loop_polling(self):
-        """Polling loop. Stops when ``stop_flag`` is set to True."""
+    def runner(self):
+        """Polling loop (only one there can be on this shield, since interrupt pin is not connected)."""
         button_states = []
         while not self.stop_flag:
-            data = (~self.readMCPreg(0x12)&0x1F)
-            if data != self.previous_data:
-                self.process_data(data)
-                self.previous_data = data
+            if self.enabled:
+                data = (~self.readMCPreg(0x12)&0x1F)
+                if data != self.previous_data:
+                    self.process_data(data)
+                    self.previous_data = data
             sleep(0.01)
 
     def process_data(self, data):
@@ -64,24 +61,6 @@ class InputDevice():
             if not data & 1<<button_number:
                 self.send_key(self.mapping[button_number])
 
-    def stop(self):
-        """Sets the ``stop_flag`` for loop functions."""
-        self.stop_flag = True
-
-    def send_key(self, key):
-        """A hook to be overridden by ``InputListener``. Otherwise, prints out key names as soon as they're released so is useful for debugging."""
-        print(key)
-
-    def activate(self):
-        """Starts a thread with ``start`` function as target."""
-        self.thread = threading.Thread(target=self.start)
-        self.thread.daemon = False
-        self.thread.start()
-
-    def deactivate(self):
-        """Starts a thread with ``start`` function as target."""
-        self.stop()
-
     def setMCPreg(self, reg, val):
         """Sets the MCP23017 register."""
         self.bus.write_byte_data(self.addr, reg, val)
@@ -92,5 +71,5 @@ class InputDevice():
 
 
 if __name__ == "__main__":
-    id = InputDevice(addr = 0x20)
-    id.start()
+    id = InputDevice(addr = 0x20, threaded=False)
+    id.runner()
