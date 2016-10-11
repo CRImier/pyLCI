@@ -57,14 +57,14 @@ class InputDevice(InputSkeleton):
     def runner(self):
         """Blocking event loop which just calls supplied callbacks in the keymap."""
         try:
-            for event in self.device.read_loop():
-                if self.stop_flag:
-                    break
-                if event.type == ecodes.EV_KEY:
+            while not self.stop_flag:
+                event = self.device.read_one()
+                if event is not None and event.type == ecodes.EV_KEY:
                     key = ecodes.keys[event.code]
                     value = event.value
-                    if value == 0:
+                    if value == 0 and self.enabled:
                         self.send_key(key)
+                sleep(0.01)
         except IOError as e: 
             if e.errno == 11:
                 #raise #Uncomment only if you have nothing better to do - error seems to appear at random
@@ -73,6 +73,7 @@ class InputDevice(InputSkeleton):
             self.listening = False
 
     def atexit(self):
+        InputSkeleton.atexit(self)
         try:
             self.device.ungrab()
         except:
