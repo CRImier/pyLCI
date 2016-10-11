@@ -1,6 +1,5 @@
 from evdev import InputDevice as HID, list_devices, ecodes
 from time import sleep
-import time
 
 from skeleton import InputSkeleton
 
@@ -69,8 +68,6 @@ class InputDevice(InputSkeleton):
             if e.errno == 11:
                 #raise #Uncomment only if you have nothing better to do - error seems to appear at random
                 pass
-        finally:
-            self.listening = False
 
     def atexit(self):
         InputSkeleton.atexit(self)
@@ -78,10 +75,6 @@ class InputDevice(InputSkeleton):
             self.device.ungrab()
         except:
             pass
-        try:
-            self.thread.join()
-        except (AttributeError, KeyboardInterrupt):
-            pass #Too early, thread not started yet
 
 
 
