@@ -32,7 +32,7 @@ def connect_to_network(network_info):
     for network in configured_networks:
         if network_info['ssid'] == network['ssid']:
             Printer([network_info['ssid'], "known,connecting"], i, o, 1)
-            wpa_cli.select_network(network['network id'])
+            wpa_cli.enable_network(network['network id'])
             raise MenuExitException
     #Then, if it's an open network, just connecting
     if wpa_cli.is_open_network(network_info):
@@ -43,7 +43,7 @@ def connect_to_network(network_info):
         wpa_cli.set_network(network_id, 'key_mgmt', 'NONE')
         wpa_cli.save_config()
         Printer(["Connecting to", network_info['ssid']], i, o, 1)
-        wpa_cli.select_network(network_id)
+        wpa_cli.enable_network(network_id)
         raise MenuExitException
     #Offering to enter a password
     else:
@@ -58,7 +58,7 @@ def connect_to_network(network_info):
         wpa_cli.set_network(network_id, 'psk', '"{}"'.format(password))
         wpa_cli.save_config()
         Printer(["Connecting to", network_info['ssid']], i, o, 1)
-        wpa_cli.select_network(network_id)
+        wpa_cli.enable_network(network_id)
         raise MenuExitException
     #No WPS PIN input possible yet and I cannot yet test WPS button functionality.
         
