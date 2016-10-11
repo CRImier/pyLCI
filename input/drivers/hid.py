@@ -46,12 +46,16 @@ class InputDevice(InputSkeleton):
             raise IOError("Device not found")
         self.path = path
         self.name = name
+        InputSkeleton.__init__(self, mapping = [], **kwargs)
+
+    def init_hw(self):
         try:
             self.device = HID(self.path)
         except OSError:
-            raise
-        self.device.grab() #Can throw exception if already grabbed
-        InputSkeleton.__init__(self, mapping = [], **kwargs)
+            return False
+        else:
+            self.device.grab() #Can throw exception if already grabbed
+            return True
 
     def runner(self):
         """Blocking event loop which just calls supplied callbacks in the keymap."""
