@@ -28,7 +28,7 @@ class PathPickerMenu(Menu):
     entry_height = 1
     catch_exit = True
 
-    def __init__(self, path, i, o, callback = None, display_hidden = False):
+    def __init__(self, path, i, o, callback = None, display_hidden = False, current_dot = False, prev_dot = True):
         """Initialises the Menu object.
         
         Args:
@@ -39,6 +39,8 @@ class PathPickerMenu(Menu):
         Kwargs:
 
             * ``callback``: if set, FilePickerMenu will call the callback with path as first argument upon selecting path, instead of exiting.
+            * ``current_dot``: if set, FilePickerMenu will show '.' path.
+            * ``prev_dot``: if set, FilePickerMenu will show '..' path.
             * ``display_hidden``: if set, FilePickerMenu displays hidden files.
 
         """
@@ -48,6 +50,8 @@ class PathPickerMenu(Menu):
         self.name = "PathPickerMenu-{}".format(self.path)
         self.display_hidden = display_hidden
         self.callback = callback
+        self.current_dot = current_dot
+        self.prev_dot = prev_dot
         self._in_background = Event()
         self.set_contents([]) #Method inherited from Menu and needs an argument, but context is not right
         self.generate_keymap()
@@ -98,13 +102,12 @@ class PathPickerMenu(Menu):
         self.goto_dir(parent_path)
 
     def process_contents(self):
-        if self.path == '/':
-            self.contents = []
-        else:
-            dot_path = os.path.join(self.path, '.')
-            self._contents = [
-            ['.', lambda: self.goto_dir(dot_path)],
-            ['..', lambda: self.goto_dir(dot_path+'.')]]
+        self._contents = []
+        if self.path != '/':
+            if self.current_dot or self.prev_dot:
+                dot_path = os.path.join(self.path, '.')
+                if self.current_dot: self._contents.append(['.', lambda: self.goto_dir(dot_path)])
+                if self.prev_dot: self._contents.append(['..', lambda: self.goto_dir(dot_path+'.')])
         path_contents = os.listdir(self.path)
         files = []
         dirs = []
