@@ -149,6 +149,7 @@ class PathPickerMenu(Menu):
     #@to_be_foreground
     def goto_dir(self, dir):
         self.path = dir
+        self.name = "PathPickerMenu-{}".format(self.path)
         self.pointer = 0
         self.set_contents([])
         self.refresh()
