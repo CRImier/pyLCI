@@ -44,7 +44,7 @@ class PathPickerMenu(Menu):
         """
         self.i = i
         self.o = o
-        self.path = path
+        self.path = os.path.normpath(path)
         self.name = "PathPickerMenu-{}".format(self.path)
         self.display_hidden = display_hidden
         self.callback = callback
@@ -98,7 +98,13 @@ class PathPickerMenu(Menu):
         self.goto_dir(parent_path)
 
     def process_contents(self):
-        self._contents = []
+        if self.path == '/':
+            self.contents = []
+        else:
+            dot_path = os.path.join(self.path, '.')
+            self._contents = [
+            ['.', lambda: self.goto_dir(dot_path)],
+            ['..', lambda: self.goto_dir(dot_path+'.')]]
         path_contents = os.listdir(self.path)
         files = []
         dirs = []
@@ -138,6 +144,7 @@ class PathPickerMenu(Menu):
         #One of the reasons MenuExitExceptions are there.
 
     def option_select(self, path):
+        path = os.path.normpath(path)
         if self.callback is None:
             self.select_path(path)
             self.deactivate()
@@ -148,6 +155,7 @@ class PathPickerMenu(Menu):
 
     #@to_be_foreground
     def goto_dir(self, dir):
+        dir = os.path.normpath(dir)
         self.path = dir
         self.name = "PathPickerMenu-{}".format(self.path)
         self.pointer = 0
@@ -156,6 +164,7 @@ class PathPickerMenu(Menu):
 
     #@to_be_foreground
     def select_path(self, path):
+        path = os.path.normpath(path)
         if self.callback is not None:
             self.to_background()
             current_item = self._contents[self.pointer][0]
