@@ -7,18 +7,15 @@ from menu import Menu, MenuExitException, to_be_foreground
 from printer import Printer
 
 class PathPicker():
-    def __init__ (self, initial_path, i, o, name="PathPicker"):
-        if not os.path.isdir(initial_path):
+    def __init__ (self, *args, **kwargs):
+        if not os.path.isdir(args[0]):
              raise ValueError("PathPicker path has to be a directory!")
-        self.path = initial_path
-        self.i = i
-        self.o = o
-        self.name = name
+        self.args  = args
+        self.kwargs  = kwargs
     
     def activate(self):
         """ A method that activates PathPicker. Returns path chosen or None if no path was chosen."""
-        path = PathPickerMenu(self.path, self.i, self.o).activate()
-        return path
+        return PathPickerMenu(*self.args, **self.kwargs).activate()
 
 class PathPickerMenu(Menu):
     """#Short description
