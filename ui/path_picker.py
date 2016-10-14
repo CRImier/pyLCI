@@ -33,7 +33,7 @@ class PathPickerMenu(Menu):
         
         Args:
 
-            * ``path``: a path to list the contents of.
+            * ``path``: a path to start from.
             * ``i``, ``o``: input&output device objects.
 
         Kwargs:
