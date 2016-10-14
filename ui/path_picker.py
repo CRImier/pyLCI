@@ -28,7 +28,7 @@ class PathPickerMenu(Menu):
     entry_height = 1
     catch_exit = True
 
-    def __init__(self, path, i, o, display_hidden = False):
+    def __init__(self, path, i, o, callback = None, display_hidden = False):
         """Initialises the Menu object.
         
         Args:
@@ -38,6 +38,7 @@ class PathPickerMenu(Menu):
 
         Kwargs:
 
+            * ``callback``: if set, FilePickerMenu will call the callback with path as first argument upon selecting path, instead of exiting.
             * ``display_hidden``: if set, FilePickerMenu displays hidden files.
 
         """
@@ -46,6 +47,7 @@ class PathPickerMenu(Menu):
         self.path = path
         self.name = "PathPickerMenu-{}".format(self.path)
         self.display_hidden = display_hidden
+        self.callback = callback
         self._in_background = Event()
         self.set_contents([]) #Method inherited from Menu and needs an argument, but context is not right
         self.generate_keymap()
@@ -138,9 +140,13 @@ class PathPickerMenu(Menu):
         #One of the reasons MenuExitExceptions are there.
 
     def option_select(self, path):
-        self.select_path(path)
-        self.deactivate()
-        raise MenuExitException 
+        if self.callback is None:
+            self.select_path(path)
+            self.deactivate()
+            raise MenuExitException 
+        else:
+            self.callback(path)
+            raise MenuExitException 
 
     #@to_be_foreground
     def goto_dir(self, dir):
@@ -151,4 +157,11 @@ class PathPickerMenu(Menu):
 
     #@to_be_foreground
     def select_path(self, path):
-        self.path_chosen = path
+        if self.callback is not None:
+            self.to_background()
+            current_item = self._contents[self.pointer][0]
+            full_path = os.path.join(self.path, current_item)
+            self.callback(full_path)
+            self.to_foreground()
+        else:
+            self.path_chosen = path
