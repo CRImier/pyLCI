@@ -6,18 +6,7 @@ from threading import Event
 from menu import Menu, MenuExitException, to_be_foreground
 from printer import Printer
 
-class PathPicker():
-    def __init__ (self, *args, **kwargs):
-        if not os.path.isdir(args[0]):
-             raise ValueError("PathPicker path has to be a directory!")
-        self.args  = args
-        self.kwargs  = kwargs
-    
-    def activate(self):
-        """ A method that activates PathPicker. Returns path chosen or None if no path was chosen."""
-        return PathPickerMenu(*self.args, **self.kwargs).activate()
-
-class PathPickerMenu(Menu):
+class PathPicker(Menu):
     """#Short description
 
     """
@@ -46,6 +35,8 @@ class PathPickerMenu(Menu):
         """
         self.i = i
         self.o = o
+        if not os.path.isdir(path):
+             raise ValueError("PathPicker path has to be a directory!")
         self.path = os.path.normpath(path)
         self.name = "PathPickerMenu-{}".format(self.path)
         self.display_hidden = display_hidden
@@ -160,7 +151,7 @@ class PathPickerMenu(Menu):
     def goto_dir(self, dir):
         dir = os.path.normpath(dir)
         self.path = dir
-        self.name = "PathPickerMenu-{}".format(self.path)
+        self.name = "PathPicker-{}".format(self.path)
         self.pointer = 0
         self.set_contents([])
         self.refresh()
