@@ -69,9 +69,7 @@ class PathPickerMenu(Menu):
         |If menu has no elements, exits the menu.
         |If MenuExitException is returned from the callback, exits menu, too."""
         logging.debug("element selected")
-        if len(self._contents) == 0:
-            self.deactivate()
-        else:
+        if len(self._contents) > 0:
             self.to_background()
             self._contents[self.pointer][1]()
             self.to_foreground()
