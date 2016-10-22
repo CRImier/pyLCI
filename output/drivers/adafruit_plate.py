@@ -4,6 +4,7 @@ from time import sleep
 import socket
 import threading
 
+
 def delay(time):
     sleep(time/1000.0)
 
@@ -11,8 +12,9 @@ def delayMicroseconds(time):
     sleep(time/1000000.0)
 
 from hd44780 import HD44780
+from backlight import *
 
-class Screen(HD44780):
+class Screen(HD44780, BacklightManager):
     """A driver for Adafruit-developed Raspberry Pi character LCD&button shields based on MCP23017, either Adafruit-made or Chinese-made.
        Has workarounds for Chinese plates with LED instead of RGB backlight and LCD backlight on a separate I2C GPIO expander pin.
        
@@ -20,8 +22,6 @@ class Screen(HD44780):
     """
 
     type = ["char", "rgb_led"]
-
-    _backlight = False
 
     def __init__(self, bus=1, addr=0x20, debug=False, chinese=True, **kwargs):
         """Initialises the ``Screen`` object.  
@@ -42,14 +42,15 @@ class Screen(HD44780):
         self.debug = debug
         self.chinese = chinese
         self.i2c_init()
+        BacklightManager.init_backlight(self, **kwargs)
         HD44780.__init__(self, debug=self.debug, **kwargs)
-        self.enable_backlight()
         
     def i2c_init(self):
         """Inits the MCP23017 expander."""
         self.setMCPreg(0x00, 0x00)
         self.setMCPreg(0x01, 0x00)
 
+    @activate_backlight_wrapper
     def write_byte(self, byte, char_mode=False):
         """Takes a byte and sends the high nibble, then the low nibble (as per HD44780 doc). Passes ``char_mode`` to ``self.write4bits``."""
         if self.debug and not char_mode:        
@@ -59,7 +60,7 @@ class Screen(HD44780):
 
     def enable_backlight(self):
         """Enables backlight. Doesn't do it instantly on genuine boards, you'll have to wait until data is sent to the display."""
-        self._backlight = True
+        BacklightManager.enable_backlight(self)
         if self.chinese: 
             self.setMCPreg(0x14, 0xc0) 
         else:
@@ -67,8 +68,11 @@ class Screen(HD44780):
 
     def disable_backlight(self):
         """Disables backlight. Doesn't do it instantly on genuine boards, you'll have to wait until data is sent to the display."""
-        self._backlight = False
-        self.setMCPreg(0x14, 0xe0)
+        BacklightManager.disable_backlight(self)
+        if self.chinese: 
+            self.setMCPreg(0x14, 0xe0) 
+        else:
+            self.setMCPreg(0x15, 0x01)
 
     def write4bits(self, data, char_mode=False):
         """Writes a nibble to the display. If ``char_mode`` is set, holds the RS line high."""
@@ -76,7 +80,7 @@ class Screen(HD44780):
         data = data << 1 #Need to also shift it to one bit
         if char_mode:
             data |= 0x80
-        if self.chinese or not self._backlight:
+        if self.chinese or not self._backlight_enabled:
                 data |= 0x01 #Chinese boards have a blue LED instead of Adafruit backlight pin, this turns blue LED off =)
                 #Adafruit boards have blue backlight at GP0, and we set the bit to turn the backlight off
         self.setMCPreg(0x15, data)
@@ -96,7 +100,7 @@ class Screen(HD44780):
         port_a = 0 | ((not green) << 7)
         port_a |= ((not red) << 6)
         if self.chinese: 
-            port_a |= ((not self._backlight) << 5)
+            port_a |= ((not self._backlight_enabled) << 5)
             self.setMCPreg(0x14, port_a) 
             self.setMCPreg(0x15, ((not blue) << 0))
         else:
