@@ -1,10 +1,6 @@
 import smbus
 from time import sleep
 
-import socket
-import threading
-
-
 def delay(time):
     sleep(time/1000.0)
 
