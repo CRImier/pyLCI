@@ -69,7 +69,10 @@ class Screen(HD44780, BacklightManager):
     def disable_backlight(self):
         """Disables backlight. Doesn't do it instantly on genuine boards, you'll have to wait until data is sent to the display."""
         BacklightManager.disable_backlight(self)
-        self.setMCPreg(0x14, 0xe0)
+        if self.chinese: 
+            self.setMCPreg(0x14, 0xe0) 
+        else:
+            self.setMCPreg(0x15, 0x01)
 
     def write4bits(self, data, char_mode=False):
         """Writes a nibble to the display. If ``char_mode`` is set, holds the RS line high."""
