@@ -25,7 +25,7 @@ class RPCClient(Server):
             self.functions = None
 
     def __getattr__(self, attr_name):
-        print("Getting attribute {}".format(attr_name))
+        #print("Getting attribute {}".format(attr_name))
         try:
             attr = self._server.__getattr__(attr_name)
         except socket.error as e:
