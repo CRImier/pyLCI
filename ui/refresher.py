@@ -20,7 +20,6 @@ class Refresher():
     refresh_function = None
     refresh_interval = 0
     display_callback = None
-    in_background = None
     in_foreground = False
     name = ""
     keymap = None
@@ -45,7 +44,6 @@ class Refresher():
         self.refresh_interval = refresh_interval
         self.refresh_function = refresh_function
         self.set_keymap(keymap if keymap else {})
-        self.set_display_callback(self.o.display_data)
         self.in_background = Event()
 
     def to_foreground(self):
@@ -128,9 +126,4 @@ class Refresher():
     @to_be_foreground
     def refresh(self):
         logging.debug("{0}: refreshed data on display".format(self.name))
-        self.display_callback(*self.refresh_function())
-
-    def set_display_callback(self, callback):
-        logging.debug("{0}: display callback set".format(self.name))
-        self.display_callback = callback
-
+        self.o.display_data(*self.refresh_function())
