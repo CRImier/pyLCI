@@ -24,9 +24,10 @@ def show_temp():
 i = None #Input device
 o = None #Output device
 
+def callback():
+    Refresher(show_temp, i, o, 0.1, name="Temperature monitor").activate()
+
 def init_app(input, output):
     global callback, i, o
     i = input; o = output
-    temp_monitor = Refresher(show_temp, i, o, 0.1, name="Temperature monitor")
-    callback = temp_monitor.activate
 
