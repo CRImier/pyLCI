@@ -8,7 +8,7 @@ from helpers import read_config
 listener = None
 
 class InputListener():
-    """A class which listens for input device events and calls according callbacks if set"""
+    """A class which listens for input device events and calls corresponding callbacks if set"""
     listening = False
     keymap = {}
     stop_flag = False
