@@ -18,7 +18,7 @@ class Refresher():
     refresh_function = None
     refresh_interval = 0
     display_callback = None
-    in_background = Event()
+    in_background = None
     in_foreground = False
     name = ""
     keymap = None
@@ -44,6 +44,7 @@ class Refresher():
         self.refresh_function = refresh_function
         self.set_keymap(keymap)
         self.set_display_callback(self.o.display_data)
+        self.in_background = Event()
 
     def to_foreground(self):
         """ Is called when refresher's ``activate()`` method is used, sets flags and performs all the actions so that refresher can display its contents and receive keypresses."""
