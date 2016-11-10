@@ -4,12 +4,14 @@ import logging
 
 from threading import Event
 
+#logging.basicConfig(level=logging.DEBUG)
+
 def to_be_foreground(func): #A safety check wrapper so that certain functions don't get called if refresher is not the one active
     def wrapper(self, *args, **kwargs):
         if self.in_foreground:
             return func(self, *args, **kwargs)
         else:
-            print(func.__name__)
+            print(func.__name__+" misbehaves")
     return wrapper
 
 class Refresher():
@@ -48,7 +50,7 @@ class Refresher():
 
     def to_foreground(self):
         """ Is called when refresher's ``activate()`` method is used, sets flags and performs all the actions so that refresher can display its contents and receive keypresses."""
-        logging.info("menu {0} enabled".format(self.name))    
+        logging.info("refresher {0} in foreground".format(self.name))    
         self.in_background.set()
         self.in_foreground = True
         self.refresh()
@@ -57,11 +59,11 @@ class Refresher():
     def to_background(self):
         """ Signals ``activate`` to finish executing """
         self.in_foreground = False
-        logging.info("menu {0} disabled".format(self.name))    
+        logging.info("refresher {0} in background".format(self.name))    
 
     def activate(self):
         """ A method which is called when refresher needs to start operating. Is blocking, sets up input&output devices, renders the refresher, periodically calls the refresh function&refreshes the screen while self.in_foreground is True, while refresher callbacks are executed from the input device thread."""
-        logging.info("menu {0} activated".format(self.name))    
+        logging.info("refresher {0} activated".format(self.name))    
         self.to_foreground() 
         sleep_time = 0.01
         counter = 0
@@ -81,30 +83,35 @@ class Refresher():
         """ Deactivates the refresher completely, exiting it."""
         self.in_foreground = False
         self.in_background.clear()
-        logging.info("menu {0} deactivated".format(self.name))    
+        logging.info("refresher {0} deactivated".format(self.name))    
 
     def print_name(self):
         """ A debug method. Useful for hooking up to an input event so that you can see which refresher is currently active. """
-        logging.info("Active menu is {0}".format(self.name))    
+        logging.info("Active refresher is {0}".format(self.name))    
 
-    def process_callback(self, function):
+    def process_callback(self, func):
         """ Decorates a function to be used by Refresher element.
         |Is typically used as a wrapper for a callback from input event processing thread.
         |After callback's execution is finished, sets the keymap again and refreshes the refresher."""
         def wrapper(*args, **kwargs):
             self.to_background() 
-            function(*args, **kwargs)
+            func(*args, **kwargs)
+            logging.debug("Executed wrapped function: {}".format(func.__name__))
             if self.in_background.isSet():
                 self.to_foreground() 
+        wrapper.__name__ == func.__name__
         return wrapper
 
     def process_keymap(self, keymap):
         """Sets the keymap. In future, will allow per-system keycode-to-callback tweaking using a config file. """
+        logging.debug("{}: processing keymap - {}".format(self.name, keymap))
         for key in keymap:
             callback = self.process_callback(keymap[key])
             keymap[key] = callback
         if not "KEY_LEFT" in keymap:
-            keymap["KEY_LEFT"] = lambda: self.deactivate()
+            keymap["KEY_LEFT"] = self.deactivate
+        if not "KEY_RIGHT" in keymap:
+            keymap["KEY_RIGHT"] = self.print_name
         return keymap
 
     def set_keymap(self, keymap):
