@@ -38,7 +38,7 @@ def show_status():
 i = None #Input device
 o = None #Output device
 
-def callback()::
+def callback():
     Refresher(show_status, i, o, 0.1, name="Assistant status monitor").activate()
 
 def init_app(input, output):
