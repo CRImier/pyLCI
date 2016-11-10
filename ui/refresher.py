@@ -23,7 +23,7 @@ class Refresher():
     name = ""
     keymap = None
 
-    def __init__(self, refresh_function, i, o, refresh_interval=1, keymap={}, name="Refresher"):
+    def __init__(self, refresh_function, i, o, refresh_interval=1, keymap=None, name="Refresher"):
         """Initialises the Refresher object.
         
         Args:
@@ -42,7 +42,7 @@ class Refresher():
         self.name = name
         self.refresh_interval = refresh_interval
         self.refresh_function = refresh_function
-        self.set_keymap(keymap)
+        self.set_keymap(keymap if keymap else {})
         self.set_display_callback(self.o.display_data)
         self.in_background = Event()
 
