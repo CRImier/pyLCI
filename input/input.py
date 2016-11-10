@@ -1,4 +1,4 @@
-import threading
+from threading import Thread, Event
 import importlib
 import atexit
 from time import sleep
@@ -9,9 +9,9 @@ listener = None
 
 class InputListener():
     """A class which listens for input device events and calls corresponding callbacks if set"""
-    listening = False
+    stop_flag = None
+    thread_index = 0
     keymap = {}
-    stop_flag = False
 
     def __init__(self, drivers, keymap={}):
         """Init function for creating KeyListener object. Checks all the arguments and sets keymap if supplied."""
@@ -49,23 +49,25 @@ class InputListener():
         """Removes all the callbacks set"""
         self.keymap = {}
 
-    def event_loop(self):
+    def event_loop(self, index):
         """Blocking event loop which just calls callbacks in the keymap once corresponding keys are received in the ``self.queue``."""
-        self.listening = True
-        try:
-            while not self.stop_flag:
-                try:
-                    key = self.queue.get(False, 0.1)
-                except Queue.Empty:
-                    sleep(0.1)
-                except AttributeError:
-                    print("Heh, caught that.") #Typically gets printed if InputListener exits abnormally upon program termination
-                else:
-                    self.process_key(key)
-        except:
-            raise
-        finally:
-            self.listening = False
+        #print("Starting event loop "+str(index))
+        self.stop_flag = Event()
+        stop_flag = self.stop_flag #Saving a reference. 
+        #stop_flag is an object that will signal the current input thread to exit or not exit once it's done processing a callback.
+        #It'll be called just before self.stop_flag will be overwritten. However, we've got a reference to it and now can check the exact object this thread itself constructed.
+        #Praise the holy garbage collector. 
+        stop_flag.clear()
+        while not stop_flag.isSet():
+            try:
+                key = self.queue.get(False, 0.1)
+            except Queue.Empty:
+                sleep(0.1)
+            except AttributeError:
+                print("Heh, caught that.") #Typically gets printed if InputListener exits abnormally upon program termination
+            else:
+                self.process_key(key)
+        #print("Stopping event loop "+str(index))
 
     def process_key(self, key):
         if key in self.keymap:
@@ -84,18 +86,19 @@ class InputListener():
         import pdb;pdb.set_trace()
 
     def listen(self):
-        """Start  event_loop in a thread. Nonblocking."""
-        self.stop_flag = False
+        """Start event_loop in a thread. Nonblocking."""
         for driver, _ in self.drivers:
             driver.start()
-        self.listener_thread = threading.Thread(target = self.event_loop) 
+        self.listener_thread = Thread(target = self.event_loop, name="InputThread-"+str(self.thread_index), args=(self.thread_index, )) 
+        self.thread_index += 1
         self.listener_thread.daemon = False
         self.listener_thread.start()
         return True
 
     def stop_listen(self):
         """This sets a flag for ``event_loop`` to stop. It also calls a ``stop`` method of the input driver ``InputListener`` is using."""
-        self.stop_flag = True
+        if self.stop_flag is not None:
+            self.stop_flag.set()
         for driver, _ in self.drivers:
             driver.stop()
         return True
