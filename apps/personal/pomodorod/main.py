@@ -35,6 +35,10 @@ def start_monitoring():
     server.start_work()
     raise MenuExitException
 
+def start_break():
+    server.start_break()
+    raise MenuExitException
+
 def stop_monitoring():
     server.break_work()
     raise MenuExitException
@@ -44,12 +48,12 @@ def ack_notification():
     raise MenuExitException
 
 def pomodoro_options_menu():
-    main_menu_contents = [
+    menu_contents = [
     ["Acknowledge", e_wr(ack_notification)],
     ["Start", e_wr(start_monitoring)],
+    ["Start break", e_wr(start_break)],
     ["Stop", e_wr(stop_monitoring)]]
-    main_menu = Menu(main_menu_contents, i, o, "Pomodoro options menu")
-    main_menu.activate()
+    Menu(menu_contents, i, o, "Pomodoro options menu").activate()
 
 def init_app(input, output):
     global i, o
