@@ -15,9 +15,11 @@ callback = None
 i = None #Input device
 o = None #Output device
 
+def callback():
+    Refresher(show_time, i, o, 1, name="Clock refresher").activate()
+
 def init_app(input, output):
-    global callback, i, o
+    global i, o
     i = input; o = output #Getting references to output and input device objects and saving them as globals
-    time_refresher = Refresher(show_time, i, o, 1, name="Timer")
-    callback = time_refresher.activate
+
 
