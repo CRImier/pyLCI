@@ -225,26 +225,28 @@ def set_password(id):
     Printer(["Password entered"], i, o, 1)
 
 def callback():
-    try:
-       current_interface = wpa_cli.get_current_interface()
-    except OSError as e:
-       if e.errno == 2:
-           Printer(["Do you have", "wpa_cli?"], i, o, 3, skippable=True)
-           return
-       else:
-           raise e
-    except wpa_cli.WPAException:
-        Printer(["Do you have", "wireless cards?", "Is wpa_supplicant", "running?"], i, o, 3, skippable=True)
-        return
-    else:
-        main_menu_contents = [
-        [current_interface, change_interface],
+    #A function for main menu to be able to dynamically update
+    def get_contents():
+        current_interface = wpa_cli.get_current_interface()
+        return [["Current: {}".format(current_interface), change_interface],
         ["Scan", scan],
         ["Networks", show_scan_results],
         ["Status", status_monitor],
         ["Saved networks", manage_networks]]
-        main_menu = Menu(main_menu_contents, i, o, "wpa_cli main menu")
-        main_menu.activate()
+    #Now testing if we actually can connect
+    try:
+        get_contents()
+    except OSError as e:
+        if e.errno == 2:
+            Printer(["Do you have", "wpa_cli?"], i, o, 3, skippable=True)
+            return
+        else:
+            raise e
+    except wpa_cli.WPAException:
+        Printer(["Do you have", "wireless cards?", "Is wpa_supplicant", "running?"], i, o, 3, skippable=True)
+        return
+    else:
+        Menu([], i, o, "wpa_cli main menu", contents_hook=get_contents).activate()
 
 
 def init_app(input, output):
