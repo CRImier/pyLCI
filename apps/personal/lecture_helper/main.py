@@ -13,11 +13,12 @@ file_path = None
 interval = 0
 
 def setup_lecture():
-    menu_contents = [
-    [ellipsize("File: {}".format(file_path), o.cols), change_file],
-    ["Interval: {}".format(interval), change_interval],
-    ["Start", start_lecture]]
-    Menu(menu_contents, i, o, "Main menu").activate()
+    def get_contents():
+        return [
+        [ellipsize("File: {}".format(file_path), o.cols), change_file],
+        ["Interval: {}".format(interval), change_interval],
+        ["Start", start_lecture]]
+    Menu([], i, o, "Lecture helper menu", contents_hook=get_contents).activate()
 
 def change_file():
     global file_path
