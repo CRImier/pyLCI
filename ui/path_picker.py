@@ -16,6 +16,7 @@ class PathPicker(Menu):
     append_exit = False
     entry_height = 1
     catch_exit = True
+    contents_hook = None
 
     def __init__(self, path, i, o, callback = None, display_hidden = False, current_dot = False, prev_dot = True):
         """Initialises the Menu object.
@@ -94,6 +95,7 @@ class PathPicker(Menu):
 
     def process_contents(self):
         self._contents = []
+        self.pointer = 0
         if self.path != '/':
             if self.current_dot or self.prev_dot:
                 dot_path = os.path.join(self.path, '.')

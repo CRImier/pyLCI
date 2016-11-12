@@ -50,7 +50,7 @@ class Menu():
     exit_exception = False
     no_entry_message = "No menu entries"
 
-    def __init__(self, contents, i, o, name="Menu", entry_height=1, append_exit=True, catch_exit=True, exitable=True):
+    def __init__(self, contents, i, o, name="Menu", entry_height=1, append_exit=True, catch_exit=True, exitable=True, contents_hook=None):
         """Initialises the Menu object.
         
         Args:
@@ -72,6 +72,7 @@ class Menu():
         self.entry_height = entry_height
         self.name = name
         self.append_exit = append_exit
+        self.contents_hook = contents_hook
         self.set_contents(contents)
         self.catch_exit = catch_exit
         self.exitable = exitable
@@ -92,6 +93,10 @@ class Menu():
     def to_foreground(self):
         """ Is called when menu's ``activate()`` method is used, sets flags and performs all the actions so that menu can display its contents and receive keypresses. Also, updates the output device with rendered currently displayed menu elements."""
         logging.info("menu {0} enabled".format(self.name))    
+        if callable(self.contents_hook):
+            new_contents = self.contents_hook()
+            old_contents = self._contents
+            self.set_contents(new_contents)
         self.in_background = True
         self.in_foreground = True
         self.refresh()
@@ -214,14 +219,20 @@ class Menu():
             self.last_displayed_entry = full_entries_shown-1 #We start numbering elements with 0, so 4-row screen would show elements 0-3
         #print("First displayed entry is {}".format(self.first_displayed_entry))
         #print("Last displayed entry is {}".format(self.last_displayed_entry))
-        self.pointer = 0 #Resetting pointer to avoid confusions between changing menu contents
 
     def process_contents(self):
         """Processes contents for custom callbacks. Currently, only 'exit' calbacks are supported.
 
         If ``self.append_exit`` is set, it goes through the menu and removes every callback which either is ``self.deactivate`` or is just a string 'exit'. 
         |Then, it appends a single ["Exit", 'exit'] element at the end of menu contents. It makes dynamically appending elements to menu easier and makes sure there's only one "Exit" callback, at the bottom of the menu."""
+        #Let's fix the pointer if it needs to be fixed
+        old_contents = self._contents
         self._contents = self.contents
+        if len(self._contents) < len(old_contents) and self.pointer > len(self._contents)-1:
+            if len(self._contents) > 0:
+                self.pointer = len(self._contents) - 1 #Pointer went too far, setting it to last entry available
+            else:
+                self.pointer = 0 #No elements, pointer should be 0
         if self.append_exit: 
             element_callbacks = [element[1] if len(element)>1 else None for element in copy(self._contents)]
             for index, callback in enumerate(element_callbacks):
