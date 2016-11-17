@@ -9,7 +9,7 @@ o = None #Output device
 #Callback for pyLCI. It gets called when application is activated in the main menu
 def callback():
     char_input = Input(i, o, initial_value = "password")
-    print(char_input.activate())
+    print(repr(char_input.activate()))
 
 def init_app(input, output):
     global i, o

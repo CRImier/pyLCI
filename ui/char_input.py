@@ -33,12 +33,14 @@ class CharArrowKeysInput():
     hexadecimals = '0123456789ABCDEF'
     specials = "!\"#$%&'()[]<>*+,-./:;=?^_"
     space = ' '
+    backspace = chr(0x08)
      
     mapping = {
     '][c':chars,
     '][C':Chars,
     '][n':numbers,
     '][S':space,
+    '][b':backspace,
     '][h':hexadecimals,
     '][s':specials}
 
@@ -81,6 +83,7 @@ class CharArrowKeysInput():
         self.name = name
         self.generate_keymap()
         self.allowed_chars = allowed_chars
+        self.allowed_chars.append("][b")
         self.generate_charmap()
         if type(initial_value) != str:
             raise ValueError("CharArrowKeysInput needs a string!")
@@ -158,6 +161,7 @@ class CharArrowKeysInput():
     @to_be_foreground
     def move_right(self):
         """Moves cursor to the next element. """
+        self.check_for_backspace()
         self.position += 1
         if self.last_displayed_char < self.position: #Went too far to the part of the value that isn't currently displayed
             self.last_displayed_char = self.position
@@ -167,6 +171,7 @@ class CharArrowKeysInput():
     @to_be_foreground
     def move_left(self):
         """Moves cursor to the previous element. If first element is chosen, exits and makes the element return None."""
+        self.check_for_backspace()
         if self.position == 0:
             self.exit()
             return
@@ -179,6 +184,7 @@ class CharArrowKeysInput():
     @to_be_foreground
     def accept_value(self):
         """Selects the currently active number value, making activate() return it."""
+        self.check_for_backspace()
         logging.debug("Value accepted")
         self.deactivate()
 
@@ -213,13 +219,20 @@ class CharArrowKeysInput():
         self.i.keymap = self.keymap
         self.i.listen()
 
+    def check_for_backspace(self):
+        for i, char_value in enumerate(self.value):
+            if char_value == self.backspace:
+                self.value.pop(i)
+                self.char_indices.pop(i)
+
     def get_displayed_data(self):
         """Formats the value and the message to show it on the screen, then returns a list that can be directly used by o.display_data"""
         if self.first_displayed_char >= len(self.value): #Value is off-screen
             value = ""
         else:
             value = ''.join(self.value)[self.first_displayed_char:][:self.screen_cols]
-            value = value.replace(' ', chr(255)) #Displaying all spcaes as black boxes
+            value = value.replace(self.backspace, chr(0x7f))
+            value = value.replace(' ', chr(255)) #Displaying all spaces as black boxes
         return [self.message, value]
 
     @to_be_foreground
