@@ -5,19 +5,23 @@ config_filename = "config.json"
 
 from subprocess import check_output, CalledProcessError, STDOUT
 from time import sleep
-import os, sys
+import os, sys, shlex
 
 from helpers.config_parse import read_config
-from ui import Menu, Printer, DialogBox, format_for_screen as ffs
+from ui import Menu, Printer, DialogBox, format_for_screen as ffs, PathPicker, CharArrowKeysInput
 
 base_dir = os.path.dirname(sys.modules[__name__].__file__)
 config_path = os.path.join(base_dir, config_filename)
 
 
-def call_external(script_list):
-    Printer("Calling {}".format(os.path.split(script_list[0])[1]), i, o, 1)
+def call_external(script_list, shell=False):
+    if shell == True:
+        script_path = script_list.split(' ')[0]
+    else:
+        script_path = os.path.split(script_list[0])[1]
+    Printer("Calling {}".format(script_path), i, o, 1)
     try:
-        output = check_output(script_list, stderr=STDOUT)
+        output = check_output(script_list, stderr=STDOUT, shell=shell)
     except OSError as e:
         if e.errno == 2:
             Printer("File not found!", i, o, 1)
@@ -38,8 +42,25 @@ def call_external(script_list):
         if answer == True:
             Printer(ffs(output, o.cols, False), i, o, 5, True)
 
+def call_by_path():
+    path = PathPicker("/", i, o).activate()
+    if path is None:
+        return
+    args = CharArrowKeysInput(i, o, message="Arguments:", name="Script argument input").activate()
+    if args is not None:
+        path = path+" "+args
+    call_external(path, shell=True)
+        
+def call_command():
+    command = CharArrowKeysInput(i, o, message="Command:", name="Script command input").activate()
+    if command is None:
+        return
+    call_external(command, shell=True)
+        
+
 def show_menu():
-    script_menu_contents = []
+    script_menu_contents = [["Script by path", call_by_path],
+                            ["Custom command", call_command]]
     scripts_in_config = []
     try:
         config = read_config(config_path)
