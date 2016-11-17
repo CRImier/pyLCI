@@ -3,12 +3,12 @@ menu_name = "Scripts" #App name as seen in main menu while using the system
 scripts_dir = "s/"
 config_filename = "config.json"
 
-from subprocess import check_output, CalledProcessError
+from subprocess import check_output, CalledProcessError, STDOUT
 from time import sleep
 import os, sys
 
 from helpers.config_parse import read_config
-from ui import Menu, Printer
+from ui import Menu, Printer, DialogBox, format_for_screen as ffs
 
 base_dir = os.path.dirname(sys.modules[__name__].__file__)
 config_path = os.path.join(base_dir, config_filename)
@@ -17,7 +17,7 @@ config_path = os.path.join(base_dir, config_filename)
 def call_external(script_list):
     Printer("Calling {}".format(os.path.split(script_list[0])[1]), i, o, 1)
     try:
-        check_output(script_list)
+        output = check_output(script_list, stderr=STDOUT)
     except OSError as e:
         if e.errno == 2:
             Printer("File not found!", i, o, 1)
@@ -25,11 +25,19 @@ def call_external(script_list):
             Printer(["Permission", "denied!"], i, o, 1)
         else:
             Printer("Unknown error!", i, o, 1)
+        output = ""
     except CalledProcessError as e:
         Printer(["Failed with", "code {}".format(e.returncode)], i, o, 1)
+        output = e.output
     else:
         Printer("Success!", i, o, 1)
-        
+    finally:
+        if not output:
+            return
+        answer = DialogBox("yn", i, o, message="Show output?").activate()
+        if answer == True:
+            Printer(ffs(output, o.cols, False), i, o, 5, True)
+
 def show_menu():
     script_menu_contents = []
     scripts_in_config = []
