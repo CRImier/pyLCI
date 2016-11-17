@@ -49,7 +49,6 @@ class CharArrowKeysInput():
     position = 0
     cancel_flag = False
     charmap = ""
-    char_indices = []
     last_displayed_char = 0
     first_displayed_char = 0
 
@@ -88,6 +87,7 @@ class CharArrowKeysInput():
         if type(initial_value) != str:
             raise ValueError("CharArrowKeysInput needs a string!")
         self.value = list(initial_value)
+        self.char_indices = [] #Fixes a bug with char_indixes remaining from previous input ( 0_0 )
         for char in self.value:
             self.char_indices.append(self.charmap.index(char))
 
