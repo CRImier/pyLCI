@@ -17,6 +17,7 @@ Debugging in general
 * In case of I2C connection, check your I2C device connection with i2cdetect, you should see its address in i2cdetect's output when connected the right way.
 * Check your connections in case you assembled things manually. In case of shields, there shouldn't be any problems.
 
+
 =============
 Output issues
 =============
@@ -25,6 +26,9 @@ Output issues
 
 * Launch the output driver manually to display the test sequence. Go to the directory you installed pyLCI from and launch the output driver directly like ``python output/drivers/your_driver.py``. You might need to adjust variables in ``if __name__ == "__main__":`` section.
 * Is the driver you're using even the correct one? See the config.json and documentation for the driver you're using. 
+
+----------
+
 
 Currently, pyLCI uses HD44780-compatible screens as output devices. Minimum screen size is 16x2. There are some known issues when using those. Again, you're not likely to run into hardware problems when using shields.
 
