@@ -2,17 +2,6 @@
 Installing and updating pyLCI
 #############################
 
-.. note:: 
-   This document refers to two pyLCI directories. First is "download directory", this is the directory which has been created by running ``git clone`` command. Second is "install directory", which is where pyLCI has been copied over by the ``setup.sh`` script.
- 
-   Directory separation is good for being able to experiment with configuration options without breaking the current install, as well as for developing applications for the system.
-
-
-Install sequence
-================
-
-.. note:: The system typically runs as root, and therefore is to be run as sudo/root user. Curious about the reasons? It's :doc:`explained in the FAQ <faq_contact>`.
-
 .. code-block:: bash
 
     git clone https://github.com/CRImier/pyLCI
@@ -24,15 +13,17 @@ Install sequence
     #Once configured:
     ./update.sh #Transfer changes to your install directory
 
+.. note:: The system typically runs as root, and therefore is to be run as sudo/root user. Curious about the reasons? It's :doc:`explained in the FAQ <faq_contact>`.
+
 Setup
 =====
 
-``setup.sh`` is the first script to be run after installation. It checks if you have python and python-pip installed and installs them if they aren't (currently, using apt-get), then creates an install directory, copies all the files to it and installs a ``systemd`` unit file for system to run at boot. Perfect for Raspbian and Debian Jessie, TODO: add support for other systems.
+``setup.sh`` is the first script to be run after installation. It checks if you have python and python-pip installed and installs them if they aren't (using apt-get), then creates an install directory, copies all the files to it and installs a ``systemd`` unit file for system to run at boot. Perfect for Raspbian and Debian Jessie, TODO: add support for other systems.
 
 Installing dependencies for hardware
 ====================================
 
-``config.sh`` is the script that installs all the necessary packages and python libraries, depending on which hardware you're using. It will also set proper ``config.json`` contents if you're using a shield which has a driver in pyLCI and doesn't need any special init parameters.
+``config.sh`` is the script that installs all the necessary packages and python libraries, depending on which hardware you're using. It will also set proper ``config.json`` contents if you're using a shield which has a pyLCI driver.
 
 Configuring input and output devices
 ====================================
@@ -58,13 +49,19 @@ Its format is as follows:
      }]
    }
 
-Documentation for :doc:`input <input>` and :doc:`output <output>` drivers have sample ``config.json`` for each driver. ``"args"`` and ``"kwargs"`` get passed directly to drivers' ``__init__`` method, so you can refer to that to see if there are additional attributes available for your application.
+Documentation for :doc:`input <input>` and :doc:`output <output>` drivers have sample ``config.json`` for each driver. ``"args"`` and ``"kwargs"`` get passed directly to drivers' ``__init__`` method, so you can refer to that to see if there are any options you could tweak.
 
 Systemctl commands
 ==================
 
 * ``systemctl start pylci.service``
 * ``systemctl stop pylci.service``
+
+
+.. note:: 
+   This document refers to two pyLCI directories. First is "download directory", this is the directory which has been created by running ``git clone`` command. Second is "install directory", which is where pyLCI has been copied over by the ``setup.sh`` script.
+ 
+   Directory separation is good for being able to experiment with configuration options without breaking the current install, as well as for developing applications for the system while not cluttering your install version.
 
 
 Launching the system manually
@@ -74,7 +71,7 @@ For testing configuration or development, you will want to launch the system dir
 
 .. tip:: If system refuses to shut down (happens due to input subsystem threads not finishing sometimes), feel free to find its PID using ``ps ax|grep "python main.py"`` and do a ``kill -KILL $PID`` on it.
 
-After you're done configuring/developing on the system, you can use ``update.sh``:
+After you're done configuring/developing on the system, you can use ``update.sh`` to transfer your changes to the install directory.
 
 Updating
 ========
@@ -82,11 +79,5 @@ Updating
 ``update.sh`` is for updating your pyLCI install, pulling new commits from GitHub and copying all the new files from download directory to the install directory. This is useful to make your installed system up-to-date if there have been new commits or if you made some changes and want to transfer them to pyLCI install directory. 
 
 .. note:: ``update.sh`` automatically pulls all the GitHub commits - just comment the corresponding line out if you don't want it. Also, it runs ``systemctl start pylci.service``.
-
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
 
 
