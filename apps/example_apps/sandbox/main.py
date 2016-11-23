@@ -1,4 +1,4 @@
-menu_name = "PDB console"
+menu_name = "Python sandbox"
 
 from ui import Printer
 
@@ -7,7 +7,8 @@ i = None
 o = None
 
 def callback():
-    import pdb;pdb.set_trace()
+    import code
+    code.interact(local=dict(globals(), **locals()))
 
 def init_app(input, output):
     global callback, i, o
