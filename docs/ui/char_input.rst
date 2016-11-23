@@ -4,7 +4,7 @@
 Character input UI elements
 ###########################
 
-``from ui import CharArrowKeyInput``
+``from ui import CharArrowKeysInput``
 
 Contents:
 
@@ -13,7 +13,7 @@ Contents:
 
 .. automodule:: ui.char_input
 
-.. autoclass:: CharArrowKeyInput
+.. autoclass:: CharArrowKeysInput
     :members: __init__,activate,move_up,move_down,move_left,move_right,accept_value,deactivate,print_value,print_name
 
 * :ref:`genindex`
