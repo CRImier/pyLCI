@@ -4,12 +4,15 @@
 Menu UI element
 #####################
 
-``from ui import Menu``
-
-Contents:
-
-.. toctree::
-   :maxdepth: 2
+``from ui import Menu
+...
+menu_contents = [
+["Do this", do_this],
+["Do this with 20", lambda: do_this(x=20)],
+["Do nothing"],
+["My submenu", submenu.activate]
+]
+Menu(menu_contents, i, o, "My menu").activate()``
 
 .. automodule:: ui.menu
  
