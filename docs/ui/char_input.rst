@@ -4,11 +4,13 @@
 Character input UI elements
 ###########################
 
-``from ui import CharArrowKeysInput
-password = CharArrowKeysInput(i, o, message="Password:", name="My password dialog").activate()
-if password is None: #UI element exited 
-    return False #Cancelling
-#processing the input you received...``
+.. code-block:: python
+
+    from ui import CharArrowKeysInput
+    password = CharArrowKeysInput(i, o, message="Password:", name="My password dialog").activate()
+    if password is None: #UI element exited 
+        return False #Cancelling
+    #processing the input you received...
 
 .. automodule:: ui.char_input
 

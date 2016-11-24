@@ -4,13 +4,14 @@
 Numeric input UI elements
 #########################
 
-``from ui import IntegerAdjustInput
-start_from = 0
-number = IntegerAdjustInput(start_from, i, o).activate()
-if number is None: #Input cancelled
-    return
-#process the number
-``
+.. code-block:: python
+                      
+    from ui import IntegerAdjustInput
+    start_from = 0
+    number = IntegerAdjustInput(start_from, i, o).activate()
+    if number is None: #Input cancelled
+        return
+    #process the number
 
 .. automodule:: ui.number_input
 

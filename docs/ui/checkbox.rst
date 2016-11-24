@@ -4,13 +4,14 @@
 Checkbox UI element
 #####################
 
-``from ui import Checkbox
-contents = [
-["Apples", 'apples'],
-["Oranges", 'oranges'],
-["Bananas", 'bananas']]
-selected_fruits = Checkbox(checkbox_contents, i, o).activate()
-``
+.. code-block:: python
+                      
+    from ui import Checkbox
+    contents = [
+    ["Apples", 'apples'],
+    ["Oranges", 'oranges'],
+    ["Bananas", 'bananas']]
+    selected_fruits = Checkbox(checkbox_contents, i, o).activate()
 
 .. automodule:: ui.checkbox
  
