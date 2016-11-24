@@ -228,10 +228,10 @@ def callback():
     #A function for main menu to be able to dynamically update
     def get_contents():
         current_interface = wpa_cli.get_current_interface()
-        return [["Current: {}".format(current_interface), change_interface],
+        return [["Status", status_monitor],
+        ["Current: {}".format(current_interface), change_interface],
         ["Scan", scan],
         ["Networks", show_scan_results],
-        ["Status", status_monitor],
         ["Saved networks", manage_networks]]
     #Now testing if we actually can connect
     try:
