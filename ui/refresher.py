@@ -34,6 +34,7 @@ class Refresher():
 
         Kwargs:
 
+            * ``refresh_interval``: Time between display refreshes (and, accordingly, ``refresh_function`` calls)
             * ``keymap``: Keymap entries you want to set while Refresher is active
             * ``name``: Refresher name which can be used internally and for debugging.
 
