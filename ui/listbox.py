@@ -30,7 +30,7 @@ class Listbox(Menu):
     exitable = True
     selected_element = None
 
-    def __init__(self, contents, i, o, name="Listbox", entry_height=1, append_exit=True):
+    def __init__(self, contents, i, o, name="Listbox", entry_height=1, append_exit=True, scrolling=True):
         """Initialises the Listbox object.
         
         Args:
@@ -52,10 +52,16 @@ class Listbox(Menu):
         self.append_exit = append_exit
         self.set_contents(contents)
         self.generate_keymap()
+        self.scrolling={"enabled":scrolling,       
+                        "current_finished":False,  
+                        "current_scrollable":False,
+                        "counter":0,               
+                        "pointer":0}               
 
     def to_foreground(self):
-        """ Is called when listboxes ``activate()`` method is used, sets flags and performs all the actions so that menu can display its contents and receive keypresses. Also, updates the output device with rendered currently displayed menu elements."""
+        """ Is called when listbox ``activate()`` method is used, sets flags and performs all the actions so that menu can display its contents and receive keypresses. Also, updates the output device with rendered currently displayed menu elements."""
         logging.info("{0} enabled".format(self.name))    
+        self.scrolling["counter"] = 0
         self.in_foreground = True
         self.refresh()
         self.set_keymap()
@@ -69,6 +75,7 @@ class Listbox(Menu):
             return None
         while self.in_foreground: #All the work is done in input callbacks
             sleep(0.1)
+            self.scroll()
         logging.debug(self.name+" exited")
         if self.selected_element is None:
             return None
@@ -94,5 +101,5 @@ class Listbox(Menu):
         |Then, it appends a single ["Exit", 'exit'] element at the end of menu contents. It makes dynamically appending elements to menu easier and makes sure there's only one "Exit" callback, at the bottom of the menu."""
         if self.append_exit: 
             self.contents.append(["Exit", None])
-        self._contents = self.contents #HAAAAAAAAAAAAAAX
+        self._contents = self.contents 
         logging.debug("{}: listbox contents processed".format(self.name))

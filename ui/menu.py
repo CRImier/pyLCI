@@ -50,7 +50,7 @@ class Menu():
     exit_exception = False
     no_entry_message = "No menu entries"
 
-    def __init__(self, contents, i, o, name="Menu", entry_height=1, append_exit=True, catch_exit=True, exitable=True, contents_hook=None):
+    def __init__(self, contents, i, o, name="Menu", entry_height=1, append_exit=True, catch_exit=True, exitable=True, contents_hook=None, scrolling=True):
         """Initialises the Menu object.
         
         Args:
@@ -73,6 +73,11 @@ class Menu():
         self.name = name
         self.append_exit = append_exit
         self.contents_hook = contents_hook
+        self.scrolling={"enabled":scrolling,
+                        "current_finished":False,
+                        "current_scrollable":False,
+                        "counter":0,
+                        "pointer":0}
         self.set_contents(contents)
         self.catch_exit = catch_exit
         self.exitable = exitable
@@ -97,6 +102,7 @@ class Menu():
             new_contents = self.contents_hook()
             old_contents = self._contents
             self.set_contents(new_contents)
+        self.scrolling["counter"] = 0
         self.in_background = True
         self.in_foreground = True
         self.refresh()
@@ -116,6 +122,7 @@ class Menu():
         self.to_foreground() 
         while self.in_background: #All the work is done in input callbacks
             sleep(0.1)
+            self.scroll()
         if self.exit_exception:
             if self.catch_exit == False:
                 raise MenuExitException
@@ -127,6 +134,19 @@ class Menu():
         self.in_foreground = False
         self.in_background = False
         logging.info("menu {0} deactivated".format(self.name))    
+
+    @to_be_foreground
+    def scroll(self):
+        if self.scrolling["enabled"] and not self.scrolling["current_finished"] and self.scrolling["current_scrollable"]:
+            self.scrolling["counter"] += 1
+            if self.scrolling["counter"] == 10:
+                self.scrolling["pointer"] += 1
+                self.scrolling["counter"] = 0
+                self.refresh()
+            
+    def reset_scrolling(self):
+        self.scrolling["current_finished"] = False
+        self.scrolling["pointer"] = 0
 
     def print_contents(self):
         """ A debug method. Useful for hooking up to an input event so that you can see the representation of menu's contents. """
@@ -144,6 +164,7 @@ class Menu():
         if self.pointer < (len(self._contents)-1):
             logging.debug("moved down")
             self.pointer += 1  
+            self.reset_scrolling()
             self.refresh()    
             return True
         else: 
@@ -158,6 +179,7 @@ class Menu():
             logging.debug("moved up")
             self.pointer -= 1
             self.refresh()
+            self.reset_scrolling()
             return True
         else: 
             return False
@@ -179,6 +201,7 @@ class Menu():
             except MenuExitException:
                 self.exit_exception = True
             finally:
+                self.reset_scrolling()
                 if self.exit_exception:
                     self.deactivate() 
                 elif self.in_background: #This check is in place so that you can have an 'exit' element
@@ -276,7 +299,8 @@ class Menu():
         disp_entry_positions = range(self.first_displayed_entry, self.last_displayed_entry+1)
         #print("Displayed entries: {}".format(disp_entry_positions))
         for entry_num in disp_entry_positions:
-            displayed_entry = self.render_displayed_entry(entry_num, active=entry_num == self.pointer)
+            is_active = entry_num == self.pointer
+            displayed_entry = self.render_displayed_entry(entry_num, active=is_active)
             displayed_data += displayed_entry
         #print("Displayed data: {}".format(displayed_data))
         return displayed_data
@@ -291,8 +315,14 @@ class Menu():
         rendered_entry = []
         entry_content = self._contents[entry_num][0]
         display_columns = self.o.cols
-        if type(entry_content) in [str, unicode]:
+        if type(entry_content) in [str, unicode]: 
             if active:
+                #Scrolling only works with strings for now
+                avail_display_chars = (self.o.cols*self.entry_height)-1 #1 char for "*"/" "
+                self.scrolling["current_scrollable"] = len(entry_content) > avail_display_chars
+                self.scrolling["current_finished"] = len(entry_content)-self.scrolling["pointer"] < avail_display_chars
+                if self.scrolling["current_scrollable"] and not self.scrolling["current_finished"]:
+                    entry_content = entry_content[self.scrolling["pointer"]:]
                 rendered_entry.append("*"+entry_content[:display_columns-1]) #First part of string displayed
                 entry_content = entry_content[display_columns-1:] #Shifting through the part we just displayed
             else:

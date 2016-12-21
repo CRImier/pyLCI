@@ -18,7 +18,7 @@ class PathPicker(Menu):
     catch_exit = True
     contents_hook = None
 
-    def __init__(self, path, i, o, callback = None, display_hidden = False, current_dot = False, prev_dot = True):
+    def __init__(self, path, i, o, callback = None, display_hidden = False, current_dot = False, prev_dot = True, scrolling=True):
         """Initialises the Menu object.
         
         Args:
@@ -47,6 +47,11 @@ class PathPicker(Menu):
         self._in_background = Event()
         self.set_contents([]) #Method inherited from Menu and needs an argument, but context is not right
         self.generate_keymap()
+        self.scrolling={"enabled":scrolling,       
+                        "current_finished":False,  
+                        "current_scrollable":False,
+                        "counter":0,               
+                        "pointer":0}               
 
     def activate(self):
         """ A method which is called when menu needs to start operating. Is blocking, sets up input&output devices, renders the menu and waits until self.in_background is False, while menu callbacks are executed from the input device thread."""
@@ -54,6 +59,7 @@ class PathPicker(Menu):
         self.to_foreground() 
         while self.in_background: #All the work is done in input callbacks
             sleep(0.1)
+            self.scroll()
         logging.debug(self.name+" exited")
         return self.path_chosen
 
