@@ -7,7 +7,9 @@ i = None #Input device
 o = None #Output device
 
 def callback():
-    print(DialogBox('ync', i, o, message="Test test test").activate())
+    print(DialogBox('ync', i, o, message="It's working?").activate())
+    print(DialogBox('yyy', i, o, message="Isn't it beautiful?").activate())
+    print(DialogBox([["Yes", True], ["Absolutely", True]], i, o, message="Do you like it").activate())
 
 def init_app(input, output):
     global i, o

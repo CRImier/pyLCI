@@ -6,7 +6,8 @@ class DialogBox():
 
     value_selected = False
     pointer = 0
-    
+    default_options = {"y":["Yes", True], 'n':["No", False], 'c':["Cancel", None]}
+
     def __init__(self, values, i, o, message="Are you sure?", name="DialogBox"):
         """Initialises the DialogBox object.
 
@@ -28,10 +29,12 @@ class DialogBox():
         self.i = i
         self.o = o
         self.name = name
-        if values == 'yn':
-            self.values = [["Yes", True], ["No", False]]
-        elif values == 'ync':
-            self.values = [["Yes", True], ["No", False], ["Cancel", None]]
+        if isinstance(values, str):
+            self.values = []
+            for char in values:
+                self.values.append(self.default_options[char])
+            #value_str = " ".join([value[0] for value in values])
+            #assert(len(value_str) <= o.cols, "Resulting string too long for the display!")
         else:
             assert type(values) in (list, tuple), "Unsupported 'values' argument!"
             assert values, "DialogBox: Empty/invalid 'values' argument!"
