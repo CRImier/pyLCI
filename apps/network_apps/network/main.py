@@ -13,11 +13,14 @@ from ui import Menu, Printer
 from if_info import parse_ip_addr
 
 def show_ifc_data(ifc_name, ifc_data):
-    ip, mask = str(ifc_data['addr']).rsplit('/', 1)
+    if ifc_data['addr'] is not None:
+        ip, mask = str(ifc_data['addr']).rsplit('/', 1)
+    else:
+        ip = "None"
+        mask = "0"
     ip_header = "IP: "
     mask_str = "/{}".format(mask)
     ip_header_str = ip_header + mask_str.rjust(o.cols-len(ip_header)) #Magic to make it beautiful
-    print(ip_header_str)
     ifd_menu_contents = [
     ["state: "+str(ifc_data['state'])],
     [[ip_header_str, ip]],
