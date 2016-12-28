@@ -10,4 +10,4 @@ WorkingDirectory=/opt/pylci
 Restart=always
 
 [Install]
-WantedBy=graphical.target
+WantedBy=getty.target
