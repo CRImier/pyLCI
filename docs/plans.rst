@@ -77,6 +77,7 @@ UI elements
 * Simple number input
 * Character input using keypads and keyboards
 * Wraparound for Menu UI element
+* Page up/down for Menu UI element
 
 ============
 Development
