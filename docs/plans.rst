@@ -59,6 +59,10 @@ Applications
 * NMap app
 * SMS and call app - interfacing to mobile phones and GSM/3G modems
 
+.. rubric:: App-related changes
+
+* Custom sorting of elements in main menu/submenus created by pyLCI
+
 ============
 UI elements
 ============
