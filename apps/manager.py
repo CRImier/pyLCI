@@ -1,6 +1,9 @@
 import importlib
 import os
 
+class ListWithMetadata(list):
+    ordering_alias = None
+
 class AppManager():
     subdir_menus = {}
     """ Example of subdir_menus:
@@ -25,6 +28,7 @@ class AppManager():
 
     def load_all_apps(self):
         base_menu = self.menu_class([], self.i, self.o, "Main app menu", exitable=False) #Main menu for all applications.
+        orderings = {}
         self.subdir_menus[self.app_directory] = base_menu
         for path, subdirs, modules in app_walk(self.app_directory): 
             #print("Loading path {} with modules {} and subdirs {}".format(path, modules, subdirs))
@@ -43,14 +47,13 @@ class AppManager():
                     print("Failed to load app {}".format(module_path))
                     print(e)
                     self.printer_func(["Failed to load", os.path.split(module_path)[1]], self.i, self.o, 2)
-        
         for subdir_path in self.subdir_menus:
             #Now it's time to link menus to parent menus
             if subdir_path == self.app_directory:
                 continue
             parent_path = os.path.split(subdir_path)[0]
             ordering = self.get_ordering(parent_path)
-            print("Adding subdir {} to parent {}".format(subdir_path, parent_path))
+            #print("Adding subdir {} to parent {}".format(subdir_path, parent_path))
             parent_menu = self.subdir_menus[parent_path]
             subdir_menu = self.subdir_menus[subdir_path]
             subdir_menu_name = self.get_subdir_menu_name(subdir_path)
@@ -62,7 +65,7 @@ class AppManager():
             app = self.app_list[app_path]
             subdir_path = os.path.split(app_path)[0]
             ordering = self.get_ordering(subdir_path)
-            print("Adding app {} to subdir {}".format(app_path, subdir_path))
+            #print("Adding app {} to subdir {}".format(app_path, subdir_path))
             subdir_menu = self.subdir_menus[subdir_path]
             subdir_menu_contents = self.insert_by_ordering([app.menu_name, app.callback], os.path.split(app_path)[1], subdir_menu.contents, ordering)
             subdir_menu.set_contents(subdir_menu_contents)
@@ -102,18 +105,33 @@ class AppManager():
             print(e)
             ordering = []
         except AttributeError as e:
-            print("No ordering for directory {}".format(path))
+            #print("No ordering for directory {}".format(path))
             #print(e)
             ordering = []
         finally:
             cache[path] = ordering
             return ordering
 
-    def insert_by_ordering(self, to_insert, alias, list, ordering):
-        print("Inserting {} by ordering {}".format(alias, ordering))
-        list.append(to_insert)
-        return list
-
+    def insert_by_ordering(self, to_insert, alias, l, ordering):
+        #print("Inserting {} by ordering {}".format(alias, ordering))
+        if alias in ordering:
+            #HAAAAAAAAAAAAAAXXXXXXXXXX
+            to_insert = ListWithMetadata(to_insert)
+            #Marking the object we're inserting with its alias 
+            #so that we won't mix up ordering of elements later
+            to_insert.ordering_alias = alias 
+            if not l: #No conditions to check
+                l.append(to_insert); return l
+            for e in l:
+                #print("{} - {}".format(type(e), e))
+                if hasattr(e, "ordering_alias"):
+                    if ordering.index(e.ordering_alias) > ordering.index(alias):
+                        l.insert(l.index(e), to_insert); return l
+                    else:
+                        pass #going to next element
+                else:
+                    l.insert(l.index(e), to_insert); return l
+        l.append(to_insert); return l #Catch-all
 
 def app_walk(base_dir):
     """Example of app_walk(directory):  
