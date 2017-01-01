@@ -13,10 +13,11 @@ class InputListener():
     thread_index = 0
     keymap = {}
 
-    def __init__(self, drivers, keymap={}):
+    def __init__(self, drivers, keymap=None):
         """Init function for creating KeyListener object. Checks all the arguments and sets keymap if supplied."""
         self.drivers = drivers
         self.queue = Queue.Queue()
+        if keymap is None: keymap = {} 
         for driver, _ in self.drivers:
             driver.send_key = self.receive_key #Overriding the send_key method so that keycodes get sent to InputListener
         self.set_keymap(keymap)
