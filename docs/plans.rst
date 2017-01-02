@@ -23,6 +23,7 @@ Global system changes
 Input devices
 ==============
 
+* Make global non-overridable and global overridable callbacks (that could be used by apps to process buttons even while being inactive)
 * Make a "passthrough" driver for HID so that a single keyboard can both be used for X and pyLCI
 * Make an input emulator for development tasks
 * Add key remapping to HID driver
