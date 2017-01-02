@@ -103,7 +103,7 @@ class InputListener():
             except Queue.Empty:
                 sleep(0.1)
             except AttributeError:
-                print("Heh, caught that.") #Typically gets printed if InputListener exits abnormally upon program termination
+                pass #Typically gets printed if InputListener exits abnormally upon program termination
             else:
                 self.process_key(key)
         #print("Stopping event loop "+str(index))
