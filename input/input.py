@@ -7,11 +7,19 @@ from helpers import read_config
 
 listener = None
 
+class CallbackException(Exception):
+    def __init__(self, code=0, message=""):
+        self.code = code
+        self.message = message
+
 class InputListener():
     """A class which listens for input device events and calls corresponding callbacks if set"""
     stop_flag = None
     thread_index = 0
     keymap = {}
+    maskable_keymap = {}
+    nonmaskable_keymap = {}
+    reserved_keys = ["KEY_LEFT", "KEY_RIGHT", "KEY_UP", "KEY_DOWN", "KEY_ENTER", "KEY_KPENTER"]
 
     def __init__(self, drivers, keymap=None):
         """Init function for creating KeyListener object. Checks all the arguments and sets keymap if supplied."""
@@ -32,6 +40,36 @@ class InputListener():
     def set_callback(self, key_name, callback):
         """Sets a single callback of the listener"""
         self.keymap[key_name] = callback
+
+    def check_special_callback(self, key_name):
+        """Raises exceptions upon setting of a special callback on a reserved/taken keyname"""
+        if key_name in self.reserved_keys:
+            #Trying to set a special callback for a reserved key
+            raise CallbackException(1, "Special callback for {} can't be set because it's one of the reserved keys".format(key_name))
+        elif key_name in self.nonmaskable_keymap:
+            #Key is already used in a non-maskable callback
+            raise CallbackException(2, "Special callback for {} can't be set because it's already set as nonmaskable".format(key_name))
+        elif key_name in self.maskable_keymap: 
+            #Key is already used in a maskable callback
+            raise CallbackException(3, "Special callback for {} can't be set because it's already set as maskable".format(key_name))
+
+    def set_maskable_callback(self, key_name, callback):
+        """Sets a single maskable callback of the listener.
+        Raises CallbackException if the callback is one of the reserved keys or already is in maskable/nonmaskable keymap.
+
+        A maskable callback is global (never cleared) and will be called upon a keypress 
+        unless a callback for the same keyname is already set in keymap."""
+        self.check_special_callback(key_name)
+        self.maskable_keymap[key_name] = callback
+
+    def set_nonmaskable_callback(self, key_name, callback):
+        """Sets a single nonmaskable callback of the listener.
+        Raises CallbackException if the callback is one of the reserved keys or already is in maskable/nonmaskable keymap.
+
+        A nonmaskable callback is global (never cleared) and will be called upon a keypress 
+        even if a callback for the same keyname is already set in ``keymap`` (callback from the ``keymap`` won't be called)."""
+        self.check_special_callback(key_name)
+        self.nonmaskable_keymap[key_name] = callback
 
     def remove_callback(self, key_name):
         """Removes a single callback of the listener"""
@@ -71,15 +109,24 @@ class InputListener():
         #print("Stopping event loop "+str(index))
 
     def process_key(self, key):
-        if key in self.keymap:
+        if key in self.nonmaskable_keymap:
+            callback = self.nonmaskable_keymap[key]
+            self.handle_callback(callback, key)
+        elif key in self.keymap:
             callback = self.keymap[key]
-            try:
-                callback()
-            except Exception as e:
-                self.handle_callback_exception(key, callback, e)
-            finally:
-                return
+            self.handle_callback(callback, key)
+        elif key in self.maskable_keymap:
+            callback = self.maskable_keymap[key]
+            self.handle_callback(callback, key)
         
+    def handle_callback(self, callback, key):
+        try:
+            callback()
+        except Exception as e:
+            self.handle_callback_exception(key, callback, e)
+        finally: #this finally allows to get a pdb prompt while still being able to operate the interface
+            return
+
     def handle_callback_exception(self, key, callback, e):
         print("Exception caused by callback {} when key {} was received".format(callback, key))
         print("Exception: {}".format(e))
