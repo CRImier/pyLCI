@@ -28,7 +28,6 @@ Input devices
 * Make an input emulator for development tasks
 * Add key remapping to HID driver
 * Pressed/released/held button states
-* Input streaming mode (pass all keycodes received to one callback)
 
 ==============
 Output devices

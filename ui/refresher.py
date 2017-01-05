@@ -109,8 +109,8 @@ class Refresher():
             keymap[key] = callback
         if not "KEY_LEFT" in keymap:
             keymap["KEY_LEFT"] = self.deactivate
-        if not "KEY_RIGHT" in keymap:
-            keymap["KEY_RIGHT"] = self.print_name
+        #if not "KEY_RIGHT" in keymap and:
+        #    keymap["KEY_RIGHT"] = self.print_name
         return keymap
 
     def set_keymap(self, keymap):

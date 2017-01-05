@@ -19,6 +19,7 @@ class InputListener():
     keymap = {}
     maskable_keymap = {}
     nonmaskable_keymap = {}
+    streaming = None
     reserved_keys = ["KEY_LEFT", "KEY_RIGHT", "KEY_UP", "KEY_DOWN", "KEY_ENTER", "KEY_KPENTER"]
 
     def __init__(self, drivers, keymap=None):
@@ -36,6 +37,16 @@ class InputListener():
             self.queue.put(key)
         except:
             raise #Just collecting possible exceptions for now
+
+    def set_streaming(self, callback):
+        """Sets a callback for streaming key events. The callback will be called 
+        with key_name as first argument but should support arbitrary number 
+        of positional arguments if compatibility with future versions is desired."""
+        self.streaming = callback
+
+    def remove_streaming(self):
+        """Removes a callback for streaming key events, if previously set by any app/UI element."""
+        self.streaming = None
 
     def set_callback(self, key_name, callback):
         """Sets a single callback of the listener"""
@@ -118,6 +129,8 @@ class InputListener():
         elif key in self.maskable_keymap:
             callback = self.maskable_keymap[key]
             self.handle_callback(callback, key)
+        elif callable(self.streaming):
+            self.streaming(key)
         
     def handle_callback(self, callback, key):
         try:
