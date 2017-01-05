@@ -16,7 +16,7 @@ Installing and updating pyLCI
 .. note:: 
    **Behind the scenes:**
    
-   When you run ``./setup.sh``, pyLCI is copied to ``/opt/pylci``, this is done to make autorun code easier and allow experimentation while making it harder to lock you out of the system if pyLCI is your main control interface. ``/opt/pylci`` will be referred to as "install directory", while the directory you cloned the repository to will be referred to as "download directory". 
+   When you run ``./setup.sh``, pyLCI is copied to ``/opt/pylci``, this is done to make autorun code easier and allow experimentation while making it harder to lock you out of the system if pyLCI is your main control interface. ``/opt/pylci`` will be referred to as "install directory", while the directory you cloned the repository to will be referred to as "download directory". ``./update.sh``, when run from download directory, will transfer the changes from the download directory (and GitHub) to the install directory.
 
 Setup
 =====
