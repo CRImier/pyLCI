@@ -147,6 +147,7 @@ class Menu():
     def reset_scrolling(self):
         self.scrolling["current_finished"] = False
         self.scrolling["pointer"] = 0
+        self.scrolling["counter"] = 0
 
     def print_contents(self):
         """ A debug method. Useful for hooking up to an input event so that you can see the representation of menu's contents. """
