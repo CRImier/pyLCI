@@ -64,12 +64,12 @@ class Refresher():
         """ A method which is called when refresher needs to start operating. Is blocking, sets up input&output devices, renders the refresher, periodically calls the refresh function&refreshes the screen while self.in_foreground is True, while refresher callbacks are executed from the input device thread."""
         logging.info("refresher {0} activated".format(self.name))    
         self.to_foreground() 
-        sleep_time = 0.01
         counter = 0
-        rts_ratio = self.refresh_interval/sleep_time
+        divisor = 2.0
+        sleep_time = self.refresh_interval/divisor
         while self.in_background.isSet(): 
             if self.in_foreground:
-                if counter == rts_ratio:
+                if counter == divisor:
                     counter = 0
                 if counter == 0:
                     self.refresh()
