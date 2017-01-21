@@ -100,13 +100,13 @@ if yes_or_no("Do you use any of pre-assembled I/O modules, such as PiFaceCAD, on
        options.append(module_name)
    else:
        print("You might still be able to use it. Do open an issue on GitHub, or, alternatively, try GPIO driver if it's based on GPIO")
-if yes_or_no("Do you connect any of your I/O devices by I2C?"):
+if yes_or_no("Do you want to use I2C devices with pyLCI?"):
    options.append('i2c')
-if yes_or_no("Do you connect any of your I/O devices by serial (UART), either hardware or serial over USB?"):
-   options.append('serial')
-if yes_or_no("Do you use HID devices, such as keyboards and keypads?"):
+#if yes_or_no("Do you want to use UART devices with pyLCI?"): #No devices as such present in the driver folders now
+#   options.append('serial')
+if yes_or_no("Do you want to use HID devices with pyLCI (such as keyboards and keypads)?"):
    options.append('hid')
-if yes_or_no("Do you use Raspberry Pi GPIO port devices (not I2C or SPI)?"):
+if yes_or_no("Do you want to use Raspberry Pi GPIO-connected devices with pyLCI (not I2C or SPI)?"):
    options.append('rpi_gpio')
 
 #Joining both module dictionaries for convenience
