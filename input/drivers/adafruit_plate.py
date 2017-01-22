@@ -31,8 +31,8 @@ class InputDevice(InputSkeleton):
         if type(addr) in [str, unicode]:
             addr = int(addr, 16)
         self.addr = addr
-        InputSkeleton.__init__(self, **kwargs)
         self.init_expander()
+        InputSkeleton.__init__(self, **kwargs)
 
     def init_expander(self):
         """Initialises the IO expander."""
