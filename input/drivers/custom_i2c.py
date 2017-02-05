@@ -84,5 +84,5 @@ class InputDevice(InputSkeleton):
             sleep(0.1)
 
 if __name__ == "__main__":
-    id = InputDevice(addr = 0x12, threaded=False)
+    id = InputDevice(addr = 0x12, int_pin = 21, threaded=False)
     id.runner()
