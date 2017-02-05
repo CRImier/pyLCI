@@ -14,7 +14,12 @@ output.init()
 o = output.screen
 from ui import Printer, Menu
 
-Printer(["Welcome to", "pyLCI"], None, o, 0)
+try:
+    from splash import splash
+    splash(None, o)
+except KeyboardInterrupt:
+    pass
+#Printer(["Welcome to", "pyLCI"], None, o, 0)
 
 try: #If there's an internal error, we show it on display and exit
     from apps.manager import AppManager
