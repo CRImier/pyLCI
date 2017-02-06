@@ -65,7 +65,7 @@ class Refresher():
         logging.info("refresher {0} activated".format(self.name))    
         self.to_foreground() 
         counter = 0
-        divisor = 2.0
+        divisor = 20.0
         sleep_time = self.refresh_interval/divisor
         while self.in_background.isSet(): 
             if self.in_foreground:
