@@ -86,7 +86,7 @@ def main_menu_contents():
     return contents
 
 def init_app(input, output):
-    global main_menu, callback, i, o
+    global i, o
     i = input; o = output
 
 def callback():
