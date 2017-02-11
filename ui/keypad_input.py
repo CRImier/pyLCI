@@ -2,10 +2,23 @@ from time import sleep
 from math import ceil
 import logging
 from functools import wraps
+from threading import Lock
+
+import threading
+import traceback
+import signal
+import sys
+def dumpthreads(*args):
+    for th in threading.enumerate():                          	
+        print(th)                                             
+        traceback.print_stack(sys._current_frames()[th.ident])
+        print()                                               
+signal.signal(signal.SIGUSR1, dumpthreads)
 
 def to_be_foreground(func): 
     #A safety check wrapper so that certain functions can't possibly be called 
     #if UI element is not the one active
+    @wraps(func)
     def wrapper(self, *args, **kwargs):
         if self.in_foreground:
             return func(self, *args, **kwargs)
@@ -13,11 +26,27 @@ def to_be_foreground(func):
             return False
     return wrapper
 
+def check_value_lock(func): 
+    #A safety check wrapper so that there's no race conditions between functions able to change position/value
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        #Value-changing code likely to run in concurrent thread and therefore we need a lock
+        #if self.__locked_name__ is not None: print("Another function already locked the thread! Name is {}, current is {}".format(self.__locked_name__, func.__name__))
+        #self.value_lock.acquire()
+        self.__locked_name__ = func.__name__
+        #print("Locked function {}".format(func.__name__))
+        result = func(self, *args, **kwargs)
+        #self.value_lock.release()
+        #print("Unlocked function {}".format(func.__name__))
+        self.__locked_name__ = None
+        return result
+    return wrapper
+
 def check_position_overflow(condition):
     """Returns a decorator which can check for different ways of "self.position" counter overflow """
     def decorator(func):
         @wraps(func)
-        def wrapper(self, condition=condition, *args, **kwargs):
+        def wrapper(self, *args, **kwargs):
             #First, different checks depending on the type of check requested
             if condition == ">":
                 overflow = self.position > len(self.value) # The biggest difference should be 1 character - for when position has advanced, but no character has been input
@@ -26,16 +55,21 @@ def check_position_overflow(condition):
                 overflow = self.position >= len(self.value) #Can't be any positive difference, when updating the position pointer should be on an existing character
                 difference = len(self.value) - self.position
             #Taking action if overflow happened
+            print("Position overflow check; v:{}; p:{}; o:{}".format(self.value, self.position, overflow))
             if overflow:
                 #TODO: insert proper logging
                 print(self.name+": WTF, position counter overflow")
+                print("Difference: {}".format(difference))
                 #Fixing the overflow by adding space characters
                 for _ in range(difference):
+                    print("Appending spaces...")
                     value.append(" ")
             #Checks done, executing decorated function
-            return func(self, *args, **kwargs)
+            result = func(self, *args, **kwargs)
+            return result
         return wrapper
     return decorator
+
 
 class NumericKeypadCharInput():
     """Implements a character input UI element for a numeric keypad, allowing to translate numbers into characters.
@@ -47,7 +81,7 @@ class NumericKeypadCharInput():
 
     """
     
-    mapping = {"1":"1",
+    mapping = {"1":"1!",
                "2":"abcABC2",
                "3":"defDEF3",
                "4":"ghiGHI4",
@@ -65,11 +99,12 @@ class NumericKeypadCharInput():
 
     value = ""
     position = 0
-
+    value_lock = None
     pending_character = None
     pending_counter = 0 
     pending_counter_start = 10 #Multiples of 0.1 second interval
     current_letter_num = 0
+    __locked_name__ = None
 
     def __init__(self, i, o, message=None, name="NumericKeypadCharInput"):
         """Initialises the NumericKeypadCharInput object.
@@ -85,6 +120,7 @@ class NumericKeypadCharInput():
         self.name = name
         self.keymap = {}
         self.generate_keymap()
+        self.value_lock = Lock()
 
     #Default set of UI element functions - 
 
@@ -115,6 +151,7 @@ class NumericKeypadCharInput():
 
     #Functions processing user input.
 
+    @check_value_lock
     def process_streaming_keycode(self, key_name, *args):
         #This function processes all keycodes that are not in the keymap - such as number keycodes
         header = "KEY_"
@@ -122,7 +159,18 @@ class NumericKeypadCharInput():
         if key in self.mapping.keys():
             #It's one of the keys we can process
             #NO INSERT IN MIDDLE/START SUPPORT
-            if self.pending_character != key: #Currently no key or another key pending
+            if self.pending_character is None: #Currently no key pending
+                #The position should be updated by now
+                #Starting with first letter in the mapping for current key
+                self.current_letter_num = 0
+                letter = self.mapping[key][0]
+                self.insert_letter_in_value(letter)
+                #Now onto the "countdown before character accepted" mechanism
+                self.pending_character = key
+                #Starting the "time before the character is accepted" countdown
+                self.pending_counter = self.pending_counter_start
+                #Output things on display
+            elif self.pending_character != key: #Currently another key pending
                 #Advancing position and inserting a new letter
                 self.position += 1
                 #Starting with first letter in the mapping for current key
@@ -149,6 +197,7 @@ class NumericKeypadCharInput():
             #Finally, output all changes to display
             self.refresh()
 
+    @check_value_lock
     def backspace(self):
         self.remove_letter_in_value()
         self.refresh()
@@ -163,40 +212,57 @@ class NumericKeypadCharInput():
             value_after_letter = self.value[self.position:]
             self.value = "".join(value_before_letter, letter, value_after_letter)
         elif self.position == len(self.value): #Right on the last character
-            self.value += self.letter
+            self.value += letter
+        else:
+            import pdb;pdb.set_trace()
 
     @check_position_overflow(">=")
     def update_letter_in_value(self, letter):
-        #yeah, this simple.
-        self.value[self.position] = letter
+        #Split the value string to list of characters, replace the letter and assemble the string again
+        value_l = list(self.value)
+        value_l[self.position] = letter
+        self.value = "".join(value_l)
 
     @check_position_overflow(">")
     def remove_letter_in_value(self):
-        if self.position == 0:
+        if self.position == 0 and not self.value:
             #Nothing to be done
+            print("Nothing to do")
             return None
+        if self.pending_character:
+            print("Pending, value: {}, pos: {}".format(self.value, self.position))
+        if self.position in [len(self.value)-1] and self.pending_character is not None:
+            #Trying to remove the character which is currently pending
+            print("Removing a character while pending")
+            self.pending_character = None
+            self.value = self.value[:-1]
         elif self.position in range(len(self.value)):
             #Inserting character in the middle of the string
+            print("Middle of string?")
             value_before_letter = self.value[:self.position-1]
             value_after_letter = self.value[self.position:]
             self.value = "".join(value_before_letter, value_after_letter)
             self.position -= 1
         elif self.position == len(self.value): 
             #Just removing the last character
+            print("Value before backspace: {}".format(self.value))
             self.value = self.value[:-1]
+            print("Value after backspace: {}".format(self.value))
             self.position -= 1
 
     #Functions that work with "pending counter"
 
+    @check_value_lock
     def check_character_state(self):
         if self.pending_character is not None:
             #Character still pending
             self.pending_counter -= 1
-        if self.pending_counter == 0:
-            #Counter reset
-            self.pending_character = None
-            #Advancing position so that next letter takes the next space
-            self.position += 1 
+            if self.pending_counter == 0:
+                #Counter reset
+                self.pending_character = None
+                #Advancing position so that next letter takes the next space
+                self.position += 1 
+                print("Advanced position to {}".format(self.position))
 
     #Functions that set up the input listener
 
@@ -220,7 +286,7 @@ class NumericKeypadCharInput():
         """Experimental: not meant for 2x16 displays
         
         Formats the value and the message to show it on the screen, then returns a list that can be directly used by o.display_data"""
-        displayed_data = [self.message]
+        displayed_data = ["" if self.message is None else self.message]
         screen_rows = self.o.rows
         screen_cols = self.o.cols
         static_line_count = 2 #One for message, another for context key labels
@@ -232,7 +298,6 @@ class NumericKeypadCharInput():
         half_line_length = screen_cols/2
         last_line = "Cancel".center(half_line_length) + "Erase".center(half_line_length)
         displayed_data.append(last_line)
-        print(displayed_data)
         return displayed_data
 
     @to_be_foreground
