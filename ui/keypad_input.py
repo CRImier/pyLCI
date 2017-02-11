@@ -1,9 +1,11 @@
 from time import sleep
 from math import ceil
 import logging
+from functools import wraps
 
-
-def to_be_foreground(func): #A safety check wrapper so that certain checks don't get called if menu is not the one active
+def to_be_foreground(func): 
+    #A safety check wrapper so that certain functions can't possibly be called 
+    #if UI element is not the one active
     def wrapper(self, *args, **kwargs):
         if self.in_foreground:
             return func(self, *args, **kwargs)
@@ -11,7 +13,31 @@ def to_be_foreground(func): #A safety check wrapper so that certain checks don't
             return False
     return wrapper
 
-class NumericKeypadCharacterInput():
+def check_position_overflow(condition):
+    """Returns a decorator which can check for different ways of "self.position" counter overflow """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self, condition=condition, *args, **kwargs):
+            #First, different checks depending on the type of check requested
+            if condition == ">":
+                overflow = self.position > len(self.value) # The biggest difference should be 1 character - for when position has advanced, but no character has been input
+                difference = (len(self.value) - self.position) + 1
+            elif condition == ">=":
+                overflow = self.position >= len(self.value) #Can't be any positive difference, when updating the position pointer should be on an existing character
+                difference = len(self.value) - self.position
+            #Taking action if overflow happened
+            if overflow:
+                #TODO: insert proper logging
+                print(self.name+": WTF, position counter overflow")
+                #Fixing the overflow by adding space characters
+                for _ in range(difference):
+                    value.append(" ")
+            #Checks done, executing decorated function
+            return func(self, *args, **kwargs)
+        return wrapper
+    return decorator
+
+class NumericKeypadCharInput():
     """Implements a character input UI element for a numeric keypad, allowing to translate numbers into characters.
 
     Attributes:
@@ -45,8 +71,8 @@ class NumericKeypadCharacterInput():
     pending_counter_start = 10 #Multiples of 0.1 second interval
     current_letter_num = 0
 
-    def __init__(self, i, o, message=None, name="NumericKeypadCharacterInput"):
-        """Initialises the NumericKeypadCharacterInput object.
+    def __init__(self, i, o, message=None, name="NumericKeypadCharInput"):
+        """Initialises the NumericKeypadCharInput object.
         
         Args:
 
@@ -57,6 +83,7 @@ class NumericKeypadCharacterInput():
         self.o = o
         self.message = message
         self.name = name
+        self.keymap = {}
         self.generate_keymap()
 
     #Default set of UI element functions - 
@@ -123,19 +150,13 @@ class NumericKeypadCharacterInput():
             self.refresh()
 
     def backspace(self):
-        self.value = self.value[:-1]
+        self.remove_letter_in_value()
         self.refresh()
 
     #Functions that do processing on the current value
 
+    @check_position_overflow(">")
     def insert_letter_in_value(self, letter):
-        #First, check if there isn't position counter overflow
-        if self.position > len(self.value)+1: # The biggest difference should be 1 character - for when position has advanced, but no character yet has been input
-            print(self.name+": WTF, position counter overflow")
-            #Fixing the overflow by adding space characters
-            difference = (len(self.value)+1) - self.position
-            for _ in range(difference):
-                value.append(" ")
         if self.position in range(len(self.value)):
             #Inserting character in the middle of the string
             value_before_letter = self.value[:self.position]
@@ -144,20 +165,38 @@ class NumericKeypadCharacterInput():
         elif self.position == len(self.value): #Right on the last character
             self.value += self.letter
 
+    @check_position_overflow(">=")
     def update_letter_in_value(self, letter):
-        #First, check if there isn't position counter overflow (I know, I know, would do better as a decorator)
-        if self.position >= len(self.value): #Can't be any positive difference, when updating the position pointer should be on an existing character
-            print(self.name+": WTF, position counter overflow")
-            #Fixing the overflow by adding space characters
-            difference = (len(self.value)) - self.position
-            for _ in range(difference):
-                value.append(" ")
         #yeah, this simple.
         self.value[self.position] = letter
 
-    #Functions that check the counter state and act accordingly
+    @check_position_overflow(">")
+    def remove_letter_in_value(self):
+        if self.position == 0:
+            #Nothing to be done
+            return None
+        elif self.position in range(len(self.value)):
+            #Inserting character in the middle of the string
+            value_before_letter = self.value[:self.position-1]
+            value_after_letter = self.value[self.position:]
+            self.value = "".join(value_before_letter, value_after_letter)
+            self.position -= 1
+        elif self.position == len(self.value): 
+            #Just removing the last character
+            self.value = self.value[:-1]
+            self.position -= 1
 
-    
+    #Functions that work with "pending counter"
+
+    def check_character_state(self):
+        if self.pending_character is not None:
+            #Character still pending
+            self.pending_counter -= 1
+        if self.pending_counter == 0:
+            #Counter reset
+            self.pending_character = None
+            #Advancing position so that next letter takes the next space
+            self.position += 1 
 
     #Functions that set up the input listener
 
