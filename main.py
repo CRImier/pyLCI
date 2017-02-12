@@ -68,7 +68,11 @@ def launch(name=None):
     app_man = AppManager("apps", Menu, Printer, i, o)
     if name != None:
         name = name.rstrip('/') #If using autocompletion from main folder, it might append a / at the name end, which isn't acceptable for load_app
-        app = app_man.load_app(name)
+        try:
+            app = app_man.load_app(name)
+        except:
+            i.atexit()
+            raise
         exception_wrapper(app.callback)
     else:
         app_menu = app_man.load_all_apps()
