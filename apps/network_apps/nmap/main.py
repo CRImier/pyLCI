@@ -35,7 +35,7 @@ def dump_current_scan_to_file():
         with open(report_path, "w") as f:
             xml = current_scan.get_nmap_last_output()
             f.write(xml)
-
+        print("Saved report {}".format(filename))
 
 def save_restore_global_storage(func):
     """A decorator that restores previous contents of report storage 
