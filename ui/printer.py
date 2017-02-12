@@ -1,6 +1,6 @@
 from time import sleep
 
-def Printer(message, i, o, sleep_time=1, skippable=False):
+def Printer(message, i, o, sleep_time=1, skippable=True):
     """Outputs string data on display as soon as it's called.                                          
                                                                                
     Args:                                                                    
