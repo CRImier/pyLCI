@@ -68,7 +68,7 @@ class InputListener():
         """Sets a single maskable callback of the listener.
         Raises CallbackException if the callback is one of the reserved keys or already is in maskable/nonmaskable keymap.
 
-        A maskable callback is global (never cleared) and will be called upon a keypress 
+        A maskable callback is global (can be cleared) and will be called upon a keypress 
         unless a callback for the same keyname is already set in keymap."""
         self.check_special_callback(key_name)
         self.maskable_keymap[key_name] = callback
@@ -84,7 +84,11 @@ class InputListener():
 
     def remove_callback(self, key_name):
         """Removes a single callback of the listener"""
-        self.keymap.remove(key_name)
+        self.keymap.pop(key_name)
+
+    def remove_maskable_callback(self, key_name):
+        """Removes a single maskable callback of the listener"""
+        self.maskable_keymap.pop(key_name)
 
     def set_keymap(self, keymap):
         """Sets all the callbacks supplied, removing the previously set keymap completely"""

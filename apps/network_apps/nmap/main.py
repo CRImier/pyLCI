@@ -2,16 +2,55 @@ menu_name = "Nmap"
 i = None
 o = None
 
-from time import sleep
+from functools import wraps
+import time
+import os, sys
 
 from ui import Menu, Printer, format_for_screen as ffs
 from if_info import get_ip_addr, get_network_from_ip, sort_ips
+
 try:
     import nmap
 except ImportError:
-    nmap = None
+    nmap = None #So we can give an error if nmap module is missing
+
+report_dir = "reports"
+
+#Figuring out where the Python module 
+current_module_path = os.path.dirname(sys.modules[__name__].__file__)
+if report_dir not in os.listdir(current_module_path):
+    os.mkdir(os.path.join(current_module_path, report_dir))
+
+report_dir_full_path = os.path.join(current_module_path, report_dir)
+
+#Global storage variables - can be dumped to a file at any time
+current_scan = None
+current_filename = ""
+
+def dump_current_scan_to_file():
+    if current_scan is not None:
+        filename = "{}.xml".format(current_filename)
+        report_path = os.path.join(report_dir_full_path, filename)
+        with open(report_path, "w") as f:
+            xml = current_scan.get_nmap_last_output()
+            f.write(xml)
 
 
+def save_restore_global_storage(func):
+    """A decorator that restores previous contents of report storage 
+    once the function that last overwrote it exits."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        global current_scan, current_filename
+        __current_scan__ = current_scan
+        __current_filename__ = current_filename
+        result = func(*args, **kwargs)
+        current_scan = __current_scan__
+        current_filename = __current_filename__
+        return result
+    return wrapper
+
+#IP/interface/network scanning functions
 
 def scan_localhost(host = "127.0.0.1"):
     scan_ip(host)
@@ -20,24 +59,21 @@ def scan_ip(ip, ports="0-1023"):
     Printer("Scanning {}:{}".format(ip, ports), i, o, 0) #Leaves the message on the screen
     nm = nmap.PortScanner()
     nm.scan(ip, ports)
-    #Scan results for the IP, as we get them from nmap interface
-    ip_results = nm[ip]
-    show_scan_results_for_ip(ip_results)
+    show_scan_results_for_ip(ip, nm)
 
 def scan_network_menu():
     #A report to be passed to Menu object
     networks = []
     #External library function that parses "ip addr" output
-    network_info = get_ip_addr()
-    for interface_name in network_info.keys():
-        interface_info = network_info[interface_name]
+    interface_data = get_ip_addr()
+    for interface_name in interface_data.keys():
+        interface_info = interface_data[interface_name]
         state = interface_info["state"]
         ip = interface_info["addr"] if interface_info["addr"] else "None"
         networks.append( ["{}:{}, {}".format(interface_name, state, ip), lambda x=ip: quick_scan_network_by_ip(x)] )
     Menu(networks, i, o).activate()
 
 def quick_scan_network_by_ip(ip_on_network):
-    ip_report = []
     if ip_on_network == "None":
         Printer("No IP to scan!", i, o, 2)
         return False
@@ -45,35 +81,51 @@ def quick_scan_network_by_ip(ip_on_network):
     Printer("Scanning {}".format(network_ip), i, o, 0)
     nm = nmap.PortScanner()
     nm.scan(network_ip, arguments="-sn")
-    ips = nm.all_hosts()
-    ips = sort_ips(ips)
-    for ip in ips:
-        if ip == ip_on_network.split('/')[0]:
-            continue
-        result = nm[ip]
-        print(result)
-        ip_report.append([[result["addresses"]["ipv4"], result["addresses"]["mac"]], lambda x=ip: scan_ip(x)])
-    Menu(ip_report, i, o, entry_height=2).activate()
+    show_quick_scan_results_for_network(network_ip, nm)
 
-def show_scan_results_for_ip(ip_results):
+#Scan result display functions
+
+@save_restore_global_storage
+def show_scan_results_for_ip(ip, ip_results):
+    global current_scan, current_filename
+    current_scan = ip_results
+    current_filename = "ip_{}_{}".format(ip, time.strftime("%Y%m%d-%H%M%S"))
+    ip_result = ip_results[ip]
     #Assembling a report we can pass straight to Menu object
     report = []
     #IP, state, hostname
-    ip = ip_results["addresses"]["ipv4"]
-    report.append([ ["IP: {}, {}".format(ip, ip_results.state())] ])
-    report.append([ ["Host: {}".format(ip_results.hostname())] ])
+    ip = ip_result["addresses"]["ipv4"]
+    report.append([ ["IP: {}, {}".format(ip, ip_result.state())] ])
+    report.append([ ["Host: {}".format(ip_result.hostname())] ])
     #Now assemble a list of open ports:
-    protocols = ip_results.all_protocols()
+    protocols = ip_result.all_protocols()
     if protocols:
         report.append([["Open ports:"]])
         for protocol in protocols:
-            ports = ip_results[protocol]
+            ports = ip_result[protocol]
             for port in ports:
                 report.append([["  {}:{}".format(protocol, port)]])
     else: #No open ports for any protocol found?
         report.append([["No open ports found"]])
     #Show report
     Menu(report, i, o).activate()
+
+@save_restore_global_storage
+def show_quick_scan_results_for_network(net_ip, net_results):
+    global current_scan, current_filename
+    current_scan = net_results
+    current_filename = "net_{}_{}".format(net_ip, time.strftime("%Y%m%d-%H%M%S"))
+    net_report = []
+    ips = net_results.all_hosts()
+    ips = sort_ips(ips)
+    for ip in ips:
+        result = net_results[ip]
+        print(result)
+        mac = result["addresses"]["mac"] if "mac" in result["addresses"] else "Unknown MAC"
+        net_report.append([[ip, mac], lambda x=ip: scan_ip(x)])
+    Menu(net_report, i, o, entry_height=2).activate()
+
+#pyLCI functions
 
 def callback():
     if nmap is None:
@@ -84,13 +136,15 @@ def callback():
     except nmap.nmap.PortScannerError:
         Printer(ffs("nmap not installed!", o.cols), i, o, 3)
         return False
+    #Dump function support
+    i.set_maskable_callback("KEY_F5", dump_current_scan_to_file)
     menu_contents = [
     ["Scan localhost", scan_localhost],
     ["Scan hardcoded IP", lambda: scan_ip("192.168.88.1")],
     ["Scan a network", scan_network_menu]
-    #["Scan arbitrary IP", scan_ip],    
     ]
     Menu(menu_contents, i, o).activate()
+    i.remove_maskable_callback("KEY_F5")
 
 def init_app(input, output):
     global i, o
