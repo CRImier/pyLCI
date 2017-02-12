@@ -4,7 +4,7 @@ def ellipsize(string, length, ellipsis="..."):
     string = string[:(length-len(ellipsis))]
     return string+ellipsis
 
-def format_for_screen(data, screen_width, break_words=True, linebreak=None):
+def format_for_screen(data, screen_width, break_words=False, linebreak=None):
     strings = data.split('\n')
     #Filter \n's
     data = ' \n '.join(strings) #Making sure linebreaks are surrounded by space characters so that when splitting by space you don't have to scan for linebreaks and just can compare
