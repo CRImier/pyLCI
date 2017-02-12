@@ -4,20 +4,14 @@ o = None
 
 from time import sleep
 
-from ui import Menu, Printer
+from ui import Menu, Printer, format_for_screen as ffs
 from if_info import get_ip_addr, get_network_from_ip, sort_ips
-
-
-
 try:
     import nmap
 except ImportError:
     nmap = None
 
-try:
-    import ipaddr
-except ImportError:
-    ipaddr = None
+
 
 def scan_localhost(host = "127.0.0.1"):
     scan_ip(host)
@@ -88,6 +82,11 @@ def show_scan_results_for_ip(ip_results):
 def callback():
     if nmap is None:
         Printer(ffs("nmap Python module not found!", o.cols), i, o, 3)
+        return False
+    try:
+        nm = nmap.PortScanner()
+    except nmap.nmap.PortScannerError:
+        Printer(ffs("nmap not installed!", o.cols), i, o, 3)
         return False
     menu_contents = [
     ["Scan localhost", scan_localhost],
