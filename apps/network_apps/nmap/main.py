@@ -30,6 +30,7 @@ current_filename = ""
 def dump_current_scan_to_file():
     if current_scan is not None:
         filename = "{}.xml".format(current_filename)
+        filename = filename.replace("/", "-") #For netmasks
         report_path = os.path.join(report_dir_full_path, filename)
         with open(report_path, "w") as f:
             xml = current_scan.get_nmap_last_output()
