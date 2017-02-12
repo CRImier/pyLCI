@@ -25,10 +25,6 @@ def scan_ip(ip, ports="0-1023"):
     show_scan_results_for_ip(ip_results)
 
 def scan_network_menu():
-    #First, if external ipaddr library is not accessible, there's nothing to do here
-    if ipaddr is None:
-        Printer(ffs("ipaddr Python module not found!", o.cols), i, o, 3)
-        return False
     #A report to be passed to Menu object
     networks = []
     #External library function that parses "ip addr" output
