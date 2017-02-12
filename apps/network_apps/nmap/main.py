@@ -135,7 +135,6 @@ def show_quick_scan_results_for_network(net_ip, net_results):
     ips = sort_ips(ips)
     for ip in ips:
         result = net_results[ip]
-        print(result)
         mac = result["addresses"]["mac"] if "mac" in result["addresses"] else "Unknown MAC"
         if result["vendor"] and mac in result["vendor"].keys():
             info_str = result["vendor"][mac]
