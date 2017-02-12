@@ -69,6 +69,7 @@ class Listbox(Menu):
     def activate(self):
         """ A method which is called when listbox needs to start operating. Is blocking, sets up input&output devices, renders the listbox and waits until self.in_foreground is False, while menu callbacks are executed from the input device thread."""
         logging.info("{0} activated".format(self.name))    
+        self.o.cursor()
         self.to_foreground() 
         if len(self.contents) == 0:
             Printer(["Nothing to", "choose from"], i, o)
@@ -76,6 +77,7 @@ class Listbox(Menu):
         while self.in_foreground: #All the work is done in input callbacks
             sleep(0.1)
             self.scroll()
+        self.o.noCursor()
         logging.debug(self.name+" exited")
         if self.selected_element is None:
             return None

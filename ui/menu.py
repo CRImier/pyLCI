@@ -119,10 +119,12 @@ class Menu():
         This method also raises MenuExitException if menu exited due to it and ``catch_exit`` is set to False."""
         logging.info("menu {0} activated".format(self.name))    
         self.exit_exception = False
+        self.o.cursor()
         self.to_foreground() 
         while self.in_background: #All the work is done in input callbacks
             sleep(0.1)
             self.scroll()
+        self.o.noCursor()
         if self.exit_exception:
             if self.catch_exit == False:
                 raise MenuExitException
@@ -222,11 +224,13 @@ class Menu():
             self.deactivate()
         elif len(self._contents[self.pointer]) > 1:
             try:
+                self.o.noCursor()
                 self._contents[self.pointer][1]()
             except MenuExitException:
                 self.exit_exception = True
             finally:
                 self.reset_scrolling()
+                self.o.cursor()
                 if self.exit_exception:
                     self.deactivate() 
                 elif self.in_background: #This check is in place so that you can have an 'exit' element
@@ -350,10 +354,10 @@ class Menu():
                 self.scrolling["current_finished"] = len(entry_content)-self.scrolling["pointer"] < avail_display_chars
                 if self.scrolling["current_scrollable"] and not self.scrolling["current_finished"]:
                     entry_content = entry_content[self.scrolling["pointer"]:]
-                rendered_entry.append("*"+entry_content[:display_columns-1]) #First part of string displayed
+                rendered_entry.append(entry_content[:display_columns-1]) #First part of string displayed
                 entry_content = entry_content[display_columns-1:] #Shifting through the part we just displayed
             else:
-                rendered_entry.append(" "+entry_content[:display_columns-1])
+                rendered_entry.append(entry_content[:display_columns-1])
                 entry_content = entry_content[display_columns-1:]
             for row_num in range(self.entry_height-1): #First part of string done, if there are more rows to display, we give them the remains of string
                 rendered_entry.append(entry_content[:display_columns])
@@ -371,4 +375,7 @@ class Menu():
     @to_be_foreground
     def refresh(self):
         logging.debug("{0}: refreshed data on display".format(self.name))
-        self.o.display_data(*self.get_displayed_data())
+        displayed_data = self.get_displayed_data()
+        active_line_num = (self.pointer - self.first_displayed_entry)*self.entry_height
+        self.o.setCursor(active_line_num, 0)
+        self.o.display_data(*displayed_data)

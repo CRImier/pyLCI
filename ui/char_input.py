@@ -103,8 +103,8 @@ class CharArrowKeysInput():
         This method returns the selected value if KEY_ENTER was pressed, thus accepting the selection.
         This method returns None when the UI element was exited by KEY_LEFT and thus the value was not accepted. """
         logging.info("{0} activated".format(self.name))    
-        self.to_foreground() 
         self.o.cursor()
+        self.to_foreground() 
         while self.in_foreground: #All the work is done in input callbacks
             sleep(0.1)
         self.o.noCursor()
@@ -237,6 +237,6 @@ class CharArrowKeysInput():
 
     @to_be_foreground
     def refresh(self):
-        self.o.display_data(*self.get_displayed_data())
         self.o.setCursor(1, self.position-self.first_displayed_char)
+        self.o.display_data(*self.get_displayed_data())
         logging.debug("{}: refreshed data on display".format(self.name))

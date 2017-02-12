@@ -50,10 +50,10 @@ class DialogBox():
 
     def activate(self):
         logging.info("{0} activated".format(self.name))    
+        self.o.cursor()
         self.to_foreground() 
         self.value_selected = False
         self.pointer = 0
-        self.o.cursor()
         while self.in_foreground: #All the work is done in input callbacks
             sleep(0.1)
         self.o.noCursor()
@@ -113,7 +113,5 @@ class DialogBox():
             current_position += len(label) + 1
 
     def refresh(self):
-        self.o.noCursor()
-        self.o.display_data(self.message, self.displayed_label)
-        self.o.cursor()
         self.o.setCursor(1, self.positions[self.pointer])
+        self.o.display_data(self.message, self.displayed_label)

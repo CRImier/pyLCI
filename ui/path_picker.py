@@ -56,10 +56,12 @@ class PathPicker(Menu):
     def activate(self):
         """ A method which is called when menu needs to start operating. Is blocking, sets up input&output devices, renders the menu and waits until self.in_background is False, while menu callbacks are executed from the input device thread."""
         logging.info("{0} activated".format(self.name))    
+        self.o.cursor()
         self.to_foreground() 
         while self.in_background: #All the work is done in input callbacks
             sleep(0.1)
             self.scroll()
+        self.o.noCursor()
         logging.debug(self.name+" exited")
         return self.path_chosen
 
