@@ -62,6 +62,18 @@ def scan_ip(ip, ports="0-1023"):
     nm.scan(ip, ports)
     show_scan_results_for_ip(ip, nm)
 
+def quick_scan_network_by_ip(ip_on_network):
+    if ip_on_network == "None":
+        Printer("No IP to scan!", i, o, 2)
+        return False
+    network_ip = get_network_from_ip(ip_on_network)
+    Printer("Scanning {}".format(network_ip), i, o, 0)
+    nm = nmap.PortScanner()
+    nm.scan(network_ip, arguments="-sn")
+    show_quick_scan_results_for_network(network_ip, nm)
+
+#Different menus
+
 def scan_network_menu():
     #A report to be passed to Menu object
     networks = []
@@ -74,15 +86,17 @@ def scan_network_menu():
         networks.append( ["{}:{}, {}".format(interface_name, state, ip), lambda x=ip: quick_scan_network_by_ip(x)] )
     Menu(networks, i, o).activate()
 
-def quick_scan_network_by_ip(ip_on_network):
-    if ip_on_network == "None":
-        Printer("No IP to scan!", i, o, 2)
-        return False
-    network_ip = get_network_from_ip(ip_on_network)
-    Printer("Scanning {}".format(network_ip), i, o, 0)
-    nm = nmap.PortScanner()
-    nm.scan(network_ip, arguments="-sn")
-    show_quick_scan_results_for_network(network_ip, nm)
+def ip_info_menu(ip_info):
+    ip = ip_info["addresses"]["ipv4"]
+    mac = ip_info["addresses"]["mac"] if "mac" in ip_info["addresses"] else "Unknown MAC"
+    vendor = ip_info["vendor"][mac] if mac in ip_info["vendor"] else "Unknown vendor"
+    menu_contents = [
+    ["IP: {}".format(ip)],
+    [mac],
+    [vendor],
+    ["-Scan ports 0-1023", lambda: scan_ip(ip)]]
+    Menu(menu_contents, i, o).activate()
+    
 
 #Scan result display functions
 
@@ -123,7 +137,11 @@ def show_quick_scan_results_for_network(net_ip, net_results):
         result = net_results[ip]
         print(result)
         mac = result["addresses"]["mac"] if "mac" in result["addresses"] else "Unknown MAC"
-        net_report.append([[ip, mac], lambda x=ip: scan_ip(x)])
+        if result["vendor"] and mac in result["vendor"].keys():
+            info_str = result["vendor"][mac]
+        else:
+            info_str = mac
+        net_report.append([[ip, info_str], lambda x=result: ip_info_menu(x)])
     Menu(net_report, i, o, entry_height=2).activate()
 
 #pyLCI functions
