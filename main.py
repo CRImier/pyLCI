@@ -9,6 +9,18 @@ import argparse
 #And we output things for debugging, so o goes first.
 from output import output
 
+#Debugging helper
+import threading
+import traceback
+import signal
+import sys
+def dumpthreads(*args):
+    for th in threading.enumerate():
+        print(th)
+        traceback.print_stack(sys._current_frames()[th.ident])
+        print()
+signal.signal(signal.SIGUSR1, dumpthreads)
+
 #These lines are here so that welcome message stays on the screen a little longer:
 output.init()
 o = output.screen
