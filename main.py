@@ -26,12 +26,6 @@ output.init()
 o = output.screen
 from ui import Printer, Menu
 
-try:
-    from splash import splash
-    splash(None, o)
-except KeyboardInterrupt:
-    pass
-#Printer(["Welcome to", "pyLCI"], None, o, 0)
 
 try: #If there's an internal error, we show it on display and exit
     from apps.manager import AppManager
@@ -43,6 +37,12 @@ except:
     Printer(["Oops. :(", "y u make mistake"], None, o, 0) #Yeah, that's about all the debug data. 
     raise
 
+def splash_screen():
+    try:
+        from splash import splash
+        splash(i, o)
+    except ImportError:
+        pass
 
 def exception_wrapper(callback):
     """This is a wrapper for all applications and menus. It catches exceptions and stops the system the right way when something bad happens, be that a Ctrl+c or an exception in one of the applications."""
@@ -75,6 +75,7 @@ def launch(name=None):
             raise
         exception_wrapper(app.callback)
     else:
+        splash_screen()
         app_menu = app_man.load_all_apps()
         exception_wrapper(app_menu.activate)
 
