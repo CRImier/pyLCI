@@ -33,14 +33,13 @@ class Checkbox():
     contents = []
     _contents = []
     pointer = 0
-    display_callback = None
     in_foreground = False
     name = ""
     first_displayed_entry = 0
     last_displayed_entry = None
     states = []
 
-    def __init__(self, contents, i, o, name="Menu", entry_height=1, default_state=False, append_exit=True):
+    def __init__(self, contents, i, o, name="Menu", entry_height=1, default_state=False, final_button_name="Save"):
         """Initialises the Checkbox object.
         
         Args:
@@ -58,10 +57,9 @@ class Checkbox():
         self.i = i
         self.o = o
         self.entry_height = entry_height
-        self.append_exit = append_exit
+        self.final_button_name = final_button_name
         self.name = name
         self.set_contents(contents)
-        self.set_display_callback(o.display_data)
         self.generate_keymap()
 
     def to_foreground(self):
@@ -74,9 +72,11 @@ class Checkbox():
     def activate(self):
         """ A method which is called when checkbox needs to start operating. Is blocking, sets up input&output devices, renders the checkbox and waits until self.in_background is False, while checkbox callbacks are executed from the input device thread."""
         logging.info("checkbox {0} activated".format(self.name))    
+        self.o.cursor()
         self.to_foreground()
         while self.in_foreground: #All the work is done in input callbacks
             sleep(0.1)
+        self.o.noCursor()
         logging.debug(self.name+" exited")
         return {self._contents[index][1]:self.states[index] for index, element in enumerate(self._contents)}
 
@@ -175,9 +175,8 @@ class Checkbox():
         |Then, it appends a single ["Exit", '', 'exit'] element at the end of checkbox contents. It makes dynamically appending elements to checkbox easier and makes sure there's only one "Exit" callback, at the bottom of the checkbox."""
         self._contents = contents
         self.states = [element[2] if len(element)>1 else self.default_state for element in copy(self._contents)]
-        if self.append_exit: 
-            self._contents.append(["Exit", '', 'exit'])
-            self.states.append(False)
+        self._contents.append([self.final_button_name, '', 'exit'])
+        self.states.append(False) #For the final button, to maintain "len(states) == len(self._contents)"
         logging.debug("{}: menu contents processed".format(self.name))
 
     @to_be_foreground
@@ -253,9 +252,7 @@ class Checkbox():
     @to_be_foreground
     def refresh(self):
         logging.debug("{0}: refreshed data on display".format(self.name))
-        self.display_callback(*self.get_displayed_data())
-
-    def set_display_callback(self, callback):
-        logging.debug("{0}: display callback set".format(self.name))
-        self.display_callback = callback
-
+        displayed_data = self.get_displayed_data()
+        active_line_num = (self.pointer - self.first_displayed_entry)*self.entry_height
+        self.o.setCursor(active_line_num, 0)
+        self.o.display_data(*displayed_data)
