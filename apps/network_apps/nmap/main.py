@@ -14,6 +14,7 @@ try:
 except ImportError:
     nmap = None #So we can give an error if nmap module is missing
 
+#Folder name - to store the saved reports
 report_dir = "reports"
 
 #Ports for "unsafe ports" heuristics
@@ -33,7 +34,7 @@ heuristic_ports = [["SSH,Telnet",          "22,23",                         True
                    ["Misc",                "19,502",                       False]]
                    
 
-#Figuring out where the Python module 
+#Figuring out the path of the app folder - not that simple
 current_module_path = os.path.dirname(sys.modules[__name__].__file__)
 if report_dir not in os.listdir(current_module_path):
     os.mkdir(os.path.join(current_module_path, report_dir))
@@ -117,6 +118,7 @@ def save_restore_global_storage(func):
         return result
     return wrapper
 
+
 #IP/interface/network scanning functions
 
 def scan_localhost(host = "127.0.0.1"):
@@ -138,6 +140,7 @@ def quick_scan_network_by_ip(ip_on_network):
     nm.scan(network_ip, arguments="-sn")
     show_quick_scan_results_for_network(network_ip, nm)
 
+    
 #Different menus
 
 def scan_network_menu():
@@ -226,9 +229,12 @@ def show_quick_scan_results_for_network(net_ip, net_results):
         net_report.append([[ip, info_str], lambda x=result: ip_info_menu(x)])
     Menu(net_report, i, o, entry_height=2).activate()
 
+    
 #pyLCI functions
 
 def callback():
+    #Check if we have all the software necessary for the app to work
+    #If not, show error messages and exit
     if nmap is None:
         Printer(ffs("nmap Python module not found!", o.cols), i, o, 3)
         return False
@@ -239,6 +245,7 @@ def callback():
         return False
     #Dump function support
     i.set_maskable_callback("KEY_F5", dump_current_scan_to_file)
+    #Constructing and loading app main menu
     menu_contents = [
     ["Smart scan", smart_scan],
     #["Scan hardcoded IP", lambda: scan_ip("192.168.88.1")],
@@ -246,6 +253,7 @@ def callback():
     ["Scan localhost", scan_localhost]
     ]
     Menu(menu_contents, i, o).activate()
+    #Have to remove the dump function callback because once application exits it isn't removed automatically
     i.remove_maskable_callback("KEY_F5")
 
 def init_app(input, output):
