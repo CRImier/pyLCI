@@ -6,7 +6,9 @@ def activate_backlight_wrapper(func):
     def wrapper(self, *args, **kwargs):
         self.enable_backlight()
         self._backlight_active.set()
-        return func(self, *args, **kwargs)
+        result = func(self, *args, **kwargs)
+        if self._backlight_interval and self._bl_thread is None:
+            self.start_backlight_thread()
     return wrapper
 
 def enable_backlight_wrapper(func):
@@ -54,9 +56,9 @@ class BacklightManager():
             self._bl_gpio.output(self._backlight_pin, not self._backlight_active_level)
 
     def start_backlight_thread(self):
-        self.bl_thread = Thread(target=self.backlight_manager, name="Screen backlight manager")
-        self.bl_thread.daemon = True
-        self.bl_thread.start()
+        self._bl_thread = Thread(target=self.backlight_manager, name="Screen backlight manager thread")
+        self._bl_thread.daemon = True
+        self._bl_thread.start()
 
     def backlight_manager(self):
         while True:
@@ -65,4 +67,6 @@ class BacklightManager():
                 self._last_active = datetime.now()
             elif (datetime.now() - self._last_active).total_seconds() >self._backlight_interval and self._backlight_enabled:
                 self.disable_backlight()
+                self._bl_thread = None
+                return
             sleep(float(self._backlight_interval)/2) #Doesn't need to be done much often unless you need your backlight to be super precise. /2 is minimum though. 1 cycle to clear the flag and 1 cycle to disable backlight
