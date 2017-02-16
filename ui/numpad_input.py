@@ -106,12 +106,14 @@ class NumpadCharInput():
         self.keymap = {}
         self.generate_keymap()
         self.value_lock = Lock()
+        self.value_accepted = False
 
     #Default set of UI element functions - 
 
     def to_foreground(self):
         """ Is called when ``activate()`` method is used, sets flags and performs all the actions so that UI element can display its contents and receive keypresses. Also, refreshes the screen."""
         logging.info("{0} enabled".format(self.name))    
+        self.value_accepted = False
         self.in_foreground = True
         self.refresh()
         self.set_keymap()
@@ -129,12 +131,20 @@ class NumpadCharInput():
         self.o.noCursor()
         self.i.remove_streaming()
         logging.debug(self.name+" exited")
-        return self.value
+        if self.value_accepted:
+            return self.value
+        else:
+            return None
 
     def deactivate(self):
         """ Deactivates the UI element, exiting it and thus making activate() return."""
         self.in_foreground = False
         logging.info("{0} deactivated".format(self.name))    
+
+    def accept_value(self):
+        logging.info("{0}: accepted value".format(self.name))    
+        self.value_accepted = True
+        self.deactivate()
 
     #Functions processing user input.
 
@@ -172,10 +182,11 @@ class NumpadCharInput():
                 letter = self.mapping[key][0]
                 self.insert_letter_in_value(letter)
                 if len(self.mapping[key]) == 1:
-                    #No other characters that could be entered but need to move forward once again
-                    self.position += 1
+                    #No other characters that could be entered 
                     #Thus, just setting pending_character to None
                     self.pending_character = None
+                    #Need to move forward once again - cursor still points at the previous character
+                    self.position += 1
                 else:
                     #There are other characters possible for the new letter
                     #So, onto the "countdown before character accepted" mechanism
@@ -262,6 +273,7 @@ class NumpadCharInput():
 
     def generate_keymap(self):
         self.keymap.update({
+        "KEY_ENTER":lambda: self.accept_value(),
         "KEY_F1":lambda: self.deactivate(),
         "KEY_F2":lambda: self.backspace()
         })
