@@ -91,7 +91,7 @@ class NumpadCharInput():
     current_letter_num = 0
     __locked_name__ = None
 
-    def __init__(self, i, o, message="", name="NumpadCharInput", debug=False):
+    def __init__(self, i, o, message="", value="", name="NumpadCharInput", debug=False):
         """Initialises the NumpadCharInput object.
         
         Args:
@@ -104,6 +104,8 @@ class NumpadCharInput():
         self.message = message
         self.name = name
         self.debug = debug
+        self.value = value
+        self.position = len(self.value)
         self.keymap = {}
         self.generate_keymap()
         self.value_lock = Lock()
