@@ -328,3 +328,21 @@ class NumpadCharInput():
         """ A debug method. Useful for hooking up to an input event so that you can see which UI element is currently processing input events. """
         logging.info("{0} active".format(self.name))    
 
+
+
+class NumpadNumberInput(NumpadCharInput):
+    """Implements a number input UI element for a numeric keypad, allowing to translate number keys into numbers."""
+    
+    #Quite straightforward mapping for now
+    mapping = {"1":"1",
+               "2":"2",
+               "3":"3",
+               "4":"4",
+               "5":"5",
+               "6":"6",
+               "7":"7",
+               "8":"8",
+               "9":"9",
+               "0":"0",
+               "*":"*",
+               "#":"#"}
