@@ -21,13 +21,13 @@ def check_value_lock(func):
     def wrapper(self, *args, **kwargs):
         #Value-changing code likely to run in concurrent thread and therefore we need a lock
         #if self.__locked_name__ is not None: print("Another function already locked the thread! Name is {}, current is {}".format(self.__locked_name__, func.__name__))
-        #self.value_lock.acquire()
-        self.__locked_name__ = func.__name__
+        self.value_lock.acquire()
+        #self.__locked_name__ = func.__name__
         #print("Locked function {}".format(func.__name__))
         result = func(self, *args, **kwargs)
-        #self.value_lock.release()
+        self.value_lock.release()
         #print("Unlocked function {}".format(func.__name__))
-        self.__locked_name__ = None
+        #self.__locked_name__ = None
         return result
     return wrapper
 
@@ -56,7 +56,7 @@ def check_position_overflow(condition):
     return decorator
 
 
-class NumericKeypadCharInput():
+class NumpadCharInput():
     """Implements a character input UI element for a numeric keypad, allowing to translate numbers into characters.
 
     Attributes:
@@ -91,8 +91,8 @@ class NumericKeypadCharInput():
     current_letter_num = 0
     __locked_name__ = None
 
-    def __init__(self, i, o, message="", name="NumericKeypadCharInput"):
-        """Initialises the NumericKeypadCharInput object.
+    def __init__(self, i, o, message="", name="NumpadCharInput"):
+        """Initialises the NumpadCharInput object.
         
         Args:
 

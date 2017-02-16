@@ -8,6 +8,6 @@ from number_input import IntegerAdjustInput
 IntegerInDecrementInput = IntegerAdjustInput #Compatibility with old ugly name
 from char_input import CharArrowKeysInput
 from dialog import DialogBox
-from keypad_input import NumericKeypadCharInput
+from numpad_input import NumpadCharInput
 
 from funcs import ellipsize, format_for_screen

@@ -1,6 +1,6 @@
 menu_name = "Char input app" 
 
-from ui import NumericKeypadCharInput as Input
+from ui import NumpadCharInput as Input
 
 #Some globals for us
 i = None #Input device
