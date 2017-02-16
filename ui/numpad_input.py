@@ -211,7 +211,7 @@ class NumpadCharInput():
             #Inserting character in the middle of the string
             value_before_letter = self.value[:self.position]
             value_after_letter = self.value[self.position:]
-            self.value = "".join(value_before_letter, letter, value_after_letter)
+            self.value = "".join([value_before_letter, letter, value_after_letter])
         elif self.position == len(self.value): #Right on the last character
             self.value += letter
         else:
