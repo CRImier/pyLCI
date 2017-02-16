@@ -152,11 +152,18 @@ class NumpadCharInput():
                 self.current_letter_num = 0
                 letter = self.mapping[key][0]
                 self.insert_letter_in_value(letter)
-                #Now onto the "countdown before character accepted" mechanism
-                self.pending_character = key
-                #Starting the "time before the character is accepted" countdown
-                self.pending_counter = self.pending_counter_start
-                #Output things on display
+                if len(self.mapping[key]) == 1:
+                    #No other characters that could be entered by using "pending character" function
+                    #Thus, just moving forward
+                    self.position += 1
+                    #pending_character is already None so "pending letter" mechanism is disabled
+                else:
+                    #Other letters possible for the key
+                    #So, onto the "countdown before character accepted" mechanism
+                    self.pending_character = key
+                    #Starting the "time before the character is accepted" countdown
+                    self.pending_counter = self.pending_counter_start
+                    #Output things on display
             elif self.pending_character != key: #Currently another key pending
                 #Advancing position and inserting a new letter
                 self.position += 1
@@ -164,11 +171,18 @@ class NumpadCharInput():
                 self.current_letter_num = 0
                 letter = self.mapping[key][0]
                 self.insert_letter_in_value(letter)
-                #Now onto the "countdown before character accepted" mechanism
-                self.pending_character = key
-                #Starting the "time before the character is accepted" countdown
-                self.pending_counter = self.pending_counter_start
-                #Output things on display
+                if len(self.mapping[key]) == 1:
+                    #No other characters that could be entered but need to move forward once again
+                    self.position += 1
+                    #Thus, just setting pending_character to None
+                    self.pending_character = None
+                else:
+                    #There are other characters possible for the new letter
+                    #So, onto the "countdown before character accepted" mechanism
+                    self.pending_character = key
+                    #Starting the "time before the character is accepted" countdown
+                    self.pending_counter = self.pending_counter_start
+                    #Output things on display
             elif self.pending_character == key: #Current pending key is the same as the one pressed
                 #Just updating the value and resetting the countdown
                 self.current_letter_num += 1
