@@ -15,10 +15,13 @@ import traceback
 import signal
 import sys
 def dumpthreads(*args):
+    print("")
+    print("SIGUSR received, dumping threads")
+    print("")
     for th in threading.enumerate():
         print(th)
         traceback.print_stack(sys._current_frames()[th.ident])
-        print()
+        print("")
 signal.signal(signal.SIGUSR1, dumpthreads)
 
 #These lines are here so that welcome message stays on the screen a little longer:
