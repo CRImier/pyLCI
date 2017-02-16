@@ -134,11 +134,14 @@ class InputListener():
             callback = self.maskable_keymap[key]
             self.handle_callback(callback, key)
         elif callable(self.streaming):
-            self.streaming(key)
+            self.handle_callback(self.streaming, key, pass_key=True)
         
-    def handle_callback(self, callback, key):
+    def handle_callback(self, callback, key, pass_key=False):
         try:
-            callback()
+            if pass_key:
+                callback(key)
+            else:
+                callback()
         except Exception as e:
             self.handle_callback_exception(key, callback, e)
         finally: #this finally allows to get a pdb prompt while still being able to operate the interface
