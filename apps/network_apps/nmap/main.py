@@ -6,7 +6,7 @@ from functools import wraps
 import time
 import os, sys
 
-from ui import Menu, Printer, Checkbox, format_for_screen as ffs
+from ui import Menu, Printer, Checkbox, format_for_screen as ffs, NumpadNumberInput, NumpadCharInput
 from if_info import get_ip_addr, get_network_from_ip, sort_ips
 
 try:
@@ -90,6 +90,100 @@ def smart_scan():
     nm.scan(network_ip, arguments="-n -p {}".format(port_string))
     print(nm)
     show_quick_scan_results_for_network(network_ip, nm)
+    
+#"Arbitrary IP/network scan" functions
+
+class NumpadIPAddressInput(NumpadNumberInput):
+    #Making an UI input element with IP address-suitable character mapping
+    mapping = {"1":"1", "2":"2", "3":"3", "4":"4", "5":"5", "6":"6", "7":"7", "8":"8", "9":"9", "0":"0", "*":".*", "#":"/"}
+
+def cleanup_validate_ip(ip):
+    if "/" in ip:
+        #Got a netmask, checking it
+        parts = ip.split("/")
+        #Do we have more than one / in IP?
+        if len(parts) != 2:
+            raise ValueError("stray / in IP!")
+        else:
+            ip, netmask = parts
+        #Is netmask an integer?
+        try:
+            netmask = int(netmask, 10)
+        except:
+            raise ValueError("netmask is not an integer")
+        #Is netmask between 0 and 32?
+        if netmask < 0 or netmask > 32:
+            raise ValueError("netmask out of IPv4 range")
+    else:
+        #Got no netmask
+        netmask = None
+    octets = ip.split(".")
+    #Do we have exactly 4 octets?
+    if len(octets) != 4:
+        raise ValueError("expected x.x.x.x format")
+    #A list to for invalid octets - to show them all in one error message
+    invalid_octets = []
+    #A list for new octets - in case any are fixed
+    new_octets = []
+    for octet in octets:
+        if octet == "":
+            #Can have an empty octet, which counts as 0
+            #Allows to write "127...1" (sorry, no "127.1" yet)
+            octet = "0"
+            new_octets.append(octet)
+            continue
+        elif octet == "*":
+            #Nothing to check
+            new_octets.append(octet)
+            continue
+        #Is each octet a proper integer?
+        try:
+            octet = int(octet, 10)
+        except:
+            invalid_octets.append(octet)
+            continue #One octet invalid but need to go to the next one
+        #Is each octet in proper range?
+        if octet < 0 or octet > 255:
+            invalid_octets.append(octet)
+        else:
+            new_octets.append(octet)
+    if len(invalid_octets) == 1:
+        #Just one invalid octet
+        raise ValueError("invalid octet: {}".format(invalid_octets[0]))
+    elif len(invalid_octets) > 1:
+        #Multiple invalid octets
+        octet_string = ",".join([str(octet) for octet in invalid_octets])
+        raise ValueError("invalid octets: {}".format(octet_string))
+    else:
+        #No invalid octets, assembling the IP and returning it
+        ip = ".".join([str(octet) for octet in new_octets])
+        if netmask: ip = ip+"/"+str(netmask)
+        return ip
+
+def scan_arbitrary_ip():
+    ip = NumpadIPAddressInput(i, o, message="IP to scan:", debug=True).activate()
+    if ip is None: return #Cancelled
+    valid_ip = False
+    while not valid_ip:
+        #Validating the IP in a loop
+        try:
+            ip = cleanup_validate_ip(ip)
+        except ValueError as e:
+            #If not valid, giving an opportunity to either fix it or cancel the scan
+            Printer(ffs("Invalid ip: {}! Reason: {}".format(ip, e.message), o.cols), i, o, 3)
+            ip = NumpadIPAddressInput(i, o, message="Fix the IP", value=ip, debug=True).activate()
+            if ip is None: return #Cancelled
+            #To the next loop iteration
+        else:
+            valid_ip = True
+    if "/" in ip:
+        #Network address with a netmask, interpreting it as a network address and just calling nmap
+        quick_scan_network_by_ip(ip)
+    elif "*" in ip:
+        Printer(ffs("Wildcards without a netmask are not yet supported by the interface, sorry", o.cols), i, o, 3)
+        return
+    else:
+        scan_ip(ip)
     
 
 #"Dump scan to file" functions
@@ -248,8 +342,8 @@ def callback():
     #Constructing and loading app main menu
     menu_contents = [
     ["Smart scan", smart_scan],
-    #["Scan hardcoded IP", lambda: scan_ip("192.168.88.1")],
     ["Scan a network", scan_network_menu],
+    ["Scan arbitrary IP", scan_arbitrary_ip],
     ["Scan localhost", scan_localhost]
     ]
     Menu(menu_contents, i, o).activate()
