@@ -291,7 +291,8 @@ def show_scan_results_for_ip(ip, ip_results):
     if protocols:
         report.append([["Open ports:"]])
         for protocol in protocols:
-            ports = ip_result[protocol].sorted()
+            ports = ip_result[protocol].keys()
+            ports.sort()
             for port in ports:
                 report.append([["  {}:{}".format(protocol, port)]])
     else: #No open ports for any protocol found?
