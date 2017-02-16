@@ -91,7 +91,7 @@ class NumpadCharInput():
     current_letter_num = 0
     __locked_name__ = None
 
-    def __init__(self, i, o, message="", name="NumpadCharInput"):
+    def __init__(self, i, o, message="", name="NumpadCharInput", debug=False):
         """Initialises the NumpadCharInput object.
         
         Args:
@@ -103,6 +103,7 @@ class NumpadCharInput():
         self.o = o
         self.message = message
         self.name = name
+        self.debug = debug
         self.keymap = {}
         self.generate_keymap()
         self.value_lock = Lock()
@@ -153,6 +154,7 @@ class NumpadCharInput():
         #This function processes all keycodes that are not in the keymap - such as number keycodes
         header = "KEY_"
         key = key_name[len(header):]
+        if self.debug: print("Received "+key_name)
         if key in self.mapping.keys():
             #It's one of the keys we can process
             #NO INSERT IN MIDDLE/START SUPPORT
