@@ -38,6 +38,7 @@ class Checkbox():
     first_displayed_entry = 0
     last_displayed_entry = None
     states = []
+    cancelled = False
 
     def __init__(self, contents, i, o, name="Menu", entry_height=1, default_state=False, final_button_name="Save"):
         """Initialises the Checkbox object.
@@ -80,13 +81,23 @@ class Checkbox():
             sleep(0.1)
         self.o.noCursor()
         logging.debug(self.name+" exited")
-        return {self._contents[index][1]:self.states[index] for index, element in enumerate(self._contents)}
+        if self.cancelled:
+            return None
+        else:
+            return {self._contents[index][1]:self.states[index] for index, element in enumerate(self._contents)}
 
     @to_be_foreground
     def deactivate(self):
         """ Deactivates the menu completely, exiting it. As for now, pointer state is preserved through checkbox activations/deactivations """
         self.in_foreground = False
         logging.info("checkbox {0} deactivated".format(self.name))    
+
+    @to_be_foreground
+    def cancel(self):
+        """ Deactivates the menu completely, exiting it. As for now, pointer state is preserved through checkbox activations/deactivations """
+        logging.info("checkbox {0} cancelled".format(self.name))    
+        self.cancelled = True
+        self.deactivate()
 
     def print_contents(self):
         """ A debug method. Useful for hooking up to an input event so that you can see the representation of checkbox's contents. """
@@ -140,7 +151,7 @@ class Checkbox():
         """Sets the keymap. In future, will allow per-system keycode-to-callback tweaking using a config file. """
         keymap = {
             "KEY_RIGHT":lambda: self.print_name(),
-            "KEY_LEFT":lambda: self.deactivate(),
+            "KEY_LEFT":lambda: self.cancel(),
             "KEY_UP":lambda: self.move_up(),
             "KEY_DOWN":lambda: self.move_down(),
             "KEY_KPENTER":lambda: self.flip_state(),
