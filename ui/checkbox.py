@@ -60,6 +60,8 @@ class Checkbox():
         self.final_button_name = final_button_name
         self.name = name
         self.set_contents(contents)
+        print(id(self.contents))
+        print(id(self._contents))
         self.generate_keymap()
 
     def to_foreground(self):
@@ -173,7 +175,7 @@ class Checkbox():
 
         If ``self.append_exit`` is set, it goes through the menu and removes every callback which either is ``self.deactivate`` or is just a string 'exit'. 
         |Then, it appends a single ["Exit", '', 'exit'] element at the end of checkbox contents. It makes dynamically appending elements to checkbox easier and makes sure there's only one "Exit" callback, at the bottom of the checkbox."""
-        self._contents = contents
+        self._contents = copy(contents)
         self.states = [element[2] if len(element)>1 else self.default_state for element in copy(self._contents)]
         self._contents.append([self.final_button_name, '', 'exit'])
         self.states.append(False) #For the final button, to maintain "len(states) == len(self._contents)"
