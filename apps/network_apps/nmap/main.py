@@ -310,7 +310,6 @@ def show_quick_scan_results_for_network(net_ip, net_results):
     ips = sort_ips(ips)
     for ip in ips:
         result = net_results[ip]
-        print(result)
         open_ports_found = "tcp" in result.keys() and result["tcp"]
         if open_ports_found:
             open_port_count = len([port_desc for port_desc in result["tcp"].values() if "state" in port_desc and port_desc["state"] == "open"])
