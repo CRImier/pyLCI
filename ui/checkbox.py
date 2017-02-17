@@ -61,8 +61,6 @@ class Checkbox():
         self.final_button_name = final_button_name
         self.name = name
         self.set_contents(contents)
-        print(id(self.contents))
-        print(id(self._contents))
         self.generate_keymap()
 
     def to_foreground(self):
