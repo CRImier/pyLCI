@@ -45,7 +45,8 @@ def change_filters():
     checkbox_contents = []
     for type in all_types:
         checkbox_contents.append([type[0], type[1], type[1] in config["allowed_types"]])
-    states = Checkbox(checkbox_contents, i, o).activate()
+    states = Checkbox(checkbox_contents, i, o, final_button_name="Save").activate()
+    if states is None: return None
     config["allowed_types"] = [state for state in states if states[state]] 
     write_config(config, config_path)
     
