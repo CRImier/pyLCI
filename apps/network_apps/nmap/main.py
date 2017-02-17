@@ -75,6 +75,7 @@ def smart_scan():
             return None
     network_ip = get_network_from_ip(network_ip)
     chosen_ports = Checkbox(heuristic_ports, i, o, final_button_name="Run scan").activate()
+    if chosen_ports is None: return None
     chosen_port_list = [port_choice for port_choice in chosen_ports if chosen_ports[port_choice] == True]
     port_string = ",".join(chosen_port_list)
     #So the library I'm using is silently failing. I launch the scan from command-line and see:
