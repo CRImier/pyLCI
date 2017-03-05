@@ -141,6 +141,7 @@ class PathPicker(Menu):
                     ["See full path",lambda x=full_path: Printer(x, self.i, self.o)],
                     ["Exit PathPicker", self.option_exit]]
         Menu(contents, self.i, self.o).activate()
+        self.o.cursor()
         if self.in_background:
             self.to_foreground()
 
