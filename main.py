@@ -11,6 +11,7 @@ from output import output
 
 main_config_path = "/boot/pylci_config.json"
 backup_config_path = "./config.json"
+config_error_file = "/boot/pylci_config_error.repr"
 
 #Debugging helper snippet
 import threading
@@ -27,23 +28,35 @@ def dumpthreads(*args):
         print("")
 signal.signal(signal.SIGUSR1, dumpthreads)
 
-#Locating pyLCI config - if config at main_config_path exists, use that
-#If not, use the backup path
-#Simple and hacky, we're not even checking the validity for now (TODO)
-
-if os.path.exists(main_config_path): config_path = main_config_path
-else: config_path = backup_config_path
-
 #Getting pyLCI config, it will be passed to input and output initializers
+#If config at main_config_path exists, use that
+#If not, use the backup path
+#Also, log the errors to a file so that it can be debugged later
+
 from helpers import read_config
 
 try:
-    config = read_config(config_path)
+    error_file = open(config_error_file, "w")
+    config = read_config(main_config_path)
 except Exception as e:
     print(repr(e))
     print("------------------------------")    
-    print("Couldn't read config, exiting!")
-    sys.exit(1)
+    print("Couldn't read main config, using backup config!")
+    error_file.write("Couldn't read main config: {}\n".format(repr(e)))
+    error_file.write("Using backup config!\n")
+    try:
+        config = read_config(backup_config_path)
+    except Exception as e:
+        print("Couldn't read backup config, exiting!")
+        error_file.write("Couldn't read backup config: {}\n".format(repr(e)))
+        error_file.write("Exiting!\n")
+        error_file.close()
+        sys.exit(1)
+else:
+    if os.path.exists(config_error_file): os.remove(config_error_file)
+    error_file.close()
+    
+
 
 
 #These lines are here so that welcome message stays on the screen a little longer:
