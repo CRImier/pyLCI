@@ -46,7 +46,7 @@ class LumaScreen(BacklightManager):
         self.busy_flag = Event()
         self.charwidth = 6
         self.charheight = 8
-        self.cols = 110/self.charwidth
+        self.cols = 128/self.charwidth
         self.rows = 64/self.charheight
         self.debug = debug
         #self.buffering = buffering
