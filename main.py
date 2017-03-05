@@ -9,9 +9,10 @@ import argparse
 #And we output things for debugging, so o goes first.
 from output import output
 
-config_path = "./config.json"
+main_config_path = "/boot/pylci_config.json"
+backup_config_path = "./config.json"
 
-#Debugging helper snipper
+#Debugging helper snippet
 import threading
 import traceback
 import signal
@@ -25,6 +26,13 @@ def dumpthreads(*args):
         traceback.print_stack(sys._current_frames()[th.ident])
         print("")
 signal.signal(signal.SIGUSR1, dumpthreads)
+
+#Locating pyLCI config - if config at main_config_path exists, use that
+#If not, use the backup path
+#Simple and hacky, we're not even checking the validity for now (TODO)
+
+if os.path.exists(main_config_path): config_path = main_config_path
+else: config_path = backup_config_path
 
 #Getting pyLCI config, it will be passed to input and output initializers
 from helpers import read_config
