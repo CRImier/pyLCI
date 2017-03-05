@@ -9,7 +9,11 @@ import argparse
 #And we output things for debugging, so o goes first.
 from output import output
 
-#Debugging helper
+main_config_path = "/boot/pylci_config.json"
+backup_config_path = "./config.json"
+config_error_file = "/boot/pylci_config_error.repr"
+
+#Debugging helper snippet
 import threading
 import traceback
 import signal
@@ -24,8 +28,39 @@ def dumpthreads(*args):
         print("")
 signal.signal(signal.SIGUSR1, dumpthreads)
 
+#Getting pyLCI config, it will be passed to input and output initializers
+#If config at main_config_path exists, use that
+#If not, use the backup path
+#Also, log the errors to a file so that it can be debugged later
+
+from helpers import read_config
+
+try:
+    error_file = open(config_error_file, "w")
+    config = read_config(main_config_path)
+except Exception as e:
+    print(repr(e))
+    print("------------------------------")    
+    print("Couldn't read main config, using backup config!")
+    error_file.write("Couldn't read main config: {}\n".format(repr(e)))
+    error_file.write("Using backup config!\n")
+    try:
+        config = read_config(backup_config_path)
+    except Exception as e:
+        print("Couldn't read backup config, exiting!")
+        error_file.write("Couldn't read backup config: {}\n".format(repr(e)))
+        error_file.write("Exiting!\n")
+        error_file.close()
+        sys.exit(1)
+else:
+    if os.path.exists(config_error_file): os.remove(config_error_file)
+    error_file.close()
+    
+
+
+
 #These lines are here so that welcome message stays on the screen a little longer:
-output.init()
+output.init(config["output"])
 o = output.screen
 from ui import Printer, Menu
 
@@ -34,7 +69,7 @@ try: #If there's an internal error, we show it on display and exit
     from apps.manager import AppManager
     #Now we init the input subsystem
     from input import input
-    input.init()
+    input.init(config["input"])
     i = input.listener
 except:
     Printer(["Oops. :(", "y u make mistake"], None, o, 0) #Yeah, that's about all the debug data. 

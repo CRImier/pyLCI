@@ -3,7 +3,6 @@ import importlib
 import atexit
 from time import sleep
 import Queue
-from helpers import read_config
 
 listener = None
 
@@ -184,13 +183,11 @@ class InputListener():
         
 
 
-def init():
+def init(input_configs):
     """ This function is called by main.py to read the input configuration, pick the corresponding drivers and initialize InputListener.
  
     It also sets ``listener`` globals of ``input`` module with driver and listener respectively, as well as registers ``listener.stop()`` function to be called when script exits since it's in a blocking non-daemon thread."""
     global listener
-    config = read_config("config.json")
-    input_configs = config["input"]
     drivers = []
     for input_config in input_configs:
         driver_name = input_config["driver"]
