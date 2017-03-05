@@ -183,7 +183,7 @@ class InputListener():
         
 
 
-def init(input_config):
+def init(input_configs):
     """ This function is called by main.py to read the input configuration, pick the corresponding drivers and initialize InputListener.
  
     It also sets ``listener`` globals of ``input`` module with driver and listener respectively, as well as registers ``listener.stop()`` function to be called when script exits since it's in a blocking non-daemon thread."""
