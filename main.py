@@ -9,7 +9,9 @@ import argparse
 #And we output things for debugging, so o goes first.
 from output import output
 
-#Debugging helper
+config_path = "./config.json"
+
+#Debugging helper snipper
 import threading
 import traceback
 import signal
@@ -24,8 +26,20 @@ def dumpthreads(*args):
         print("")
 signal.signal(signal.SIGUSR1, dumpthreads)
 
+#Getting pyLCI config, it will be passed to input and output initializers
+from helpers import read_config
+
+try:
+    config = read_config(config_path)
+except Exception as e:
+    print(repr(e))
+    print("------------------------------")    
+    print("Couldn't read config, exiting!")
+    sys.exit(1)
+
+
 #These lines are here so that welcome message stays on the screen a little longer:
-output.init()
+output.init(config["output"])
 o = output.screen
 from ui import Printer, Menu
 
@@ -34,7 +48,7 @@ try: #If there's an internal error, we show it on display and exit
     from apps.manager import AppManager
     #Now we init the input subsystem
     from input import input
-    input.init()
+    input.init(config["input"])
     i = input.listener
 except:
     Printer(["Oops. :(", "y u make mistake"], None, o, 0) #Yeah, that's about all the debug data. 
