@@ -11,6 +11,6 @@ def init(output_config):
     screen_config = output_config[0]
     driver_name = screen_config["driver"]
     driver_module = importlib.import_module("output.drivers."+driver_name)
-    args = output_config["args"] if "args" in screen_config else []
-    kwargs = output_config["kwargs"] if "kwargs" in screen_config else {}
+    args = screen_config["args"] if "args" in screen_config else []
+    kwargs = screen_config["kwargs"] if "kwargs" in screen_config else {}
     screen = driver_module.Screen(*args, **kwargs)
