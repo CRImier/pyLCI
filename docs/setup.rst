@@ -7,18 +7,23 @@ Installing and updating pyLCI
     git clone https://github.com/CRImier/pyLCI
     cd pyLCI/
     ./setup.sh #Install main dependencies and create a install directory
-    ./config.sh #Install dependencies for your input&output devices
-    nano config.json #Describe your input&outputdevices
-    python main.py #Start the system to test your configuration
+    ./config.sh #Install dependencies for your input&output devices 
+    nano config.json #Describe your input&outputdevices (if you have a supported shield, previous step will edit this for you)
+    sudo python main.py #Start the system to test your configuration - do screen and buttons work OK?
     #Once configured:
-    ./update.sh #Transfer changes to your install directory
+    ./update.sh #Transfer the working system to your install directory
 
-.. note:: The system typically runs as root, and therefore is to be run as sudo/root user. Curious about the reasons? It's :doc:`explained in the FAQ <faq_contact>`.
+.. note:: 
+   **Behind the scenes:**
+   
+   When you run ``./setup.sh``, pyLCI is copied to ``/opt/pylci``, this is done to make autorun code easier and allow experimentation while making it harder to lock you out of the system if pyLCI is your main control interface. ``/opt/pylci`` will be referred to as "install directory", while the directory you cloned the repository to will be referred to as "download directory". ``./update.sh``, when run from download directory, will transfer the changes from the download directory (and GitHub) to the install directory.
 
 Setup
 =====
 
-``setup.sh`` is the first script to be run after installation. It checks if you have python and python-pip installed and installs them if they aren't (using apt-get), then creates an install directory, copies all the files to it and installs a ``systemd`` unit file for system to run at boot. Perfect for Raspbian and Debian Jessie, TODO: add support for other systems.
+``setup.sh`` is the first script to be run after installation. It checks if you have python and python-pip installed and installs them if they aren't (using apt-get), then creates the install directory, copies all the files to it and installs a ``systemd`` unit file for system to run at boot. Perfect for Raspbian and Debian Jessie, TODO: add support for other systems.
+   
+.. note:: The system typically runs as root, and therefore is to be run as sudo/root user. Curious about the reasons? It's :doc:`explained in the FAQ <faq_contact>`.
 
 Installing dependencies for hardware
 ====================================
@@ -49,7 +54,7 @@ Its format is as follows:
      }]
    }
 
-Documentation for :doc:`input <input>` and :doc:`output <output>` drivers have sample ``config.json`` for each driver. ``"args"`` and ``"kwargs"`` get passed directly to drivers' ``__init__`` method, so you can refer to that to see if there are any options you could tweak.
+Documentation for :doc:`input <input>` and :doc:`output <output>` drivers have sample ``config.json`` for each driver. ``"args"`` and ``"kwargs"`` get passed directly to drivers' ``__init__`` method, so you can read the driver documentation/files to see if there are any options you could tweak.
 
 Systemctl commands
 ==================
@@ -78,6 +83,4 @@ Updating
 
 ``update.sh`` is for updating your pyLCI install, pulling new commits from GitHub and copying all the new files from download directory to the install directory. This is useful to make your installed system up-to-date if there have been new commits or if you made some changes and want to transfer them to pyLCI install directory. 
 
-.. note:: ``update.sh`` automatically pulls all the GitHub commits - just comment the corresponding line out if you don't want it. Also, it runs ``systemctl start pylci.service``.
-
-
+.. note:: ``update.sh`` automatically pulls all the GitHub commits - just comment the corresponding line out if you don't want it. It also runs ``systemctl start pylci.service``.

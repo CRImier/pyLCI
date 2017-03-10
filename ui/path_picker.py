@@ -86,6 +86,8 @@ class PathPicker(Menu):
             "KEY_RIGHT":lambda: self.options_menu(),
             "KEY_UP":lambda: self.move_up(),
             "KEY_DOWN":lambda: self.move_down(),
+            "KEY_PAGEUP":lambda: self.page_up(),
+            "KEY_PAGEDOWN":lambda: self.page_down(),
             "KEY_KPENTER":lambda: self.select_element(),
             "KEY_ENTER":lambda: self.select_element(),
             "KEY_LEFT": lambda: self.go_back()

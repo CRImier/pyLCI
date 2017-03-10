@@ -12,16 +12,19 @@ True
 menu_name = "System info"
 
 from subprocess import call
-from ui import Menu, Printer
+from ui import Menu, Printer, Refresher
 
 import sys_info
 
-def show_uptime_load():
+def uptime_load_data():
     loadavg_string = " ".join([str(number) for number in sys_info.loadavg()])
     uptime_string = sys_info.uptime()
-    Printer([uptime_string, loadavg_string], i, o, skippable=True)
+    return [uptime_string, loadavg_string]
 
-def show_memory():
+def uptime_load_monitor():
+    Refresher(uptime_load_data, i, o, 1).activate()
+
+def memory_menu_data():
     memory_info = sys_info.free()
     menu_contents = [
     ["Free {}MB".format(memory_info["Free"])],
@@ -35,7 +38,10 @@ def show_memory():
     ["Cached {}MB".format(memory_info["Cached"])],
     ["Shared {}MB".format(memory_info["Shared"])],
     ["Buffers {}MB".format(memory_info["Buffers"])]]
-    Menu(menu_contents, i, o).activate()
+    return menu_contents
+
+def show_memory():
+    Menu([], i, o, contents_hook=memory_menu_data).activate()
 
 def show_linux_info():
     linux_info = sys_info.linux_info()
@@ -59,7 +65,7 @@ def init_app(input, output):
     i = input; o = output
 
     menu_contents = [
-    ["Uptime&load", show_uptime_load],
+    ["Uptime&load", uptime_load_monitor],
     #["CPU", show_cpu],
     ["Memory", show_memory],
     ["Linux info", show_linux_info]

@@ -147,6 +147,7 @@ class Menu():
     def reset_scrolling(self):
         self.scrolling["current_finished"] = False
         self.scrolling["pointer"] = 0
+        self.scrolling["counter"] = 0
 
     def print_contents(self):
         """ A debug method. Useful for hooking up to an input event so that you can see the representation of menu's contents. """
@@ -171,6 +172,18 @@ class Menu():
             return False
 
     @to_be_foreground
+    def page_down(self):
+        """ Moves the pointer 5 elements down, if possible. If not possible, moves as far as it can"""
+        counter = 5
+        while counter != 0 and self.pointer < (len(self._contents)-1):
+            logging.debug("moved down")
+            self.pointer += 1  
+            counter -= 1
+        self.refresh()    
+        self.reset_scrolling()
+        return True
+
+    @to_be_foreground
     def move_up(self):
         """ Moves the pointer one element up, if possible. 
         |Is typically used as a callback from input event processing thread.
@@ -183,6 +196,18 @@ class Menu():
             return True
         else: 
             return False
+
+    @to_be_foreground
+    def page_up(self):
+        """ Moves the pointer 5 elements down, if possible. If not possible, moves as far as it can"""
+        counter = 5
+        while counter != 0 and self.pointer != 0:
+            logging.debug("moved down")
+            self.pointer -= 1  
+            counter -= 1
+        self.refresh()    
+        self.reset_scrolling()
+        return True
 
     @to_be_foreground
     def select_element(self):
@@ -215,6 +240,8 @@ class Menu():
             "KEY_RIGHT":lambda: self.print_name(),
             "KEY_UP":lambda: self.move_up(),
             "KEY_DOWN":lambda: self.move_down(),
+            "KEY_PAGEUP":lambda: self.page_up(),
+            "KEY_PAGEDOWN":lambda: self.page_down(),
             "KEY_KPENTER":lambda: self.select_element(),
             "KEY_ENTER":lambda: self.select_element()
             }

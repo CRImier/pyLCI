@@ -24,8 +24,8 @@ class InputDevice(InputSkeleton):
         * ``debug``: enables printing button press and release events when set to True
         """
         self.button_pins = button_pins
-        InputSkeleton.__init__(self, **kwargs)
         self.init_hw()
+        InputSkeleton.__init__(self, **kwargs)
 
     def init_hw(self):
         import RPi.GPIO as GPIO #Doing that because I couldn't mock it for ReadTheDocs

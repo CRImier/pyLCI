@@ -12,22 +12,20 @@ from output import output
 #These lines are here so that welcome message stays on the screen a little longer:
 output.init()
 o = output.screen
-from ui import Printer
+from ui import Printer, Menu
+
 Printer(["Welcome to", "pyLCI"], None, o, 0)
 
-try:
-    #All the LCI-related modules are imported here
-    from input import input
+try: #If there's an internal error, we show it on display and exit
     from apps.manager import AppManager
-    from ui import Menu
-    #Now we init the input subsystem.
+    #Now we init the input subsystem
+    from input import input
     input.init()
     i = input.listener
 except:
     Printer(["Oops. :(", "y u make mistake"], None, o, 0) #Yeah, that's about all the debug data. 
-    #import time;time.sleep(3) #u make mi sad i go to slip
-    #o.clear()
     raise
+
 
 def exception_wrapper(callback):
     """This is a wrapper for all applications and menus. It catches exceptions and stops the system the right way when something bad happens, be that a Ctrl+c or an exception in one of the applications."""

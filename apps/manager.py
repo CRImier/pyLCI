@@ -1,6 +1,9 @@
 import importlib
 import os
 
+class ListWithMetadata(list):
+    ordering_alias = None
+
 class AppManager():
     subdir_menus = {}
     """ Example of subdir_menus:
@@ -25,6 +28,7 @@ class AppManager():
 
     def load_all_apps(self):
         base_menu = self.menu_class([], self.i, self.o, "Main app menu", exitable=False) #Main menu for all applications.
+        orderings = {}
         self.subdir_menus[self.app_directory] = base_menu
         for path, subdirs, modules in app_walk(self.app_directory): 
             #print("Loading path {} with modules {} and subdirs {}".format(path, modules, subdirs))
@@ -48,21 +52,22 @@ class AppManager():
             if subdir_path == self.app_directory:
                 continue
             parent_path = os.path.split(subdir_path)[0]
+            ordering = self.get_ordering(parent_path)
             #print("Adding subdir {} to parent {}".format(subdir_path, parent_path))
             parent_menu = self.subdir_menus[parent_path]
             subdir_menu = self.subdir_menus[subdir_path]
             subdir_menu_name = self.get_subdir_menu_name(subdir_path)
-            parent_menu_contents = parent_menu.contents
-            parent_menu_contents.append([subdir_menu_name, subdir_menu.activate])
+            #Inserting by the ordering given
+            parent_menu_contents = self.insert_by_ordering([subdir_menu_name, subdir_menu.activate], os.path.split(subdir_path)[1], parent_menu.contents, ordering)
             parent_menu.set_contents(parent_menu_contents)
         for app_path in self.app_list:
             #Last thing is adding applications to menus.
             app = self.app_list[app_path]
             subdir_path = os.path.split(app_path)[0]
+            ordering = self.get_ordering(subdir_path)
             #print("Adding app {} to subdir {}".format(app_path, subdir_path))
             subdir_menu = self.subdir_menus[subdir_path]
-            subdir_menu_contents = subdir_menu.contents
-            subdir_menu_contents.append([app.menu_name, app.callback])
+            subdir_menu_contents = self.insert_by_ordering([app.menu_name, app.callback], os.path.split(app_path)[1], subdir_menu.contents, ordering)
             subdir_menu.set_contents(subdir_menu_contents)
         #print(app_list)
         #print(subdir_menus)
@@ -86,6 +91,47 @@ class AppManager():
             print(e)
             return os.path.split(subdir_path)[1]
 
+    def get_ordering(self, path, cache={}):
+        """This function gets a subdirectory path and imports __init__.py from it. It then gets _ordering attribute from __init__.py and returns it. It also caches the attribute for faster initialization.
+        If failed to either import __init__.py or get the _ordering attribute, it returns an empty list."""
+        if path in cache:
+            return cache[path]
+        import_path = path.replace('/', '.')
+        try:
+            imported_module = importlib.import_module(import_path+'.__init__')
+            ordering = imported_module._ordering
+        except ImportError as e:
+            print("Exception while loading __init__.py for directory {}".format(path))
+            print(e)
+            ordering = []
+        except AttributeError as e:
+            #print("No ordering for directory {}".format(path))
+            #print(e)
+            ordering = []
+        finally:
+            cache[path] = ordering
+            return ordering
+
+    def insert_by_ordering(self, to_insert, alias, l, ordering):
+        #print("Inserting {} by ordering {}".format(alias, ordering))
+        if alias in ordering:
+            #HAAAAAAAAAAAAAAXXXXXXXXXX
+            to_insert = ListWithMetadata(to_insert)
+            #Marking the object we're inserting with its alias 
+            #so that we won't mix up ordering of elements later
+            to_insert.ordering_alias = alias 
+            if not l: #No conditions to check
+                l.append(to_insert); return l
+            for e in l:
+                #print("{} - {}".format(type(e), e))
+                if hasattr(e, "ordering_alias"):
+                    if ordering.index(e.ordering_alias) > ordering.index(alias):
+                        l.insert(l.index(e), to_insert); return l
+                    else:
+                        pass #going to next element
+                else:
+                    l.insert(l.index(e), to_insert); return l
+        l.append(to_insert); return l #Catch-all
 
 def app_walk(base_dir):
     """Example of app_walk(directory):  
