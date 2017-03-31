@@ -47,6 +47,7 @@ class PathPicker(Menu):
         self._in_background = Event()
         self.set_contents([]) #Method inherited from Menu and needs an argument, but context is not right
         self.generate_keymap()
+        self.menu_pointers = {}
         self.scrolling={"enabled":scrolling,       
                         "current_finished":False,  
                         "current_scrollable":False,
@@ -162,11 +163,21 @@ class PathPicker(Menu):
 
     #@to_be_foreground
     def goto_dir(self, dir):
+        self.menu_pointers[self.path] = self.pointer
         dir = os.path.normpath(dir)
         self.path = dir
         self.name = "PathPicker-{}".format(self.path)
-        self.pointer = 0
         self.set_contents([])
+        if self.path in self.menu_pointers:
+            pointer = self.menu_pointers[self.path]
+            #If parent directory changed contents while we were browsing child directory, the count will be different
+            #So, a quick check
+            if pointer >= len(self._contents):
+                self.pointer = len(self._contents)-1
+            else:
+                self.pointer = pointer
+        else:
+            self.pointer = 0
         self.refresh()
 
     #@to_be_foreground
