@@ -5,7 +5,13 @@ from skeleton import InputSkeleton
 
 def get_input_devices():
     """Returns list of all the available InputDevices"""
-    return [HID(fn) for fn in list_devices()]
+    devices = []
+    for fn in list_devices():
+        try:
+            devices.append(HID(fn))
+        except:
+            pass
+    return devices
 
 def get_path_by_name(name):
     """Gets HID device path by name, returns None if not found."""
