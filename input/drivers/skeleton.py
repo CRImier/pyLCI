@@ -16,6 +16,7 @@ class InputSkeleton():
             self.mapping = mapping
         else:
             self.mapping = self.default_mapping
+        self.init_hw()
         if threaded:
             self.start_thread()
 
