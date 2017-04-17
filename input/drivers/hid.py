@@ -34,10 +34,10 @@ class InputDevice(InputSkeleton):
     """ A driver for HID devices. As for now, supports keyboards and numpads."""
 
     def __init__(self, path=None, name=None, **kwargs):
-        """Initialises the ``InputDevice`` object.  
-                                                                               
-        Kwargs:                                                                  
-                                                                                 
+        """Initialises the ``InputDevice`` object.
+
+        Kwargs:
+
             * ``path``: path to the input device. If not specified, you need to specify ``name``.
             * ``name``: input device name
 
