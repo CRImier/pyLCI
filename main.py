@@ -12,6 +12,7 @@ from output import output
 main_config_path = "/boot/pylci_config.json"
 backup_config_path = "./config.json"
 config_error_file = "/boot/pylci_config_error.repr"
+emulator_flag_filename = "emulator"
 
 #Debugging helper snippet
 import threading
@@ -35,31 +36,33 @@ signal.signal(signal.SIGUSR1, dumpthreads)
 
 from helpers import read_config
 
-try:
-    error_file = open(config_error_file, "w")
-    config = read_config(main_config_path)
-except Exception as e:
-    print(repr(e))
-    print("------------------------------")    
-    print("Couldn't read main config, using backup config!")
-    error_file.write("Couldn't read main config: {}\n".format(repr(e)))
-    error_file.write("Using backup config!\n")
+is_emulator = emulator_flag_filename in os.listdir(".")
+
+if not is_emulator:
     try:
-        config = read_config(backup_config_path)
+        error_file = open(config_error_file, "w+")
+        config = read_config(main_config_path)
     except Exception as e:
-        print("Couldn't read backup config, exiting!")
-        error_file.write("Couldn't read backup config: {}\n".format(repr(e)))
-        error_file.write("Exiting!\n")
+        print(repr(e))
+        print("------------------------------")
+        print("Couldn't read main config, using backup config!")
+        error_file.write("Couldn't read main config: {}\n".format(repr(e)))
+        error_file.write("Using backup config!\n")
+        try:
+            config = read_config(backup_config_path)
+        except Exception as e:
+            print("Couldn't read backup config, exiting!")
+            error_file.write("Couldn't read backup config: {}\n".format(repr(e)))
+            error_file.write("Exiting!\n")
+            error_file.close()
+            sys.exit(1)
+    else:
+        if os.path.exists(config_error_file): os.remove(config_error_file)
         error_file.close()
-        sys.exit(1)
 else:
-    if os.path.exists(config_error_file): os.remove(config_error_file)
-    error_file.close()
-    
+    config = read_config(backup_config_path)
 
 
-
-#These lines are here so that welcome message stays on the screen a little longer:
 output.init(config["output"])
 o = output.screen
 from ui import Printer, Menu
