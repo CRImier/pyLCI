@@ -39,19 +39,19 @@ class InputDevice(InputSkeleton):
             for row_num, row_pin in enumerate(self.rows):
                 prev_row_state = self.button_states[row_num]
                 if self.GPIO.input(row_pin) != any(prev_row_state):
-                    self.GPIO.setup(row_pin, self.GPIO.IN, pull_up_down=self.GPIO.PUD_UP)
+                    for col in self.cols: self.GPIO.output(col, False)
                     #A button pressed!
                     col_num = None
                     for col_num, col_pin in enumerate(self.cols):
-                        self.GPIO.output(col_pin, False)
-                        state = not self.GPIO.input(row_pin)
                         self.GPIO.output(col_pin, True)
+                        state = self.GPIO.input(row_pin)
+                        self.GPIO.output(col_pin, False)
                         prev_state = self.button_states[row_num][col_num]
                         if state == True and prev_state == False:
                             key = self.mapping[row_num][col_num]
                             self.send_key(key)
                         self.button_states[row_num][col_num] = state
-                    self.GPIO.setup(row_pin, self.GPIO.IN, pull_up_down=self.GPIO.PUD_DOWN)
+                    for col in self.cols: self.GPIO.output(col, True)
             sleep(0.01)
 
 
