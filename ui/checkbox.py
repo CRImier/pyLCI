@@ -15,15 +15,14 @@ class Checkbox(BaseListUIElement):
          * ``element[2]`` (element's state) is the default state assumed by the checkbox. If not present, assumed to be default_state.
 
       *If you want to set contents after the initalisation, please, use set_contents() method.*
-    * ``_contents``: "Working copy" of checkbox contents, basically, a ``contents`` attribute which has been processed by ``self.process_contents``. 
-    * ``pointer``: currently selected menu element's number in ``self._contents``.
+    * ``pointer``: currently selected menu element's number in ``self.contents``.
     * ``in_foreground`` : a flag which indicates if checkbox is currently displayed. If it's not active, inhibits any of menu's actions which can interfere with other menu or UI element being displayed.
-    * ``first_displayed_entry`` : Internal flag which points to the number of ``self._contents`` element which is at the topmost position of the checkbox menu as it's currently displayed on the screen
-    * ``last_displayed_entry`` : Internal flag which points to the number of ``self._contents`` element which is at the lowest position of the checkbox menu as it's currently displayed on the screen
+    * ``first_displayed_entry`` : Internal flag which points to the number of ``self.contents`` element which is at the topmost position of the checkbox menu as it's currently displayed on the screen
+    * ``last_displayed_entry`` : Internal flag which points to the number of ``self.contents`` element which is at the lowest position of the checkbox menu as it's currently displayed on the screen
 
     """
     states = []
-    accepted = True
+    accepted = False
     exit_entry = ["Accept", None, 'accept']
 
     def __init__(self, *args, **kwargs):
@@ -42,14 +41,14 @@ class Checkbox(BaseListUIElement):
             * ``final_button_name``: name for the last button that confirms the selection
 
         """
-        default_state = **kwargs.pop("default_state") if "default_state" in kwargs else False
-        final_button_name = **kwargs.pop("final_button_name") if "final_button_name" in kwargs else "Accept"
+        self.default_state = kwargs.pop("default_state") if "default_state" in kwargs else False
+        self.final_button_name = kwargs.pop("final_button_name") if "final_button_name" in kwargs else "Accept"
         BaseListUIElement.__init__(self, *args, **kwargs)
-        self.exit_entry[0] = final_button_name
+        self.exit_entry[0] = self.final_button_name
 
     def get_return_value(self):
         if self.accepted:
-            return {self._contents[index][1]:self.states[index] for index, element in enumerate(self._contents)}
+            return {self.contents[index][1]:self.states[index] for index, element in enumerate(self.contents) if element != self.exit_entry}
         else:
             return None
 
@@ -58,7 +57,7 @@ class Checkbox(BaseListUIElement):
         """ Changes the current element's state to the opposite.
         |Is typically used as a callback from input event processing thread. Afterwards, refreshes the screen."""
         logging.debug("element selected")
-        if self._contents[self.pointer][2] == 'accept':
+        if len(self.contents[self.pointer]) > 2 and self.contents[self.pointer][2] == self.exit_entry[2]:
             self.accepted = True
             self.deactivate()
             return
@@ -66,12 +65,16 @@ class Checkbox(BaseListUIElement):
         self.refresh()
 
     def validate_contents(self, contents):
-        pass
+        assert isinstance(contents, list), "Checkbox contents should be a list"
+        for entry in contents:
+            assert isinstance(entry[0], str), "Checkbox entry first element should be a string - got {} instead".format(repr(entry[0]))
+            if len(entry) > 2:
+                assert entry[2] in ["accept", True, False], "Checkbox entry third element can only be a boolean or  \"accept\" - got {} instead".format(repr(entry[2]))
 
-    def process_contents(self, contents):
-        self.states = [element[2] if len(element)>1 else self.default_state for element in contents]
+    def process_contents(self):
+        self.states = [element[2] if len(element)>2 else self.default_state for element in self.contents]
         self.contents.append(self.exit_entry)
-        self.states.append(False) #For the final button, to maintain "len(states) == len(self._contents)"
+        self.states.append(False) #For the final button, to maintain "len(states) == len(self.contents)"
         logging.debug("{}: menu contents processed".format(self.name))
 
     def get_displayed_data(self):
@@ -94,7 +97,7 @@ class Checkbox(BaseListUIElement):
         If element's representation is a list, it returns that list as the rendered entry, trimming its elements down or padding the list with empty strings to match the element's height as defined.
         """
         rendered_entry = []
-        entry_content = self._contents[entry_num][0]
+        entry_content = self.contents[entry_num][0]
         display_columns = self.o.cols
         if type(entry_content) in [str, unicode]:
             if checked:
