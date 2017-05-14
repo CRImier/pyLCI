@@ -19,7 +19,7 @@ def get_mock_input():
 
 def get_mock_output(rows=2, cols=16):
     m = Mock()
-    m.configure_mock(rows=rows, cols=cols)
+    m.configure_mock(rows=rows, cols=cols, type=["char"])
     return m
 
 cb_name = "Test checkbox"
