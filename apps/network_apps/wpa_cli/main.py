@@ -84,7 +84,7 @@ def status_refresher_data():
     state = w_status['wpa_state']
     ip = w_status['ip_address'] if 'ip_address' in w_status else 'None'
     ap = w_status['ssid'] if 'ssid' in w_status else 'None'
-    return [ap.rjust(o.cols), ip.rjust(o.cols)]    
+    return [ap.center(o.cols), ip.center(o.cols)]    
 
 def status_monitor():
     keymap = {"KEY_ENTER":wireless_status, "KEY_KPENTER":wireless_status}

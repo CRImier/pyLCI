@@ -16,6 +16,10 @@ class InputSkeleton():
             self.mapping = mapping
         else:
             self.mapping = self.default_mapping
+        try:
+            self.init_hw()
+        except AtrributeError:
+            print("init_hw function not found!")
         if threaded:
             self.start_thread()
 

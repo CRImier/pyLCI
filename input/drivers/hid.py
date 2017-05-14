@@ -5,7 +5,13 @@ from skeleton import InputSkeleton
 
 def get_input_devices():
     """Returns list of all the available InputDevices"""
-    return [HID(fn) for fn in list_devices()]
+    devices = []
+    for fn in list_devices():
+        try:
+            devices.append(HID(fn))
+        except:
+            pass
+    return devices
 
 def get_path_by_name(name):
     """Gets HID device path by name, returns None if not found."""
@@ -28,10 +34,10 @@ class InputDevice(InputSkeleton):
     """ A driver for HID devices. As for now, supports keyboards and numpads."""
 
     def __init__(self, path=None, name=None, **kwargs):
-        """Initialises the ``InputDevice`` object.  
-                                                                               
-        Kwargs:                                                                  
-                                                                                 
+        """Initialises the ``InputDevice`` object.
+
+        Kwargs:
+
             * ``path``: path to the input device. If not specified, you need to specify ``name``.
             * ``name``: input device name
 
