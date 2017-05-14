@@ -29,8 +29,9 @@ class LumaScreen(BacklightManager):
 
     #buffer = " "
     #redraw_coefficient = 0.5
+    current_image = None
 
-    type = ["char"] 
+    type = ["char", "b&w-pixel"] 
     cursor_enabled = False
     cursor_pos = (0, 0) #x, y
 
@@ -65,6 +66,12 @@ class LumaScreen(BacklightManager):
         self.device.hide()
 
     @activate_backlight_wrapper
+    def display_image(self, image):
+        if self.current_image:
+            del self.current_image #Freeing memory
+        self.device.display(image)    
+        self.current_image = image
+
     def display_data(self, *args):
         """Displays data on display. This function does the actual work of printing things to display.
         
