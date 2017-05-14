@@ -78,8 +78,15 @@ class InputDevice(InputSkeleton):
         GPIO.setup(self.int_pin, GPIO.IN)
         while not self.stop_flag:
             while GPIO.input(self.int_pin) == False and self.enabled:
-                data = self.bus.read_byte(self.addr)
-                self.send_key(self.mapping[data-1])
+                try:
+                    data = self.bus.read_byte(self.addr)
+                except IOError:
+                    print("Can't get data from keypad!")
+                else:
+                    if data != 0:
+                        self.send_key(self.mapping[data-1])
+                    else:
+                        print("Received 0 from keypad though the interrupt has been triggered!")
             sleep(0.1)
 
 if __name__ == "__main__":
