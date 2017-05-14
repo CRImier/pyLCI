@@ -43,7 +43,7 @@ class Screen():
         #TODO: this needs to be adjusted based on window/screen size
         self.charwidth = 6
         self.charheight = 8
-        self.cols = 110/self.charwidth
+        self.cols = 128/self.charwidth
         self.rows = 64/self.charheight
         #with the default 128 pixels wide and 64 pixels high screen
         #implicitly required for the splash screen, this works
