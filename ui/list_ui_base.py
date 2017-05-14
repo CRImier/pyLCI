@@ -5,6 +5,10 @@ import logging
 from copy import copy
 from time import sleep
 from threading import Event
+try:
+    from luma.core.render import canvas as luma_canvas
+except:
+    print("luma.oled library not found, luma_canvas not available")
 
 def to_be_foreground(func):
     """A safety check wrapper so that certain checks don't get called if UI element is
@@ -43,6 +47,13 @@ class BaseListUIElement():
                         "pointer":0}
         self.set_contents(contents)
         self.generate_keymap()
+        self.set_refresh_type()
+
+    def set_refresh_type(self):
+        if "b&w-pixel" in self.o.type and hasattr(self, "refresh_graphical"):
+            self.refresh = self.refresh_graphical
+        elif "char" in self.o.type and hasattr(self, "refresh_char"):
+            self.refresh = self.refresh_char
 
     def before_foreground(self):
         """Hook for child UI elements"""
@@ -259,9 +270,10 @@ class BaseListUIElement():
         logging.debug("First displayed entry is {}".format(self.first_displayed_entry))
         logging.debug("Last displayed entry is {}".format(self.last_displayed_entry))
 
-    def get_displayed_data(self):
-        """Generates the displayed data in a way that the output device accepts. The output of this function can be fed in the o.display_data function.
-        |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed entries' numbers, renders each one of them and concatenates them into one big list which it returns.
+    def get_displayed_text(self):
+        """Generates the displayed data for a character-based output device. The output of this function can be fed to the o.display_data function.
+        |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed entries' numbers, renders each one 
+        of them and concatenates them into one big list which it returns.
         |Doesn't support partly-rendering entries yet."""
         displayed_data = []
         disp_entry_positions = range(self.first_displayed_entry, self.last_displayed_entry+1)
@@ -272,6 +284,29 @@ class BaseListUIElement():
             displayed_data += displayed_entry
         #print("Displayed data: {}".format(displayed_data))
         return displayed_data
+
+    @to_be_foreground
+    def get_displayed_canvas(self, cursor_x=0, cursor_y=None):
+        """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.########## function.
+        |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed entries' numbers, renders each one 
+        of them and concatenates them into one big list which it returns.
+        |Doesn't support partly-rendering entries yet."""
+        charwidth = 6
+        charheight = 8
+        menu_text = self.get_displayed_text()
+        draw = luma_canvas(self.o.device)
+        d = draw.__enter__()
+        if cursor_y is not None:
+            c_x = cursor_x * charwidth
+            c_y = cursor_y * charheight
+            cursor_dims = (c_x-1+2, c_y-1, c_x+charwidth+2, c_y+charheight+1)
+            d.rectangle(cursor_dims, outline="white")
+        for i, line in enumerate(menu_text):
+            y = (i*8 - 1) if i != 0 else 0
+            d.text((2, y), line, fill="white")
+        image = draw.image
+        del d;draw.__exit__(None, None, None);del draw
+        return image
 
     def render_displayed_entry(self, entry_num, active=False):
         """Renders an UI element entry by its position number in self.contents, determined also by display width, self.entry_height and entry's representation type.
@@ -311,16 +346,23 @@ class BaseListUIElement():
         return rendered_entry
 
     @to_be_foreground
-    def refresh(self):
+    def refresh_char(self):
         logging.debug("{}: refreshed data on display".format(self.name))
         self.fix_pointers_on_refresh()
-        displayed_data = self.get_displayed_data()
+        displayed_data = self.get_displayed_text()
         active_line_num = (self.pointer - self.first_displayed_entry)*self.entry_height
-        #Workaround for current state of graphical display library
-        #Not going to work on HD44780-based screens, lines need to be reordered
+        self.o.noCursor()
+        self.o.display_data(*displayed_data)
         self.o.setCursor(active_line_num, 0)
         self.o.cursor()
-        self.o.display_data(*displayed_data)
+
+    @to_be_foreground
+    def refresh_graphical(self):
+        logging.debug("{}: refreshed data on display".format(self.name))
+        self.fix_pointers_on_refresh()
+        active_line_num = (self.pointer - self.first_displayed_entry)*self.entry_height
+        canvas = self.get_displayed_canvas(cursor_y=active_line_num)
+        self.o.display_image(canvas)
 
 
 class BaseListBackgroundableUIElement(BaseListUIElement):
