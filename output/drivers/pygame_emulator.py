@@ -92,7 +92,7 @@ class Screen():
                 logger.debug("line = %s, arg = %s, type(arg)=%s", line, arg, type(arg))
                 #Emulator only:  Passing anything except a string to draw.text will cause PIL to
                 #throw an exception.  Warn 'em here via the log.
-                if not isinstance(arg, str):
+                if not isinstance(arg, basestring):
                     logger.warning(
                         "emulator only likes strings fed to draw.text, prepare for exception")
                 y = (line*self.charheight - 1) if line != 0 else 0

@@ -87,7 +87,7 @@ class TestCheckbox(unittest.TestCase):
         with patch.object(cb, 'idle_loop', side_effect=scenario) as p:
             return_value = cb.activate()
         assert isinstance(return_value, dict)
-        assert all([isinstance(key, str) for key in return_value.keys()])
+        assert all([isinstance(key, basestring) for key in return_value.keys()])
         assert all([isinstance(value, bool) for value in return_value.values()])
 
 

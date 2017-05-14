@@ -29,7 +29,7 @@ class DialogBox():
         self.i = i
         self.o = o
         self.name = name
-        if isinstance(values, str):
+        if isinstance(values, basestring):
             self.values = []
             for char in values:
                 self.values.append(self.default_options[char])

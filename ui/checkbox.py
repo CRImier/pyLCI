@@ -67,7 +67,7 @@ class Checkbox(BaseListUIElement):
     def validate_contents(self, contents):
         assert isinstance(contents, list), "Checkbox contents should be a list"
         for entry in contents:
-            assert isinstance(entry[0], str), "Checkbox entry first element should be a string - got {} instead".format(repr(entry[0]))
+            assert isinstance(entry[0], basestring), "Checkbox entry first element should be a string - got {} instead".format(repr(entry[0]))
             if len(entry) > 2:
                 assert entry[2] in ["accept", True, False], "Checkbox entry third element can only be a boolean or  \"accept\" - got {} instead".format(repr(entry[2]))
 

@@ -203,11 +203,11 @@ class BaseListUIElement():
         #    raise ValueError("UI element 'contents' argument has to be set to a non-empty list!")
         for entry in contents:
             entry_repr = entry[0]
-            if not isinstance(entry_repr, str) and not isinstance(entry_repr, list):
+            if not isinstance(entry_repr, basestring) and not isinstance(entry_repr, list):
                 raise Exception("Entries can be either strings or lists of strings - {} is neither!".format(entry))
             if isinstance(entry_repr, list):
                 for entry_str in entry_repr:
-                    if not isinstance(entry_str, str):
+                    if not isinstance(entry_str, basestring):
                         raise Exception("List entries can only contain strings - {} is not a string!".format(entry_str))
 
     def fix_pointers_on_contents_update(self):
