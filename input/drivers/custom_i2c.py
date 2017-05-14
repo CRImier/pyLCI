@@ -53,10 +53,9 @@ class InputDevice(InputSkeleton):
             addr = int(addr, 16)
         self.addr = addr
         self.int_pin = int_pin
-        self.init_expander()
         InputSkeleton.__init__(self, **kwargs)
 
-    def init_expander(self):
+    def init_hw(self):
         try:
             self.bus.read_byte(self.addr)
         except IOError:
