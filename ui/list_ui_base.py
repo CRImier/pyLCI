@@ -303,7 +303,7 @@ class BaseListUIElement():
             entry = entry[:self.entry_height] #Can't have more arguments in the list argument than maximum entry height
             while len(entry) < self.entry_height: #Can't have less either, padding with empty strings if necessary
                 entry.append('')
-            return [str(entry_str)[:o.cols] for entry_str in entry]
+            return [str(entry_str)[:self.o.cols] for entry_str in entry]
         else:
             #How did this slip past the check on set_contents?
             raise Exception("Entries may contain either strings or lists of strings as their representations")
