@@ -158,7 +158,7 @@ class InputListener():
             driver.start()
         self.listener_thread = Thread(target = self.event_loop, name="InputThread-"+str(self.thread_index), args=(self.thread_index, )) 
         self.thread_index += 1
-        self.listener_thread.daemon = False
+        self.listener_thread.daemon = True
         self.listener_thread.start()
         return True
 
