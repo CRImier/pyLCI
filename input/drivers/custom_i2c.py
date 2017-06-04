@@ -37,7 +37,7 @@ class InputDevice(InputSkeleton):
     "KEY_CAMERA"
     ]
 
-    def __init__(self, addr = 0x12, bus = 1, int_pin = 21, **kwargs):
+    def __init__(self, addr = 0x12, bus = 1, int_pin = 16, **kwargs):
         """Initialises the ``InputDevice`` object.  
                                                                                
         Kwargs:                                                                  
@@ -87,8 +87,9 @@ class InputDevice(InputSkeleton):
                         self.send_key(self.mapping[data-1])
                     else:
                         print("Received 0 from keypad though the interrupt has been triggered!")
+                        sleep(0.1)
             sleep(0.1)
 
 if __name__ == "__main__":
-    id = InputDevice(addr = 0x12, int_pin = 21, threaded=False)
+    id = InputDevice(addr = 0x12, int_pin = 16, threaded=False)
     id.runner()
