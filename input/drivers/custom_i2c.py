@@ -5,6 +5,7 @@ from skeleton import InputSkeleton
 
 class InputDevice(InputSkeleton):
     default_mapping = [
+    "KEY_LEFT",
     "KEY_UP",
     "KEY_DOWN",
     "KEY_RIGHT",
@@ -33,8 +34,7 @@ class InputDevice(InputSkeleton):
     "KEY_VOLUMEDOWN",
     "KEY_PROG1",
     "KEY_PROG2",
-    "KEY_CAMERA",
-    "KEY_LEFT"
+    "KEY_CAMERA"
     ]
 
     def __init__(self, addr = 0x12, bus = 1, int_pin = 21, **kwargs):
