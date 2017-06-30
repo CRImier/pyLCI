@@ -5,7 +5,7 @@ o = None
 
 from time import sleep
 
-from ui import Menu, Printer, MenuExitException, CharArrowKeysInput, Refresher, DialogBox
+from ui import Menu, Printer, MenuExitException, CharArrowKeysInput, Refresher, DialogBox, ellipsize
 
 import wpa_cli
 
@@ -81,11 +81,34 @@ def status_refresher_data():
     try:
         w_status = wpa_cli.connection_status()
     except:
-        return ["wpa_cli fail"]
+        return ["wpa_cli fail".center(o.cols)]
+    #Getting data
     state = w_status['wpa_state']
     ip = w_status['ip_address'] if 'ip_address' in w_status else 'None'
     ap = w_status['ssid'] if 'ssid' in w_status else 'None'
-    return [ap.center(o.cols), ip.center(o.cols)]    
+
+    #Formatting strings for screen width
+    if len(ap) > o.cols: #AP doesn't fit on the screen
+        ap = ellipsize(ap, o.cols)
+    if o.cols >= len(ap) + len("SSID: "):
+        ap = "SSID: "+ap
+    ip_max_len = 15 #3x4 digits + 3 dots
+    if o.cols >= ip_max_len+4: #disambiguation fits on the screen
+        ip = "IP: "+ip
+    data = [ap.center(o.cols), ip.center(o.cols)]    
+
+    #Formatting strings for screen height
+    #Additional state info
+    if o.rows > 2:
+       data.append(("St: "+state).center(o.cols))
+    #Button usage tips - we could have 3 rows by now, can we add at least two more?
+    if o.rows >= 5:
+       empty_rows = o.rows-5 #ip, ap, state and two rows we'll add
+       for i in range(empty_rows): data.append("") #Padding
+       data.append("ENTER: more info".center(o.cols))
+       data.append("RIGHT: rescan".center(o.cols))
+
+    return data
 
 def status_monitor():
     keymap = {"KEY_ENTER":wireless_status, "KEY_KPENTER":wireless_status, "KEY_RIGHT":lambda: scan(False)}
