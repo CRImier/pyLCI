@@ -1,10 +1,21 @@
 [
  {"path":"./s/login.sh",
   "name":"Hotspot login"},
+ {"path":"./s/dmesg.sh",
+  "name":"Last 100 dmesg lines"},
  {"path":"/root/backup.sh",
   "name":"Backup things",
   "args":["--everything", "--now"]},
  {"path":"mount",
   "name":"'mount' with -a",
-  "args":["-a"]}
+  "args":["-a"]},
+ {"path":"dcdc_ctl",
+  "name":"5V DC-DC on",
+  "args":["on"]},
+ {"path":"dcdc_ctl",
+  "name":"5V DC-DC off",
+  "args":["off"]},
+ {"path":"wget",
+  "name":"wget google main page",
+  "args":["http://www.google.com"]}
 ]
