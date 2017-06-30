@@ -63,7 +63,8 @@ def connect_to_network(network_info):
     #No WPS PIN input possible yet and I cannot yet test WPS button functionality.
         
 
-def scan():
+def scan( delay = True ):
+    delay = 1 if delay else 0
     try:
         wpa_cli.initiate_scan()
     except wpa_cli.WPAException as e:
@@ -74,7 +75,7 @@ def scan():
     else:
         Printer("Scanning...", i, o, 1)
     finally:
-        sleep(1)
+        sleep(delay)
 
 def status_refresher_data():
     try:
@@ -87,7 +88,7 @@ def status_refresher_data():
     return [ap.center(o.cols), ip.center(o.cols)]    
 
 def status_monitor():
-    keymap = {"KEY_ENTER":wireless_status, "KEY_KPENTER":wireless_status}
+    keymap = {"KEY_ENTER":wireless_status, "KEY_KPENTER":wireless_status, "KEY_RIGHT":lambda: scan(False)}
     refresher = Refresher(status_refresher_data, i, o, 0.5, keymap, "Wireless monitor")
     refresher.activate()
 
