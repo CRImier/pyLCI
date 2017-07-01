@@ -41,8 +41,13 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
         while message:
            rendered_message.append(message[:screen_width])
            message = message[screen_width:]
-    elif type(message) == list: #It's simple then, just output it as it is.
-       rendered_message = message
+    elif type(message) in (list, tuple): #It's simple then, just output it as it is.
+       rendered_message = list(message)
+       for element in message:
+           if not isinstance(element, basestring):
+               raise ValueError("Found {} in message! {}".format(type(element), element))
+    else:
+       raise ValueError("{} can't be passed to Printer! {}".format(type(message), message))
 
     #Now onto calculating the parameters and displaying the message screen-by-screen
     screen_rows = o.rows
