@@ -26,7 +26,7 @@ class BaseListUIElement():
     name = ""
     first_displayed_entry = 0
     last_displayed_entry = None
-    exit_entry = ["Exit", "exit"]
+    exit_entry = ["Back", "exit"]
 
     def __init__(self, contents, i, o, name=None, entry_height=1, append_exit=True, exitable=True, scrolling=True, keymap=None):
         self.i = i
