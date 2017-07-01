@@ -1,7 +1,7 @@
 from time import sleep
 
 def Printer(message, i, o, sleep_time=1, skippable=True):
-    """Outputs string data on display as soon as it's called.                                          
+    """Outputs string data on display as soon as it's called.
                                                                                
     Args:                                                                    
                                                                              
@@ -25,7 +25,7 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
         Printer.exit_flag = True
 
     #If skippable option is enabled, etting input callbacks on keys we use for skipping screens
-    if i is not None: #Can be on boot or whenever
+    if i is not None: #On boot, None is passed to print debugging messages when i is not yet initialized
         i.stop_listen()
         i.clear_keymap()
         if skippable:
@@ -36,7 +36,7 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
 
     #Now onto rendering the message
     rendered_message = []
-    if type(message) in (str, unicode): #Dividing the string into screen-sized chunks
+    if isinstance(message, basestring): #Dividing the string into screen-sized chunks
         screen_width = o.cols
         while message:
            rendered_message.append(message[:screen_width])
