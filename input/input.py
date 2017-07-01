@@ -1,14 +1,16 @@
 from threading import Thread, Event
+from traceback import print_exc, format_exc
+from time import sleep
 import importlib
 import atexit
-from time import sleep
 import Queue
+import sys
 
 listener = None
 
 class CallbackException(Exception):
-    def __init__(self, code=0, message=""):
-        self.code = code
+    def __init__(self, errno=0, message=""):
+        self.errno = errno
         self.message = message
 
 class InputListener():
@@ -142,15 +144,11 @@ class InputListener():
             else:
                 callback()
         except Exception as e:
-            self.handle_callback_exception(key, callback, e)
-        finally: #this finally allows to get a pdb prompt while still being able to operate the interface
+            print("Exception {} caused by callback {} when key {} was received".format(e, callback, key))
+            print(format_exc())
+        finally:
+            print("Returning")
             return
-
-    def handle_callback_exception(self, key, callback, e):
-        print("Exception caused by callback {} when key {} was received".format(callback, key))
-        print("Exception: {}".format(e))
-        #raise e
-        import pdb;pdb.set_trace()
 
     def listen(self):
         """Start event_loop in a thread. Nonblocking."""

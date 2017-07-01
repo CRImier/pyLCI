@@ -1,4 +1,6 @@
 import logging
+from traceback import print_exc
+
 from list_ui_base import BaseListBackgroundableUIElement, to_be_foreground
 
 
@@ -83,6 +85,8 @@ class Menu(BaseListBackgroundableUIElement):
                 entry[1]()
             except MenuExitException:
                 self.exit_exception = True
+            except:
+                print_exc()
             finally:
                 if self.exit_exception:
                     self.deactivate()
