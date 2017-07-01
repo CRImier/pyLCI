@@ -147,7 +147,6 @@ class InputListener():
             print("Exception {} caused by callback {} when key {} was received".format(e, callback, key))
             print(format_exc())
         finally:
-            print("Returning")
             return
 
     def listen(self):
