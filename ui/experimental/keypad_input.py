@@ -90,7 +90,8 @@ class NumberKeypadInputLayer():
         for key in self.keymap:
             if isinstance(self.keymap[key], list):
                 callback = self.keymap[key][0]
-                self.keymap[key] = lambda: callback(self.value)
+                arguments = self.keymap[key][1:]
+                self.keymap[key] = self.wrap_external( lambda: callback( *(getattr(self, arg_str) for arg_str in arguments) ) )
         self.keymap.update({
         "KEY_F1":lambda: self.deactivate(),
         "KEY_F2":lambda: self.backspace()
@@ -100,9 +101,17 @@ class NumberKeypadInputLayer():
     def set_keymap(self):
         self.i.stop_listen()
         self.i.clear_keymap()
-        self.i.keymap = self.keymap
+        self.i.set_keymap(self.keymap)
         self.i.set_streaming(self.process_keycode)
         self.i.listen()
+
+    def wrap_external(self, func):
+        def wrapper(*args, **kwargs):
+            rvalue = func(*args, **kwargs)
+            self.set_keymap()
+            self.refresh()
+            return rvalue
+        return wrapper
 
     def get_displayed_data(self):
         """Experimental: not meant for 2x16 displays
@@ -120,7 +129,6 @@ class NumberKeypadInputLayer():
         half_line_length = screen_cols/2
         last_line = "Cancel".center(half_line_length) + "Erase".center(half_line_length)
         displayed_data.append(last_line)
-        print(displayed_data)
         return displayed_data
 
     @to_be_foreground

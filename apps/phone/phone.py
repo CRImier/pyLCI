@@ -1,7 +1,9 @@
 from threading import Event, Thread, Timer
 from Queue import Queue, Empty
+from datetime import datetime
 from serial import Serial
 from time import sleep
+from copy import copy
 import logging
 import string
 import shlex
@@ -28,22 +30,51 @@ class ATError(Exception):
         self.expected = expected
         message = "Expected {}, got {}".format(expected, repr(received))
         Exception.__init__(self, message)
+
         self.received = received
 
 class Phone():
-    def __init__(self, modem):
+    
+    modem = None
+    modem_state = {}
+    missed_calls = []
+
+    def __init__(self):
         pass
+
+    def attach_modem(self, modem):
+        if self.modem is not None:
+            self.modem.update_state_cb = None
+        self.modem = modem
+        self.modem.update_state_cb = self.state_update_cb
+        self.modem_state = copy(self.modem.status)
+        print(self.modem_state)
+
+    def state_update_cb(self, key, value):
+        self.modem_state[key] = value
+        if key == "state":
+            if value == "incoming":
+                self.signal_incoming_call()
+            elif value == "talking":
+                self.signal_call_started()
+            elif value == "missed_call":
+                callerid = self.modem.current_callerid
+                callerid["timestamp"] = datetime.now.strftime("%H:%M:%S %Y-%m-%d")
+                self.missed_calls.append(callerid)
 
     def get_status(self):
-        pass
+        return self.modem_state
     
     def send_message(self, recipient, text):
-        pass
+        raise NotImplementedError
 
     def get_caller_id(self):
-        pass
+        return self.modem.current_callerid
 
     def get_call_duration(self):
+        pass
+
+    def signal_incoming_call(self):
         pass
 
     def signal_call_started(self):
@@ -59,12 +90,18 @@ class Phone():
         pass
 
     def get_hardware_info(self):
-        return modem.get_manufacturer(), modem.get_model(), modem.get_imei()
+        return self.modem.get_manufacturer(), self.modem.get_model(), self.modem.get_imei()
+
+    def __getattr__(self, name):
+        if hasattr(self.modem, name):
+            return getattr(self.modem, name)
+        else:
+            raise AttributeError
 
 
 class Modem():
     #Serial port settings
-    read_buffer_size = 1000
+    read_buffer_size = 1024
 
     #Some constants
     linesep = '\r\n'
@@ -78,10 +115,10 @@ class Modem():
     status = {"state":"idle",
               "type":None}
 
-    #The last Caller ID that was received from the modem is stored
-    #It's cleared once the call ends, and once it's set it looks like this:
-    #last_callerid = {"number":"something", "type":"unknown"/"international"/"national"/"network-specific"}
-    last_callerid = None
+    #The Caller ID variable - is set when a call is received and cleard when a call ends
+    #When set, it looks like this:
+    #current_callerid = {"number":"something", "type":"unknown"/"international"/"national"/"network-specific"}
+    current_callerid = None
 
     def __init__(self, serial_path="/dev/ttyAMA0", serial_timeout=0.5, read_timeout=0.2):
         self.serial_path = serial_path
@@ -111,7 +148,11 @@ class Modem():
    #Functions that the user will be calling
 
     def call(self, number):
-        return self.at_command("ATD{};".format(number))
+         #ATD in CLCC is going to generate CLCC data straight away,
+         #so that's going into the queue to be processed separately
+         response = self.at_command("ATD{};".format(number), nook=True)
+         self.queue_unexpected_data(response)
+         return True
 
     def ussd(self, string):
         result = self.at_command('AT+CUSD=1,"{}"'.format(string))
@@ -127,9 +168,20 @@ class Modem():
     def pprint_status(self):
         print("--------------------------")
         print("New state: {}".format(self.status["state"]))
-        if self.last_callerid:
-            print("Caller ID: {}, type: {}".format(self.last_callerid["number"],
-                                                   self.last_callerid["type"]))
+        if self.current_callerid:
+            print("Caller ID: {}, type: {}".format(self.current_callerid["number"],
+                                                   self.current_callerid["type"]))
+
+    def print_callerid(self, callerid):
+        if self.current_callerid:
+            print("Incoming: {} ({})".format(self.current_callerid["number"], self.current_callerid["type"]))
+
+    #Call state set function - that also calls a callback 
+
+    def set_state(self, key, value):
+        self.status[key] = value
+        if callable(self.update_state_cb):
+            self.update_state_cb(key, value)
 
     #Callbacks that change the call state and clean state variables
     #Not to be overridden directly as they might have desirable side effects
@@ -140,51 +192,51 @@ class Modem():
     #  "0":on_talking,
     def on_talking(self):
         #Call answered, voice comms established
-        self.status["state"] = "talking"
-        self.pprint_status()
+        self.set_state("state", "talking")
+        #self.pprint_status()
 
     #  "1":on_held,
     def on_held(self):
         #Held call signal
         if self.status["type"] == "incoming":
-            self.status["state"] = "held"
+            self.set_state("state", "held")
         else:
-            self.status["state"] = "holding"
-        self.pprint_status()
+            self.set_state("state", "holding")
+        #self.pprint_status()
 
     #  "2":on_dialing,
     def on_dialing(self):
         assert(self.status["type"] == "outgoing")
-        self.status["state"] = "dialing"
-        self.pprint_status()
+        self.set_state("state", "dialing")
+        #self.pprint_status()
 
     #  "3":on_alerting,
     def on_alerting(self):
         assert(self.status["type"] == "outgoing")
-        self.status["state"] = "alerting"
-        self.pprint_status()
+        self.set_state("state", "alerting")
+        #self.pprint_status()
 
     #  "4":on_incoming,
     def on_incoming(self):
         assert(self.status["type"] == "incoming")
-        self.status["state"] = "incoming_call"
-        self.pprint_status()
+        self.set_state("state", "incoming_call")
+        #self.pprint_status()
 
     #  "5":on_waiting,
     def on_waiting(self):
         assert(self.status["type"] == "incoming")
-        self.status["state"] = "waiting"
-        self.pprint_status()
+        self.set_state("state", "incoming")
+        #self.pprint_status()
 
     #  "6":on_disconnect
     def on_disconnect(self, incoming=True):
         #Either finished or missed call
         if self.status["type"] == "incoming" and self.status["state"] not in ["held", "talking"]:
-            self.status["state"] = "missed_call"
+            self.set_state("state", "missed_call")
         else:
-            self.status["state"] = "finished"
+            self.set_state("state", "finished")
         Timer(3, self.on_idle).start()
-        self.pprint_status()
+        #self.pprint_status()
 
     def on_idle(self):
         #Cleans up variables and sets state to "idle"
@@ -192,9 +244,10 @@ class Modem():
         #Safety check to ensure this doesn't run during a call 
         #if call happens right after previous call ends:
         if self.status["state"] not in ["active_call", "held"]:
-            self.last_callerid = None
-            self.status["state"] = "idle"
-            self.pprint_status()
+            self.current_callerid = None
+            self.set_state("state", "idle")
+            self.set_state("type", None)
+            #self.pprint_status()
 
     #SMS callbacks
 
@@ -217,6 +270,7 @@ class Modem():
             header = output[i*2]
             if not header.startswith(cmgl_header):
                 print("Line presumed to be CMGL doesn't start with CMGL header!")
+                continue
             id, x, x, pdu_len = header[len(cmgl_header):].split(",")
             smsc_pdu_str = output[(i*2)+1]
             self.decode_message(smsc_pdu_str, pdu_len, id)
@@ -302,7 +356,8 @@ class Modem():
             self.set_callerid(elements[5], elements[6])
         call_type = elements[1]
         call_status = elements[2]
-        self.status["type"] = "incoming" if call_type=="1" else "outgoing" 
+        new_state = "incoming" if call_type=="1" else "outgoing" 
+        self.set_state("type", new_state)
         self.clcc_mapping[call_status](self)
 
     def process_clip(self, line):
@@ -333,7 +388,7 @@ class Modem():
         else:
             type = clip_type_mapping[type_id]
         #Setting status variable
-        self.last_callerid = {"number":number.strip('\"'), "type":type}
+        self.current_callerid = {"number":number.strip('\"'), "type":type}
         
     clcc_mapping = { 
       "0":on_talking,
@@ -425,6 +480,8 @@ class Modem():
             #We should ignore some messages if we're using CLIP
             #As those messages will appear anyway, but processing them 
             #would be redundant. It could be much prettier, though.
+            if line == "OK":
+                continue
             if line == "RING":
                 if not self.clcc_enabled:
                     self.on_ring()

@@ -1,6 +1,7 @@
 _ordering = [
 "personal", 
-"network_apps", 
+"network_apps",
+"phone",
 "privacy_apps",
 "system_apps", 
 "media_apps", 
