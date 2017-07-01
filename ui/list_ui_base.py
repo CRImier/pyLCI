@@ -235,8 +235,9 @@ class BaseListUIElement():
         |Then, it appends a single "Exit" entry at the end of menu contents. It makes dynamically appending entries to menu easier and makes sure there's only one "Exit" callback, at the bottom of the menu."""
         if self.append_exit:
             #filtering possible duplicate exit entries
-            while self.exit_entry in self.contents:
-                self.contents.remove(self.exit_entry)
+            for entry in self.contents:
+                if len(entry) > 1 and entry[1] == 'exit':
+                    self.contents.remove(entry)
             self.contents.append(self.exit_entry)
         logging.debug("{}: contents processed".format(self.name))
 
