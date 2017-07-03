@@ -34,12 +34,14 @@ class LumaScreen(BacklightManager):
     cursor_enabled = False
     cursor_pos = (0, 0) #x, y
 
-    def __init__(self, hw = "spi", address = 0, debug = False, buffering = True, **kwargs):
+    def __init__(self, hw = "spi", port=None, address = 0, debug = False, buffering = True, **kwargs):
         if hw == "spi":
-            self.serial = spi(port=0, device=address, bcm_DC=6, bcm_RST=5)
+            if port is None: port = 0
+            self.serial = spi(port=port, device=address, bcm_DC=6, bcm_RST=5)
         elif hw == "i2c":
+            if port is None: port = 1
             if isinstance(address, basestring): address = int(address, 16)
-            self.serial = i2c(port=1, address=address)
+            self.serial = i2c(port=port, address=address)
         else:
             raise ValueError("Unknown interface type: {}".format(hw))
         self.address = address
