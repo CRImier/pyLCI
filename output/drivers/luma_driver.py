@@ -38,7 +38,7 @@ class LumaScreen(BacklightManager):
         if hw == "spi":
             self.serial = spi(port=0, device=address, bcm_DC=6, bcm_RST=5)
         elif hw == "i2c":
-            if isinstance(address, str): address = int(address, 16)
+            if isinstance(address, basestring): address = int(address, 16)
             self.serial = i2c(port=1, address=address)
         else:
             raise ValueError("Unknown interface type: {}".format(hw))

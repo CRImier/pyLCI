@@ -109,6 +109,8 @@ def change_adjust_amount():
 def init_app(input, output):
     global i, o, callback
     i = input; o = output
+    i.set_nonmaskable_callback("KEY_VOLUMEUP", plus_volume)
+    i.set_nonmaskable_callback("KEY_VOLUMEDOWN", minus_volume)
     main_menu_contents = [ 
     ["Increase volume", plus_volume],
     ["Decrease volume", minus_volume],

@@ -27,8 +27,12 @@ def call_external(script_list, shell=False):
             Printer("File not found!", i, o, 1)
         elif e.errno == 13:
             Printer(["Permission", "denied!"], i, o, 1)
+        elif e.errno == 8:
+            Printer(["Unknown format,", "forgot header?"], i, o, 1)
         else:
-            Printer("Unknown error!", i, o, 1)
+            error_data = ["Unknown error", ""]
+            error_data += ffs(repr(e), o.cols)
+            Printer(error_data, i, o, 1)
         output = ""
     except CalledProcessError as e:
         Printer(["Failed with", "code {}".format(e.returncode)], i, o, 1)
