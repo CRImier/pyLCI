@@ -1,19 +1,18 @@
 {
  "input":
-    [{
-      "driver":"pcf8574",
-      "kwargs":
-       {
-        "addr":"0x3f",
-        "int_pin":4
-       }
-    }],
+ [
+  {
+   "driver":"custom_i2c"
+  }
+ ],
  "output":
-    [{
-      "driver":"pcf8574",
-      "kwargs":
-      {
-        "addr":"0x27"
-      }
-    }]
+ [
+  {
+   "driver":"sh1106", 
+   "kwargs":
+   {
+    "backlight_interval":10
+   }
+  }
+ ]
 }
