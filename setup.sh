@@ -4,8 +4,8 @@ if (( $EUID != 0 )); then
     SUDO='sudo'
 fi
 [ -f config.json ] || cp config.json.example config.json
-$SUDO apt-get install python python-pip python-smbus
-$SUDO pip install luma.oled
+$SUDO apt-get install python python-pip python-smbus python-dev libjpeg-dev python-serial
+$SUDO pip install luma.oled stem
 $SUDO mkdir -p $INSTALL_DIR
 $SUDO cp ./. $INSTALL_DIR -R
 cd $INSTALL_DIR
