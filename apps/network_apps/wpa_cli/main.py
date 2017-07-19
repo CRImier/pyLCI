@@ -4,6 +4,8 @@ i = None
 o = None
 
 from time import sleep
+from threading import Thread
+from traceback import format_exc
 
 from ui import Menu, Printer, MenuExitException, CharArrowKeysInput, Refresher, DialogBox, ellipsize
 
@@ -62,11 +64,32 @@ def connect_to_network(network_info):
         raise MenuExitException
     #No WPS PIN input possible yet and I cannot yet test WPS button functionality.
         
+etdn_thread = None #Well-hidden global
 
-def scan( delay = True ):
+def enable_temp_disabled_networks():
+    global etdn_thread
+    if not etdn_thread:
+        etdn_thread = Thread(target=etdn_runner)
+        etdn_thread.daemon = True
+        etdn_thread.start()
+
+def etdn_runner():
+    global etdn_thread
+    saved_networks = wpa_cli.list_configured_networks()
+    for network in saved_networks:
+        if network["flags"] == "[TEMP-DISABLED]":
+            print("Network {} is temporarily disabled, re-enabling".format(network["ssid"]))
+            try:
+                enable_network(network["network_id"])
+            except:
+                print(format_exc())
+    etdn_thread = None
+
+def scan(delay = True):
     delay = 1 if delay else 0
     try:
         wpa_cli.initiate_scan()
+        enable_temp_disabled_networks()
     except wpa_cli.WPAException as e:
         if e.code=="FAIL-BUSY":
             Printer("Still scanning...", i, o, 1)
@@ -196,7 +219,7 @@ def saved_network_menu(network_info):
     ["BSSID", lambda x=bssid: Printer(x, i, o, 5, skippable=True)]]
     network_info_menu = Menu(network_info_contents, i, o, "Wireless network info", catch_exit=False)
     network_info_menu.activate() 
-    #After menu exits, we'll request the status again and update the 
+    #After menu exits, we'll request the status again and update the network list
     saved_networks = wpa_cli.list_configured_networks()
 
 def select_network(id):
