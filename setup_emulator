@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+
+import subprocess
+
+from helpers import (read_config, write_config)
+
+CONFIG_PATH = 'config.json'
+
+try:
+    config = read_config(CONFIG_PATH)
+except:
+    config = dict()
+
+config['input'] = [{'driver': 'pyygame_input'}]
+config['output'] = [{"driver":"pygame_emulator"}]
+
+write_config(config, CONFIG_PATH)
+
+# Phone app will try to connect to a modem.
+# The emulator environment is unlikely to have one
+# In the future, the modem could be emulated.
+# Until then, the app will likely have to be 
+# disabled on emulators
+subprocess.call('touch apps/phone/do_not_load'.split())
