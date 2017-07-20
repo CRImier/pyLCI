@@ -6,6 +6,11 @@ from time import sleep
 def splash(i, o):
     image = PIL.Image.open("splash.png").convert('L')
     image = invert(image)
-    image = image.convert(o.device.mode)
-    o.device.display(image)
+    #FIXME:
+    # need a first-class API call on the display to do this
+    # Moving the emulator out of proc broke this feature (can't access
+    # the 'device' property anymore
+
+#    image = image.convert(o.device.mode)
+#    o.device.display(image)
 
