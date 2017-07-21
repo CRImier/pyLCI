@@ -81,5 +81,5 @@ def init_app(input, output):
     i = input; o = output
 
 def callback():
-    Menu(main_menu_contents, i, o, "I2C tools menu").activate()
+    Menu(main_menu_contents, i, o, "UPnP/SSDP app menu").activate()
 
