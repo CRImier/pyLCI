@@ -194,7 +194,9 @@ class BaseListUIElement():
     def set_contents(self, contents):
         """Sets the UI element contents and triggers pointer recalculation."""
         self.validate_contents(contents)
-        self.contents = contents
+        #Copy-ing the contents list is necessary because it can be modified 
+        #by UI elements that are based on this class
+        self.contents = copy(contents)
         self.process_contents()
         self.fix_pointers_on_contents_update()
 
