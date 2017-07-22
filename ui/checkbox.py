@@ -52,6 +52,10 @@ class Checkbox(BaseListUIElement):
         else:
             return None
 
+    def before_foreground():
+        #Protecting from a bug that might happen where Checkbox object is reused multiple times
+        self.accepted = False
+
     @to_be_foreground
     def select_entry(self):
         """ Changes the current element's state to the opposite.
