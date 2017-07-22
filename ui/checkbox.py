@@ -43,8 +43,8 @@ class Checkbox(BaseListUIElement):
         """
         self.default_state = kwargs.pop("default_state") if "default_state" in kwargs else False
         self.final_button_name = kwargs.pop("final_button_name") if "final_button_name" in kwargs else "Accept"
-        BaseListUIElement.__init__(self, *args, **kwargs)
         self.exit_entry[0] = self.final_button_name
+        BaseListUIElement.__init__(self, *args, **kwargs)
 
     def get_return_value(self):
         if self.accepted:
