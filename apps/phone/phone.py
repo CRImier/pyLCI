@@ -59,7 +59,7 @@ class Phone():
                 self.signal_call_started()
             elif value == "missed_call":
                 callerid = self.modem.current_callerid
-                callerid["timestamp"] = datetime.now.strftime("%H:%M:%S %Y-%m-%d")
+                callerid["timestamp"] = datetime.now().strftime("%H:%M:%S %Y-%m-%d")
                 self.missed_calls.append(callerid)
 
     def get_status(self):
