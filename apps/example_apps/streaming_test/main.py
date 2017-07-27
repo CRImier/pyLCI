@@ -34,3 +34,5 @@ def callback():
     refresher = Refresher(get_keys, i, o, 1, name="Key monitor")
     refresher.keymap.pop("KEY_LEFT") #Removing deactivate callback to show KEY_LEFT
     PrettyPrinter("To exit this app, press the same key 3 times", i, o)
+    refresher.activate()
+    i.remove_streaming()
