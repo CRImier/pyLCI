@@ -1,4 +1,5 @@
 from time import sleep
+from funcs import format_for_screen as ffs
 
 def Printer(message, i, o, sleep_time=1, skippable=True):
     """Outputs string data on display as soon as it's called.
@@ -68,3 +69,6 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
             if Printer.skip_screen_flag:
                 break #Going straight to the next screen
             sleep(poll_period)
+
+def PrettyPrinter(text, i, o, *args, **kwargs):
+    Printer(ffs(text, o.cols), i, o, *args, **kwargs)
