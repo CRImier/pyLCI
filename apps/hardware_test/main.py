@@ -94,13 +94,11 @@ def callback():
         pygame.mixer.music.play()
         continue_event = Event()
         def restart():
-            print("Restarting")
             pygame.mixer.music.stop()
             pygame.mixer.init()
             pygame.mixer.music.load(music_path)
             pygame.mixer.music.play()
         def stop():
-            print("Stopping")
             pygame.mixer.music.stop()
             continue_event.set()
         i.clear_keymap()
