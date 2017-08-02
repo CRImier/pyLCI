@@ -45,11 +45,14 @@ def callback():
             PrettyPrinter("Keypad does not respond!", i, o)
         else:
             PrettyPrinter("Keypad found!", i, o)
+        #Checking IO expander
+        expander_ok = False
         try:
             bus.read_byte(0x20)
         except IOError as e:
             if e.errno == 16:
                 PrettyPrinter("IO expander OK!", i, o)
+                expander_ok = True
             elif e.errno == 121:
                 PrettyPrinter("IO expander not found!", i, o)
         else:
@@ -63,25 +66,27 @@ def callback():
         import key_test
         key_test.init_app(i, o)
         key_test.callback()
-        #Testing charging detection
-        PrettyPrinter("Testing charger detection", i, o, 1)
-        from zerophone_hw import is_charging
-        if is_charging():
-            PrettyPrinter("Charging, unplug charger to continue", i, o, 1)
-            while is_charging():
-                sleep(1)
-        else:
-            PrettyPrinter("Not charging, plug charger to continue", i, o, 1)
-            while not is_charging():
-                sleep(1)
-        #Testing the RGB LED
-        PrettyPrinter("Testing RGB LED", i, o, 1)
-        from zerophone_hw import RGB_LED
-        led = RGB_LED()
-        for color in ["red", "green", "blue"]:
-            led.set_color(color)
-            Printer(color.center(o.cols), i, o, 3)
-        led.set_color("none")
+        #Following things depend on I2C IO expander,
+        #which might not be present:
+            #Testing charging detection
+            PrettyPrinter("Testing charger detection", i, o, 1)
+            from zerophone_hw import is_charging
+            if is_charging():
+                PrettyPrinter("Charging, unplug charger to continue", i, o, 1)
+                while is_charging():
+                    sleep(1)
+            else:
+                PrettyPrinter("Not charging, plug charger to continue", i, o, 1)
+                while not is_charging():
+                    sleep(1)
+            #Testing the RGB LED
+            PrettyPrinter("Testing RGB LED", i, o, 1)
+            from zerophone_hw import RGB_LED
+            led = RGB_LED()
+            for color in ["red", "green", "blue"]:
+                led.set_color(color)
+                Printer(color.center(o.cols), i, o, 3)
+            led.set_color("none")
         #Testing audio jack sound
         PrettyPrinter("Testing audio jack", i, o, 1)
         if not downloaded.isSet():
