@@ -65,7 +65,7 @@ def callback():
         key_test.callback()
         #Testing charging detection
         PrettyPrinter("Testing charger detection", i, o, 1)
-        from zerophone import is_charging
+        from zerophone_hw import is_charging
         if is_charging():
             PrettyPrinter("Charging, unplug charger to continue", i, o, 1)
             while is_charging():
@@ -76,7 +76,7 @@ def callback():
                 sleep(1)
         #Testing the RGB LED
         PrettyPrinter("Testing RGB LED", i, o, 1)
-        from zerophone import RGB_LED
+        from zerophone_hw import RGB_LED
         led = RGB_LED()
         for color in ["red", "green", "blue"]:
             led.set_color(color)
