@@ -68,6 +68,7 @@ def callback():
         key_test.callback()
         #Following things depend on I2C IO expander,
         #which might not be present:
+        if expander_ok:
             #Testing charging detection
             PrettyPrinter("Testing charger detection", i, o, 1)
             from zerophone_hw import is_charging
