@@ -15,7 +15,7 @@ o = None
 #Code from downloading a song from http://freemusicarchive.org/
 downloaded = Event()
 music_filename = "test.mp3"
-url = "https://freemusicarchive.org/music/download/cb244f71bd004b784fbd31a357c4f717c358cfc9"
+url = "http://wiki.zerophone.org/images/b/b5/Otis_McMusic.mp3"
 base_dir = os.path.dirname(sys.modules[__name__].__file__)
 music_path = os.path.join(base_dir, music_filename)
 
@@ -93,6 +93,8 @@ def callback():
         if not downloaded.isSet():
             PrettyPrinter("Audio jack test music not yet downloaded, waiting...", i, o)
             downloaded.wait()
+        disclaimer = ["Track used:" "", "Otis McDonald", "-", "Otis McMusic", "YT AudioLibrary"]
+        Printer([s.center(o.cols) for s in disclaimer], i, o, 3)
         PrettyPrinter("Press C1 to restart music, C2 to continue testing", i, o)
         import pygame
         pygame.mixer.init()
