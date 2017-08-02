@@ -70,16 +70,23 @@ def callback():
         #which might not be present:
         if expander_ok:
             #Testing charging detection
+            bypass = Event()
+            bypass.clear()
             PrettyPrinter("Testing charger detection", i, o, 1)
             from zerophone_hw import is_charging
             if is_charging():
-                PrettyPrinter("Charging, unplug charger to continue", i, o, 1)
-                while is_charging():
+                PrettyPrinter("Charging, unplug charger to continue \n Enter to bypass", i, o, 0)
+                i.set_callback("KEY_ENTER", lambda: bypass.set())
+                #Printer sets its own callbacks, so we need to set
+                #our callback after using Printer
+                while is_charging() or not bypass.isSet():
                     sleep(1)
             else:
-                PrettyPrinter("Not charging, plug charger to continue", i, o, 1)
-                while not is_charging():
+                PrettyPrinter("Not charging, plug charger to continue \n Enter to bypass", i, o, 0)
+                i.set_callback("KEY_ENTER", lambda: bypass.set())
+                while not is_charging() or not bypass.isSet():
                     sleep(1)
+            i.remove_callback("KEY_ENTER")
             #Testing the RGB LED
             PrettyPrinter("Testing RGB LED", i, o, 1)
             from zerophone_hw import RGB_LED
@@ -112,6 +119,7 @@ def callback():
         i.clear_keymap()
         i.set_callback("KEY_F1", restart)
         i.set_callback("KEY_F2", stop)
+        i.set_callback("KEY_ENTER", stop)
         continue_event.wait()
         #Self-test passed, it seems!
                 
