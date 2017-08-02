@@ -79,12 +79,12 @@ def callback():
                 i.set_callback("KEY_ENTER", lambda: bypass.set())
                 #Printer sets its own callbacks, so we need to set
                 #our callback after using Printer
-                while is_charging() or not bypass.isSet():
+                while is_charging() and not bypass.isSet():
                     sleep(1)
             else:
                 PrettyPrinter("Not charging, plug charger to continue \n Enter to bypass", i, o, 0)
                 i.set_callback("KEY_ENTER", lambda: bypass.set())
-                while not is_charging() or not bypass.isSet():
+                while not is_charging() and not bypass.isSet():
                     sleep(1)
             i.remove_callback("KEY_ENTER")
             #Testing the RGB LED
