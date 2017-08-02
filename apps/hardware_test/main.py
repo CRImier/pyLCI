@@ -49,9 +49,9 @@ def callback():
             bus.read_byte(0x20)
         except IOError as e:
             if e.errno == 16:
-                PrettyPrinter("IO expander not found!", i, o)
-            elif e.errno == 121:
                 PrettyPrinter("IO expander OK!", i, o)
+            elif e.errno == 121:
+                PrettyPrinter("IO expander not found!", i, o)
         else:
             PrettyPrinter("IO expander driver not loaded!", i, o)
         #Launching splashscreen
