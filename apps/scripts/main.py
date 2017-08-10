@@ -8,7 +8,7 @@ from time import sleep
 import os, sys, shlex
 
 from helpers.config_parse import read_config
-from ui import Menu, Printer, DialogBox, format_for_screen as ffs, PathPicker, CharArrowKeysInput
+from ui import Menu, Printer, DialogBox, format_for_screen as ffs, PathPicker, NumpadCharInput
 
 base_dir = os.path.dirname(sys.modules[__name__].__file__)
 config_path = os.path.join(base_dir, config_filename)
@@ -50,13 +50,13 @@ def call_by_path():
     path = PathPicker("/", i, o).activate()
     if path is None:
         return
-    args = CharArrowKeysInput(i, o, message="Arguments:", name="Script argument input").activate()
+    args = NumpadCharInput(i, o, message="Arguments:", name="Script argument input").activate()
     if args is not None:
         path = path+" "+args
     call_external(path, shell=True)
         
 def call_command():
-    command = CharArrowKeysInput(i, o, message="Command:", name="Script command input").activate()
+    command = NumpadCharInput(i, o, message="Command:", name="Script command input").activate()
     if command is None:
         return
     call_external(command, shell=True)

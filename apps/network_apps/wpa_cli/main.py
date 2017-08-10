@@ -7,7 +7,7 @@ from time import sleep
 from threading import Thread
 from traceback import format_exc
 
-from ui import Menu, Printer, MenuExitException, CharArrowKeysInput, Refresher, DialogBox, ellipsize
+from ui import Menu, Printer, MenuExitException, NumpadCharInput, Refresher, DialogBox, ellipsize
 
 import wpa_cli
 
@@ -49,7 +49,7 @@ def connect_to_network(network_info):
         raise MenuExitException
     #Offering to enter a password
     else:
-        input = CharArrowKeysInput(i, o, message="Password:", name="WiFi password enter UI element")
+        input = NumpadCharInput(i, o, message="Password:", name="WiFi password enter UI element")
         password = input.activate()
         if password is None:
             return False
@@ -263,7 +263,7 @@ def remove_network(id):
         raise MenuExitException
 
 def set_password(id):    
-    input = CharArrowKeysInput(i, o, message="Password:", name="WiFi password enter UI element")
+    input = NumpadCharInput(i, o, message="Password:", name="WiFi password enter UI element")
     password = input.activate()
     if password is None:
         return False
