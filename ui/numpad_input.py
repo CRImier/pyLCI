@@ -1,4 +1,5 @@
 from time import sleep
+from copy import copy
 from math import ceil
 import logging
 from functools import wraps
@@ -66,18 +67,18 @@ class NumpadCharInput():
 
     """
     
-    mapping = {"1":"1!",
-               "2":"abcABC2",
-               "3":"defDEF3",
-               "4":"ghiGHI4",
-               "5":"jklJKL5",
-               "6":"mnoMNO6",
-               "7":"pqrsPQRS7",
-               "8":"tuvTUV8",
-               "9":"wxyzWXYZ9",
-               "0":" 0+",
-               "*":"*",
-               "#":"#"
+    default_mapping = {"1":"1!?$&|\\",
+               "2":"abc2ABC",
+               "3":"def3DEF",
+               "4":"ghi4GHI",
+               "5":"jkl5JKL",
+               "6":"mno6MNO",
+               "7":"pqrs7PQRS",
+               "8":"tuv8TUV",
+               "9":"wxyz9WXYZ",
+               "0":" 0+_:-;=%",
+               "*":"*.,'\"^",
+               "#":"#/()[]<>"
               }
     
     in_foreground = False
@@ -91,7 +92,7 @@ class NumpadCharInput():
     current_letter_num = 0
     __locked_name__ = None
 
-    def __init__(self, i, o, message="", value="", name="NumpadCharInput", debug=False):
+    def __init__(self, i, o, message="", value="", name="NumpadCharInput", mapping=None, debug=False):
         """Initialises the NumpadCharInput object.
         
         Args:
@@ -106,6 +107,10 @@ class NumpadCharInput():
         self.debug = debug
         self.value = value
         self.position = len(self.value)
+        if mapping is not None:
+            self.mapping = copy(mapping)
+        else:
+            self.mapping = copy(self.default_mapping)
         self.keymap = {}
         self.generate_keymap()
         self.value_lock = Lock()
