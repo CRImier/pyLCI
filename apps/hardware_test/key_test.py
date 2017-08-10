@@ -29,7 +29,8 @@ def init_app(input, output):
     i = input; o = output 
 
 def callback():
-    global refresher
+    global refresher, keys_called
+    keys_called = []
     i.set_streaming(process_key)
     refresher = Refresher(get_keys, i, o, 1, name="Key monitor")
     refresher.keymap.pop("KEY_LEFT") #Removing deactivate callback to show KEY_LEFT
