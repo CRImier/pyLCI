@@ -127,4 +127,4 @@ def callback():
         exc = format_exc()
         PrettyPrinter(exc, i, o, 10)
     else:
-        PrettyPrinter("Self-test passed!", i, o, 3)
+        PrettyPrinter("Self-test passed!", i, o, 3, skippable=False)
