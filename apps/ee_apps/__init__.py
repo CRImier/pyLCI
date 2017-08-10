@@ -1,1 +1,1 @@
-_menu_name = "Electronics"
+_menu_name = "Hardware"
