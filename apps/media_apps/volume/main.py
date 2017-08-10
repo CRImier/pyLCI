@@ -1,7 +1,7 @@
 menu_name = "Volume control"
 
 config_filename = "config.json"
-default_config = '{"card":0, "channel":"Master", "adjust_amount":5, "adjust_type":"%"}'
+default_config = '{"card":0, "channel":"PCM", "adjust_amount":1, "adjust_type":"dB"}'
 
 i = None
 o = None
@@ -16,8 +16,8 @@ config_path = os.path.join(current_module_path, config_filename)
 
 try:
     config = read_config(config_path)
-except (ValueError, IOError): #damn braces
-    print("Volume app: broken config, restoring with defaults...")
+except (ValueError, IOError):
+    print("Volume app: missing/broken config, restoring with defaults...")
     with open(config_path, "w") as f:
         f.write(default_config)
     config = read_config(config_path)
