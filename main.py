@@ -74,6 +74,7 @@ try: #If there's an internal error, we show it on display and exit
     from input import input
     input.init(config["input"])
     i = input.listener
+    i.on_callback_cb = o.activate_backlight
 except:
     Printer(["Oops. :(", "y u make mistake"], None, o, 0) #Yeah, that's about all the debug data. 
     raise

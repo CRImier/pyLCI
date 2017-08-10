@@ -45,6 +45,10 @@ class BacklightManager():
         if self._backlight_interval:
             self.start_backlight_thread()
 
+    @activate_backlight_wrapper
+    def activate_backlight(self):
+        pass
+
     @enable_backlight_wrapper
     def enable_backlight(self):
         if self._backlight_pin:

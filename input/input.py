@@ -20,6 +20,7 @@ class InputListener():
     keymap = {}
     maskable_keymap = {}
     nonmaskable_keymap = {}
+    on_callback_cb = None
     streaming = None
     reserved_keys = ["KEY_LEFT", "KEY_RIGHT", "KEY_UP", "KEY_DOWN", "KEY_ENTER", "KEY_KPENTER"]
 
@@ -125,6 +126,12 @@ class InputListener():
         #print("Stopping event loop "+str(index))
 
     def process_key(self, key):
+        if callable(self.on_callback_cb):
+            try:
+                self.on_callback_cb()
+            except:
+                print("Exception while calling the callback callback!")
+                print(format_exc())
         if key in self.nonmaskable_keymap:
             callback = self.nonmaskable_keymap[key]
             self.handle_callback(callback, key)
@@ -136,6 +143,8 @@ class InputListener():
             self.handle_callback(callback, key)
         elif callable(self.streaming):
             self.handle_callback(self.streaming, key, pass_key=True)
+        else:
+            pass #No handler for the key
         
     def handle_callback(self, callback, key, pass_key=False):
         try:
