@@ -9,6 +9,7 @@ def activate_backlight_wrapper(func):
         result = func(self, *args, **kwargs)
         if self._backlight_interval and self._bl_thread is None:
             self.start_backlight_thread()
+        return result
     return wrapper
 
 def enable_backlight_wrapper(func):
@@ -45,9 +46,14 @@ class BacklightManager():
         if self._backlight_interval:
             self.start_backlight_thread()
 
+    def set_backlight_callback(self, obj):
+        obj.backlight_cb = self.activate_backlight
+
     @activate_backlight_wrapper
     def activate_backlight(self):
-        pass
+        """Returns True when backlight has been activated, False if 
+        backlight timer is disabled or backlight is already enabled"""
+        return self._backlight_interval and self._bl_thread is None
 
     @enable_backlight_wrapper
     def enable_backlight(self):

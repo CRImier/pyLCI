@@ -20,7 +20,7 @@ class InputListener():
     keymap = {}
     maskable_keymap = {}
     nonmaskable_keymap = {}
-    on_callback_cb = None
+    backlight_cb = None
     streaming = None
     reserved_keys = ["KEY_LEFT", "KEY_RIGHT", "KEY_UP", "KEY_DOWN", "KEY_ENTER", "KEY_KPENTER"]
 
@@ -126,12 +126,17 @@ class InputListener():
         #print("Stopping event loop "+str(index))
 
     def process_key(self, key):
-        if callable(self.on_callback_cb):
+        #Checking backlight state, turning it on if necessary
+        if callable(self.backlight_cb):
             try:
-                self.on_callback_cb()
+                backlight_was_off = self.backlight_cb()
             except:
-                print("Exception while calling the callback callback!")
+                print("Exception while calling the backlight callback!")
                 print(format_exc())
+            else:
+                #If backlight was off, ignore the keypress
+                if backlight_was_off is True:
+                    return
         if key in self.nonmaskable_keymap:
             callback = self.nonmaskable_keymap[key]
             self.handle_callback(callback, key)
