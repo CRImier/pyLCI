@@ -81,6 +81,8 @@ class NumpadCharInput():
                "#":"#/()[]<>"
               }
     
+    bottom_row_buttons = ["Cancel", "OK", "Erase"]
+
     in_foreground = False
 
     value = ""
@@ -311,8 +313,9 @@ class NumpadCharInput():
         empty_line_count = screen_rows - (static_line_count + lines_taken_by_value)
         for _ in range(empty_line_count):
             displayed_data.append("") #Just empty line
-        half_line_length = screen_cols/2
-        last_line = "Cancel".center(half_line_length) + "Erase".center(half_line_length)
+        third_line_length = screen_cols/3
+        button_labels = [button.center(third_line_length) for button in self.bottom_row_buttons]
+        last_line = "".join(button_labels)
         displayed_data.append(last_line)
         return displayed_data
 
