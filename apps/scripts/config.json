@@ -9,12 +9,6 @@
  {"path":"mount",
   "name":"'mount' with -a",
   "args":["-a"]},
- {"path":"dcdc_ctl",
-  "name":"5V DC-DC on",
-  "args":["on"]},
- {"path":"dcdc_ctl",
-  "name":"5V DC-DC off",
-  "args":["off"]},
  {"path":"wget",
   "name":"wget google main page",
   "args":["http://www.google.com"]}
