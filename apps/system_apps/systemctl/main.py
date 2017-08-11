@@ -23,7 +23,7 @@ config_path = os.path.join(current_module_path, config_filename)
 
 try:
     config = read_config(config_path)
-except ValueError:
+except (IOError, ValueError):
     print("Systemctl app: broken config, restoring with defaults...")
     with open(config_path, "w") as f:
         f.write(default_config)
