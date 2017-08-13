@@ -63,7 +63,7 @@ def init_app(input, output):
     global i, o, usb_file, usb_full_path
     i = input; o = output
     #Set up DC-DC GPIO, DC-DC off by default
-    gpio.setup(dcdc_gpio, gpio.True)
+    gpio.setup(dcdc_gpio, gpio.HIGH)
     #Find the usb device control directory
     device_files = os.listdir(usb_file_base_dir)
     usb_files = [file for file in device_files if file.endswith(".usb")]
