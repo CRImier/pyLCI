@@ -132,11 +132,11 @@ class Modem():
         self.port = Serial(self.serial_path, 115200, timeout=self.serial_timeout)
         self.at()
         self.enable_verbosity()
+        print("Battery voltage is: {}".format(self.get_voltage()))
         self.enable_clcc()
         self.enable_clip()
         self.set_message_mode("pdu")
         #self.at_command("AT+CSSN=1,1")
-        print("Battery voltage is: {}".format(self.get_voltage()))
         self.save_settings()
 
     def deinit_modem(self):
