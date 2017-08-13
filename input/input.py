@@ -148,9 +148,11 @@ class InputListener():
         if key in self.keymap:
             callback = self.keymap[key]
             self.handle_callback(callback, key)
+        #Maskable callbacks
         elif key in self.maskable_keymap:
             callback = self.maskable_keymap[key]
             self.handle_callback(callback, key)
+        #Keycode streaming
         elif callable(self.streaming):
             self.handle_callback(self.streaming, key, pass_key=True)
         else:
