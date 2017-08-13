@@ -19,20 +19,37 @@ i = None
 o = None
 
 dcdc_gpio = 510
+#It doesn't make sense to export the DC-DC GPIO as the app is initialized, 
+#so that the current state of GPIO is saved even if pyLCI restarts
+dcdc_exported = True
+
 usb_file = None
 usb_file_base_dir = "/sys/devices/platform/soc/"
 usb_control_file = "buspower"
 usb_full_path = None
 
 def dcdc_off_on():
+    global dcdc_exported
+    if not dcdc_exported:
+        #DC-DC GPIO not yet set up
+        gpio.setup(dcdc_gpio, gpio.HIGH)
+        dcdc_exported = True
     gpio.set(dcdc_gpio, True)
     sleep(0.5)
     gpio.set(dcdc_gpio, False)
 
 def dcdc_on():
+    global dcdc_exported
+    if not dcdc_exported:
+        gpio.setup(dcdc_gpio, gpio.LOW)
+        dcdc_exported = True
     gpio.set(dcdc_gpio, False)
 
 def dcdc_off():
+    global dcdc_exported
+    if not dcdc_exported:
+        gpio.setup(dcdc_gpio, gpio.HIGH)
+        dcdc_exported = True
     gpio.set(dcdc_gpio, True)
 
 def usb_off_on():
@@ -62,8 +79,6 @@ main_menu_contents = [
 def init_app(input, output):
     global i, o, usb_file, usb_full_path
     i = input; o = output
-    #Set up DC-DC GPIO, DC-DC off by default
-    gpio.setup(dcdc_gpio, gpio.HIGH)
     #Find the usb device control directory
     device_files = os.listdir(usb_file_base_dir)
     usb_files = [file for file in device_files if file.endswith(".usb")]
