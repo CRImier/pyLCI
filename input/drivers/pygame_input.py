@@ -21,17 +21,8 @@ KEY_MAP = dict([
 class InputDevice(InputSkeleton):
     """ A driver for pygame-based keyboard key detection."""
 
-    def __init__(self, path=None, name=None, **kwargs):
-        """
-        Initializes the ``InputDevice`` object.
-
-        Kwargs:
-
-            * ``path``: path to the input device. If not specified, you need to specify ``name``.
-            * ``name``: input device name
-
-        """
-        InputSkeleton.__init__(self, mapping = [], **kwargs)
+    def __init__(self, **kwargs):
+        InputSkeleton.__init__(self, mapping=[], **kwargs)
         self.emulator = emulator.get_emulator()
 
     def init_hw(self):
