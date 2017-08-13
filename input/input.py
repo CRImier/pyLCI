@@ -126,6 +126,12 @@ class InputListener():
         #print("Stopping event loop "+str(index))
 
     def process_key(self, key):
+        #Nonmaskable callbacks are supposed to work even when the screen backlight is off
+        #(since, right now, they're actions like "volume up/down" and "next song")
+        if key in self.nonmaskable_keymap:
+            callback = self.nonmaskable_keymap[key]
+            self.handle_callback(callback, key)
+            return
         #Checking backlight state, turning it on if necessary
         if callable(self.backlight_cb):
             try:
@@ -137,10 +143,9 @@ class InputListener():
                 #If backlight was off, ignore the keypress
                 if backlight_was_off is True:
                     return
-        if key in self.nonmaskable_keymap:
-            callback = self.nonmaskable_keymap[key]
-            self.handle_callback(callback, key)
-        elif key in self.keymap:
+        #Now, all the other options:
+        #Simple callbacks
+        if key in self.keymap:
             callback = self.keymap[key]
             self.handle_callback(callback, key)
         elif key in self.maskable_keymap:
