@@ -1,7 +1,7 @@
 """
-pygame emulator for lcd screen
-allows development of sofware on a without zerophone hardware
-e.g. on a laptop with a USB keyboard
+Pygame-based emulator for the ZeroPhone OLED screen
+Allows development of sofware without ZeroPhone hardware,
+e.g. on a laptop with a USB keyboard.
 """
 
 import logging
@@ -16,8 +16,8 @@ import emulator
 class Screen():
     """
     Screen is an important class; all display is done by this class.
-    On program start main.py invokes output.py which looks up an output driver and
-    the output driver creates a Screen instance.
+    On program start main.py invokes output.py which looks up
+    an output driver and the output driver creates a Screen instance.
 
     Screen provides high-level functions for interaction with display.
     It contains all the high-level logic and
@@ -27,17 +27,8 @@ class Screen():
     methods in this class
     """
 
-    def __init__(self, debug=True, **kwargs):
-        """ Sets variables for high-level functions.
-
-        Kwargs:
-
-           * ``width`` (default=2): rows of the connected display
-           * ``height`` (default=16): columns of the connected display
-           * ``debug`` (default=False): debug mode which prints out the commands sent to display
-           * ``**kwargs``: all the other arguments
-                 get passed to the init_display() function (currently ignored)"""
-        self.debug = debug
+    def __init__(self, **kwargs):
+        """ Sets variables for high-level functions."""
         self.char_width = 6
         self.char_height = 8
         self.cols = 128 / self.char_width
@@ -72,9 +63,9 @@ class Screen():
         self.emulator.setCursor(row, col)
 
     def noCursor(self):
-        """ Turns the underline cursor off """
+        """ Turns the box cursor off """
         self.emulator.noCursor()
 
     def cursor(self):
-        """ Turns the underline cursor on """
+        """ Turns the box cursor on """
         self.emulator.cursor()
