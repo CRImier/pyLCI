@@ -47,10 +47,12 @@ class LumaScreen(BacklightManager):
             raise ValueError("Unknown interface type: {}".format(hw))
         self.address = address
         self.busy_flag = Event()
+        self.width = 128
+        self.height = 64
         self.charwidth = 6
         self.charheight = 8
-        self.cols = 128/self.charwidth
-        self.rows = 64/self.charheight
+        self.cols = self.width/self.charwidth
+        self.rows = self.height/self.charheight
         self.debug = debug
         #self.buffering = buffering
         #self.buffer = [" "*self.cols for i in range(self.rows)]
