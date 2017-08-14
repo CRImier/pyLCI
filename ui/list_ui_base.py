@@ -9,6 +9,10 @@ try:
     from luma.core.render import canvas as luma_canvas
 except:
     print("luma.oled library not found, luma_canvas not available")
+try:
+    from PIL import ImageFont
+except:
+    print("PIL library not found, ImageFont not available")
 
 def to_be_foreground(func):
     """A safety check wrapper so that certain checks don't get called if UI element is
@@ -465,8 +469,29 @@ class SimpleGraphicalModeView(TextModeView):
         del d;draw.__exit__(None, None, None);del draw
         return image
 
+class PrettyGraphicalModeView(SimpleGraphicalModeView):
 
-    def deactivate(self):
-        """Sets a flag that signals the UI element's ``activate()`` to return."""
-        self.in_background = False
-        BaseListUIElement.deactivate(self)
+    charwidth = 8
+    charheight = 16
+
+    @to_be_foreground
+    def get_displayed_canvas(self, cursor_x=0, cursor_y=None):
+        """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.########## function.
+        |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed entries' numbers, renders each one 
+        of them and concatenates them into one big list which it returns.
+        |Doesn't support partly-rendering entries yet."""
+        menu_text = self.get_displayed_text()
+        draw = luma_canvas(self.o.device)
+        d = draw.__enter__()
+        if cursor_y is not None:
+            c_x = cursor_x * self.charwidth
+            c_y = cursor_y * self.charheight
+            cursor_dims = (c_x-1+2, c_y-1, c_x+self.charwidth+2, c_y+self.charheight)
+            d.rectangle(cursor_dims, outline="white")
+        font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 16)
+        for i, line in enumerate(menu_text):
+            y = (i*self.charheight - 1) if i != 0 else 0
+            d.text((2, y), line, fill="white", font=font)
+        image = draw.image
+        del d;draw.__exit__(None, None, None);del draw
+        return image
