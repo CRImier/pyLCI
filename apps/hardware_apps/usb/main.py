@@ -32,7 +32,7 @@ def dcdc_off_on():
     global dcdc_exported
     if not dcdc_exported:
         #DC-DC GPIO not yet set up
-        gpio.setup(dcdc_gpio, gpio.HIGH)
+        gpio.setup(dcdc_gpio, gpio.OUT)
         dcdc_exported = True
     gpio.set(dcdc_gpio, True)
     sleep(0.5)
@@ -41,14 +41,14 @@ def dcdc_off_on():
 def dcdc_on():
     global dcdc_exported
     if not dcdc_exported:
-        gpio.setup(dcdc_gpio, gpio.LOW)
+        gpio.setup(dcdc_gpio, gpio.OUT)
         dcdc_exported = True
     gpio.set(dcdc_gpio, False)
 
 def dcdc_off():
     global dcdc_exported
     if not dcdc_exported:
-        gpio.setup(dcdc_gpio, gpio.HIGH)
+        gpio.setup(dcdc_gpio, gpio.OUT)
         dcdc_exported = True
     gpio.set(dcdc_gpio, True)
 
