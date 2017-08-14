@@ -28,8 +28,6 @@ class BaseListUIElement():
     pointer = 0
     in_foreground = False
     name = ""
-    first_displayed_entry = 0
-    last_displayed_entry = None
     exit_entry = ["Back", "exit"]
 
     def __init__(self, contents, i, o, name=None, entry_height=1, append_exit=True, exitable=True, scrolling=True, keymap=None):
@@ -45,15 +43,17 @@ class BaseListUIElement():
                         "current_scrollable":False,
                         "counter":0,
                         "pointer":0}
+        self.set_view()
         self.set_contents(contents)
         self.generate_keymap()
-        self.set_refresh_type()
 
-    def set_refresh_type(self):
-        if "b&w-pixel" in self.o.type and hasattr(self, "refresh_graphical"):
-            self.refresh = self.refresh_graphical
-        elif "char" in self.o.type and hasattr(self, "refresh_char"):
-            self.refresh = self.refresh_char
+    def set_view(self):
+        if "b&w-pixel" in self.o.type:
+            self.view = SimpleGraphicalModeView(self.o, self.entry_height, self)
+        elif "char" in self.o.type:
+            self.view = TextModeView(self.o, self.entry_height, self)
+        else:
+            raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
 
     def before_foreground(self):
         """Hook for child UI elements"""
@@ -68,7 +68,7 @@ class BaseListUIElement():
         self.reset_scrolling()
         self.in_foreground = True
         self.o.cursor()
-        self.refresh()
+        self.view.refresh()
         self.set_keymap()
 
     def idle_loop(self):
@@ -107,7 +107,7 @@ class BaseListUIElement():
             if self.scrolling["counter"] == 10:
                 self.scrolling["pointer"] += 1
                 self.scrolling["counter"] = 0
-                self.refresh()
+                self.view.refresh()
 
     def reset_scrolling(self):
         self.scrolling["current_finished"] = False
@@ -124,9 +124,6 @@ class BaseListUIElement():
             you can see which UI element is currently processing input events. """
         logging.info("Active UI element is {0}".format(self.name))
 
-    def get_entry_count_per_screen(self):
-        return self.o.rows / self.entry_height
-
     @to_be_foreground
     def move_down(self):
         """ Moves the pointer one entry down, if possible.
@@ -137,7 +134,7 @@ class BaseListUIElement():
             logging.debug("moved down")
             self.pointer += 1
             self.reset_scrolling()
-            self.refresh()
+            self.view.refresh()
             return True
         else:
             return False
@@ -146,12 +143,12 @@ class BaseListUIElement():
     def page_down(self):
         """ Scrolls up a full screen of entries, if possible.
             If not possible, moves as far as it can."""
-        counter = self.get_entry_count_per_screen()
+        counter = self.view.get_entry_count_per_screen()
         while counter != 0 and self.pointer < (len(self.contents)-1):
             logging.debug("moved down")
             self.pointer += 1
             counter -= 1
-        self.refresh()
+        self.view.refresh()
         self.reset_scrolling()
         return True
 
@@ -164,7 +161,7 @@ class BaseListUIElement():
         if self.pointer != 0:
             logging.debug("moved up")
             self.pointer -= 1
-            self.refresh()
+            self.view.refresh()
             self.reset_scrolling()
             return True
         else:
@@ -174,12 +171,12 @@ class BaseListUIElement():
     def page_up(self):
         """ Scrolls down a full screen of UI entries, if possible.
             If not possible, moves as far as it can."""
-        counter = self.get_entry_count_per_screen()
+        counter = self.view.get_entry_count_per_screen()
         while counter != 0 and self.pointer != 0:
             logging.debug("moved down")
             self.pointer -= 1
             counter -= 1
-        self.refresh()
+        self.view.refresh()
         self.reset_scrolling()
         return True
 
@@ -209,7 +206,7 @@ class BaseListUIElement():
         #by UI elements that are based on this class
         self.contents = copy(contents)
         self.process_contents()
-        self.fix_pointers_on_contents_update()
+        self.view.fix_pointers_on_contents_update()
 
     def validate_contents(self, contents):
         #if not contents:
@@ -222,24 +219,6 @@ class BaseListUIElement():
                 for entry_str in entry_repr:
                     if not isinstance(entry_str, basestring):
                         raise Exception("List entries can only contain strings - {} is not a string!".format(entry_str))
-
-    def fix_pointers_on_contents_update(self):
-        """Boundary-checks ``pointer``, re-sets ``last`` & ``first_displayed_entry`` pointers
-           and calculates the value for ``last_displayed_entry`` pointer."""
-        if  self.pointer > len(self.contents)-1:
-            #Pointer went too far, setting it to last entry position
-            self.pointer = len(self.contents) - 1
-        full_entries_shown = self.get_entry_count_per_screen()
-        entry_count = len(self.contents)
-        self.first_displayed_entry = 0
-        if full_entries_shown > entry_count: #Display is capable of showing more entries than we have, so the last displayed entry is the last menu entry
-            logging.debug("There are more display rows than entries can take, correcting")
-            self.last_displayed_entry = entry_count-1
-        else:
-            logging.debug("There are no empty spaces on the display")
-            self.last_displayed_entry = full_entries_shown-1 #We start numbering entries with 0, so 4-row screen would show entries 0-3
-        logging.debug("First displayed entry is {}".format(self.first_displayed_entry))
-        logging.debug("Last displayed entry is {}".format(self.last_displayed_entry))
 
     def process_contents(self):
         """Processes contents for custom callbacks. Currently, only 'exit' calbacks are supported.
@@ -260,112 +239,6 @@ class BaseListUIElement():
         self.i.stop_listen()
         self.i.set_keymap(self.keymap)
         self.i.listen()
-
-    def fix_pointers_on_refresh(self):
-        if self.pointer < self.first_displayed_entry:
-            logging.debug("Pointer went too far to top, correcting")
-            self.last_displayed_entry -=  self.first_displayed_entry - self.pointer #The difference will mostly be 1 but I guess it might be more in case of concurrency issues
-            self.first_displayed_entry = self.pointer
-        if self.pointer > self.last_displayed_entry:
-            logging.debug("Pointer went too far to bottom, correcting")
-            self.first_displayed_entry += self.pointer - self.last_displayed_entry
-            self.last_displayed_entry = self.pointer
-        logging.debug("First displayed entry is {}".format(self.first_displayed_entry))
-        logging.debug("Last displayed entry is {}".format(self.last_displayed_entry))
-
-    def get_displayed_text(self):
-        """Generates the displayed data for a character-based output device. The output of this function can be fed to the o.display_data function.
-        |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed entries' numbers, renders each one 
-        of them and concatenates them into one big list which it returns.
-        |Doesn't support partly-rendering entries yet."""
-        displayed_data = []
-        disp_entry_positions = range(self.first_displayed_entry, self.last_displayed_entry+1)
-        #print("Displayed entries: {}".format(disp_entry_positions))
-        for entry_num in disp_entry_positions:
-            is_active = entry_num == self.pointer
-            displayed_entry = self.render_displayed_entry(entry_num, active=is_active)
-            displayed_data += displayed_entry
-        #print("Displayed data: {}".format(displayed_data))
-        return displayed_data
-
-    @to_be_foreground
-    def get_displayed_canvas(self, cursor_x=0, cursor_y=None):
-        """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.########## function.
-        |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed entries' numbers, renders each one 
-        of them and concatenates them into one big list which it returns.
-        |Doesn't support partly-rendering entries yet."""
-        charwidth = 6
-        charheight = 8
-        menu_text = self.get_displayed_text()
-        draw = luma_canvas(self.o.device)
-        d = draw.__enter__()
-        if cursor_y is not None:
-            c_x = cursor_x * charwidth
-            c_y = cursor_y * charheight
-            cursor_dims = (c_x-1+2, c_y-1, c_x+charwidth+2, c_y+charheight+1)
-            d.rectangle(cursor_dims, outline="white")
-        for i, line in enumerate(menu_text):
-            y = (i*8 - 1) if i != 0 else 0
-            d.text((2, y), line, fill="white")
-        image = draw.image
-        del d;draw.__exit__(None, None, None);del draw
-        return image
-
-    def render_displayed_entry(self, entry_num, active=False):
-        """Renders an UI element entry by its position number in self.contents, determined also by display width, self.entry_height and entry's representation type.
-        If entry representation is a string, splits it into parts as long as the display's width in characters.
-           If active flag is set, appends a "*" as the first entry's character. Otherwise, appends " ".
-           TODO: omit " " and "*" if entry height matches the display's row count.
-        If entry representation is a list, it returns that list as the rendered entry, trimming and padding with empty strings when necessary (to match the ``entry_height``).
-        """
-        rendered_entry = []
-        entry = self.contents[entry_num][0]
-        display_columns = self.o.cols
-        if type(entry) in [str, unicode]:
-            if active:
-                #Scrolling only works with strings for now
-                avail_display_chars = (self.o.cols*self.entry_height)-1 #1 char for "*"/" "
-                self.scrolling["current_scrollable"] = len(entry) > avail_display_chars
-                self.scrolling["current_finished"] = len(entry)-self.scrolling["pointer"] < avail_display_chars
-                if self.scrolling["current_scrollable"] and not self.scrolling["current_finished"]:
-                    entry = entry[self.scrolling["pointer"]:]
-                rendered_entry.append(entry[:display_columns-1]) #First part of string displayed
-                entry = entry[display_columns-1:] #Shifting through the part we just displayed
-            else:
-                rendered_entry.append(entry[:display_columns-1])
-                entry = entry[display_columns-1:]
-            for row_num in range(self.entry_height-1): #First part of string done, if there are more rows to display, we give them the remains of string
-                rendered_entry.append(entry[:display_columns])
-                entry = entry[display_columns:]
-        elif type(entry) == list:
-            entry = entry[:self.entry_height] #Can't have more arguments in the list argument than maximum entry height
-            while len(entry) < self.entry_height: #Can't have less either, padding with empty strings if necessary
-                entry.append('')
-            return [str(entry_str)[:self.o.cols] for entry_str in entry]
-        else:
-            #How did this slip past the check on set_contents?
-            raise Exception("Entries may contain either strings or lists of strings as their representations")
-        logging.debug("Rendered entry: {}".format(rendered_entry))
-        return rendered_entry
-
-    @to_be_foreground
-    def refresh_char(self):
-        logging.debug("{}: refreshed data on display".format(self.name))
-        self.fix_pointers_on_refresh()
-        displayed_data = self.get_displayed_text()
-        active_line_num = (self.pointer - self.first_displayed_entry)*self.entry_height
-        self.o.noCursor()
-        self.o.display_data(*displayed_data)
-        self.o.setCursor(active_line_num, 0)
-        self.o.cursor()
-
-    @to_be_foreground
-    def refresh_graphical(self):
-        logging.debug("{}: refreshed data on display".format(self.name))
-        self.fix_pointers_on_refresh()
-        active_line_num = (self.pointer - self.first_displayed_entry)*self.entry_height
-        canvas = self.get_displayed_canvas(cursor_y=active_line_num)
-        self.o.display_image(canvas)
 
 
 class BaseListBackgroundableUIElement(BaseListUIElement):
@@ -417,6 +290,181 @@ class BaseListBackgroundableUIElement(BaseListUIElement):
         return_value = self.get_return_value()
         logging.info("{} exited".format(self.name))
         return return_value
+
+    def deactivate(self):
+        """Sets a flag that signals the UI element's ``activate()`` to return."""
+        self.in_background = False
+        BaseListUIElement.deactivate(self)
+
+
+class TextModeView():
+    first_displayed_entry = 0
+    last_displayed_entry = None
+
+    #To move into view:
+    #Scrolling?
+    #Pointer?
+    #Page down logic?
+
+    def __init__(self, o, entry_height, ui_element):
+        self.o = o
+        self.entry_height = entry_height
+        self.el = ui_element
+    
+    @property
+    def in_foreground(self):
+        #Is necessary so that @to_be_foreground works
+        #Is to_be_foreground even necessary here?
+        return self.el.in_foreground
+
+    def get_entry_count_per_screen(self):
+        return self.get_fow_height_in_chars() / self.entry_height
+
+    def get_fow_width_in_chars(self):
+        return self.o.cols
+
+    def get_fow_height_in_chars(self):
+        return self.o.rows
+
+    def fix_pointers_on_contents_update(self):
+        """Boundary-checks ``pointer``, re-sets ``last`` & ``first_displayed_entry`` pointers
+           and calculates the value for ``last_displayed_entry`` pointer."""
+        if  self.el.pointer > len(self.el.contents)-1:
+            #Pointer went too far, setting it to last entry position
+            self.el.pointer = len(self.el.contents) - 1
+        full_entries_shown = self.get_entry_count_per_screen()
+        entry_count = len(self.el.contents)
+        self.first_displayed_entry = 0
+        if full_entries_shown > entry_count: #Display is capable of showing more entries than we have, so the last displayed entry is the last menu entry
+            #print("There are some free display rows, adjusting last_display_entry")
+            self.last_displayed_entry = entry_count-1
+        else:
+            #print("There are no empty spaces on the display")
+            self.last_displayed_entry = full_entries_shown-1 #We start numbering entries with 0, so 4-row screen would show entries 0-3
+        #print("First displayed entry is {}".format(self.first_displayed_entry))
+        #print("Last displayed entry is {}".format(self.last_displayed_entry))
+
+    def fix_pointers_on_refresh(self):
+        if self.el.pointer < self.first_displayed_entry:
+            logging.debug("Pointer went too far to top, correcting")
+            self.last_displayed_entry -=  self.first_displayed_entry - self.el.pointer #The difference will mostly be 1 but I guess it might be more in case of concurrency issues
+            self.first_displayed_entry = self.el.pointer
+        if self.el.pointer > self.last_displayed_entry:
+            logging.debug("Pointer went too far to bottom, correcting")
+            self.first_displayed_entry += self.el.pointer - self.last_displayed_entry
+            self.last_displayed_entry = self.el.pointer
+        logging.debug("First displayed entry is {}".format(self.first_displayed_entry))
+        logging.debug("Last displayed entry is {}".format(self.last_displayed_entry))
+
+    #def get_displayed_entry_nums(self, screen_rows):
+    #    disp_entry_positions = range(self.first_displayed_entry, self.last_displayed_entry+1)
+
+    def get_displayed_text(self):
+        """Generates the displayed data for a character-based output device. The output of this function can be fed to the o.display_data function.
+        |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed entries' numbers, renders each one 
+        of them and concatenates them into one big list which it returns.
+        |Doesn't support partly-rendering entries yet."""
+        displayed_data = []
+        disp_entry_positions = range(self.first_displayed_entry, self.last_displayed_entry+1)
+        #print("Displayed entries: {}".format(disp_entry_positions))
+        for entry_num in disp_entry_positions:
+            is_active = entry_num == self.el.pointer
+            displayed_entry = self.render_displayed_entry(entry_num, active=is_active)
+            displayed_data += displayed_entry
+        #print("Displayed data: {}".format(displayed_data))
+        return displayed_data
+
+    def render_displayed_entry(self, entry_num, active=False):
+        """Renders an UI element entry by its position number in self.contents, determined also by display width, self.entry_height and entry's representation type.
+        If entry representation is a string, splits it into parts as long as the display's width in characters.
+           If active flag is set, appends a "*" as the first entry's character. Otherwise, appends " ".
+           TODO: omit " " and "*" if entry height matches the display's row count.
+        If entry representation is a list, it returns that list as the rendered entry, trimming and padding with empty strings when necessary (to match the ``entry_height``).
+        """
+        rendered_entry = []
+        entry = self.el.contents[entry_num][0]
+        display_columns = self.get_fow_width_in_chars()
+        if type(entry) in [str, unicode]:
+            if active:
+                #Scrolling only works with strings for now
+                #Maybe scrolling should be part of view, too?
+                #Likely, yes.
+                avail_display_chars = (display_columns*self.entry_height)-1 #1 char for "*"/" "
+                self.el.scrolling["current_scrollable"] = len(entry) > avail_display_chars
+                self.el.scrolling["current_finished"] = len(entry)-self.el.scrolling["pointer"] < avail_display_chars
+                if self.el.scrolling["current_scrollable"] and not self.el.scrolling["current_finished"]:
+                    entry = entry[self.el.scrolling["pointer"]:]
+                rendered_entry.append(entry[:display_columns-1]) #First part of string displayed
+                entry = entry[display_columns-1:] #Shifting through the part we just displayed
+            else:
+                rendered_entry.append(entry[:display_columns-1])
+                entry = entry[display_columns-1:]
+            for row_num in range(self.entry_height-1): #First part of string done, if there are more rows to display, we give them the remains of string
+                rendered_entry.append(entry[:display_columns])
+                entry = entry[display_columns:]
+        elif type(entry) == list:
+            entry = entry[:self.entry_height] #Can't have more arguments in the list argument than maximum entry height
+            while len(entry) < self.entry_height: #Can't have less either, padding with empty strings if necessary
+                entry.append('')
+            return [str(entry_str)[:display_columns] for entry_str in entry]
+        else:
+            #How did this slip past the check on set_contents?
+            raise Exception("Entries may contain either strings or lists of strings as their representations")
+        logging.debug("Rendered entry: {}".format(rendered_entry))
+        return rendered_entry
+
+    def get_active_line_num(self):
+        return (self.el.pointer - self.first_displayed_entry)*self.entry_height
+
+    @to_be_foreground
+    def refresh(self):
+        logging.debug("{}: refreshed data on display".format(self.el.name))
+        self.fix_pointers_on_refresh()
+        displayed_data = self.get_displayed_text()
+        self.o.noCursor()
+        self.o.display_data(*displayed_data)
+        self.o.setCursor(self.get_active_line_num(), 0)
+        self.o.cursor()
+
+class SimpleGraphicalModeView(TextModeView):
+
+    charwidth = 6
+    charheight = 8
+
+    def get_fow_width_in_chars(self):
+        return self.o.width/self.charwidth
+
+    def get_fow_height_in_chars(self):
+        return self.o.height/self.charheight
+
+    @to_be_foreground
+    def refresh(self):
+        logging.debug("{}: refreshed data on display".format(self.el.name))
+        self.fix_pointers_on_refresh()
+        canvas = self.get_displayed_canvas(cursor_y=self.get_active_line_num())
+        self.o.display_image(canvas)
+
+    @to_be_foreground
+    def get_displayed_canvas(self, cursor_x=0, cursor_y=None):
+        """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.########## function.
+        |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed entries' numbers, renders each one 
+        of them and concatenates them into one big list which it returns.
+        |Doesn't support partly-rendering entries yet."""
+        menu_text = self.get_displayed_text()
+        draw = luma_canvas(self.o.device)
+        d = draw.__enter__()
+        if cursor_y is not None:
+            c_x = cursor_x * self.charwidth
+            c_y = cursor_y * self.charheight
+            cursor_dims = (c_x-1+2, c_y-1, c_x+self.charwidth+2, c_y+self.charheight+1)
+            d.rectangle(cursor_dims, outline="white")
+        for i, line in enumerate(menu_text):
+            y = (i*self.charheight - 1) if i != 0 else 0
+            d.text((2, y), line, fill="white")
+        image = draw.image
+        del d;draw.__exit__(None, None, None);del draw
+        return image
+
 
     def deactivate(self):
         """Sets a flag that signals the UI element's ``activate()`` to return."""
