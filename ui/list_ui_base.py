@@ -471,6 +471,8 @@ class SimpleGraphicalModeView(TextModeView):
 
 class PrettyGraphicalModeView(SimpleGraphicalModeView):
 
+    #http://pillow.readthedocs.io/en/3.1.x/reference/ImageFont.html
+
     charwidth = 8
     charheight = 16
 
