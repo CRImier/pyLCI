@@ -21,7 +21,7 @@ o = None
 dcdc_gpio = 510
 #It doesn't make sense to export the DC-DC GPIO as the app is initialized, 
 #so that the current state of GPIO is saved even if pyLCI restarts
-dcdc_exported = True
+dcdc_exported = False
 
 usb_file = None
 usb_file_base_dir = "/sys/devices/platform/soc/"
