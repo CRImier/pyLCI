@@ -53,7 +53,7 @@ class BaseListUIElement():
 
     def set_view(self):
         if "b&w-pixel" in self.o.type:
-            self.view = SimpleGraphicalModeView(self.o, self.entry_height, self)
+            self.view = PrettyGraphicalModeView(self.o, self.entry_height, self)
         elif "char" in self.o.type:
             self.view = TextModeView(self.o, self.entry_height, self)
         else:
