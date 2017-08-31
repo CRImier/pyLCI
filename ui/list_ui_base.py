@@ -53,9 +53,9 @@ class BaseListUIElement():
 
     def set_view(self):
         if "b&w-pixel" in self.o.type:
-            self.view = PrettyGraphicalModeView(self.o, self.entry_height, self)
+            self.view = PrettyGraphicalView(self.o, self.entry_height, self)
         elif "char" in self.o.type:
-            self.view = TextModeView(self.o, self.entry_height, self)
+            self.view = TextView(self.o, self.entry_height, self)
         else:
             raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
 
@@ -301,7 +301,7 @@ class BaseListBackgroundableUIElement(BaseListUIElement):
         BaseListUIElement.deactivate(self)
 
 
-class TextModeView():
+class TextView():
     first_displayed_entry = 0
     last_displayed_entry = None
 
@@ -430,7 +430,7 @@ class TextModeView():
         self.o.setCursor(self.get_active_line_num(), 0)
         self.o.cursor()
 
-class SimpleGraphicalModeView(TextModeView):
+class SimpleGraphicalView(TextView):
 
     charwidth = 6
     charheight = 8
@@ -469,7 +469,7 @@ class SimpleGraphicalModeView(TextModeView):
         del d;draw.__exit__(None, None, None);del draw
         return image
 
-class PrettyGraphicalModeView(SimpleGraphicalModeView):
+class PrettyGraphicalView(SimpleGraphicalView):
 
     #http://pillow.readthedocs.io/en/3.1.x/reference/ImageFont.html
 
