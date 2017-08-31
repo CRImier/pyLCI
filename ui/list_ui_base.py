@@ -390,21 +390,18 @@ class TextView():
         entry = self.el.contents[entry_num][0]
         active = self.entry_is_active(entry_num)
         display_columns = self.get_fow_width_in_chars()
+        avail_display_chars = (display_columns*self.entry_height)
         if type(entry) in [str, unicode]:
             if active:
                 #Scrolling only works with strings for now
                 #Maybe scrolling should be part of view, too?
                 #Likely, yes.
-                avail_display_chars = (display_columns*self.entry_height)-1 #1 char for "*"/" "
                 self.el.scrolling["current_scrollable"] = len(entry) > avail_display_chars
                 self.el.scrolling["current_finished"] = len(entry)-self.el.scrolling["pointer"] < avail_display_chars
                 if self.el.scrolling["current_scrollable"] and not self.el.scrolling["current_finished"]:
                     entry = entry[self.el.scrolling["pointer"]:]
-                rendered_entry.append(entry[:display_columns-1]) #First part of string displayed
-                entry = entry[display_columns-1:] #Shifting through the part we just displayed
-            else:
-                rendered_entry.append(entry[:display_columns-1])
-                entry = entry[display_columns-1:]
+            rendered_entry.append(entry[:display_columns]) #First part of string displayed
+            entry = entry[display_columns:] #Shifting through the part we just displayed
             for row_num in range(self.entry_height-1): #First part of string done, if there are more rows to display, we give them the remains of string
                 rendered_entry.append(entry[:display_columns])
                 entry = entry[display_columns:]
