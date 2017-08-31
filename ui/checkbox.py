@@ -1,6 +1,6 @@
 import logging
 
-from list_ui_base import BaseListUIElement, to_be_foreground
+from list_ui_base import BaseListUIElement, TextView, SimpleGraphicalView, PrettyGraphicalView, to_be_foreground
 
 class Checkbox(BaseListUIElement):
     """Implements a checkbox which can be used to enable or disable some functions in your application. 
@@ -46,6 +46,14 @@ class Checkbox(BaseListUIElement):
         self.exit_entry[0] = self.final_button_name
         BaseListUIElement.__init__(self, *args, **kwargs)
 
+    def set_view(self):
+        if "b&w-pixel" in self.o.type:
+            self.view = ChPrettyGraphicalView(self.o, self.entry_height, self)
+        elif "char" in self.o.type:
+            self.view = ChTextView(self.o, self.entry_height, self)
+        else:
+            raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
+
     def get_return_value(self):
         if self.accepted:
             return {self.contents[index][1]:self.states[index] for index, element in enumerate(self.contents) if element != self.exit_entry}
@@ -66,7 +74,7 @@ class Checkbox(BaseListUIElement):
             self.deactivate()
             return
         self.states[self.pointer] = not self.states[self.pointer] #Just inverting.
-        self.refresh()
+        self.view.refresh()
 
     def validate_contents(self, contents):
         assert isinstance(contents, list), "Checkbox contents should be a list"
@@ -81,48 +89,52 @@ class Checkbox(BaseListUIElement):
         self.states.append(False) #For the final button, to maintain "len(states) == len(self.contents)"
         logging.debug("{}: menu contents processed".format(self.name))
 
-    def get_displayed_data(self):
-        """Generates the displayed data in a way that the output device accepts.
-           The output of this function can be fed to the o.display_data function."""
-        displayed_data = []
-        disp_entry_positions = range(self.first_displayed_entry, self.last_displayed_entry+1)
-        #print("Displayed entries: {}".format(disp_entry_positions))
-        for entry_num in disp_entry_positions:
-            displayed_entry = self.render_displayed_entry(entry_num, checked = self.states[entry_num])
-            displayed_data += displayed_entry
-        #print("Displayed data: {}".format(displayed_data))
-        return displayed_data
 
-    def render_displayed_entry(self, entry_num, checked=False):
-        """Renders a checkbox element by its position number in self._contents, determined also by display width, self.entry_height and element's representation type.
-        If element's representation is a string, splits it into parts as long as the display's width in characters.
-           If active flag is set, appends a "*" as the first entry's character. Otherwise, appends " ".
-           TODO: omit " " and "*" if element height matches the display's row count.
-        If element's representation is a list, it returns that list as the rendered entry, trimming its elements down or padding the list with empty strings to match the element's height as defined.
-        """
+class CheckboxRenderingMixin():
+
+    def entry_is_checked(self, entry_num):
+        return self.el.states[entry_num]
+
+    def render_displayed_entry(self, entry_num):
         rendered_entry = []
-        entry_content = self.contents[entry_num][0]
-        display_columns = self.o.cols
-        if type(entry_content) in [str, unicode]:
+        entry = self.el.contents[entry_num][0]
+        active = self.entry_is_active(entry_num)
+        checked = self.entry_is_checked(entry_num)
+        display_columns = self.get_fow_width_in_chars()
+        avail_display_chars = (display_columns*self.entry_height)-1 #1 char for "*"/" "
+        if type(entry) in [str, unicode]:
+            if active:
+                self.el.scrolling["current_scrollable"] = len(entry) > avail_display_chars
+                self.el.scrolling["current_finished"] = len(entry)-self.el.scrolling["pointer"] < avail_display_chars
+                if self.el.scrolling["current_scrollable"] and not self.el.scrolling["current_finished"]:
+                    entry = entry[self.el.scrolling["pointer"]:]
             if checked:
-                rendered_entry.append("*"+entry_content[:display_columns-1]) #First part of string displayed
-                entry_content = entry_content[display_columns-1:] #Shifting through the part we just displayed
+                rendered_entry.append("*"+entry[:display_columns-1]) #First part of string displayed
             else:
-                rendered_entry.append(" "+entry_content[:display_columns-1])
-                entry_content = entry_content[display_columns-1:]
+                rendered_entry.append(" "+entry[:display_columns-1])
+            entry_content = entry[display_columns-1:]
             for row_num in range(self.entry_height-1): #First part of string done, if there are more rows to display, we give them the remains of string
-                rendered_entry.append(entry_content[:display_columns])
-                entry_content = entry_content[display_columns:]
-        elif type(entry_content) == list:
-            entry_content = entry_content[:self.entry_height] #Can't have more arguments in the list argument than maximum entry height
+                rendered_entry.append(entry[:display_columns])
+                entry = entry[display_columns:]
+        elif type(entry) == list:
+            entry = entry[:self.entry_height] #Can't have more arguments in the list argument than maximum entry height
             if checked:
-                entry_content[0][0] == "*"
+                entry[0][0] == "*"
             else:
-                entry_content[0][0] == " "
-            while len(entry_content) < self.entry_height: #Can't have less either, padding with empty strings if necessary
-                entry_content.append('')
-            return entry_content
+                entry[0][0] == " "
+            while len(entry) < self.entry_height: #Can't have less either, padding with empty strings if necessary
+                entry.append('')
+            return entry
         else:
             raise Exception("Entries may contain either strings or lists of strings as their representations")
-        #print("Rendered entry: {}".format(rendered_entry))
+        logging.debug("Rendered entry: {}".format(rendered_entry))
         return rendered_entry
+
+class ChSimpleGraphicalView(SimpleGraphicalView, CheckboxRenderingMixin):
+    pass
+
+class ChTextView(TextView, CheckboxRenderingMixin):
+    pass
+
+class ChPrettyGraphicalView(CheckboxRenderingMixin, PrettyGraphicalView):
+    pass
