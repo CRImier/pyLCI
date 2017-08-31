@@ -363,6 +363,9 @@ class TextView():
     #def get_displayed_entry_nums(self, screen_rows):
     #    disp_entry_positions = range(self.first_displayed_entry, self.last_displayed_entry+1)
 
+    def entry_is_active(self, entry_num):
+        return entry_num == self.el.pointer
+        
     def get_displayed_text(self):
         """Generates the displayed data for a character-based output device. The output of this function can be fed to the o.display_data function.
         |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed entries' numbers, renders each one 
@@ -370,15 +373,13 @@ class TextView():
         |Doesn't support partly-rendering entries yet."""
         displayed_data = []
         disp_entry_positions = range(self.first_displayed_entry, self.last_displayed_entry+1)
-        #print("Displayed entries: {}".format(disp_entry_positions))
         for entry_num in disp_entry_positions:
-            is_active = entry_num == self.el.pointer
-            displayed_entry = self.render_displayed_entry(entry_num, active=is_active)
+            displayed_entry = self.render_displayed_entry(entry_num)
             displayed_data += displayed_entry
-        #print("Displayed data: {}".format(displayed_data))
+        logging.debug("Displayed data: {}".format(displayed_data))
         return displayed_data
 
-    def render_displayed_entry(self, entry_num, active=False):
+    def render_displayed_entry(self, entry_num):
         """Renders an UI element entry by its position number in self.contents, determined also by display width, self.entry_height and entry's representation type.
         If entry representation is a string, splits it into parts as long as the display's width in characters.
            If active flag is set, appends a "*" as the first entry's character. Otherwise, appends " ".
@@ -387,6 +388,7 @@ class TextView():
         """
         rendered_entry = []
         entry = self.el.contents[entry_num][0]
+        active = self.entry_is_active(entry_num)
         display_columns = self.get_fow_width_in_chars()
         if type(entry) in [str, unicode]:
             if active:
