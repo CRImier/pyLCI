@@ -130,10 +130,10 @@ class CheckboxRenderingMixin():
         logging.debug("Rendered entry: {}".format(rendered_entry))
         return rendered_entry
 
-class ChSimpleGraphicalView(SimpleGraphicalView, CheckboxRenderingMixin):
+class ChSimpleGraphicalView(CheckboxRenderingMixin, SimpleGraphicalView):
     pass
 
-class ChTextView(TextView, CheckboxRenderingMixin):
+class ChTextView(CheckboxRenderingMixin, TextView):
     pass
 
 class ChPrettyGraphicalView(CheckboxRenderingMixin, PrettyGraphicalView):
