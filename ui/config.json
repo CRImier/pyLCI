@@ -1,0 +1,9 @@
+{"list_ui_base":{
+   "custom_views":{
+       "Systemctl: all unit list menu":"SimpleGraphicalView",
+       "Systemctl: filtered unit list menu":"SimpleGraphicalView",
+       "NMap: select port types":"SimpleGraphicalView"
+   },
+   "default":"PrettyGraphicalView"
+ }
+}
