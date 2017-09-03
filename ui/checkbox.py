@@ -46,13 +46,11 @@ class Checkbox(BaseListUIElement):
         self.exit_entry[0] = self.final_button_name
         BaseListUIElement.__init__(self, *args, **kwargs)
 
-    def set_view(self):
-        if "b&w-pixel" in self.o.type:
-            self.view = ChPrettyGraphicalView(self.o, self.entry_height, self)
-        elif "char" in self.o.type:
-            self.view = ChTextView(self.o, self.entry_height, self)
-        else:
-            raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
+    def set_views_dict(self):
+        self.views = {
+        "PrettyGraphicalView":ChPrettyGraphicalView,
+        "SimpleGraphicalView":ChSimpleGraphicalView,
+        "TextView":ChTextView}
 
     def get_return_value(self):
         if self.accepted:

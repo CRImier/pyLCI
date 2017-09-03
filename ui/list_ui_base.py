@@ -5,6 +5,8 @@ import logging
 from copy import copy
 from time import sleep
 from threading import Event
+from traceback import print_exc
+from helpers import read_config
 try:
     from luma.core.render import canvas as luma_canvas
 except:
@@ -25,6 +27,13 @@ def to_be_foreground(func):
             return False
     return wrapper
 
+#quick hack to make UI elements globally configurable
+try:
+    config = read_config("ui/config.json")
+except:
+    print_exc()
+    config = {}
+
 class BaseListUIElement():
     """This is a base UI element for list-like UI elements."""
 
@@ -33,6 +42,8 @@ class BaseListUIElement():
     in_foreground = False
     name = ""
     exit_entry = ["Back", "exit"]
+
+    config_key = "list_ui_base"
 
     def __init__(self, contents, i, o, name=None, entry_height=1, append_exit=True, exitable=True, scrolling=True, keymap=None):
         self.i = i
@@ -47,15 +58,50 @@ class BaseListUIElement():
                         "current_scrollable":False,
                         "counter":0,
                         "pointer":0}
-        self.set_view()
+        self.set_view(config.get(self.config_key, {}))
         self.set_contents(contents)
         self.generate_keymap()
 
-    def set_view(self):
+    def set_views_dict(self):
+        self.views = {
+        "PrettyGraphicalView":PrettyGraphicalView,
+        "SimpleGraphicalView":SimpleGraphicalView,
+        "TextView":TextView}
+
+    def set_view(self, config):
+        view = None
+        self.set_views_dict()
+        if self.name in config.get("custom_views", {}).keys():
+            view_config = config["custom_views"][self.name]
+            if isinstance(view_config, basestring):
+                if view_config not in self.views:
+                    print('Unknown view "{}" given for UI element "{}"!'.format(view_config, self.name))
+                else:
+                    view = self.views[view_config]
+            elif isinstance(view_config, dict):
+                raise NotImplementedError
+                #This is the part where fine-tuning views will be possible, 
+                #once passing args&kwargs is implemented, that is
+            else:
+                print("Custom view description can only be a string or a dictionary; is {}!".format(type(view_config)))
+        elif not view and "default" in config:
+            view_config = config["default"]
+            if isinstance(view_config, basestring):
+                if view_config not in self.views:
+                    print('Unknown view "{}" given for UI element "{}"!'.format(view_config, self.name))
+                else: 
+                    view = self.views[view_config]
+            elif isinstance(view_config, dict):
+                raise NotImplementedError #Again, this is for fine-tuning
+        elif not view:
+            view = self.get_default_view()
+        self.view = view(self.o, self.entry_height, self)
+
+    def get_default_view(self):
         if "b&w-pixel" in self.o.type:
-            self.view = PrettyGraphicalView(self.o, self.entry_height, self)
+            return views["PrettyGraphicalView"]
         elif "char" in self.o.type:
-            self.view = TextView(self.o, self.entry_height, self)
+            return views["TextView"]
         else:
             raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
 
