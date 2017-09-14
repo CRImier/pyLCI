@@ -5,6 +5,7 @@ import logging
 from copy import copy
 from time import sleep
 from threading import Event
+from ui import config_manager
 from traceback import print_exc
 from helpers import read_config
 try:
@@ -27,12 +28,9 @@ def to_be_foreground(func):
             return False
     return wrapper
 
-#quick hack to make UI elements globally configurable
-try:
-    config = read_config("ui/config.json")
-except:
-    print_exc()
-    config = {}
+cm = config_manager.get_ui_config_manager()
+cm.set_path("ui/configs")
+config = cm.get_global_config()
 
 class BaseListUIElement():
     """This is a base UI element for list-like UI elements."""
