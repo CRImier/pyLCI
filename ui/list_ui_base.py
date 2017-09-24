@@ -62,6 +62,7 @@ class BaseListUIElement():
 
     def set_views_dict(self):
         self.views = {
+        "MainMenuTripletView":MainMenuTripletView,
         "PrettyGraphicalView":PrettyGraphicalView,
         "SimpleGraphicalView":SimpleGraphicalView,
         "TextView":TextView}
@@ -537,6 +538,35 @@ class PrettyGraphicalView(SimpleGraphicalView):
         for i, line in enumerate(menu_text):
             y = (i*self.charheight - 1) if i != 0 else 0
             d.text((2, y), line, fill="white", font=font)
+        image = draw.image
+        del d;draw.__exit__(None, None, None);del draw
+        return image
+
+class MainMenuTripletView(PrettyGraphicalView):
+
+    charwidth = 8
+    charheight = 16
+    
+    def __init__(self, *args, **kwargs):
+        PrettyGraphicalView.__init__(self, *args, **kwargs)
+        self.charheight = self.o.height / 3
+
+    @to_be_foreground
+    def get_displayed_canvas(self, cursor_x=0, cursor_y=None):
+        #This view doesn't have a cursor, instead, the entry that's currently active is in the display center
+        draw = luma_canvas(self.o.device)
+        d = draw.__enter__()
+        central_position = (10, 16)
+        font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 32)
+        current_entry = self.el.contents[self.el.pointer]
+        d.text(central_position, current_entry[0], fill="white", font=font)
+        font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 16)
+        if self.el.pointer != 0:
+            line = self.el.contents[self.el.pointer-1][0]
+            d.text((2, 0), line, fill="white", font=font)
+        if self.el.pointer < len(self.el.contents)-1:
+            line = self.el.contents[self.el.pointer+1][0]
+            d.text((2, 48), line, fill="white", font=font)
         image = draw.image
         del d;draw.__exit__(None, None, None);del draw
         return image
