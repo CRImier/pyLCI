@@ -74,6 +74,7 @@ class LumaScreen(BacklightManager):
         self.current_image = image
         self.device.display(image)
 
+    @activate_backlight_wrapper
     def display_data(self, *args):
         """Displays data on display. This function does the actual work of printing things to display.
         
