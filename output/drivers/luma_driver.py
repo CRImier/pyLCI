@@ -71,8 +71,8 @@ class LumaScreen(BacklightManager):
     def display_image(self, image):
         if self.current_image:
             del self.current_image #Freeing memory
-        self.device.display(image)    
         self.current_image = image
+        self.device.display(image)
 
     def display_data(self, *args):
         """Displays data on display. This function does the actual work of printing things to display.
