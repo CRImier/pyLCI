@@ -74,7 +74,7 @@ def smart_scan():
         if network_ip is None: #Listbox exited without making a choice
             return None
     network_ip = get_network_from_ip(network_ip)
-    chosen_ports = Checkbox(heuristic_ports, i, o, name="NMap: select port types" final_button_name="Run scan").activate()
+    chosen_ports = Checkbox(heuristic_ports, i, o, name="NMap: select port types", final_button_name="Run scan").activate()
     if chosen_ports is None: return None
     chosen_port_list = [port_choice for port_choice in chosen_ports if chosen_ports[port_choice] == True]
     port_string = ",".join(chosen_port_list)
