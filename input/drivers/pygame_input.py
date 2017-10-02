@@ -23,9 +23,9 @@ class InputDevice(InputSkeleton):
 
     def __init__(self, **kwargs):
         InputSkeleton.__init__(self, mapping=[], **kwargs)
-        self.emulator = emulator.get_emulator()
 
     def init_hw(self):
+        self.emulator = emulator.get_emulator()
         return True
 
     def runner(self):
