@@ -2,6 +2,7 @@
 
 import logging
 from multiprocessing import Process, Pipe
+from time import sleep
 
 import luma.emulator.device
 import pygame
