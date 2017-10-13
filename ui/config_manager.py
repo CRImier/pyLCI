@@ -63,7 +63,7 @@ class UIConfigManager():
         user_configs = []
         for file in files:
             if file.startswith(self.user_config_prefix) and \
-                      file.endswith(self.user_config.postfix):
+                      file.endswith(self.user_config_postfix):
                 user_configs.append(file)
         for file in user_configs:
             file_path = os.path.join(path, file)
