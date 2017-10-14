@@ -24,7 +24,6 @@ Input devices
 ==============
 
 * Make a "passthrough" driver for HID so that a single keyboard can both be used for X and pyLCI
-* Make an input emulator for development tasks
 * Add key remapping to HID driver
 * Pressed/released/held button states
 
@@ -32,14 +31,7 @@ Input devices
 Output devices
 ==============
 
-* Make an output emulator for development tasks
 * Add backlight control layer to all displays
-
-
-.. rubric:: Supporting graphical displays
-
-* Get/make fonts
-* Include compatibility layers
 
 ============
 Applications
@@ -55,7 +47,6 @@ Applications
 * Mount partitions app
 * OpenHAB console
 * Twitter reader
-* NMap app
 * SMS and call app - interfacing to mobile phones and GSM/3G modems
 
 ============
@@ -66,10 +57,7 @@ UI elements
 
 * Date/time picker
 * "Quick reading" UI element (word-by-word)
-* Simple number input
-* Character input using keypads and keyboards
 * Wraparound for Menu UI element
-* Page up/down for Menu UI element
 
 ============
 Development
@@ -89,7 +77,6 @@ Development
 Maintenance
 ============
 
-* Refactor UI elements to use common classes
 * Refactor main.py launcher
 * Clean up comments in UI elements, decide what functions to expose in the docs
 * Make an app for configuring pyLCI on the fly
