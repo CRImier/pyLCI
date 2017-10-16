@@ -1,8 +1,10 @@
 menu_name = "Update pyLCI"
 
 from subprocess import check_output, CalledProcessError
+import signal
+import os
 
-from ui import Printer
+from ui import Printer, DialogBox
 
 def update():
     Printer("Updating...", i, o, 1)
@@ -12,6 +14,9 @@ def update():
             Printer("All up-to-date", i, o, 1)
         else:
             Printer("Updated pyLCI", i, o, 1)
+            needs_restart = DialogBox('yn', i, o, message="Restart the UI?").activate()
+            if needs_restart:
+                os.kill(os.getpid(), signal.SIGTERM)
     except OSError as e:
         if e.errno == 2:
             Printer("git not found!", i, o, 1)
