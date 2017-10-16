@@ -24,5 +24,5 @@ def print_path(path):
         Printer("WTF: {}".format(path), i, o, 5) # ;-P
 
 def browse():
-    path_picker = PathPicker("/", i, o, callback=)
+    path_picker = PathPicker("/", i, o, callback=print_path)
     path_picker.activate() #Menu yet to be added
