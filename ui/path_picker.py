@@ -144,7 +144,7 @@ class PathPicker(BaseListBackgroundableUIElement):
                 self.pointer = pointer
         else:
             self.pointer = 0
-        self.refresh()
+        self.view.refresh()
 
     #@to_be_foreground
     def select_path(self, path):
