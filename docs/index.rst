@@ -1,7 +1,7 @@
 Welcome to ZPUI documentation!
 =================================
 
-ZPUI stands for ZeroPhone UI, it's the default user interface for ZeroPhone (that ZeroPhone official SD card images ships with). It allows you to interact with your ZeroPhone, using the 1.3" OLED and the 30-button numpad.
+ZPUI stands for ZeroPhone UI, it's the official user interface for ZeroPhone (that ZeroPhone official SD card images ships with). It allows you to interact with your ZeroPhone, using the 1.3" OLED and the 30-button numpad.
 
 Guides:
 =================================
