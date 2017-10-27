@@ -19,8 +19,6 @@ ZPUI core consists of 5 parts:
 
 :doc:`Development plans <plans>`
 
-:doc:`FAQ&contacts <faq_contact>`
-
 .. toctree::
    :maxdepth: 1
    :hidden:
