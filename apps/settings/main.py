@@ -1,10 +1,10 @@
-menu_name = "Update pyLCI"
+menu_name = "Settings"
 
 from subprocess import check_output, CalledProcessError
 import signal
 import os
 
-from ui import Printer, DialogBox
+from ui import Menu, Printer, DialogBox
 
 def update():
     Printer("Updating...", i, o, 1)
@@ -13,7 +13,7 @@ def update():
         if "Already up-to-date." in output:
             Printer("All up-to-date", i, o, 1)
         else:
-            Printer("Updated pyLCI", i, o, 1)
+            Printer("Updated ZPUI", i, o, 1)
             needs_restart = DialogBox('yn', i, o, message="Restart the UI?").activate()
             if needs_restart:
                 os.kill(os.getpid(), signal.SIGTERM)
@@ -28,7 +28,11 @@ def update():
         else:
             Printer(["Failed with", "code {}".format(e.returncode)], i, o, 1)
 
-callback = update
+def settings():
+    c = [["Update ZPUI", update]]
+    Menu(c, i, o, "Global settings menu").activate()
+
+callback = settings
 i = None #Input device
 o = None #Output device
 
