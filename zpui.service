@@ -1,0 +1,13 @@
+[Unit]
+Description=ZeroPhone official UI framework
+
+[Service]
+User=root
+Group=root
+PIDFile=/run/zpui.pid
+ExecStart=/opt/zpui/main.py 
+WorkingDirectory=/opt/zpui
+Restart=always
+
+[Install]
+WantedBy=getty.target

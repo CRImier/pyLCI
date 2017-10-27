@@ -1,4 +1,4 @@
-INSTALL_DIR="/opt/pylci"
+INSTALL_DIR="/opt/zpui"
 SUDO=''
 if (( $EUID != 0 )); then
     SUDO='sudo'
@@ -9,8 +9,8 @@ $SUDO pip install luma.oled python-nmap smspdu zerophone_hw gpio
 $SUDO mkdir -p $INSTALL_DIR
 $SUDO cp ./. $INSTALL_DIR -R
 cd $INSTALL_DIR
-$SUDO cp pylci.service /etc/systemd/system/
+$SUDO cp zpui.service /etc/systemd/system/
 $SUDO systemctl daemon-reload
-$SUDO systemctl enable pylci.service
-$SUDO systemctl start pylci.service
+$SUDO systemctl enable zpui.service
+$SUDO systemctl start zpui.service
 
