@@ -1,27 +1,15 @@
-Welcome to pyLCI's documentation!
+Welcome to ZPUI documentation!
 =================================
 
-pyLCI stands for Python-based Linux Control Interface. It's an external interface for configuration of your Linux devices in an easy and quick way. 
-
-It can be used on:
-
-* Embedded devices (where dependency on Python isn't problematic to satisfy), such as OpenWRT-powered routers
-* Single-board computers, including, but not limited to Raspberry Pi, BeagleBone and many others 
-* Tablets and laptops
-* Servers
-* Desktop PCs and HTPCs
+ZPUI stands for ZeroPhone UI, it's the default user interface for ZeroPhone (that ZeroPhone official SD card images ships with). It allows you to interact with your ZeroPhone, using the 1.3" OLED and the 30-button numpad.
 
 Guides:
 =================================
 
-* :doc:`Hardware guide <hardware>`
-* :doc:`Setup and configuration guide <setup>`
 * :doc:`Debugging issues <debugging>`
 * :doc:`Managing and developing applications <app_mgmt>`
 
-pyLCI system - the software part (pyLCI daemon) and the hardware part - typically consisting of a character LCD and a keypad of some sort. 
-
-The pyLCI daemon consists of 5 parts:
+ZPUI core consists of 5 parts:
 
 #. :doc:`Input system <input>`
 #. :doc:`Output system <output>`
@@ -29,12 +17,9 @@ The pyLCI daemon consists of 5 parts:
 #. :doc:`Applications <apps>`
 #. Glue logic (mostly main.py launcher)
 
-
 :doc:`Development plans <plans>`
 
 :doc:`FAQ&contacts <faq_contact>`
-
-
 
 .. toctree::
    :maxdepth: 1
