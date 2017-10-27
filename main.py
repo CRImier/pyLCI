@@ -102,7 +102,7 @@ def exception_wrapper(callback):
         i.atexit()
         sys.exit(1)
     else:
-        Printer("Exiting pyLCI", None, o, 0)
+        Printer("Exiting ZPUI", None, o, 0)
         i.atexit()
         sys.exit(0)
 
