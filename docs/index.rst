@@ -35,13 +35,3 @@ ZPUI core consists of 5 parts:
    app_mgmt.rst
    plans.rst
    faq_contact.rst
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-
