@@ -21,6 +21,8 @@ ZPUI core consists of 5 parts:
 
 :doc:`Development plans <plans>`
 
+:doc:`Working on documentation <docs_development>`
+
 .. toctree::
    :maxdepth: 1
    :hidden:
@@ -35,3 +37,4 @@ ZPUI core consists of 5 parts:
    app_mgmt.rst
    plans.rst
    faq_contact.rst
+   docs_development.rst
