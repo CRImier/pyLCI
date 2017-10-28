@@ -346,11 +346,6 @@ class TextView():
     first_displayed_entry = 0
     last_displayed_entry = None
 
-    #To move into view:
-    #Scrolling?
-    #Pointer?
-    #Page down logic?
-
     def __init__(self, o, entry_height, ui_element):
         self.o = o
         self.entry_height = entry_height
@@ -381,10 +376,10 @@ class TextView():
         entry_count = len(self.el.contents)
         self.first_displayed_entry = 0
         if full_entries_shown > entry_count: #Display is capable of showing more entries than we have, so the last displayed entry is the last menu entry
-            #print("There are some free display rows, adjusting last_display_entry")
+            #There are some free display rows, adjusting last_displayed_entry
             self.last_displayed_entry = entry_count-1
         else:
-            #print("There are no empty spaces on the display")
+            #There are no empty spaces on the display
             self.last_displayed_entry = full_entries_shown-1 #We start numbering entries with 0, so 4-row screen would show entries 0-3
         #print("First displayed entry is {}".format(self.first_displayed_entry))
         #print("Last displayed entry is {}".format(self.last_displayed_entry))
@@ -400,9 +395,6 @@ class TextView():
             self.last_displayed_entry = self.el.pointer
         logging.debug("First displayed entry is {}".format(self.first_displayed_entry))
         logging.debug("Last displayed entry is {}".format(self.last_displayed_entry))
-
-    #def get_displayed_entry_nums(self, screen_rows):
-    #    disp_entry_positions = range(self.first_displayed_entry, self.last_displayed_entry+1)
 
     def entry_is_active(self, entry_num):
         return entry_num == self.el.pointer
@@ -502,6 +494,7 @@ class EightPtView(TextView):
             c_y = cursor_y * self.charheight
             cursor_dims = (c_x-1+2, c_y-1, c_x+self.charwidth+2, c_y+self.charheight+1)
             d.rectangle(cursor_dims, outline="white")
+        #Drawing the text itself
         for i, line in enumerate(menu_text):
             y = (i*self.charheight - 1) if i != 0 else 0
             d.text((2, y), line, fill="white")
@@ -511,16 +504,12 @@ class EightPtView(TextView):
 
 class SixteenPtView(EightPtView):
 
-    #http://pillow.readthedocs.io/en/3.1.x/reference/ImageFont.html
-
     charwidth = 8
     charheight = 16
 
     @to_be_foreground
     def get_displayed_canvas(self, cursor_x=0, cursor_y=None):
-        """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.########## function.
-        |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed entries' numbers, renders each one 
-        of them and concatenates them into one big list which it returns.
+        """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.display_image function.
         |Doesn't support partly-rendering entries yet."""
         menu_text = self.get_displayed_text()
         draw = luma_canvas(self.o.device)
@@ -530,6 +519,8 @@ class SixteenPtView(EightPtView):
             c_y = cursor_y * self.charheight
             cursor_dims = (c_x-1+2, c_y-1, c_x+self.charwidth+2, c_y+self.charheight)
             d.rectangle(cursor_dims, outline="white")
+        #Drawing the text itself
+        #http://pillow.readthedocs.io/en/3.1.x/reference/ImageFont.html
         font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 16)
         for i, line in enumerate(menu_text):
             y = (i*self.charheight - 1) if i != 0 else 0
@@ -539,6 +530,8 @@ class SixteenPtView(EightPtView):
         return image
 
 class MainMenuTripletView(SixteenPtView):
+
+    #TODO: enable scrolling
 
     charwidth = 8
     charheight = 16
