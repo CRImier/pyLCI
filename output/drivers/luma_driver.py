@@ -66,10 +66,16 @@ class LumaScreen(BacklightManager):
 
     @activate_backlight_wrapper
     def display_image(self, image):
+        """Displays a PIL Image object onto the display
+        Also saves it fo the case where display needs to be refreshed"""
+        while self.busy_flag.isSet():
+            sleep(0.01)
+        self.busy_flag.set()
         if self.current_image:
             del self.current_image #Freeing memory
-        self.current_image = image
         self.device.display(image)
+        self.current_image = image
+        self.busy_flag.clear()
 
     @activate_backlight_wrapper
     def display_data(self, *args):
