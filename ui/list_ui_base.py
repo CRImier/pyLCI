@@ -57,8 +57,10 @@ class BaseListUIElement():
     def set_views_dict(self):
         self.views = {
         "MainMenuTripletView":MainMenuTripletView,
-        "PrettyGraphicalView":PrettyGraphicalView,
-        "SimpleGraphicalView":SimpleGraphicalView,
+        "PrettyGraphicalView":SixteenPtView, #Not a descriptive name - left for compatibility
+        "SimpleGraphicalView":EightPtView, #Not a descriptive name - left for compatibility
+        "SixteenPtView":SixteenPtView,
+        "EightPtView":EightPtView,
         "TextView":TextView}
 
     def set_view(self, config):
@@ -468,7 +470,7 @@ class TextView():
         self.o.setCursor(self.get_active_line_num(), 0)
         self.o.cursor()
 
-class SimpleGraphicalView(TextView):
+class EightPtView(TextView):
 
     charwidth = 6
     charheight = 8
@@ -507,7 +509,7 @@ class SimpleGraphicalView(TextView):
         del d;draw.__exit__(None, None, None);del draw
         return image
 
-class PrettyGraphicalView(SimpleGraphicalView):
+class SixteenPtView(EightPtView):
 
     #http://pillow.readthedocs.io/en/3.1.x/reference/ImageFont.html
 
@@ -536,7 +538,7 @@ class PrettyGraphicalView(SimpleGraphicalView):
         del d;draw.__exit__(None, None, None);del draw
         return image
 
-class MainMenuTripletView(PrettyGraphicalView):
+class MainMenuTripletView(SixteenPtView):
 
     charwidth = 8
     charheight = 16

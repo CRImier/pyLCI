@@ -1,6 +1,6 @@
 import logging
 
-from list_ui_base import BaseListUIElement, TextView, SimpleGraphicalView, PrettyGraphicalView, to_be_foreground
+from list_ui_base import BaseListUIElement, TextView, EightPtView, SixteenPtView, to_be_foreground
 
 class Checkbox(BaseListUIElement):
     """Implements a checkbox which can be used to enable or disable some functions in your application. 
@@ -48,8 +48,10 @@ class Checkbox(BaseListUIElement):
 
     def set_views_dict(self):
         self.views = {
-        "PrettyGraphicalView":ChPrettyGraphicalView,
-        "SimpleGraphicalView":ChSimpleGraphicalView,
+        "PrettyGraphicalView":ChSixteenPtView, #Left for compatibility
+        "SimpleGraphicalView":ChEightPtView, #Left for compatibility
+        "SixteenPtView":ChSixteenPtView,
+        "EightPtView":ChEightPtView,
         "TextView":ChTextView}
 
     def get_return_value(self):
@@ -128,11 +130,11 @@ class CheckboxRenderingMixin():
         logging.debug("Rendered entry: {}".format(rendered_entry))
         return rendered_entry
 
-class ChSimpleGraphicalView(CheckboxRenderingMixin, SimpleGraphicalView):
+class ChEightPtView(CheckboxRenderingMixin, EightPtView):
     pass
 
 class ChTextView(CheckboxRenderingMixin, TextView):
     pass
 
-class ChPrettyGraphicalView(CheckboxRenderingMixin, PrettyGraphicalView):
+class ChSixteenPtView(CheckboxRenderingMixin, SixteenPtView):
     pass
