@@ -501,9 +501,7 @@ class EightPtView(TextView):
 
     @to_be_foreground
     def get_displayed_canvas(self, cursor_x=0, cursor_y=None):
-        """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.########## function.
-        |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed entries' numbers, renders each one 
-        of them and concatenates them into one big list which it returns.
+        """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.display_image function.
         |Doesn't support partly-rendering entries yet."""
         menu_text = self.get_displayed_text()
         draw = luma_canvas(self.o.device)
