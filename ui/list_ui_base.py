@@ -466,9 +466,12 @@ class EightPtView(TextView):
 
     charwidth = 6
     charheight = 8
+    x_offset = 2
+    x_scrollbar_offset = 5
+    scrollbar_y_offset = 1
 
     def get_fow_width_in_chars(self):
-        return self.o.width/self.charwidth
+        return (self.o.width-self.x_scrollbar_offset)/self.charwidth
 
     def get_fow_height_in_chars(self):
         return self.o.height/self.charheight
@@ -480,6 +483,22 @@ class EightPtView(TextView):
         canvas = self.get_displayed_canvas(cursor_y=self.get_active_line_num())
         self.o.display_image(canvas)
 
+    def get_scrollbar_top_bottom(self):
+        scrollbar_max_length = self.o.height-(self.scrollbar_y_offset*2)
+        total_entry_count = len(self.el.contents)
+        entries_before = self.first_displayed_entry
+        entries_after = total_entry_count - self.last_displayed_entry - 1
+        entries_on_screen = total_entry_count - entries_before - entries_after
+        if entries_on_screen >= total_entry_count:
+            #No scrollbar if there are no entries not shown on the screen
+            return (0, 0) #Look, an owl
+        #Scrollbar length per one entry
+        length_unit = float(scrollbar_max_length)/total_entry_count
+        top = self.scrollbar_y_offset + int(entries_before*length_unit)
+        length = int(entries_on_screen*length_unit)
+        bottom = top+length
+        return top, bottom
+
     @to_be_foreground
     def get_displayed_canvas(self, cursor_x=0, cursor_y=None):
         """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.########## function.
@@ -489,15 +508,25 @@ class EightPtView(TextView):
         menu_text = self.get_displayed_text()
         draw = luma_canvas(self.o.device)
         d = draw.__enter__()
+        scrollbar_coordinates = self.get_scrollbar_top_bottom()
+        #Drawing scrollbar, if applicable
+        if scrollbar_coordinates == (0, 0):
+            #left offset is dynamic and depends on whether there's a scrollbar or not
+            left_offset = self.x_offset
+        else:
+            left_offset = self.x_scrollbar_offset
+            y1, y2 = scrollbar_coordinates
+            d.rectangle((1, y1, 2, y2), outline="white")
+        #Drawing cursor, if enabled
         if cursor_y is not None:
             c_x = cursor_x * self.charwidth
             c_y = cursor_y * self.charheight
-            cursor_dims = (c_x-1+2, c_y-1, c_x+self.charwidth+2, c_y+self.charheight+1)
+            cursor_dims = (c_x-1+left_offset, c_y-1, c_x+self.charwidth+left_offset, c_y+self.charheight+1)
             d.rectangle(cursor_dims, outline="white")
         #Drawing the text itself
         for i, line in enumerate(menu_text):
             y = (i*self.charheight - 1) if i != 0 else 0
-            d.text((2, y), line, fill="white")
+            d.text((left_offset, y), line, fill="white")
         image = draw.image
         del d;draw.__exit__(None, None, None);del draw
         return image
@@ -514,17 +543,27 @@ class SixteenPtView(EightPtView):
         menu_text = self.get_displayed_text()
         draw = luma_canvas(self.o.device)
         d = draw.__enter__()
+        scrollbar_coordinates = self.get_scrollbar_top_bottom()
+        #Drawing scrollbar, if applicable
+        if scrollbar_coordinates == (0, 0):
+            #left offset is dynamic and depends on whether there's a scrollbar or not
+            left_offset = self.x_offset
+        else:
+            left_offset = self.x_scrollbar_offset
+            y1, y2 = scrollbar_coordinates
+            d.rectangle((1, y1, 2, y2), outline="white")
+        #Drawing cursor, if enabled
         if cursor_y is not None:
             c_x = cursor_x * self.charwidth
             c_y = cursor_y * self.charheight
-            cursor_dims = (c_x-1+2, c_y-1, c_x+self.charwidth+2, c_y+self.charheight)
+            cursor_dims = (c_x-1+left_offset, c_y-1, c_x+self.charwidth+left_offset, c_y+self.charheight)
             d.rectangle(cursor_dims, outline="white")
         #Drawing the text itself
         #http://pillow.readthedocs.io/en/3.1.x/reference/ImageFont.html
         font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 16)
         for i, line in enumerate(menu_text):
             y = (i*self.charheight - 1) if i != 0 else 0
-            d.text((2, y), line, fill="white", font=font)
+            d.text((left_offset, y), line, fill="white", font=font)
         image = draw.image
         del d;draw.__exit__(None, None, None);del draw
         return image
