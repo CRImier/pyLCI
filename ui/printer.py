@@ -83,6 +83,7 @@ def GraphicsPrinter(image, i, o, sleep_time=1, invert=True):
         i.stop_listen()
         i.clear_keymap()
         i.set_callback("KEY_LEFT", exit_printer)
+        i.set_callback("KEY_ENTER", exit_printer)
         i.listen()
     if invert: image = do_invert(image)
     image = image.convert(o.device.mode)
