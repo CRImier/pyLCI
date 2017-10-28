@@ -7,7 +7,7 @@ from time import sleep
 import sys
 import os
 
-from ui import Menu, Printer, PrettyPrinter
+from ui import Menu, Printer, PrettyPrinter, GraphicsPrinter
 
 i = None
 o = None
@@ -58,9 +58,8 @@ def callback():
         else:
             PrettyPrinter("IO expander driver not loaded!", i, o)
         #Launching splashscreen
-        import splash
-        splash.splash(i, o)
-        sleep(2)
+        image = PIL.Image.open("splash.png").convert('L')
+        GraphicsPrinter(image, i, o, 1)
         #Launching key_test app from app folder, that's symlinked from example app folder
         PrettyPrinter("Testing keypad", i, o, 1)
         import key_test
