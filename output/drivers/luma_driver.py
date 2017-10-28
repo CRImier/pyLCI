@@ -8,7 +8,6 @@
 # Adafruit - https://github.com/adafruit/Adafruit-Raspberry-Pi-Python-Code
 # SSD1306 library - ################
 
-from time import sleep
 from luma.core.serial import spi, i2c
 from luma.core.render import canvas
 from time import sleep
@@ -54,8 +53,6 @@ class LumaScreen(BacklightManager):
         self.cols = self.width/self.charwidth
         self.rows = self.height/self.charheight
         self.debug = debug
-        #self.buffering = buffering
-        #self.buffer = [" "*self.cols for i in range(self.rows)]
         self.init_display(**kwargs)
         BacklightManager.init_backlight(self, **kwargs)
 
