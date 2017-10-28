@@ -4,6 +4,7 @@ from threading import Event, Thread
 from traceback import format_exc
 from subprocess import call
 from time import sleep
+import PIL
 import sys
 import os
 
@@ -59,7 +60,7 @@ def callback():
             PrettyPrinter("IO expander driver not loaded!", i, o)
         #Launching splashscreen
         image = PIL.Image.open("splash.png").convert('L')
-        GraphicsPrinter(image, i, o, 1)
+        GraphicsPrinter(image, i, o, 2)
         #Launching key_test app from app folder, that's symlinked from example app folder
         PrettyPrinter("Testing keypad", i, o, 1)
         import key_test
