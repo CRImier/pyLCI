@@ -8,14 +8,8 @@ from threading import Event
 from ui import config_manager
 from traceback import print_exc
 from helpers import read_config
-try:
-    from luma.core.render import canvas as luma_canvas
-except:
-    print("luma.oled library not found, luma_canvas not available")
-try:
-    from PIL import ImageFont
-except:
-    print("PIL library not found, ImageFont not available")
+from luma.core.render import canvas as luma_canvas
+from PIL import ImageFont
 
 def to_be_foreground(func):
     """A safety check wrapper so that certain checks don't get called if UI element is
