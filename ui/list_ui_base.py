@@ -526,7 +526,7 @@ class EightPtView(TextView):
             y = (i*self.charheight - 1) if i != 0 else 0
             d.text((left_offset, y), line, fill="white")
         image = draw.image
-        del d;draw.__exit__(None, None, None);del draw
+        del d;del draw
         return image
 
 class SixteenPtView(EightPtView):
@@ -563,7 +563,7 @@ class SixteenPtView(EightPtView):
             y = (i*self.charheight - 1) if i != 0 else 0
             d.text((left_offset, y), line, fill="white", font=font)
         image = draw.image
-        del d;draw.__exit__(None, None, None);del draw
+        del d;del draw
         return image
 
 class MainMenuTripletView(SixteenPtView):
@@ -594,5 +594,5 @@ class MainMenuTripletView(SixteenPtView):
             line = self.el.contents[self.el.pointer+1][0]
             d.text((2, 48), line, fill="white", font=font)
         image = draw.image
-        del d;draw.__exit__(None, None, None);del draw
+        del d;del draw
         return image
