@@ -33,6 +33,11 @@ class InputDevice(InputSkeleton):
         Blocking event loop which just calls supplied callbacks in the keymap.
         """
 
+        #TODO: debug and fix race condition
+        while not hasattr(self, "emulator"):
+            print("Input emulator not yet ready (a bug, TOFIX)")
+            sleep(0.1)
+
         while not self.stop_flag:
             event = self.emulator.poll_input()
             if event is None:
