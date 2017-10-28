@@ -1,5 +1,5 @@
 from menu import Menu, MenuExitException
-from printer import Printer, PrettyPrinter
+from printer import Printer, PrettyPrinter, GraphicsPrinter
 from listbox import Listbox
 from refresher import Refresher
 from checkbox import Checkbox

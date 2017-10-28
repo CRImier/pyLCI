@@ -1,5 +1,6 @@
 from time import sleep
 from funcs import format_for_screen as ffs
+from PIL.ImageOps import invert
 
 def Printer(message, i, o, sleep_time=1, skippable=True):
     """Outputs string data on display as soon as it's called.
@@ -72,3 +73,23 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
 
 def PrettyPrinter(text, i, o, *args, **kwargs):
     Printer(ffs(text, o.cols), i, o, *args, **kwargs)
+
+def GraphicsPrinter(image, i, o, sleep_time=1, invert=True):
+    #Inverts images by default!
+    GraphicsPrinter.exit_flag = False
+    def exit_printer():
+        GraphicsPrinter.exit_flag = True
+    if i is not None:
+        i.stop_listen()
+        i.clear_keymap()
+        i.set_callback("KEY_LEFT", exit_printer)
+        i.listen()
+    if invert: image = invert(image)
+    image = image.convert(o.device.mode)
+    o.display_image(image)
+    poll_period = 0.1
+    sleep_periods = sleep_time/poll_period
+    for period in range(int(sleep_periods)):
+        if GraphicsPrinter.exit_flag == True:
+            return #Exiting the function completely
+        sleep(poll_period)
