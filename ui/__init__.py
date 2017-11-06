@@ -10,4 +10,4 @@ from char_input import CharArrowKeysInput
 from dialog import DialogBox
 from numpad_input import NumpadCharInput, NumpadNumberInput
 
-from funcs import ellipsize, format_for_screen
+from funcs import ellipsize, format_for_screen, ffs
