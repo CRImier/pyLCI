@@ -121,8 +121,11 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
     image = image.convert(o.device.mode)
     o.display_image(image)
     poll_period = 0.1
-    sleep_periods = sleep_time/poll_period
-    for period in range(int(sleep_periods)):
-        if GraphicsPrinter.exit_flag == True:
-            return #Exiting the function completely
-        sleep(poll_period)
+    if sleep_time < poll_period*2:
+        sleep(sleep_time)
+    else:
+        sleep_periods = sleep_time/poll_period
+        for period in range(int(sleep_periods)):
+            if GraphicsPrinter.exit_flag == True:
+                return #Exiting the function completely
+            sleep(poll_period)
