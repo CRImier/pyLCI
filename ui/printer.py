@@ -3,19 +3,21 @@ from funcs import format_for_screen as ffs
 from PIL.ImageOps import invert as do_invert
 
 def Printer(message, i, o, sleep_time=1, skippable=True):
-    """Outputs string data on display as soon as it's called.
+    """Outputs a string, or a list of strings, on a display as soon as it's called.
+    A string will be split into a list, a list will not be modified. 
+    The resulting list is then displayed string-by-string.
+    If resulting strings will take more than one screen, they'll be split
+    into multiple screenfuls and shown one-by-one.
                                                                                
-    Args:                                                                    
-                                                                             
-        * ``message``: A string or list of strings to display. A string will be split into a list, a list will not be modified. The resulting list is then displayed string-by-string.
+    Args:
+
+        * ``message``: A string or list of strings to display.
         * ``i``, ``o``: input&output device objects. If you're not using skippable=True and don't need exit on KEY_LEFT, feel free to pass None as i.
-                                                                             
-    Kwargs:                                                                  
-                                                                                 
+
+    Kwargs:
+
         * ``sleep_time``: Time to display each the message (for each of resulting screens).
-        * ``skippable``: If set, allows skipping message screens by presing ENTER.
-                                                                                 
-    """                                                                      
+        * ``skippable``: If set, allows skipping message screens by presing ENTER. """
     Printer.skip_screen_flag = False #A flag which is set for skipping screens and is polled while printer is displaying things
     Printer.exit_flag = False #A flag which is set for stopping exiting the printing process completely
 
@@ -72,6 +74,20 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
             sleep(poll_period)
 
 def PrettyPrinter(text, i, o, *args, **kwargs):
+    """Outputs string data on display as soon as it's called. Will pass the data 
+    through format_for_screen function before passing it on to Printer.
+    If text will take more than one screen, it'll be split into multiple 
+    screenfuls to fit.
+
+    Args:
+
+        * ``message``: A string to be displayed.
+        * ``i``, ``o``: input&output device objects. If you're not using skippable=True and don't need exit on KEY_LEFT, feel free to pass None as i.
+
+    Kwargs:
+
+        * ``sleep_time``: Time to display each screenful of text.
+        * ``skippable``: If set, allows skipping screens by presing ENTER."""
     Printer(ffs(text, o.cols), i, o, *args, **kwargs)
 
 def GraphicsPrinter(image, i, o, sleep_time=1, invert=True):
