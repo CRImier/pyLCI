@@ -31,8 +31,6 @@ class ATError(Exception):
         message = "Expected {}, got {}".format(expected, repr(received))
         Exception.__init__(self, message)
 
-        self.received = received
-
 class Phone():
     
     modem = None
@@ -43,12 +41,20 @@ class Phone():
         pass
 
     def attach_modem(self, modem):
-        if self.modem is not None:
-            self.modem.update_state_cb = None
+        self.detach_modem()
         self.modem = modem
         self.modem.update_state_cb = self.state_update_cb
         self.modem_state = copy(self.modem.status)
         print(self.modem_state)
+        self.modem.init()
+        self.modem.start_monitor()
+
+    def detach_modem(self):
+        if self.modem is not None:
+            self.modem.update_state_cb = None
+            self.modem.stop_monitor()
+            self.modem.deinit()
+            self.modem = None
 
     def state_update_cb(self, key, value):
         self.modem_state[key] = value
@@ -128,7 +134,7 @@ class Modem():
         self.should_monitor = Event()
         self.unexpected_queue = Queue()
 
-    def init_modem(self):
+    def init(self):
         self.port = Serial(self.serial_path, 115200, timeout=self.serial_timeout)
         self.at()
         self.enable_verbosity()
@@ -139,7 +145,7 @@ class Modem():
         #self.at_command("AT+CSSN=1,1")
         self.save_settings()
 
-    def deinit_modem(self):
+    def deinit(self):
         try:
             self.port.close()
         except: #Could be not created or already closed
@@ -549,20 +555,20 @@ class Modem():
             #    print("CPAS exception")
         print("Stopped monitoring!")
 
-    def start_monitoring(self):
+    def start_monitor(self):
         self.should_monitor.set()
         self.thread = Thread(target=self.monitor)
         self.thread.daemon=True
         self.thread.start()
 
-    def stop_monitoring(self):
+    def stop_monitor(self):
         self.should_monitor.clear()
 
 
 if __name__ == "__main__":
     modem = Modem()
-    modem.init_modem()
-    modem.start_monitoring()
+    modem.init()
+    modem.start_monitor()
     def dial():
         modem.call("25250034")
     def cpas():

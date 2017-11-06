@@ -1,19 +1,19 @@
 menu_name = "Phone" 
 
 from subprocess import call as os_call
-from threading import Thread, Event
+from time import sleep
+import traceback
 
-from ui import Refresher, Menu, Printer, format_for_screen as ffs
+from ui import Refresher, Menu, Printer, PrettyPrinter, DialogBox, ffs
 from ui.experimental import NumberKeypadInputLayer
+from helpers import BackgroundRunner, ExitHelper
 
 from phone import Phone, Modem, ATError
 
 i = None
 o = None
+init = None
 phone = None
-modem = None
-
-connecting = Event()
 
 def answer():
     #No context switching as for now, so all we can do is 
@@ -57,47 +57,75 @@ def call_view():
 def status_refresher():
     Refresher(phone_status, i, o).activate()
 
-def check_modem_connection(bg=False):
-    global modem, phone, connecting
-    if not bg: Printer(ffs("Connecting to modem", o.cols), i, o, 0)
-    if connecting.isSet(): return False
-    if phone.modem is not None: return True
-    connecting.set()
+
+def init_hardware():
     try:
+        global phone
+        phone = Phone()
         modem = Modem()
-        modem.init_modem()
-        modem.start_monitoring()
         phone.attach_modem(modem)
-        connecting.clear()
-        return True
-    except ValueError as e:
-        print(repr(e)) 
-        #Rollback
-        if not bg: Printer(ffs("Modem connection failed", o.cols), i, o)
-        modem.stop_monitoring()
-        modem.deinit_modem()
-        modem = None
-        connecting.clear()
+    except:
+        deinit_hardware()
+        raise
+
+def deinit_hardware():
+    phone.detach_modem()
+
+def wait_for_connection():
+    eh = ExitHelper(i).start()
+    while eh.do_run() and init.running and not init.failed:
+        sleep(1)
+    eh.stop()
+
+def check_modem_connection():
+    if init.running:
         return False
+    elif init.finished:
+        return True
+    elif init.failed:
+        raise Exception("Modem connection failed!")
+    else:
+        raise Exception("Phone app init runner is in invalid state! (never ran?)")
 
 def init_app(input, output):
-    global i, o, phone
+    global i, o, init
     i = input; o = output 
     i.set_maskable_callback("KEY_ANSWER", answer)
     i.set_nonmaskable_callback("KEY_HANGUP", hangup)
-    phone = Phone()
     try:
         #This not good enough - either make the systemctl library system-wide or add more checks
         os_call(["systemctl", "stop", "serial-getty@ttyAMA0.service"])
     except Exception as e:
         print(repr(e))
         #import pdb;pdb.set_trace()
-    Thread(target=check_modem_connection, args=[True]).start()
+    init = BackgroundRunner(init_hardware)
+    init.run()
 
-def callback():
-    if not check_modem_connection():
-        Printer(ffs("Modem connection failed. Try again in 10 seconds.", o.cols), i, o)
-        return
-    contents = [["Status", status_refresher],
-                ["Call", call_view]]
-    Menu(contents, i, o).activate()
+def offer_retry(counter):
+    do_reactivate = DialogBox("ync", i, o, message="Retry?").activate()
+    if do_reactivate:
+        PrettyPrinter("Connecting, try {}...".format(counter), i, o, 0)
+        init.reset()
+        init.run()
+        wait_for_connection()
+        callback(counter)
+
+def callback(counter=0):
+    try:
+        counter += 1
+        status = check_modem_connection()
+    except:
+        if counter < 3:
+            PrettyPrinter("Modem connection failed =(", i, o)
+            offer_retry(counter)
+        else:
+            PrettyPrinter("Modem connection failed 3 times", i, o, 1)
+    else:
+        if not status:
+            PrettyPrinter("Connecting...", i, o, 0)
+            wait_for_connection()
+            callback(counter)
+        else:
+            contents = [["Status", status_refresher],
+                        ["Call", call_view]]
+            Menu(contents, i, o).activate()
