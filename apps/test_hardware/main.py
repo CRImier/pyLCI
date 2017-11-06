@@ -9,6 +9,7 @@ import sys
 import os
 
 from ui import Menu, Printer, PrettyPrinter, GraphicsPrinter
+from helpers import ExitHelper
 
 i = None
 o = None
@@ -70,23 +71,17 @@ def callback():
         #which might not be present:
         if expander_ok:
             #Testing charging detection
-            bypass = Event()
-            bypass.clear()
             PrettyPrinter("Testing charger detection", i, o, 1)
             from zerophone_hw import is_charging
+            eh = ExitHelper(i, ["KEY_LEFT", "KEY_ENTER"]).start()
             if is_charging():
-                PrettyPrinter("Charging, unplug charger to continue \n Enter to bypass", i, o, 0)
-                i.set_callback("KEY_ENTER", lambda: bypass.set())
-                #Printer sets its own callbacks, so we need to set
-                #our callback after using Printer
-                while is_charging() and not bypass.isSet():
+                PrettyPrinter("Charging, unplug charger to continue \n Enter to bypass", None, o, 0)
+                while is_charging() and eh.do_run():
                     sleep(1)
             else:
-                PrettyPrinter("Not charging, plug charger to continue \n Enter to bypass", i, o, 0)
-                i.set_callback("KEY_ENTER", lambda: bypass.set())
-                while not is_charging() and not bypass.isSet():
+                PrettyPrinter("Not charging, plug charger to continue \n Enter to bypass", None, o, 0)
+                while not is_charging() and eh.do_run():
                     sleep(1)
-            i.remove_callback("KEY_ENTER")
             #Testing the RGB LED
             PrettyPrinter("Testing RGB LED", i, o, 1)
             from zerophone_hw import RGB_LED
@@ -122,7 +117,6 @@ def callback():
         i.set_callback("KEY_ENTER", stop)
         continue_event.wait()
         #Self-test passed, it seems!
-                
     except:
         exc = format_exc()
         PrettyPrinter(exc, i, o, 10)
