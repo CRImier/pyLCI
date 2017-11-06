@@ -344,7 +344,7 @@ class NumpadNumberInput(NumpadCharInput):
     """Implements a number input UI element for a numeric keypad, allowing to translate number keys into numbers."""
     
     #Quite straightforward mapping for now
-    mapping = {"1":"1",
+    default_mapping = {"1":"1",
                "2":"2",
                "3":"3",
                "4":"4",
