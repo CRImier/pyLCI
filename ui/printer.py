@@ -1,4 +1,5 @@
 import PIL
+from PIL import ImageOps
 from time import sleep
 from funcs import format_for_screen as ffs
 
@@ -117,7 +118,7 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
         i.set_callback("KEY_LEFT", exit_printer)
         i.set_callback("KEY_ENTER", exit_printer)
         i.listen()
-    if invert: image = PIL.ImageOps.invert(image)
+    if invert: image = ImageOps.invert(image)
     image = image.convert(o.device.mode)
     o.display_image(image)
     poll_period = 0.1
