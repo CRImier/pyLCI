@@ -1,10 +1,11 @@
-menu_name = "Flame detector" #App name as seen in main menu while using the system
+menu_name = "Flame detector"
 
 from RPi import GPIO
 import PIL
 import sys
 import os
 
+from helpers import ExitHelper
 from ui import GraphicsPrinter
 
 app_path = os.path.dirname(sys.modules[__name__].__file__)
@@ -15,18 +16,17 @@ def show_image(image_path):
     image = PIL.Image.open(image_path).convert('L')
     GraphicsPrinter(image, i, o, 0.1)
 
-#Some globals for us
-i = None #Input device
-o = None #Output device
+i = None; o = None
 
 def init_app(input, output):
-    global callback, i, o
-    i = input; o = output #Getting references to output and input device objects and saving them as globals
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(18, GPIO.IN)
+    global i, o
+    i = input; o = output
 
 def callback():
-    while True:
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(18, GPIO.IN)
+    eh = ExitHelper(i).start()
+    while eh.do_run():
         state = GPIO.input(18)
         if state:
             show_image("no_fire.png")
