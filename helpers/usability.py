@@ -40,7 +40,6 @@ class ExitHelper():
         self.i.stop_listen()
         self.i.clear_keymap()
         keymap = {key:self.signal_exit for key in self.keys}
-        print(keymap)
         self.i.set_keymap(keymap)
         self.i.listen()
         self.started = True
@@ -53,7 +52,6 @@ class ExitHelper():
         return not self._do_exit.isSet()
 
     def signal_exit(self):
-        print("Caught!")
         self._do_exit.set()
 
     def reset(self):
