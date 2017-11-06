@@ -1,6 +1,6 @@
+import PIL
 from time import sleep
 from funcs import format_for_screen as ffs
-from PIL.ImageOps import invert as do_invert
 
 def Printer(message, i, o, sleep_time=1, skippable=True):
     """Outputs a string, or a list of strings, on a display as soon as it's called.
@@ -90,8 +90,24 @@ def PrettyPrinter(text, i, o, *args, **kwargs):
         * ``skippable``: If set, allows skipping screens by presing ENTER."""
     Printer(ffs(text, o.cols), i, o, *args, **kwargs)
 
-def GraphicsPrinter(image, i, o, sleep_time=1, invert=True):
-    #Inverts images by default!
+def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
+    """Outputs image on the display, as soon as it's called.
+    You can use either a PIL image, or a relative/absolute path 
+    to a suitable image
+
+    Args:
+
+        * ``image_or_path``: Either a PIL image or path to an image to be displayed.
+        * ``i``, ``o``: input&output device objects. If you don't need/want exit on KEY_LEFT, feel free to pass None as i.
+
+    Kwargs:
+
+        * ``sleep_time``: Time to display the image
+        * ``invert``: Invert the image before displaying (True by default) """
+    if isinstance(image_or_path, basestring):
+        image = PIL.Image.open(image_or_path).convert('L')
+    else:
+        image = image_or_path
     GraphicsPrinter.exit_flag = False
     def exit_printer():
         GraphicsPrinter.exit_flag = True
@@ -101,7 +117,7 @@ def GraphicsPrinter(image, i, o, sleep_time=1, invert=True):
         i.set_callback("KEY_LEFT", exit_printer)
         i.set_callback("KEY_ENTER", exit_printer)
         i.listen()
-    if invert: image = do_invert(image)
+    if invert: image = PIL.ImageOps.invert(image)
     image = image.convert(o.device.mode)
     o.display_image(image)
     poll_period = 0.1
