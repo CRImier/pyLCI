@@ -23,9 +23,9 @@ class Oneshot():
     
     Args:
 
-        *``func``: function to be run
-        *``*args``: positional arguments for the function
-        *``**kwargs``: keyword arguments for the function"""
+        * ``func``: callable to be run
+        * ``*args``: positional arguments for the callable
+        * ``**kwargs``: keyword arguments for the callable"""
     _running = False
     _finished = False
     
@@ -36,6 +36,8 @@ class Oneshot():
         self.active_lock = Lock()
     
     def run(self):
+        """Run the callable. Sets the ``running`` and ``finished`` attributes 
+        as the function progresses. This function doesn't handle exceptions."""
         if self.running or self.finished:
             return
         self.active_lock.acquire()
@@ -50,12 +52,17 @@ class Oneshot():
         self.active_lock.release()
 
     def reset(self):
+        """Resets all flags, allowing the callable to be run once again.
+        Will raise an Exception if the callable is still running."""
         if self.running:
             raise Exception("Runner can't be reset while still running")
+        self._running = False
         self._finished = False
 
     @property
     def running(self):
+        """Shows whether the callable is still running after it has been launched
+        (assuming it has been launched)."""
         self.active_lock.acquire()
         value = self._running
         self.active_lock.release()
@@ -63,6 +70,8 @@ class Oneshot():
 
     @property
     def finished(self):
+        """Shows whether the callable has finished running after it has been launched
+        (assuming it has been launched)."""
         self.active_lock.acquire()
         value = self._finished
         self.active_lock.release()
@@ -74,9 +83,9 @@ class BackgroundRunner():
     
     Args:
 
-        *``func``: function to be run
-        *``*args``: positional arguments for the function
-        *``**kwargs``: keyword arguments for the function"""
+        * ``func``: function to be run
+        * ``*args``: positional arguments for the function
+        * ``**kwargs``: keyword arguments for the function"""
 
     exc_info = None
 
@@ -91,6 +100,8 @@ class BackgroundRunner():
 
     @property
     def running(self):
+        """Shows whether the callable is still running after it has been launched
+        (assuming it has been launched)."""
         self.active_lock.acquire()
         value = bool(self._running)
         self.active_lock.release()
@@ -98,6 +109,8 @@ class BackgroundRunner():
 
     @property
     def finished(self):
+        """Shows whether the callable has finished running after it has been launched
+        (assuming it has been launched)."""
         self.active_lock.acquire()
         value = bool(self._finished)
         self.active_lock.release()
@@ -105,12 +118,21 @@ class BackgroundRunner():
 
     @property
     def failed(self):
+        """Shows whether the callable has thrown an exception during execution
+        (assuming it has been launched). The exception info will be stored in
+        ``self.exc_info``."""
         self.active_lock.acquire()
         value = bool(self._failed)
         self.active_lock.release()
         return value
 
     def threaded_runner(self, print_exc=True):
+        """Actually runs the callable. Sets the ``running`` and ``finished`` attributes 
+        as the callable progresses. This method catches exceptions, stores 
+        ``sys.exc_info`` in ``self.exc_info``, unsets ``self.running`` and 
+        re-raises the exception.
+
+        Not to be called directly!"""
         self.active_lock.acquire()
         self._running.set(True)
         self.active_lock.release()
@@ -119,7 +141,6 @@ class BackgroundRunner():
         except:
             self.exc_info = sys.exc_info
             if print_exc: traceback.print_exc()
-            print("Runner failed!")
             self.active_lock.acquire()
             self._running.set(False)
             self._failed.set(True)
@@ -131,6 +152,7 @@ class BackgroundRunner():
             self.active_lock.release()
 
     def run(self, daemonize=True):
+        """Starts a thread that will run the callable."""
         if self.running:
             return
         self.thread = Thread(target=self.threaded_runner)
@@ -138,6 +160,7 @@ class BackgroundRunner():
         self.thread.start()
 
     def reset(self):
+        """Resets all flags, restoring a clean state of the runner."""
         self._running.set(False)
         self._finished.set(False)
         self._failed.set(False)

@@ -10,24 +10,8 @@ class ExitHelper():
 
     Arguments:
 
-        *``i``: input device
-        *``keys``: all the keys that should trigger an exit
-
-    Usage:
-
-        def callback():
-            ...
-            eh = ExitHelper(i)
-            eh.start()
-            while eh.do_run():
-                ... #do your thing
-
-    There is also a shortened usage form:
-
-        ...
-        eh = ExitHelper(i).start()
-        while eh.do_run():
-            ..."""
+        * ``i``: input device
+        * ``keys``: all the keys that should trigger an exit"""
 
     started = False
 
@@ -37,6 +21,7 @@ class ExitHelper():
         self._do_exit = Event()
 
     def start(self):
+        """Clears input device keymap, registers callbacks and enables input listener."""
         self.i.stop_listen()
         self.i.clear_keymap()
         keymap = {key:self.signal_exit for key in self.keys}
@@ -46,20 +31,23 @@ class ExitHelper():
         return self #Allows shortened usage, like eh = ExitHelper(i).start()
 
     def do_exit(self):
+        """Returns ``True`` once exit flag has been set, ``False`` otherwise."""
         return self._do_exit.isSet()
 
     def do_run(self):
+        """Returns ``False`` once exit flag has been set, ``True`` otherwise."""
         return not self._do_exit.isSet()
 
     def signal_exit(self):
         self._do_exit.set()
 
     def reset(self):
+        """Clears the exit flag."""
         self._do_exit.clear()
 
     def stop(self):
         """Stop input listener and remove the created keymap. Shouldn't usually be necessary, 
-        since UI elements are supposed to make sure their callbacks are set"""
+        since all other UI elements are supposed to make sure their callbacks are set."""
         self.started = False
         self.i.clear_keymap()
         self.i.stop_listen()
