@@ -48,15 +48,6 @@ The pyLCI daemon consists of 5 parts:
    ui.rst
    apps.rst
    app_mgmt.rst
+   helpers.rst
    plans.rst
    faq_contact.rst
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-

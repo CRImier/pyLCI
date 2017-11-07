@@ -29,8 +29,3 @@ UI elements:
    ui/checkbox.rst
    ui/number_input.rst
    ui/char_input.rst
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
