@@ -22,6 +22,7 @@ Find a task to work on
 
 * Look into `ZPUI GitHub issues`_ and see if there are issues concerning documentation
 * Unleash your inner perfectionist
+* If you're not intimately familiar with reStructuredText markup, feel free to look through the existing documentation to see syntax and solutions that are already used.
 
 .. _ZPUI GitHub issues: https://github.com/ZeroPhone/ZPUI/issues
 
