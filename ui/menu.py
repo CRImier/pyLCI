@@ -1,7 +1,7 @@
 import logging
 from traceback import print_exc
 
-from list_ui_base import BaseListBackgroundableUIElement, to_be_foreground
+from base_list_ui import BaseListBackgroundableUIElement, to_be_foreground
 
 
 class MenuExitException(Exception):

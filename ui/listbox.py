@@ -1,6 +1,6 @@
 import logging
 
-from list_ui_base import BaseListUIElement, to_be_foreground
+from base_list_ui import BaseListUIElement, to_be_foreground
 
 class Listbox(BaseListUIElement):
     """Implements a listbox to choose one thing from many.

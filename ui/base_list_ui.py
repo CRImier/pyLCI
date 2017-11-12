@@ -45,7 +45,7 @@ class BaseListUIElement():
     name = ""
     exit_entry = ["Back", "exit"]
 
-    config_key = "list_ui_base"
+    config_key = "base_list_ui"
 
     def __init__(self, contents, i, o, name=None, entry_height=1, append_exit=True, exitable=True, scrolling=True, keymap=None):
         self.i = i

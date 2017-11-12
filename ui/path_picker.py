@@ -1,7 +1,7 @@
 import os
 import logging
 
-from list_ui_base import BaseListBackgroundableUIElement, to_be_foreground
+from base_list_ui import BaseListBackgroundableUIElement, to_be_foreground
 from menu import Menu, MenuExitException
 from printer import Printer
 

@@ -1,6 +1,6 @@
 import logging
 
-from list_ui_base import BaseListUIElement, TextView, EightPtView, SixteenPtView, to_be_foreground
+from base_list_ui import BaseListUIElement, TextView, EightPtView, SixteenPtView, to_be_foreground
 
 class Checkbox(BaseListUIElement):
     """Implements a checkbox which can be used to enable or disable some functions in your application. 
