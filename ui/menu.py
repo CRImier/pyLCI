@@ -58,7 +58,7 @@ class Menu(BaseListBackgroundableUIElement):
 
     def before_activate(self):
         #Clearing flags before the menu is activated
-        self.exit_exception = True
+        self.exit_exception = False
 
     def before_foreground(self):
         if callable(self.contents_hook):
