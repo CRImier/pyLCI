@@ -4,12 +4,22 @@ Best example of such an element is a Menu element - which has menu entries you c
 import logging
 from copy import copy
 from time import sleep
+from PIL import ImageFont
 from threading import Event
-from ui import config_manager
 from traceback import print_exc
 from helpers import read_config
 from luma.core.render import canvas as luma_canvas
-from PIL import ImageFont
+
+#Documentation building process has problems with this import
+try:
+    import ui.config_manager as config_manager
+except (ImportError, AttributeError):
+    config = {}
+else:
+    cm = config_manager.get_ui_config_manager()
+    cm.set_path("ui/configs")
+    config = cm.get_global_config()
+
 
 def to_be_foreground(func):
     """A safety check wrapper so that certain checks don't get called if UI element is
@@ -22,9 +32,6 @@ def to_be_foreground(func):
             return False
     return wrapper
 
-cm = config_manager.get_ui_config_manager()
-cm.set_path("ui/configs")
-config = cm.get_global_config()
 
 class BaseListUIElement():
     """This is a base UI element for list-like UI elements.
