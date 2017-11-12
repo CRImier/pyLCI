@@ -27,7 +27,10 @@ cm.set_path("ui/configs")
 config = cm.get_global_config()
 
 class BaseListUIElement():
-    """This is a base UI element for list-like UI elements."""
+    """This is a base UI element for list-like UI elements.
+
+       This UI element has built-in scrolling of entries - if the entry text is longer
+       than the screen, once the entry is selected, UI element will scroll through its text."""
 
     contents = []
     pointer = 0
@@ -101,13 +104,13 @@ class BaseListUIElement():
             raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
 
     def before_foreground(self):
-        """Hook for child UI elements"""
+        """Hook for child UI elements. Is called each time to_foreground is called."""
         pass
 
     def before_activate(self):
-        """Hook for child UI elements. Is the perfect place to clear any flags that you 
-        don't want to persist between multiple activations of a single instance of an
-        UI element."""
+        """Hook for child UI elements, is called each time activate() is called. 
+        Is the perfect place to clear any flags that you don't want to persist 
+        between multiple activations of a single instance of an UI element."""
         pass
 
     def to_foreground(self):
@@ -298,7 +301,8 @@ class BaseListBackgroundableUIElement(BaseListUIElement):
        This UI element has the ability to go into background. It's usually for the cases when
        an UI element can call another UI element, after the second UI element returns,
        context has to return to the first UI element - like in nested menus.
-       This UI element also has built-in scrolling of entries - if the entry text is longer
+
+       This UI element has built-in scrolling of entries - if the entry text is longer
        than the screen, once the entry is selected, UI element will scroll through its text."""
 
     def __init__(self, *args, **kwargs):
