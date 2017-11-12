@@ -6,6 +6,7 @@ from menu import Menu, MenuExitException
 from printer import Printer
 
 class PathPicker(BaseListBackgroundableUIElement):
+
     path_chosen = None
 
     def __init__(self, path, i, o, callback = None, display_hidden = False, current_dot = False, prev_dot = True, scrolling=True, **kwargs):
@@ -34,6 +35,10 @@ class PathPicker(BaseListBackgroundableUIElement):
         self.menu_pointers = {}
         self.set_path(os.path.normpath(path))
         self.update_keymap()
+
+    def before_activate(self):
+        #Clearing flags
+        path_chosen = None
 
     def get_return_value(self):
         return self.path_chosen

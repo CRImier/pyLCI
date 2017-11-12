@@ -60,7 +60,7 @@ class Checkbox(BaseListUIElement):
         else:
             return None
 
-    def before_foreground(self):
+    def before_activate(self):
         #Protecting from a bug that might happen where Checkbox object is reused multiple times
         self.accepted = False
 

@@ -104,6 +104,12 @@ class BaseListUIElement():
         """Hook for child UI elements"""
         pass
 
+    def before_activate(self):
+        """Hook for child UI elements. Is the perfect place to clear any flags that you 
+        don't want to persist between multiple activations of a single instance of an
+        UI element."""
+        pass
+
     def to_foreground(self):
         """ Is called when UI element's ``activate()`` method is used, sets flags
             and performs all the actions so that UI element can display its contents
@@ -127,6 +133,7 @@ class BaseListUIElement():
             waits until self.in_foreground is False, while UI element callbacks
             are executed from the input listener thread."""
         logging.info("{0} activated".format(self.name))
+        self.before_activate()
         self.to_foreground()
         while self.in_foreground: #All the work is done in input callbacks
             self.idle_loop()
@@ -329,6 +336,7 @@ class BaseListBackgroundableUIElement(BaseListUIElement):
             waits until self.in_background is False, while UI element callbacks
             are executed from the input listener thread."""
         logging.info("{0} activated".format(self.name))
+        self.before_activate()
         self.to_foreground()
         while self.in_background: #All the work is done in input callbacks
             self.idle_loop()

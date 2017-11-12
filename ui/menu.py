@@ -56,6 +56,10 @@ class Menu(BaseListBackgroundableUIElement):
         self.contents_hook = kwargs.pop("contents_hook") if "contents_hook" in kwargs else None
         BaseListBackgroundableUIElement.__init__(self, *args, **kwargs)
 
+    def before_activate(self):
+        #Clearing flags before the menu is activated
+        self.exit_exception = True
+
     def before_foreground(self):
         if callable(self.contents_hook):
             self.set_contents(self.contents_hook())
