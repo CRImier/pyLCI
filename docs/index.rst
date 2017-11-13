@@ -15,6 +15,7 @@ Guides:
 =================================
 
 * :doc:`Hardware guide <hardware>`
+* :doc:`Hacking on UI <hacking_ui>`
 * :doc:`Setup and configuration guide <setup>`
 * :doc:`Debugging issues <debugging>`
 * :doc:`Managing and developing applications <app_mgmt>`
@@ -43,6 +44,7 @@ The pyLCI daemon consists of 5 parts:
    hardware.rst
    setup.rst
    debugging.rst
+   hacking_ui.rst
    input.rst
    output.rst
    ui.rst
@@ -50,4 +52,4 @@ The pyLCI daemon consists of 5 parts:
    app_mgmt.rst
    helpers.rst
    plans.rst
-   faq_contact.rst
+   contact.rst
