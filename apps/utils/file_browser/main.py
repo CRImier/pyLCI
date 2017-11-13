@@ -3,16 +3,14 @@ menu_name = "File browser"
 from ui import PathPicker, Printer
 import os
 
-#Callback global for pyLCI. It gets called when application is activated in the main menu
 callback = None
 
-#Some globals for us
-i = None #Input device
-o = None #Output device
+i = None
+o = None
 
 def init_app(input, output):
     global callback, i, o
-    i = input; o = output #Getting references to output and input device objects and saving them as globals
+    i = input; o = output
     callback = browse
 
 def print_path(path):
@@ -24,5 +22,6 @@ def print_path(path):
         Printer("WTF: {}".format(path), i, o, 5) # ;-P
 
 def browse():
+    #"File options" menu yet to be added
     path_picker = PathPicker("/", i, o, callback=print_path)
-    path_picker.activate() #Menu yet to be added
+    path_picker.activate() 

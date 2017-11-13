@@ -15,7 +15,7 @@ def show_time():
     now = datetime.now()
     return [now.strftime("%H:%M:%S").center(o.cols), now.strftime("%Y-%m-%d").center(o.cols)]
 
-#Callback global for pyLCI. It gets called when application is activated in the main menu
+#Callback global for ZPUI. It gets called when application is activated in the main menu
 callback = None
 
 #Some globals for us

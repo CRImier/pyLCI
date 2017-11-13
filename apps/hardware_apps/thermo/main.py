@@ -18,7 +18,7 @@ def show_temp():
     "Object:"+str(obj_temp).rjust(o.cols-len("Object:"))]
     return data
 
-#Callback global for pyLCI. It gets called when application is activated in the main menu
+#Callback global for ZPUI. It gets called when application is activated in the main menu
 
 #Some globals for us
 i = None #Input device
@@ -28,6 +28,6 @@ def callback():
     Refresher(show_temp, i, o, 0.1, name="Temperature monitor").activate()
 
 def init_app(input, output):
-    global callback, i, o
+    global i, o
     i = input; o = output
 

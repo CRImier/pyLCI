@@ -4,14 +4,14 @@ import os
 from subprocess import call
 from time import sleep
 import argparse
-#Welcome to pyLCI innards
+#Welcome to ZPUI innards
 #Here, things are about i and o, which are input and output
 #And we output things for debugging, so o goes first.
 from output import output
 
-main_config_path = "/boot/pylci_config.json"
+main_config_path = "/boot/zpui_config.json"
 backup_config_path = "./config.json"
-config_error_file = "/boot/pylci_config_error.repr"
+config_error_file = "/boot/zpui_config_error.repr"
 emulator_flag_filename = "emulator"
 
 #Debugging helper snippet
@@ -29,7 +29,7 @@ def dumpthreads(*args):
         print("")
 signal.signal(signal.SIGUSR1, dumpthreads)
 
-#Getting pyLCI config, it will be passed to input and output initializers
+#Getting ZPUI config, it will be passed to input and output initializers
 #If config at main_config_path exists, use that
 #If not, use the backup path
 #Also, log the errors to a file so that it can be debugged later
@@ -106,7 +106,7 @@ def exception_wrapper(callback):
         sys.exit(0)
 
 def launch(name=None):
-    """Function that launches pyLCI, either in full mode or single-app mode (if ``name`` kwarg is passed)."""
+    """Function that launches ZPUI, either in full mode or single-app mode (if ``name`` kwarg is passed)."""
     app_man = AppManager("apps", Menu, Printer, i, o)
     if name != None:
         name = name.rstrip('/') #If using autocompletion from main folder, it might append a / at the name end, which isn't acceptable for load_app
@@ -122,7 +122,7 @@ def launch(name=None):
         exception_wrapper(app_menu.activate)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="pyLCI runner")
-    parser.add_argument('-a', '--app', action="store", help="Launch pyLCI with a single app loaded (useful for testing)", default=None)
+    parser = argparse.ArgumentParser(description="ZPUI runner")
+    parser.add_argument('-a', '--app', action="store", help="Launch ZPUI with a single app loaded (useful for testing)", default=None)
     args = parser.parse_args()
     launch(name=args.app)

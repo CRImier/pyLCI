@@ -56,7 +56,7 @@ docs/_build/
 # PyBuilder
 target/
 
-# pyLCI
+# ZPUI
 # Apps are not supposed to ship config.json
 # Instead, they're supposed to create them on first launch
 config.json 

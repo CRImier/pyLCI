@@ -53,9 +53,7 @@ def show_linux_info():
     ]
     Menu(menu_contents, i, o, entry_height=2).activate()
 
-#Some globals for pyLCI
 callback = None
-#Some globals for us
 i = None
 o = None
 

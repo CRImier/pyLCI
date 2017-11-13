@@ -13,10 +13,9 @@ def call_external():
     Printer(["Calling external", "command"], i, o, 1)
     call(['echo', 'Success'])
 
-#Callback global for pyLCI. It gets called when application is activated in the main menu
+#Callback global for ZPUI. It gets called when application is activated in the main menu
 callback = None
 
-#Some globals for us
 i = None #Input device
 o = None #Output device
 

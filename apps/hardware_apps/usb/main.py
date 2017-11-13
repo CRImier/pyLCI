@@ -9,7 +9,7 @@ import gpio
 sys.excepthook = sys.__excepthook__
 #GPIO library workaround - it sets excepthook
 #to PDB debug, that's good but it's going to
-#propagate through pyLCI code, and that's not desirable
+#propagate through ZPUI code, and that's not desirable
 gpio.log.setLevel(gpio.logging.INFO)
 #Otherwise, a bunch of stuff is printed in the terminal
 
@@ -20,7 +20,7 @@ o = None
 
 dcdc_gpio = 510
 #It doesn't make sense to export the DC-DC GPIO as the app is initialized, 
-#so that the current state of GPIO is saved even if pyLCI restarts
+#so that the current state of GPIO is saved even if ZPUI restarts
 dcdc_exported = False
 
 usb_file = None

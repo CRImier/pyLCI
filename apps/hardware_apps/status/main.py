@@ -32,11 +32,7 @@ def show_status():
     "Battery: "+str(bat_voltage).rjust(o.cols-len("Battery: "))]
     return data
 
-#Callback global for pyLCI. It gets called when application is activated in the main menu
-
-#Some globals for us
-i = None #Input device
-o = None #Output device
+i = None; o = None
 
 def callback():
     Refresher(show_status, i, o, 0.1, name="Assistant status monitor").activate()

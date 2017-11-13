@@ -189,7 +189,7 @@ class InputListener():
         return True
 
     def atexit(self):
-        """Exits driver (if necessary) if something wrong happened or pyLCI exits. Also, stops the listener"""
+        """Exits driver (if necessary) if something wrong happened or ZPUI exits. Also, stops the listener"""
         self.stop_listen()
         for driver, _ in self.drivers:
             if hasattr(driver, "atexit"):

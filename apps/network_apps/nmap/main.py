@@ -325,7 +325,7 @@ def show_quick_scan_results_for_network(net_ip, net_results):
     Menu(net_report, i, o, entry_height=2).activate()
 
     
-#pyLCI functions
+#ZPUI functions
 
 def callback():
     #Check if we have all the software necessary for the app to work

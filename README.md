@@ -1,4 +1,4 @@
-# Z{UI
+# ZPUI
 Default ZeroPhone UI framework (based on [pyLCI](pylci.rtfd.io))
 
 [Project description on Hackaday](https://hackaday.io/project/19035)

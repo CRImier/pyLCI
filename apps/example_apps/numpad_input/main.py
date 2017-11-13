@@ -6,7 +6,7 @@ from ui import NumpadCharInput as CharInput, NumpadNumberInput as NumberInput
 i = None #Input device
 o = None #Output device
 
-#Callback for pyLCI. It gets called when application is activated in the main menu
+#Callback for ZPUI. It gets called when application is activated in the main menu
 def callback():
     char_input = CharInput(i, o, message="Input characters")
     print(repr(char_input.activate()))
