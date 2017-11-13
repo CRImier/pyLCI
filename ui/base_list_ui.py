@@ -109,9 +109,9 @@ class BaseListUIElement():
         """Decides on the view to use for UI element when config file has 
         no information on it."""
         if "b&w-pixel" in self.o.type:
-            return views["PrettyGraphicalView"]
+            return self.views["SixteenPtView"]
         elif "char" in self.o.type:
-            return views["TextView"]
+            return self.views["TextView"]
         else:
             raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
 
