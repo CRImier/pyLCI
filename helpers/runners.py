@@ -38,18 +38,15 @@ class Oneshot():
     def run(self):
         """Run the callable. Sets the ``running`` and ``finished`` attributes 
         as the function progresses. This function doesn't handle exceptions."""
-        if self.running or self.finished:
-            return
-        self.active_lock.acquire()
-        self._running = True
-        self.active_lock.release()
-
+        with self.active_lock:
+            if self.running or self.finished:
+                return
+            self._running = True
         self.func(*self.args, **self.kwargs)
-
-        self.active_lock.acquire()
-        self._running = False
-        self._finished = True
-        self.active_lock.release()
+        with self.active_lock:
+            self._running = False
+            self._finished = True
+        return value
 
     def reset(self):
         """Resets all flags, allowing the callable to be run once again.
@@ -63,18 +60,16 @@ class Oneshot():
     def running(self):
         """Shows whether the callable is still running after it has been launched
         (assuming it has been launched)."""
-        self.active_lock.acquire()
-        value = self._running
-        self.active_lock.release()
+        with self.active_lock:
+            value = self._running
         return value
 
     @property
     def finished(self):
         """Shows whether the callable has finished running after it has been launched
         (assuming it has been launched)."""
-        self.active_lock.acquire()
-        value = self._finished
-        self.active_lock.release()
+        with self.active_lock:
+            value = self._finished
         return value
 
 class BackgroundRunner():
@@ -102,18 +97,16 @@ class BackgroundRunner():
     def running(self):
         """Shows whether the callable is still running after it has been launched
         (assuming it has been launched)."""
-        self.active_lock.acquire()
-        value = bool(self._running)
-        self.active_lock.release()
+        with self.active_lock:
+            value = bool(self._running)
         return value
 
     @property
     def finished(self):
         """Shows whether the callable has finished running after it has been launched
         (assuming it has been launched)."""
-        self.active_lock.acquire()
-        value = bool(self._finished)
-        self.active_lock.release()
+        with self.active_lock:
+            value = bool(self._finished)
         return value
 
     @property
@@ -121,9 +114,8 @@ class BackgroundRunner():
         """Shows whether the callable has thrown an exception during execution
         (assuming it has been launched). The exception info will be stored in
         ``self.exc_info``."""
-        self.active_lock.acquire()
-        value = bool(self._failed)
-        self.active_lock.release()
+        with self.active_lock:
+            value = bool(self._failed)
         return value
 
     def threaded_runner(self, print_exc=True):
@@ -133,23 +125,20 @@ class BackgroundRunner():
         re-raises the exception.
 
         Not to be called directly!"""
-        self.active_lock.acquire()
-        self._running.set(True)
-        self.active_lock.release()
+        with self.active_lock:
+            self._running.set(True)
         try:
             self.func(*self.args, **self.kwargs)
         except:
             self.exc_info = sys.exc_info
             if print_exc: traceback.print_exc()
-            self.active_lock.acquire()
-            self._running.set(False)
-            self._failed.set(True)
-            self.active_lock.release()
+            with self.active_lock:
+                self._running.set(False)
+                self._failed.set(True)
         else:
-            self.active_lock.acquire()
-            self._running.set(False)
-            self._finished.set(True)
-            self.active_lock.release()
+            with self.active_lock:
+                self._running.set(False)
+                self._finished.set(True)
 
     def run(self, daemonize=True):
         """Starts a thread that will run the callable."""
