@@ -10,7 +10,7 @@ class Checkbox(BaseListUIElement):
     * ``contents``: list of checkbox elements which was passed either to ``Checkbox`` constructor or to ``checkbox.set_contents()``.
 
       Checkbox element structure is a list, where:
-         * ``element[0]`` (element's representation) is either a string, which simply has the element's value as it'll be displayed, such as "Menu element 1", or, in case of entry_height > 1, can be a list of strings, each of which represents a corresponding display row occupied by the element.
+         * ``element[0]`` (element's label) is either a string, which simply has the element's value as it'll be displayed, such as "Option 1", or, in case of entry_height > 1, can be a list of strings, each of which represents a corresponding display row occupied by the element.
          * ``element[1]`` (element's name) is a name returned by the checkbox upon its exit in a dictionary along with its boolean value.
          * ``element[2]`` (element's state) is the default state assumed by the checkbox. If not present, assumed to be default_state.
 
@@ -26,8 +26,7 @@ class Checkbox(BaseListUIElement):
     exit_entry = ["Accept", None, 'accept']
 
     def __init__(self, *args, **kwargs):
-        """Initialises the Checkbox object.
-
+        """
         Args:
 
             * ``contents``: a list of element descriptions, which can be constructed as described in the Checkbox object's docstring.
@@ -37,8 +36,8 @@ class Checkbox(BaseListUIElement):
 
             * ``name``: Checkbox name which can be used internally and for debugging.
             * ``entry_height``: number of display rows one checkbox element occupies.
-            * ``default_state``: default state of the element if not supplied.
-            * ``final_button_name``: name for the last button that confirms the selection
+            * ``default_state``: default state of entries where not set in ``contents`` (default: ``False``)
+            * ``final_button_name``: name for the last button that confirms the selection (default: ``"Accept"``)
 
         """
         self.default_state = kwargs.pop("default_state") if "default_state" in kwargs else False
@@ -61,7 +60,7 @@ class Checkbox(BaseListUIElement):
             return None
 
     def before_activate(self):
-        #Protecting from a bug that might happen where Checkbox object is reused multiple times
+        #Clearing flags
         self.accepted = False
 
     @to_be_foreground
@@ -91,6 +90,18 @@ class Checkbox(BaseListUIElement):
 
 
 class CheckboxRenderingMixin():
+    """A mixin to add checkbox-specific functions and overrides to views.
+    If you're making your own view for BaseListUIElements and want it to 
+    work with checkbox UI elements, you will probably want to use this mixin,
+    like this:
+
+    .. code-block:: python
+
+        class ChEightPtView(CheckboxRenderingMixin, EightPtView):
+            pass
+
+    """
+
 
     def entry_is_checked(self, entry_num):
         return self.el.states[entry_num]
@@ -126,7 +137,7 @@ class CheckboxRenderingMixin():
                 entry.append('')
             return entry
         else:
-            raise Exception("Entries may contain either strings or lists of strings as their representations")
+            raise Exception("Entry labels have to be either strings or lists of strings, found: {}, type: {}".format(entry, type(entry)))
         logging.debug("Rendered entry: {}".format(rendered_entry))
         return rendered_entry
 

@@ -10,7 +10,7 @@ class Listbox(BaseListUIElement):
     * ``contents``: list of listbox entries
 
       Listbox entry is a list, where:
-         * ``entry[0]`` (entry's representation) is either a string, which simply has the entry's value as it'll be displayed, such as "Listbox entry 1", or, in case of entry_height > 1, can be a list of strings, each of which represents a corresponding display row occupied by the entry.
+         * ``entry[0]`` (entry's label) is usually a string which will be displayed in the UI, such as "Option 1". If ``entry_height`` > 1, can be a list of strings, each of those strings will be shown on a separate display row.
          * ``entry[1]`` (entry's value) is the value to be returned when entry is selected.
 
       *If you want to set contents after the initalisation, please, use set_contents() method.*

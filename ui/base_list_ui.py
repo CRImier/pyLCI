@@ -1,5 +1,5 @@
-"""Contains base classes for UI elements that consist of entries, that can be scrolled through using arrow keys.
-Best example of such an element is a Menu element - which has menu entries you can scroll through, which execute a callback when you click on them. """
+"""Contains base classes for UI elements that deal with lists of entries, that can be scrolled through using arrow keys.
+Best example of such an element is a Menu element - it has menu entries you can scroll through, which execute a callback when you click on them. """
 
 import logging
 from copy import copy
@@ -7,7 +7,6 @@ from time import sleep
 from PIL import ImageFont
 from threading import Event
 from traceback import print_exc
-from helpers import read_config
 from luma.core.render import canvas as luma_canvas
 
 #Documentation building process has problems with this import
@@ -66,12 +65,13 @@ class BaseListUIElement():
 
     def set_views_dict(self):
         self.views = {
+        "TextView":TextView,
+        "EightPtView":EightPtView,
+        "SixteenPtView":SixteenPtView,
         "MainMenuTripletView":MainMenuTripletView,
         "PrettyGraphicalView":SixteenPtView, #Not a descriptive name - left for compatibility
-        "SimpleGraphicalView":EightPtView, #Not a descriptive name - left for compatibility
-        "SixteenPtView":SixteenPtView,
-        "EightPtView":EightPtView,
-        "TextView":TextView}
+        "SimpleGraphicalView":EightPtView #Not a descriptive name - left for compatibility
+        }
 
     def set_view(self, config):
         view = None
@@ -103,6 +103,8 @@ class BaseListUIElement():
         self.view = view(self.o, self.entry_height, self)
 
     def get_default_view(self):
+        """Decides on the view to use for UI element when config file has 
+        no information on it."""
         if "b&w-pixel" in self.o.type:
             return views["PrettyGraphicalView"]
         elif "char" in self.o.type:
@@ -162,6 +164,8 @@ class BaseListUIElement():
         self.o.noCursor()
         logging.info("{} deactivated".format(self.name))
 
+    #Scroll functions - will likely be moved into a mixin or views later on
+
     @to_be_foreground
     def scroll(self):
         if self.scrolling["enabled"] and not self.scrolling["current_finished"] and self.scrolling["current_scrollable"]:
@@ -176,6 +180,8 @@ class BaseListUIElement():
         self.scrolling["pointer"] = 0
         self.scrolling["counter"] = 0
 
+    #Debugging helpers - you can set them as callbacks for keys you don't use
+
     def print_contents(self):
         """ A debug method. Useful for hooking up to an input event so that
             you can see the representation of current UI element's contents. """
@@ -185,6 +191,8 @@ class BaseListUIElement():
         """ A debug method. Useful for hooking up to an input event so that
             you can see which UI element is currently processing input events. """
         logging.info("Active UI element is {0}".format(self.name))
+
+    #Callbacks for moving up and down in the entry list
 
     @to_be_foreground
     def move_down(self):
@@ -248,8 +256,18 @@ class BaseListUIElement():
            in UI element."""
         print(self.contents[self.pointer])
 
+    #Working with the keymap
+
+    @to_be_foreground
+    def set_keymap(self):
+        """Sets the input device's keycode-to-callback mapping. Re-starts the input device because ofpassing-variables-between-threads issues."""
+        self.i.stop_listen()
+        self.i.set_keymap(self.keymap)
+        self.i.listen()
+
     def generate_keymap(self):
         """Makes the keymap dictionary for the input device."""
+        #Has to be in a function because otherwise it will be a SyntaxError
         self.keymap.update({
             "KEY_UP":lambda: self.move_up(),
             "KEY_DOWN":lambda: self.move_down(),
@@ -262,7 +280,7 @@ class BaseListUIElement():
             self.keymap["KEY_LEFT"] = lambda: self.deactivate()
 
     def set_contents(self, contents):
-        """Sets the UI element contents and triggers pointer recalculation."""
+        """Sets the UI element contents and triggers pointer recalculation in the view."""
         self.validate_contents(contents)
         #Copy-ing the contents list is necessary because it can be modified 
         #by UI elements that are based on this class
@@ -271,6 +289,9 @@ class BaseListUIElement():
         self.view.fix_pointers_on_contents_update()
 
     def validate_contents(self, contents):
+        """A hook to validate contents before they're set. If validation is unsuccessful,
+        raise exceptions (it's better if exception message contains the faulty entry).
+        Does not check if the contents are falsey."""
         #if not contents:
         #    raise ValueError("UI element 'contents' argument has to be set to a non-empty list!")
         for entry in contents:
@@ -294,13 +315,6 @@ class BaseListUIElement():
                     self.contents.remove(entry)
             self.contents.append(self.exit_entry)
         logging.debug("{}: contents processed".format(self.name))
-
-    @to_be_foreground
-    def set_keymap(self):
-        """Sets the input device's keycode-to-callback mapping. Re-starts the input device because ofpassing-variables-between-threads issues."""
-        self.i.stop_listen()
-        self.i.set_keymap(self.keymap)
-        self.i.listen()
 
 
 class BaseListBackgroundableUIElement(BaseListUIElement):
@@ -360,6 +374,7 @@ class BaseListBackgroundableUIElement(BaseListUIElement):
         self.in_background = False
         BaseListUIElement.deactivate(self)
 
+#Views.
 
 class TextView():
     first_displayed_entry = 0
