@@ -1,3 +1,4 @@
+from copy import copy
 import logging
 
 from base_list_ui import BaseListUIElement, TextView, EightPtView, SixteenPtView, to_be_foreground
@@ -41,8 +42,12 @@ class Checkbox(BaseListUIElement):
 
         """
         self.default_state = kwargs.pop("default_state") if "default_state" in kwargs else False
-        self.final_button_name = kwargs.pop("final_button_name") if "final_button_name" in kwargs else "Accept"
-        self.exit_entry[0] = self.final_button_name
+        if "final_button_name" in kwargs:
+            #Avoid propagation into other Checkbox objects, 
+            #since exit_entry is modified in-place
+            final_button_name = kwargs.pop("final_button_name")
+            self.exit_entry = copy(self.exit_entry)
+            self.exit_entry[0] = final_button_name
         BaseListUIElement.__init__(self, *args, **kwargs)
 
     def set_views_dict(self):
