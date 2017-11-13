@@ -37,12 +37,13 @@ class Oneshot():
     
     def run(self):
         """Run the callable. Sets the ``running`` and ``finished`` attributes 
-        as the function progresses. This function doesn't handle exceptions."""
+        as the function progresses. This function doesn't handle exceptions.
+        Passes the return value through."""
         with self.active_lock:
             if self.running or self.finished:
                 return
             self._running = True
-        self.func(*self.args, **self.kwargs)
+        value = self.func(*self.args, **self.kwargs)
         with self.active_lock:
             self._running = False
             self._finished = True
@@ -83,6 +84,7 @@ class BackgroundRunner():
         * ``**kwargs``: keyword arguments for the function"""
 
     exc_info = None
+    return_value = None
 
     def __init__(self, func, *args, **kwargs):
         self.func = func
@@ -122,13 +124,13 @@ class BackgroundRunner():
         """Actually runs the callable. Sets the ``running`` and ``finished`` attributes 
         as the callable progresses. This method catches exceptions, stores 
         ``sys.exc_info`` in ``self.exc_info``, unsets ``self.running`` and 
-        re-raises the exception.
+        re-raises the exception. Function's return value is stored as ``self.return_value``.
 
         Not to be called directly!"""
         with self.active_lock:
             self._running.set(True)
         try:
-            self.func(*self.args, **self.kwargs)
+            self.return_value = self.func(*self.args, **self.kwargs)
         except:
             self.exc_info = sys.exc_info
             if print_exc: traceback.print_exc()
@@ -154,3 +156,4 @@ class BackgroundRunner():
         self._finished.set(False)
         self._failed.set(False)
         self.exc_info = None
+        self.return_value = None
