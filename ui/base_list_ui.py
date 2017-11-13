@@ -17,7 +17,10 @@ except (ImportError, AttributeError):
 else:
     cm = config_manager.get_ui_config_manager()
     cm.set_path("ui/configs")
-    config = cm.get_global_config()
+    try:
+        config = cm.get_global_config()
+    except OSError:
+        print("Config files not available, running under ReadTheDocs?")
 
 
 def to_be_foreground(func):
