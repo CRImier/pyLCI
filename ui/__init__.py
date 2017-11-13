@@ -1,5 +1,5 @@
 from menu import Menu, MenuExitException
-from printer import Printer, PrettyPrinter
+from printer import Printer, PrettyPrinter, GraphicsPrinter
 from listbox import Listbox
 from refresher import Refresher
 from checkbox import Checkbox
@@ -10,4 +10,4 @@ from char_input import CharArrowKeysInput
 from dialog import DialogBox
 from numpad_input import NumpadCharInput, NumpadNumberInput
 
-from funcs import ellipsize, format_for_screen
+from funcs import ellipsize, format_for_screen, ffs

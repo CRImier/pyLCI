@@ -96,8 +96,7 @@ def exception_wrapper(callback):
         i.atexit()
         sys.exit(1)
     except Exception as e:
-        print(e)
-        #raise
+        traceback.print_exc()
         Printer(["A wild exception", "appears!"], None, o, 0)
         i.atexit()
         sys.exit(1)

@@ -13,3 +13,7 @@ Printer UI element
 .. automodule:: ui.printer
 
 .. autofunction:: Printer
+
+.. autofunction:: PrettyPrinter
+
+.. autofunction:: GraphicsPrinter

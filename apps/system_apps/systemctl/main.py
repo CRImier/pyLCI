@@ -55,7 +55,7 @@ def all_units():
     units = systemctl.list_units()
     for unit in units: 
         menu_contents.append([unit["basename"], lambda x=unit: unit_menu(x)])
-    Menu(menu_contents, i, o, "All unit list menu").activate()
+    Menu(menu_contents, i, o, "Systemctl: all unit list menu").activate()
 
 def filtered_units():
     menu_contents = []
@@ -63,7 +63,7 @@ def filtered_units():
     for unit in units: 
         if unit["type"] in config["allowed_types"]:
             menu_contents.append([unit["basename"], lambda x=unit: unit_menu(x)])
-    Menu(menu_contents, i, o, "All unit list menu").activate()
+    Menu(menu_contents, i, o, "Systemctl: filtered unit list menu").activate()
 
 def unit_menu(unit):
     name = unit["name"]

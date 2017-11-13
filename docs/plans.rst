@@ -35,7 +35,6 @@ Applications
 * Mount partitions app
 * OpenHAB console
 * Twitter reader
-* NMap app
 * SMS and call app - interfacing to mobile phones and GSM/3G modems
 
 ============

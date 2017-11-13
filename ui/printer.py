@@ -1,20 +1,24 @@
+import PIL
+from PIL import ImageOps
 from time import sleep
 from funcs import format_for_screen as ffs
 
 def Printer(message, i, o, sleep_time=1, skippable=True):
-    """Outputs string data on display as soon as it's called.
+    """Outputs a string, or a list of strings, on a display as soon as it's called.
+    A string will be split into a list, a list will not be modified. 
+    The resulting list is then displayed string-by-string.
+    If resulting strings will take more than one screen, they'll be split
+    into multiple screenfuls and shown one-by-one.
                                                                                
-    Args:                                                                    
-                                                                             
-        * ``message``: A string or list of strings to display. A string will be split into a list, a list will not be modified. The resulting list is then displayed string-by-string.
+    Args:
+
+        * ``message``: A string or list of strings to display.
         * ``i``, ``o``: input&output device objects. If you're not using skippable=True and don't need exit on KEY_LEFT, feel free to pass None as i.
-                                                                             
-    Kwargs:                                                                  
-                                                                                 
+
+    Kwargs:
+
         * ``sleep_time``: Time to display each the message (for each of resulting screens).
-        * ``skippable``: If set, allows skipping message screens by presing ENTER.
-                                                                                 
-    """                                                                      
+        * ``skippable``: If set, allows skipping message screens by presing ENTER. """
     Printer.skip_screen_flag = False #A flag which is set for skipping screens and is polled while printer is displaying things
     Printer.exit_flag = False #A flag which is set for stopping exiting the printing process completely
 
@@ -71,4 +75,58 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
             sleep(poll_period)
 
 def PrettyPrinter(text, i, o, *args, **kwargs):
+    """Outputs string data on display as soon as it's called. Will pass the data 
+    through format_for_screen function before passing it on to Printer.
+    If text will take more than one screen, it'll be split into multiple 
+    screenfuls to fit.
+
+    Args:
+
+        * ``message``: A string to be displayed.
+        * ``i``, ``o``: input&output device objects. If you're not using skippable=True and don't need exit on KEY_LEFT, feel free to pass None as i.
+
+    Kwargs:
+
+        * ``sleep_time``: Time to display each screenful of text.
+        * ``skippable``: If set, allows skipping screens by presing ENTER."""
     Printer(ffs(text, o.cols), i, o, *args, **kwargs)
+
+def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
+    """Outputs image on the display, as soon as it's called.
+    You can use either a PIL image, or a relative/absolute path 
+    to a suitable image
+
+    Args:
+
+        * ``image_or_path``: Either a PIL image or path to an image to be displayed.
+        * ``i``, ``o``: input&output device objects. If you don't need/want exit on KEY_LEFT, feel free to pass None as i.
+
+    Kwargs:
+
+        * ``sleep_time``: Time to display the image
+        * ``invert``: Invert the image before displaying (True by default) """
+    if isinstance(image_or_path, basestring):
+        image = PIL.Image.open(image_or_path).convert('L')
+    else:
+        image = image_or_path
+    GraphicsPrinter.exit_flag = False
+    def exit_printer():
+        GraphicsPrinter.exit_flag = True
+    if i is not None:
+        i.stop_listen()
+        i.clear_keymap()
+        i.set_callback("KEY_LEFT", exit_printer)
+        i.set_callback("KEY_ENTER", exit_printer)
+        i.listen()
+    if invert: image = ImageOps.invert(image)
+    image = image.convert(o.device.mode)
+    o.display_image(image)
+    poll_period = 0.1
+    if sleep_time < poll_period*2:
+        sleep(sleep_time)
+    else:
+        sleep_periods = sleep_time/poll_period
+        for period in range(int(sleep_periods)):
+            if GraphicsPrinter.exit_flag == True:
+                return #Exiting the function completely
+            sleep(poll_period)

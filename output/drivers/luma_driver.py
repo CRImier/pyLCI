@@ -8,7 +8,6 @@
 # Adafruit - https://github.com/adafruit/Adafruit-Raspberry-Pi-Python-Code
 # SSD1306 library - ################
 
-from time import sleep
 from luma.core.serial import spi, i2c
 from luma.core.render import canvas
 from time import sleep
@@ -29,8 +28,9 @@ class LumaScreen(BacklightManager):
 
     #buffer = " "
     #redraw_coefficient = 0.5
+    current_image = None
 
-    type = ["char"] 
+    type = ["char", "b&w-pixel"] 
     cursor_enabled = False
     cursor_pos = (0, 0) #x, y
 
@@ -46,13 +46,13 @@ class LumaScreen(BacklightManager):
             raise ValueError("Unknown interface type: {}".format(hw))
         self.address = address
         self.busy_flag = Event()
+        self.width = 128
+        self.height = 64
         self.charwidth = 6
         self.charheight = 8
-        self.cols = 128/self.charwidth
-        self.rows = 64/self.charheight
+        self.cols = self.width/self.charwidth
+        self.rows = self.height/self.charheight
         self.debug = debug
-        #self.buffering = buffering
-        #self.buffer = [" "*self.cols for i in range(self.rows)]
         self.init_display(**kwargs)
         BacklightManager.init_backlight(self, **kwargs)
 
@@ -63,6 +63,19 @@ class LumaScreen(BacklightManager):
     @disable_backlight_wrapper
     def disable_backlight(self):
         self.device.hide()
+
+    @activate_backlight_wrapper
+    def display_image(self, image):
+        """Displays a PIL Image object onto the display
+        Also saves it fo the case where display needs to be refreshed"""
+        while self.busy_flag.isSet():
+            sleep(0.01)
+        self.busy_flag.set()
+        if self.current_image:
+            del self.current_image #Freeing memory
+        self.device.display(image)
+        self.current_image = image
+        self.busy_flag.clear()
 
     @activate_backlight_wrapper
     def display_data(self, *args):

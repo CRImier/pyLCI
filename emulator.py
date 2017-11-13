@@ -4,6 +4,7 @@ import logging
 from multiprocessing import Process, Pipe
 from time import sleep
 
+from time import sleep
 import luma.emulator.device
 import pygame
 from luma.core.render import canvas
@@ -20,7 +21,12 @@ def get_emulator():
 
 
 class EmulatorProxy(object):
+
+    width = 128
+    height = 64
+
     def __init__(self):
+        self.device = type("MockDevice", (), {"mode":"1", "size":(128, 64)})
         self.parent_conn, self.child_conn = Pipe()
         self.proc = Process(target=Emulator, args=(self.child_conn,))
         self.proc.start()
@@ -146,3 +152,6 @@ class Emulator(object):
                 y = (line * self.char_height - 1) if line != 0 else 0
                 draw.text((2, y), arg, fill='white')
                 logging.debug('after draw.text(2, %d), %s', y, arg)
+
+    def display_image(self, image):
+        self.device.display(image)

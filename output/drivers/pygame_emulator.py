@@ -44,28 +44,31 @@ class Screen():
         logging.debug('Creating emulator instance')
         self.emulator = emulator.get_emulator()
 
-    def display_data(self, *args):
-        """Displays data on display.
-        called from menu.py refresh() so don't remove this method
-        This function does the actual work of printing things to display.
-        ``*args`` is a list of strings,
-                  where each string corresponds to a row of the display,
-                  starting with 0.
-                  Note:  the emulator does not support passing tuples, lists
-                  or anything except comma delimited simple strings as args.
-        """
-        self.emulator.display_data(*args)
+    def __getattr__(self, name):
+        return getattr(self.emulator, name)
 
-    def setCursor(self, row, col):
-        """
-        Called from menu.py refresh() so don't remove this method
-        Set current input cursor to ``row`` and ``column`` specified """
-        self.emulator.setCursor(row, col)
+    #def display_data(self, *args):
+    #    """Displays data on display.
+    #    called from menu.py refresh() so don't remove this method
+    #    This function does the actual work of printing things to display.
+    #    ``*args`` is a list of strings,
+    #              where each string corresponds to a row of the display,
+    #              starting with 0.
+    #              Note:  the emulator does not support passing tuples, lists
+    #              or anything except comma delimited simple strings as args.
+    #    """
+    #    self.emulator.display_data(*args)
 
-    def noCursor(self):
-        """ Turns the box cursor off """
-        self.emulator.noCursor()
+    #def setCursor(self, row, col):
+    #    """
+    #    Called from menu.py refresh() so don't remove this method
+    #    Set current input cursor to ``row`` and ``column`` specified """
+    #    self.emulator.setCursor(row, col)
 
-    def cursor(self):
-        """ Turns the box cursor on """
-        self.emulator.cursor()
+    #def noCursor(self):
+    #    """ Turns the box cursor off """
+    #    self.emulator.noCursor()
+
+    #def cursor(self):
+    #    """ Turns the box cursor on """
+    #    self.emulator.cursor()

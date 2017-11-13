@@ -286,6 +286,8 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
+autodoc_member_order = 'bysource'
+autodoc_mock_imports = ['evdev', 'smbus', 'pifacecad', 'RPi', 'RPi.GPIO' 'serial']
 
 sys.path.insert(0,os.path.abspath("../"))
 
@@ -295,14 +297,3 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     import sphinx_rtd_theme
     html_theme = "sphinx_rtd_theme"
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-
-
-from mock import Mock as MagicMock
-
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-            return Mock()
-
-MOCK_MODULES = ['evdev', 'smbus', 'pifacecad', 'RPi', 'RPi.GPIO' 'serial']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)

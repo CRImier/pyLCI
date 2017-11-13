@@ -25,6 +25,8 @@ def lsusb():
         location, description = line.split(':', 1)
         id_str, vid_pid, name = description.strip(' ').split(' ', 2)
         bus_str, bus, device_str, device = location.split(' ', 3)
+        bus = str(int(bus, 10))
+        device = str(int(device, 10))
         lsusb_entries.append([bus, device, vid_pid, name])
     return lsusb_entries
 

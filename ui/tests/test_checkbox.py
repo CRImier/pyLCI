@@ -19,7 +19,7 @@ def get_mock_input():
 
 def get_mock_output(rows=2, cols=16):
     m = Mock()
-    m.configure_mock(rows=rows, cols=cols)
+    m.configure_mock(rows=rows, cols=cols, type=["char"])
     return m
 
 cb_name = "Test checkbox"
@@ -38,6 +38,17 @@ class TestCheckbox(unittest.TestCase):
         self.assertIsNotNone(checkbox.keymap)
         for key_name, callback in checkbox.keymap.iteritems():
             self.assertIsNotNone(callback)
+
+    def test_exit_label_leakage(self):
+        """tests whether the exit label of one Checkbox leaks into another"""
+        i = get_mock_input()
+        o = get_mock_output()
+        c1 = Checkbox([["a", "1"]], i, o, name=cb_name+"1", final_button_name = "Name1")
+        c2 = Checkbox([["b", "2"]], i, o, name=cb_name+"2", final_button_name = "Name2")
+        c3 = Checkbox([["c", "3"]], i, o, name=cb_name+"3")
+        assert(c1.exit_entry != c2.exit_entry)
+        assert(c2.exit_entry != c3.exit_entry)
+        assert(c1.exit_entry != c3.exit_entry)
 
     def test_left_key_returns_none(self):
         num_elements = 3

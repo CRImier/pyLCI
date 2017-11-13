@@ -1,15 +1,16 @@
 import os
 import logging
 
-from list_ui_base import BaseListBackgroundableUIElement, to_be_foreground
+from base_list_ui import BaseListBackgroundableUIElement, to_be_foreground
 from menu import Menu, MenuExitException
 from printer import Printer
 
 class PathPicker(BaseListBackgroundableUIElement):
+
     path_chosen = None
 
     def __init__(self, path, i, o, callback = None, display_hidden = False, current_dot = False, prev_dot = True, scrolling=True, **kwargs):
-        """Initialises the Menu object.
+        """Initialises the PathPicker object.
 
         Args:
 
@@ -18,10 +19,10 @@ class PathPicker(BaseListBackgroundableUIElement):
 
         Kwargs:
 
-            * ``callback``: if set, FilePickerMenu will call the callback with path as first argument upon selecting path, instead of exiting.
-            * ``current_dot``: if set, FilePickerMenu will show '.' path.
-            * ``prev_dot``: if set, FilePickerMenu will show '..' path.
-            * ``display_hidden``: if set, FilePickerMenu displays hidden files.
+            * ``callback``: if set, PathPicker will call the callback with path as first argument upon selecting path, instead of exiting the activate().
+            * ``current_dot``: if True, PathPicker will show '.' path.
+            * ``prev_dot``: if True, PathPicker will show '..' path.
+            * ``display_hidden``: if True, PathPicker will display hidden files.
 
         """
         BaseListBackgroundableUIElement.__init__(self, [], i, o, entry_height=1, scrolling=True, append_exit=False)
@@ -34,6 +35,10 @@ class PathPicker(BaseListBackgroundableUIElement):
         self.menu_pointers = {}
         self.set_path(os.path.normpath(path))
         self.update_keymap()
+
+    def before_activate(self):
+        #Clearing flags
+        path_chosen = None
 
     def get_return_value(self):
         return self.path_chosen
@@ -109,7 +114,7 @@ class PathPicker(BaseListBackgroundableUIElement):
                     ["See full name",lambda x=full_path: Printer(current_item, self.i, self.o)],
                     ["See full path",lambda x=full_path: Printer(x, self.i, self.o)],
                     ["Exit PathPicker", self.option_exit]]
-        Menu(contents, self.i, self.o).activate()
+        Menu(contents, self.i, self.o, name="PathPicker context menu").activate()
         self.o.cursor()
         if self.in_background:
             self.to_foreground()
@@ -144,7 +149,7 @@ class PathPicker(BaseListBackgroundableUIElement):
                 self.pointer = pointer
         else:
             self.pointer = 0
-        self.refresh()
+        self.view.refresh()
 
     #@to_be_foreground
     def select_path(self, path):
