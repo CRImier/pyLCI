@@ -92,6 +92,10 @@ class InputListener():
         """Removes a single maskable callback of the listener"""
         self.maskable_keymap.pop(key_name)
 
+    def get_keymap(self):
+        """Returns the current keymap."""
+        return self.keymap
+
     def set_keymap(self, keymap):
         """Sets all the callbacks supplied, removing the previously set keymap completely"""
         self.keymap = keymap
