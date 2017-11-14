@@ -1,3 +1,4 @@
+import traceback
 import importlib
 import os
 
@@ -47,7 +48,7 @@ class AppManager():
                     self.app_list[module_path] = app
                 except Exception as e:
                     print("Failed to load app {}".format(module_path))
-                    print(e)
+                    traceback.print_exc()
                     self.printer_func(["Failed to load", os.path.split(module_path)[1]], self.i, self.o, 2)
         for subdir_path in self.subdir_menus:
             #Now it's time to link menus to parent menus
