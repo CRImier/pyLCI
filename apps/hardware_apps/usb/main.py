@@ -1,56 +1,24 @@
 menu_name = "USB control"
 
+from zerophone_hw import USB_DCDC
 from ui import Menu, Printer
 from time import sleep
 import os
 
-import sys
-import gpio
-sys.excepthook = sys.__excepthook__
-#GPIO library workaround - it sets excepthook
-#to PDB debug, that's good but it's going to
-#propagate through ZPUI code, and that's not desirable
-gpio.log.setLevel(gpio.logging.INFO)
-#Otherwise, a bunch of stuff is printed in the terminal
-
-#TODO - move DC-DC-specific part into zerophone_hw package
-
 i = None
 o = None
 
-dcdc_gpio = 510
-#It doesn't make sense to export the DC-DC GPIO as the app is initialized, 
-#so that the current state of GPIO is saved even if ZPUI restarts
-dcdc_exported = False
+dcdc = USB_DCDC()
+
+def dcdc_off_on():
+    dcdc.off()
+    sleep(0.5)
+    dcdc.on()
 
 usb_file = None
 usb_file_base_dir = "/sys/devices/platform/soc/"
 usb_control_file = "buspower"
 usb_full_path = None
-
-def dcdc_off_on():
-    global dcdc_exported
-    if not dcdc_exported:
-        #DC-DC GPIO not yet set up
-        gpio.setup(dcdc_gpio, gpio.OUT)
-        dcdc_exported = True
-    gpio.set(dcdc_gpio, True)
-    sleep(0.5)
-    gpio.set(dcdc_gpio, False)
-
-def dcdc_on():
-    global dcdc_exported
-    if not dcdc_exported:
-        gpio.setup(dcdc_gpio, gpio.OUT)
-        dcdc_exported = True
-    gpio.set(dcdc_gpio, False)
-
-def dcdc_off():
-    global dcdc_exported
-    if not dcdc_exported:
-        gpio.setup(dcdc_gpio, gpio.OUT)
-        dcdc_exported = True
-    gpio.set(dcdc_gpio, True)
 
 def usb_off_on():
     with open(usb_full_path, "w") as f:
@@ -69,8 +37,8 @@ def usb_off():
 
 main_menu_contents = [ 
 ["Restart 5V DC-DC", dcdc_off_on],
-["Turn 5V DC-DC on", dcdc_on],
-["Turn 5V DC-DC off", dcdc_off],
+["Turn 5V DC-DC on", dcdc.on],
+["Turn 5V DC-DC off", dcdc.off],
 ["Restart USB bus", usb_off_on],
 ["Turn USB bus on", usb_on],
 ["Turn USB bus off", usb_off]
