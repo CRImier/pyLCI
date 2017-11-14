@@ -34,11 +34,3 @@ Buying/choosing guide
 * Want something cheap and minimum effort? Get a "LCD RGB KEYPAD ForRPI" shield. It's 6$, you can find it on eBay just by searching "Raspberry Pi LCD shield" and sorting the list by "Lowest price first". It'll take its time to arrive, but it's a great value for the price.
 * Want something quickly and minimum effort? Get a PiFaceCAD shield, or an Adafruit one. They're sold by distributors in UK/USA, and will arrive quickly. Moreover, they're nicely made.
 * Want something quickly and cheaply? You can assemble your own hardware from what you have. I2C expanders come in handy when you need to save pins, but connecting things through GPIO is a good alternative.
-
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-
-

@@ -46,7 +46,3 @@ Some information on maintaining and writing applications:
    apps/update.rst
    apps/volume.rst
    apps/wpa_cli.rst
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

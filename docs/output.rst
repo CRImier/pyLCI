@@ -41,7 +41,3 @@ Drivers:
    output/pifacecad.rst
    output/adafruit.rst
    output/pi_gpio.rst
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

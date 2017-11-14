@@ -27,8 +27,3 @@ To get device names, you can just run ``python input/driver/hid.py`` while your 
 .. autoclass:: InputDevice
     :members:
     :special-members:
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-

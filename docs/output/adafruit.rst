@@ -41,8 +41,3 @@ Sample ``config.json`` section for Chinese clone:
 .. autoclass:: Screen
     :members:
     :special-members:
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-

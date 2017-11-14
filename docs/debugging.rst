@@ -51,7 +51,3 @@ Currently, pyLCI uses HD44780-compatible screens as output devices. Minimum scre
 
 * Is first row of blocks shown? If not, regulate the contrast with a potentiometer. You can also try to tie the contrast pin to GND.
 * Does screen receive 5V (not 3.3V) as VCC? Unless it's a screen that's capable of doing 3.3V (must be stated in screen's description), that's a no-go.
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
