@@ -69,9 +69,12 @@ class AppManager():
             ordering = self.get_ordering(subdir_path)
             menu_name = app.menu_name if hasattr(app, "menu_name") else app_dirname.capitalize()
             #print("Adding app {} to subdir {}".format(app_path, subdir_path))
-            subdir_menu = self.subdir_menus[subdir_path]
-            subdir_menu_contents = self.insert_by_ordering([app.menu_name, app.callback], os.path.split(app_path)[1], subdir_menu.contents, ordering)
-            subdir_menu.set_contents(subdir_menu_contents)
+            if hasattr(app, "callback") and callable(app.callback):
+                subdir_menu = self.subdir_menus[subdir_path]
+                subdir_menu_contents = self.insert_by_ordering([menu_name, app.callback], os.path.split(app_path)[1], subdir_menu.contents, ordering)
+                subdir_menu.set_contents(subdir_menu_contents)
+            else:
+                print("App \"{}\" has no callback; loading silently".format(menu_name))
         #print(app_list)
         #print(subdir_menus)
         return base_menu
