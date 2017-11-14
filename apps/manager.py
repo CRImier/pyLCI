@@ -63,10 +63,11 @@ class AppManager():
             parent_menu_contents = self.insert_by_ordering([subdir_menu_name, subdir_menu.activate], os.path.split(subdir_path)[1], parent_menu.contents, ordering)
             parent_menu.set_contents(parent_menu_contents)
         for app_path in self.app_list:
-            #Last thing is adding applications to menus.
+            #Last thing is attaching applications to the menu structure created.
             app = self.app_list[app_path]
-            subdir_path = os.path.split(app_path)[0]
+            subdir_path, app_dirname = os.path.split(app_path)
             ordering = self.get_ordering(subdir_path)
+            menu_name = app.menu_name if hasattr(app, "menu_name") else app_dirname.capitalize()
             #print("Adding app {} to subdir {}".format(app_path, subdir_path))
             subdir_menu = self.subdir_menus[subdir_path]
             subdir_menu_contents = self.insert_by_ordering([app.menu_name, app.callback], os.path.split(app_path)[1], subdir_menu.contents, ordering)
@@ -77,6 +78,11 @@ class AppManager():
 
     def load_app(self, app_path):
         app_import_path = app_path.replace('/', '.')
+        #If user runs in single-app mode and by accident 
+        #autocompletes the app name too far, it shouldn't fail
+        main_py_string = ".main.py" 
+        if app_import_path.endswith(main_py_string):
+            app_import_path = app_import_path[:-len(main_py_string)]
         app = importlib.import_module(app_import_path+'.main', package='apps')
         app.init_app(self.i, self.o)
         return app
@@ -91,7 +97,7 @@ class AppManager():
         except Exception as e:
             print("Exception while loading __init__.py for subdir {}".format(subdir_path))
             print(e)
-            return os.path.split(subdir_path)[1]
+            return os.path.split(subdir_path)[1].capitalize()
 
     def get_ordering(self, path, cache={}):
         """This function gets a subdirectory path and imports __init__.py from it. It then gets _ordering attribute from __init__.py and returns it. It also caches the attribute for faster initialization.
