@@ -1,3 +1,4 @@
+#!/bin/bash
 INSTALL_DIR="/opt/zpui"
 SUDO=''
 if (( $EUID != 0 )); then
