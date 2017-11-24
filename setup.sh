@@ -1,3 +1,4 @@
+#!/bin/bash
 INSTALL_DIR="/opt/zpui"
 SUDO=''
 if (( $EUID != 0 )); then
@@ -5,7 +6,7 @@ if (( $EUID != 0 )); then
 fi
 [ -f config.json ] || cp config.json.example config.json
 $SUDO apt-get install python python-pip python-smbus python-dev python-pygame libjpeg-dev python-serial nmap
-$SUDO pip install luma.oled python-nmap smspdu zerophone_hw gpio
+$SUDO pip2 install luma.oled python-nmap smspdu zerophone_hw gpio
 $SUDO mkdir -p $INSTALL_DIR
 $SUDO cp ./. $INSTALL_DIR -R
 cd $INSTALL_DIR
