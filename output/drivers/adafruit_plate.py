@@ -54,17 +54,17 @@ class Screen(HD44780, BacklightManager):
         self.write4bits(byte >> 4, char_mode)   
         self.write4bits(byte & 0x0F, char_mode) 
 
+    @enable_backlight_wrapper
     def enable_backlight(self):
         """Enables backlight. Doesn't do it instantly on genuine boards, you'll have to wait until data is sent to the display."""
-        BacklightManager.enable_backlight(self)
         if self.chinese: 
             self.setMCPreg(0x14, 0xc0) 
         else:
             self.setMCPreg(0x14, 0xe0)
 
+    @disable_backlight_wrapper
     def disable_backlight(self):
         """Disables backlight. Doesn't do it instantly on genuine boards, you'll have to wait until data is sent to the display."""
-        BacklightManager.disable_backlight(self)
         if self.chinese: 
             self.setMCPreg(0x14, 0xe0) 
         else:
@@ -81,12 +81,9 @@ class Screen(HD44780, BacklightManager):
                 #Adafruit boards have blue backlight at GP0, and we set the bit to turn the backlight off
         self.setMCPreg(0x15, data)
         data ^= 0x20
-        delayMicroseconds(1.0)
         self.setMCPreg(0x15, data)
         data ^= 0x20
-        delayMicroseconds(1.0)
         self.setMCPreg(0x15, data)
-        delay(1.0)
         
     def setMCPreg(self, reg, val):
         """Sets the MCP23017 register."""

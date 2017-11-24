@@ -1,7 +1,7 @@
 menu_name = "Systemctl"
 
 config_filename = "config.json" 
-default_config = '{"allowed_types":["service","target"]}'
+default_config = '{"allowed_types":["service","target"], "pinned_units":["pylci.service"]}'
 
 callback = None
 
@@ -23,7 +23,10 @@ config_path = os.path.join(current_module_path, config_filename)
 
 try:
     config = read_config(config_path)
-except (IOError, ValueError):
+    if "pinned_values" not in config:
+        config["pinned_units"] = []
+        write_config(config, config_path)
+except (ValueError, IOError):
     print("Systemctl app: broken config, restoring with defaults...")
     with open(config_path, "w") as f:
         f.write(default_config)
@@ -57,6 +60,13 @@ def all_units():
         menu_contents.append([unit["basename"], lambda x=unit: unit_menu(x)])
     Menu(menu_contents, i, o, "Systemctl: all unit list menu").activate()
 
+def pinned_units():
+    menu_contents = []
+    units = systemctl.list_units()
+    for unit_name in config["pinned_units"]:
+        menu_contents.append([unit_name, lambda x=unit_name: unit_menu(x)])
+    Menu(menu_contents, i, o, "Pinned unit list menu").activate()
+
 def filtered_units():
     menu_contents = []
     units = systemctl.list_units()
@@ -74,11 +84,17 @@ def unit_menu(unit):
     ["Restart unit", lambda x=name: restart_unit(x)],
     ["Reload unit", lambda x=name: reload_unit(x)],
     ["Enable unit", lambda x=name: enable_unit(x)],
-    ["Disable unit", lambda x=name: disable_unit(x)]]
-    Menu(unit_menu_contents, i, o, "{} unit menu").activate()
+    ["Disable unit", lambda x=name: disable_unit(x)],
+    ["Pin unit", lambda x=name: pin_unit(x)]]
+    Menu(unit_menu_contents, i, o, "{} unit menu".format(name)).activate()
+
+def pin_unit(name):
+    global config
+    config["pinned_units"].append(name)
+    write_config(config, config_path)
+    Printer(["Pinned unit", name], i, o, 1)
 
 def start_unit(name):
-    print(name)
     status = systemctl.action_unit("start", name)
     if status:
         Printer(["Started unit", name], i, o, 1)
@@ -136,6 +152,7 @@ def launch():
        else:
            raise e
     main_menu_contents = [
+    ["Pinned units", pinned_units],
     ["Units (filtered)", filtered_units],
     ["All units", all_units],
     ["Change filters", change_filters]]

@@ -31,7 +31,7 @@ class CharArrowKeysInput():
     Chars = string.ascii_uppercase
     numbers = '0123456789'
     hexadecimals = '0123456789ABCDEF'
-    specials = "!\"#$%&'()[]<>*+,-./:;=?^_"
+    specials = "!\"#$%&'()[]<>*+,-./:;=?^_|"
     space = ' '
     backspace = chr(0x08)
      
