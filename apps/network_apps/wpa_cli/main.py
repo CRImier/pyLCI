@@ -15,7 +15,11 @@ def show_scan_results():
     network_menu_contents = []
     networks = wpa_cli.get_scan_results()
     for network in networks:
-        network_menu_contents.append([network['ssid'], lambda x=network: network_info_menu(x)])
+        if network["ssid"] == '':
+            ssid = '[Hidden]'
+        elif network["ssid"]:
+            ssid = network["ssid"]
+        network_menu_contents.append([ssid, lambda x=network: network_info_menu(x)])
     network_menu = Menu(network_menu_contents, i, o, "Wireless network menu")
     network_menu.activate()
 
