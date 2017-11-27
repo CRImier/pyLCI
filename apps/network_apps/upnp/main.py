@@ -2,7 +2,7 @@
 menu_name = "UPnP/SSDP scan"
 
 from ui import Menu, Printer, IntegerAdjustInput, format_for_screen as ffs
-from helpers.config_parse import read_config, write_config
+from helpers import read_or_create_config, write_config, local_path_gen
 
 from collections import OrderedDict
 from traceback import format_exc
@@ -15,17 +15,12 @@ import os
 i = None
 o = None
 
-current_module_path = os.path.dirname(sys.modules[__name__].__file__)
 config_filename = "config.json"
 default_config = '{"timeout":1,"dst":"239.255.255.250","st":"upnp:rootdevice"}'
-config_path = os.path.join(current_module_path, config_filename)
-try:
-    config = read_config(config_path)
-except (ValueError, IOError):
-    print("{}: broken/nonexistent config, restoring with defaults...".format(menu_name))
-    with open(config_path, "w") as f:
-        f.write(default_config)
-    config = read_config(config_path)
+
+local_path = local_path_gen(__name__)
+config_path = local_path(config_filename)
+config = read_or_create_config(config_path, default_config, menu_name+" app")
 
 def run_scan():
     Printer("Scanning:", i, o, 0)

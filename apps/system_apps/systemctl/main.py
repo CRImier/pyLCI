@@ -4,33 +4,24 @@ config_filename = "config.json"
 default_config = '{"allowed_types":["service","target"], "pinned_units":["pylci.service"]}'
 
 callback = None
-
-main_menu = None
 i = None
 o = None
 
 from time import sleep
 
-from helpers import read_config, write_config
 from ui import Menu, Printer, Checkbox, MenuExitException
 
 import systemctl
 
-import os,sys
-current_module_path = os.path.dirname(sys.modules[__name__].__file__)
+from helpers import read_or_create_config, write_config, local_path_gen
+local_path = local_path_gen(__name__)
+config_path = local_path(config_filename)
+config = read_or_create_config(config_path, default_config, menu_name+" app")
 
-config_path = os.path.join(current_module_path, config_filename)
-
-try:
-    config = read_config(config_path)
-    if "pinned_values" not in config:
-        config["pinned_units"] = []
-        write_config(config, config_path)
-except (ValueError, IOError):
-    print("Systemctl app: broken config, restoring with defaults...")
-    with open(config_path, "w") as f:
-        f.write(default_config)
-    config = read_config(config_path)
+#Migrating config in case it's preserved from older app versions
+if "pinned_units" not in config:
+    config["pinned_units"] = []
+    write_config(config, config_path)
 
 def change_filters():
     global config
@@ -161,6 +152,6 @@ def launch():
 
 
 def init_app(input, output):
-    global callback, main_menu, i, o
+    global callback, i, o
     i = input; o = output
     callback = launch

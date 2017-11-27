@@ -7,20 +7,10 @@ i = None
 o = None
 callback = None
 
-from helpers import read_config, write_config
-
-import os,sys
-current_module_path = os.path.dirname(sys.modules[__name__].__file__)
-
-config_path = os.path.join(current_module_path, config_filename)
-
-try:
-    config = read_config(config_path)
-except (ValueError, IOError):
-    print("Volume app: missing/broken config, restoring with defaults...")
-    with open(config_path, "w") as f:
-        f.write(default_config)
-    config = read_config(config_path)
+from helpers import read_or_create_config, write_config, local_path_gen
+local_path = local_path_gen(__name__)
+config_path = local_path(config_filename)
+config = read_or_create_config(config_path, default_config, menu_name+" app")
 
 from subprocess import call, check_output
 

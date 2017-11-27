@@ -7,11 +7,19 @@ Helpers
 These are various objects and functions that help you build the logic 
 of your application quicker and convert your ideas into code more concisely.
 
+local_path_gen helper
+---------------------
+
+.. automodule:: helpers.general
+
+.. autofunction:: local_path_gen
+
+
 ExitHelper
 ----------
 
 .. automodule:: helpers.usability
- 
+
 .. autoclass:: ExitHelper
     :members: start,do_exit,do_run,stop,reset
 
