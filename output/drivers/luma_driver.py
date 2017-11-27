@@ -1,12 +1,6 @@
 #!/usr/bin/python
 
-#draw.rectangle((0, 0, device.width-1, device.height-2), outline="white", fill="black")
-
-# based on code from Adafruit, lrvick and LiquidCrystal
-# lrvick - https://github.com/lrvick/raspi-hd44780/blob/master/hd44780.py
-# LiquidCrystal - https://github.com/arduino/Arduino/blob/master/libraries/LiquidCrystal/LiquidCrystal.cpp
-# Adafruit - https://github.com/adafruit/Adafruit-Raspberry-Pi-Python-Code
-# SSD1306 library - ################
+#luma.oled library used: https://github.com/rm-hull/luma.oled
 
 from luma.core.serial import spi, i2c
 from luma.core.render import canvas
