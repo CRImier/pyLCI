@@ -76,7 +76,7 @@ def on_refresh_printing():
     global i, o, counter
     counter.on_refresh()
     text_rows = ["{} {}".format(get_char(counter), round(counter.elapsed, 2)).center(o.cols)]
-    text_rows.extend([i.center(o.cols) for i in INSTRUCTIONS])
+    text_rows.extend([instruction.center(o.cols) for instruction in INSTRUCTIONS])
     return text_rows
 
 
