@@ -4,21 +4,21 @@
 Helpers
 #######
 
-These are various objects and functions that help you build the logic 
-of your application quicker and convert your ideas into code more concisely.
+These are various objects and functions that help you with general-purpose 
+tasks while building your application - for example, config management, 
+running initialization tasks or exiting event loops on a keypress. 
+They can help you build the logic of your application quicker, and allow 
+to not repeat the code that was already written for other ZPUI apps.
+
+.. automodule:: helpers
 
 local_path_gen helper
 ---------------------
 
-.. automodule:: helpers.general
-
 .. autofunction:: local_path_gen
-
 
 ExitHelper
 ----------
-
-.. automodule:: helpers.usability
 
 .. autoclass:: ExitHelper
     :members: start,do_exit,do_run,stop,reset
@@ -27,6 +27,8 @@ Usage:
 
 .. code-block:: python
 
+    from helpers import ExitHelper
+    ...
     eh = ExitHelper(i)
     eh.start()
     while eh.do_run():
@@ -44,8 +46,6 @@ There is also a shortened usage form:
 Oneshot helper
 --------------
 
-.. automodule:: helpers.runners
-
 .. autoclass:: Oneshot
     :members: run,running,finished, reset
 
@@ -53,6 +53,8 @@ Usage:
 
 .. code-block:: python
 
+    from helpers import Oneshot
+    ...
     def init_hardware():
         #can only be run once
 
@@ -74,6 +76,8 @@ Usage:
 
 .. code-block:: python
 
+    from helpers import BackgroundRunner
+    ...
     def init_hardware():
         #takes a long time
 
@@ -98,6 +102,8 @@ Combining BackgroundRunner and Oneshot
 
 .. code-block:: python
 
+    from helpers import BackgroundRunner, Oneshot
+    ...
     def init_hardware():
         #takes a long time, *and* can only be run once
 
