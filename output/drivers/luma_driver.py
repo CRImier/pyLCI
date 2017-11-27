@@ -2,7 +2,10 @@
 
 #luma.oled library used: https://github.com/rm-hull/luma.oled
 
-from luma.core.interface.serial import spi, i2c
+try:
+    from luma.core.interface.serial import spi, i2c
+except ImportError:
+    from luma.core.serial import spi, i2c #Compatilibity with older luma.oled version
 from luma.core.render import canvas
 from time import sleep
 from threading import Event
@@ -31,7 +34,11 @@ class LumaScreen(BacklightManager):
     def __init__(self, hw = "spi", port=None, address = 0, debug = False, buffering = True, **kwargs):
         if hw == "spi":
             if port is None: port = 0
-            self.serial = spi(port=port, device=address, bcm_DC=6, bcm_RST=5)
+            try:
+                self.serial = spi(port=port, device=address, gpio_DC=6, gpio_RST=5)
+            except TypeError:
+                #Compatibility with older luma.oled versions
+                self.serial = spi(port=port, device=address, bcm_DC=6, bcm_RST=5)
         elif hw == "i2c":
             if port is None: port = 1
             if isinstance(address, basestring): address = int(address, 16)
