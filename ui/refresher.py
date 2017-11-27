@@ -127,4 +127,14 @@ class Refresher():
     @to_be_foreground
     def refresh(self):
         logging.debug("{0}: refreshed data on display".format(self.name))
-        self.o.display_data(*self.refresh_function())
+        data_to_display = self.refresh_function()
+        if isinstance(data_to_display, basestring):
+            #Passed a string, not a list.
+            #Let's be user-friendly and wrap it in a list!
+            data_to_display = [data_to_display]
+        elif isinstance(data_to_display, tuple):
+            #Passed a tuple. Let's convert it into a list!
+            data_to_display = list(data_to_display)
+        elif not isinstance(data_to_display, list):
+            raise ValueError("refresh_function returned an unsupported type: {}!".format(type(data_to_display)))
+        self.o.display_data(*data_to_display)
