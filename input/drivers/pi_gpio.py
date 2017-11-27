@@ -3,7 +3,11 @@ from time import sleep
 from skeleton import InputSkeleton
 
 class InputDevice(InputSkeleton):
-    """ A driver for pushbuttons attached to Raspberry Pi GPIO. It uses RPi.GPIO library. Button's first pin has to be attached to ground, second pin has to be attached to the GPIO pin and pulled up to 3.3V with a 1-10K resistor."""
+    """ A driver for pushbuttons attached to Raspberry Pi GPIO.
+    It uses RPi.GPIO library. Button's first pin has to be attached
+    to ground, second pin has to be attached to the GPIO pin and
+    pulled up to 3.3V with a 1-10K resistor. It's also possible to use
+    internal pullups of Raspberry Pi GPIO."""
 
     default_mapping = [
     "KEY_UP",
@@ -15,15 +19,17 @@ class InputDevice(InputSkeleton):
     "KEY_HOME",
     "KEY_END"]
 
-    def __init__(self, button_pins=[], **kwargs):
+    def __init__(self, button_pins=[], pullups=True; **kwargs):
         """Initialises the ``InputDevice`` object. 
 
         Kwargs:
         
         * ``button_pins``: GPIO mubers which to treat as buttons (GPIO.BCM numbering)
+        * ``pullups``: if True, enables pullups on all pins, if False, doesn't. Default: True
         * ``debug``: enables printing button press and release events when set to True
         """
         self.button_pins = button_pins
+        self.pullups = pullups
         self.init_hw()
         InputSkeleton.__init__(self, **kwargs)
 
@@ -32,7 +38,10 @@ class InputDevice(InputSkeleton):
         self.GPIO = GPIO
         GPIO.setmode(GPIO.BCM) 
         for pin_num in self.button_pins:
-            GPIO.setup(pin_num, GPIO.IN)
+            if self.pullups:
+                GPIO.setup(pin_num, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+            else:
+                GPIO.setup(pin_num, GPIO.IN)
         self.button_states = []
         for i, pin_num in enumerate(self.button_pins):
             self.button_states.append(GPIO.input(pin_num))
