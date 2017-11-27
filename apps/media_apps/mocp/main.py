@@ -50,6 +50,7 @@ def init_app(input, output):
     global main_menu, callback, i, o
     i = input; o = output
     i.set_nonmaskable_callback("KEY_PROG1", mocp_next)
+    i.set_nonmaskable_callback("KEY_CAMERA", mocp_prev)
     main_menu = Menu(main_menu_contents, i, o, "MOCP menu")
     callback = main_menu.activate
 
