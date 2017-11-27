@@ -7,15 +7,17 @@ def list_units():
     lines = output.split('\n')[1:][:-8]
     for line in lines:
         line = ' '.join(line.split()).strip(' ') #Removing all redundant whitespace
-        if line.startswith('\xe2\x97\x8f'): #Special character systemctl output uses to mark units that failed to load
+        if line.startswith('\xe2\x97\x8f'): #Special character that is used by systemctl output to mark units that failed to load
             elements = line.split(' ', 5)[1:] #Omitting that first element since it doesn't convey any meaning
         else:
             elements = line.split(' ', 4)
-        #print(elements)
-        name, loaded, active, details, description = elements
-        basename, type = name.rsplit('.', 1)
-        name = name.replace('\\x2d', '-') #Replacing unicode dashes with normal ones
-        units.append({"name":name, "load":loaded, "active":active, "sub":details, "description":description, "type":type, "basename":basename})
+        if len(elements) == 5:
+            name, loaded, active, details, description = elements
+            basename, type = name.rsplit('.', 1)
+            name = name.replace('\\x2d', '-') #Replacing unicode dashes with normal ones
+            units.append({"name":name, "load":loaded, "active":active, "sub":details, "description":description, "type":type, "basename":basename})
+        else:
+            print("Systemctl: couldn't parse line: {}".format(repr(line)))
     return units         
                      
 def action_unit(action, unit):
