@@ -16,7 +16,6 @@ def local_path_gen(_name_):
     The resulting local_path function supports multiple arguments, 
     passing all of them to os.path.join."""
     app_path = os.path.dirname(sys.modules[_name_].__file__)
-    print(app_path)
     def local_path(*path):
         return os.path.join(app_path, *path)
     return local_path
