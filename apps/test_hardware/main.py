@@ -8,22 +8,23 @@ import sys
 import os
 
 from ui import Menu, Printer, PrettyPrinter, GraphicsPrinter
-from helpers import ExitHelper
+from helpers import ExitHelper, local_path_gen
 
 i = None
 o = None
 
 #Code from downloading a song from http://freemusicarchive.org/
 downloaded = Event()
-music_filename = "test.mp3"
 url = "http://wiki.zerophone.org/images/b/b5/Otis_McMusic.mp3"
-base_dir = os.path.dirname(sys.modules[__name__].__file__)
-music_path = os.path.join(base_dir, music_filename)
+
+music_filename = "test.mp3"
+local_path = local_path_gen(__name__)
+music_path = local_path(music_filename)
 
 def init_app(input, output):
     global i, o
     i = input; o = output
-    if music_filename not in os.listdir(base_dir):
+    if music_filename not in os.listdir(local_path('.')):
         def download():
             downloaded.clear()
             print("Downloading music for hardware test app!")
