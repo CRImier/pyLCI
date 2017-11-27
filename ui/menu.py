@@ -18,8 +18,8 @@ class Menu(BaseListBackgroundableUIElement):
     * ``contents``: list of menu entries which was passed either to ``Menu`` constructor or to ``menu.set_contents()``.
 
       Menu entry is a list, where:
-         * ``entry[0]`` (entry's label) is usually a string which will be displayed in the UI, such as "Menu entry 1". If ``entry_height`` > 1, can be a list of strings, each of those strings will be shown on a separate display row.
-         * ``entry[1]`` (entry's callback) is a function which is called when the user presses Enter.
+         * ``entry[0]`` (entry label) is usually a string which will be displayed in the UI, such as "Menu entry 1". If ``entry_height`` > 1, can be a list of strings, each of those strings will be shown on a separate display row.
+         * ``entry[1]`` (entry callback) is a function which is called when the user presses Enter.
            * Can be omitted if you don't need to have any actions taken upon activation of the entry.
            * You can supply 'exit' (string instead of a function) if you want a menu entry that exits the menu when the user presses Enter.
 
@@ -27,8 +27,6 @@ class Menu(BaseListBackgroundableUIElement):
     * ``pointer``: currently selected menu entry's number, starting from 0.
     * ``in_background``: a flag which indicates whether menu is currently active, either being displayed or just waiting in background (for example, you go into a sub-menu, the parent menu will still be considered active.
     * ``in_foreground`` : a flag which indicates whether menu is currently displayed. 
-    * ``first_displayed_entry`` : Internal pointer which points to the number of ``self.contents`` entry which is at the topmost position of the menu as it's currently displayed on the screen
-    * ``last_displayed_entry`` : Internal pointer which points to the number of ``self.contents`` entry which is at the lowest position of the menu as it's currently displayed on the screen
 
     """
 

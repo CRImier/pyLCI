@@ -19,6 +19,6 @@ Menu UI element
 .. automodule:: ui.menu
  
 .. autoclass:: Menu
-    :members: __init__,activate,deactivate,set_contents,move_up,move_down,select_element,print_name,print_contents,generate_keymap
+    :members: __init__,activate,deactivate,set_contents,print_name,print_contents
 
 .. autoclass:: MenuExitException
