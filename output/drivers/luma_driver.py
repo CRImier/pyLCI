@@ -8,7 +8,7 @@
 # Adafruit - https://github.com/adafruit/Adafruit-Raspberry-Pi-Python-Code
 # SSD1306 library - ################
 
-from luma.core.serial import spi, i2c
+from luma.core.interface.serial import spi, i2c
 from luma.core.render import canvas
 from time import sleep
 from threading import Event
