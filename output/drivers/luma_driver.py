@@ -2,7 +2,7 @@
 
 #luma.oled library used: https://github.com/rm-hull/luma.oled
 
-from luma.core.serial import spi, i2c
+from luma.core.interface.serial import spi, i2c
 from luma.core.render import canvas
 from time import sleep
 from threading import Event
