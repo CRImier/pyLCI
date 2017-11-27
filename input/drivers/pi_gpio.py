@@ -19,7 +19,7 @@ class InputDevice(InputSkeleton):
     "KEY_HOME",
     "KEY_END"]
 
-    def __init__(self, button_pins=[], pullups=True; **kwargs):
+    def __init__(self, button_pins=[], pullups=True, **kwargs):
         """Initialises the ``InputDevice`` object. 
 
         Kwargs:
