@@ -8,18 +8,16 @@ class Checkbox(BaseListUIElement):
 
     Attributes:
 
-    * ``contents``: list of checkbox elements which was passed either to ``Checkbox`` constructor or to ``checkbox.set_contents()``.
+    * ``contents``: list of checkbox entries which was passed either to ``Checkbox`` constructor or to ``checkbox.set_contents()``.
 
-      Checkbox element structure is a list, where:
-         * ``element[0]`` (element's label) is either a string, which simply has the element's value as it'll be displayed, such as "Option 1", or, in case of entry_height > 1, can be a list of strings, each of which represents a corresponding display row occupied by the element.
-         * ``element[1]`` (element's name) is a name returned by the checkbox upon its exit in a dictionary along with its boolean value.
-         * ``element[2]`` (element's state) is the default state assumed by the checkbox. If not present, assumed to be default_state.
+      Checkbox entry structure is a list, where:
+         * ``entry[0]`` (entry label) is usually a string which will be displayed in the UI, such as "Option 1". In case of entry_height > 1, can be a list of strings, each of which represents a corresponding display row occupied by the entry.
+         * ``entry[1]`` (entry name) is a name returned by the checkbox upon its exit in a dictionary along with its boolean value.
+         * ``entry[2]`` (entry state) is the default state of the entry (checked or not checked). If not present, assumed to be`` default_state``.
 
       *If you want to set contents after the initalisation, please, use set_contents() method.*
     * ``pointer``: currently selected menu element's number in ``self.contents``.
     * ``in_foreground`` : a flag which indicates if checkbox is currently displayed. If it's not active, inhibits any of menu's actions which can interfere with other menu or UI element being displayed.
-    * ``first_displayed_entry`` : Internal flag which points to the number of ``self.contents`` element which is at the topmost position of the checkbox menu as it's currently displayed on the screen
-    * ``last_displayed_entry`` : Internal flag which points to the number of ``self.contents`` element which is at the lowest position of the checkbox menu as it's currently displayed on the screen
 
     """
     states = []
@@ -27,8 +25,7 @@ class Checkbox(BaseListUIElement):
     exit_entry = ["Accept", None, 'accept']
 
     def __init__(self, *args, **kwargs):
-        """
-        Args:
+        """Args:
 
             * ``contents``: a list of element descriptions, which can be constructed as described in the Checkbox object's docstring.
             * ``i``, ``o``: input&output device objects
@@ -36,14 +33,14 @@ class Checkbox(BaseListUIElement):
         Kwargs:
 
             * ``name``: Checkbox name which can be used internally and for debugging.
-            * ``entry_height``: number of display rows one checkbox element occupies.
-            * ``default_state``: default state of entries where not set in ``contents`` (default: ``False``)
-            * ``final_button_name``: name for the last button that confirms the selection (default: ``"Accept"``)
+            * ``entry_height``: number of display rows that one checkbox element occupies.
+            * ``default_state``: default state for each entry that doesn't have a state (entry[2]) specified in ``contents`` (default: ``False``)
+            * ``final_button_name``: label for the last button that confirms the selection (default: ``"Accept"``)
 
         """
         self.default_state = kwargs.pop("default_state") if "default_state" in kwargs else False
         if "final_button_name" in kwargs:
-            #Avoid propagation into other Checkbox objects, 
+            #Avoid propagation of final button name into other Checkbox objects, 
             #since exit_entry is modified in-place
             final_button_name = kwargs.pop("final_button_name")
             self.exit_entry = copy(self.exit_entry)
