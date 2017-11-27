@@ -32,7 +32,7 @@ class InputDevice(InputSkeleton):
         self.GPIO = GPIO
         GPIO.setmode(GPIO.BCM) 
         for pin_num in self.button_pins:
-            GPIO.setup(pin_num, GPIO.IN)
+            GPIO.setup(pin_num, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         self.button_states = []
         for i, pin_num in enumerate(self.button_pins):
             self.button_states.append(GPIO.input(pin_num))
