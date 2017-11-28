@@ -31,16 +31,16 @@ ZPUI core consists of 5 parts:
    :maxdepth: 1
    :hidden:
 
-   hardware.rst
    setup.rst
-   debugging.rst
+   ui.rst
+   helpers.rst
    hacking_ui.rst
+   hardware.rst
+   debugging.rst
    input.rst
    output.rst
-   ui.rst
    apps.rst
    app_mgmt.rst
-   helpers.rst
    plans.rst
    docs_development.rst
    contact.rst
