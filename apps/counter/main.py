@@ -113,7 +113,7 @@ class StopwatchApp(ZeroApp):
         self.refresher.activate()
 
     def register(self):
-        # hack, todo: remove when manager.py is refactored
+        # hack, todo: remove when app_manager.py is refactored
         global menu_name
         menu_name = self.__menu_name
 
