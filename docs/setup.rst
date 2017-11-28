@@ -78,6 +78,8 @@ For testing configuration or development, you will want to launch ZPUI directly
 so that you will see the logs and will be able to stop it with a simple Ctrl^C. 
 In that case, just run ZPUI with ``sudo python main.py`` from your local (or system-wide) directory. 
 
+-----------
+
 .. _emulator:
 
 Installing the ZPUI emulator
