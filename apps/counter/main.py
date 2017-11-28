@@ -67,6 +67,8 @@ class ZeroApp(object):
     """
 
     def __init__(self, i, o):
+        """ctor : called when the ZPUI boots. Avoid loading too many objects here. The application is not yet
+        opened. Without knowing if you app will be used, do not burden the poor CPU with unused stuff."""
         # type: (InputListener, object) -> ZeroApp
         self.__output = o
         self.__input = i
@@ -90,6 +92,7 @@ class ZeroApp(object):
         """
         pass
 
+
 class StopwatchApp(ZeroApp):
     def __init__(self, i, o):
         super(StopwatchApp, self).__init__(i, o)
@@ -101,7 +104,7 @@ class StopwatchApp(ZeroApp):
 
     def on_start(self):
         super(StopwatchApp, self).on_start()
-        self.refresher = Refresher(self.on_refresh_printing, self.i, self.o, .1, {
+        self.refresher = Refresher(self.refresh_function, self.i, self.o, .1, {
             "KEY_UP": self.counter.toggle,
             "KEY_RIGHT": self.counter.start,
             "KEY_ENTER": self.counter.toggle,
@@ -114,7 +117,7 @@ class StopwatchApp(ZeroApp):
         global menu_name
         menu_name = self.__menu_name
 
-    def on_refresh_printing(self):
+    def refresh_function(self):
         self.counter.update()
         text_rows = ["{} {}".format(self.get_char(), round(self.counter.elapsed, 2)).center(self.o.cols)]
         text_rows.extend([instruction.center(self.o.cols) for instruction in self.__instructions])
@@ -125,10 +128,10 @@ class StopwatchApp(ZeroApp):
 
 
 def callback():
-    global app
+    global app  # hack, todo: remove when manager.py is refactored
     app.on_start()
 
 
-def init_app(input, output):
+def init_app(i, o):
     global app
-    app = StopwatchApp(input, output)
+    app = StopwatchApp(i, o)
