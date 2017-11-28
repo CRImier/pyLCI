@@ -132,19 +132,19 @@ class AppManager(object):
             # so that we won't mix up ordering of elements later
             to_insert.ordering_alias = alias
             if not l:  # No conditions to check
-                l.append(to_insert);
+                l.append(to_insert)
                 return l
             for e in l:
                 if hasattr(e, "ordering_alias"):
                     if ordering.index(e.ordering_alias) > ordering.index(alias):
-                        l.insert(l.index(e), to_insert);
+                        l.insert(l.index(e), to_insert)
                         return l
                     else:
                         pass  # going to next element
                 else:
-                    l.insert(l.index(e), to_insert);
+                    l.insert(l.index(e), to_insert)
                     return l
-        l.append(to_insert);
+        l.append(to_insert)
         return l  # Catch-all
 
 
