@@ -43,3 +43,4 @@ ZPUI core consists of 5 parts:
    helpers.rst
    plans.rst
    docs_development.rst
+   contact.rst
