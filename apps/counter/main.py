@@ -4,15 +4,6 @@ from time import time
 from input.input import InputListener
 from ui import Refresher
 
-INSTRUCTIONS = ["", "UP/ENTER to start/pause", "RIGHT : restart", "DOWN : reset"]
-
-menu_name = "Counter"
-total_elapsed_time = None
-refresher = None
-counter = None
-i = None  # Input device
-o = None  # Output device
-
 
 class Chronometer(object):
     def __init__(self):
@@ -44,8 +35,9 @@ class Counter(object):
     def elapsed(self):
         return self.__elapsed
 
-    def on_refresh(self):
-        if not self.__active: return
+    def update(self):
+        if not self.__active:
+            return
         self.__elapsed += self.__cron.tick()
 
     def stop(self):
@@ -68,32 +60,75 @@ class Counter(object):
         self.pause() if self.active else self.resume()
 
 
-def get_char(counter):
-    return "|>" if counter.active else "||"
+class ZeroApp(object):
+    """
+    A template class for a Zerophone App. Presents default functions that are called by the app manager.
+    Keeps a pointer to the input and output devices
+    """
+
+    def __init__(self, i, o):
+        # type: (InputListener, object) -> ZeroApp
+        self.__output = o
+        self.__input = i
+        self.__menu_name = "ZeroApp template"  # Name as presented in the menu
+
+    @property
+    def menu_name(self):
+        return self.__menu_name
+
+    @property
+    def i(self):
+        return self.__input
+
+    @property
+    def o(self):
+        return self.__output
+
+    def on_start(self):
+        """
+        Called ONCE when the app is selected FOR THE FIRST TIME in the menu
+        """
+        pass
+
+class StopwatchApp(ZeroApp):
+    def __init__(self, i, o):
+        super(StopwatchApp, self).__init__(i, o)
+        self.__menu_name = "Stopwatch"
+        self.register()
+        self.counter = Counter()
+        self.refresher = None
+        self.__instructions = ["", "UP/ENTER to start/pause", "RIGHT : restart", "DOWN : reset"]
+
+    def on_start(self):
+        super(StopwatchApp, self).on_start()
+        self.refresher = Refresher(self.on_refresh_printing, self.i, self.o, .1, {
+            "KEY_UP": self.counter.toggle,
+            "KEY_RIGHT": self.counter.start,
+            "KEY_ENTER": self.counter.toggle,
+            "KEY_DOWN": self.counter.stop
+        })
+        self.refresher.activate()
+
+    def register(self):
+        # hack, todo: remove when manager.py is refactored
+        global menu_name
+        menu_name = self.__menu_name
+
+    def on_refresh_printing(self):
+        self.counter.update()
+        text_rows = ["{} {}".format(self.get_char(), round(self.counter.elapsed, 2)).center(self.o.cols)]
+        text_rows.extend([instruction.center(self.o.cols) for instruction in self.__instructions])
+        return text_rows
+
+    def get_char(self):
+        return "|>" if self.counter.active else "||"
 
 
-def on_refresh_printing():
-    global i, o, counter
-    counter.on_refresh()
-    text_rows = ["{} {}".format(get_char(counter), round(counter.elapsed, 2)).center(o.cols)]
-    text_rows.extend([instruction.center(o.cols) for instruction in INSTRUCTIONS])
-    return text_rows
-
-
-# run once the app starts
 def callback():
-    global refresher, counter
-    counter = Counter()
-    refresher = Refresher(on_refresh_printing, i, o, .1, {
-        "KEY_UP": counter.toggle,
-        "KEY_RIGHT": counter.start,
-        "KEY_ENTER": counter.toggle,
-        "KEY_DOWN": counter.stop
-    })
-    refresher.activate()
+    global app
+    app.on_start()
 
 
 def init_app(input, output):
-    # type: (InputListener, object) -> None
-    global i, o
-    i, o = input, output
+    global app
+    app = StopwatchApp(input, output)
