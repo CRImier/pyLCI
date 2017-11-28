@@ -25,7 +25,8 @@ Installation
     sudo ./update.sh #Transfer the working system to your system-wide ZPUI copy
 
 .. admonition:: Behind the scenes
-   
+   :class: note
+
    There are two ZPUI copies on your system - your local copy, which you downloaded ZPUI into, 
    and a system-wide copy, which is where ZPUI is launched from when it's started
    as a service (typically, ``/opt/zpui``).
