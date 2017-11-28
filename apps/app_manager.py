@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import importlib
 import os
 import traceback
@@ -111,6 +113,7 @@ class AppManager(object):
         if path in cache:
             return cache[path]
         import_path = path.replace('/', '.')
+        ordering = []
         try:
             imported_module = importlib.import_module(import_path + '.__init__')
             ordering = imported_module._ordering
@@ -118,7 +121,9 @@ class AppManager(object):
             print("Exception while loading __init__.py for directory {}".format(path))
             print(e)
             ordering = []
-        except AttributeError as e:
+        except AttributeError as e:  # todo: refactor as a single 'except' statement
+            print("Exception while loading __init__.py for directory {}".format(path))
+            print(e)
             ordering = []
         finally:
             cache[path] = ordering
