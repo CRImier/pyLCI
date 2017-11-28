@@ -7,7 +7,7 @@ class ListWithMetadata(list):
     ordering_alias = None
 
 
-class AppManager():
+class AppManager(object):
     subdir_menus = {}
     """ Example of subdir_menus:
     {'apps/network_apps': <ui.menu.Menu instance at 0x7698ac10>, 
