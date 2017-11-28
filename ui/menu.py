@@ -11,25 +11,13 @@ class MenuExitException(Exception):
 
 
 class Menu(BaseListBackgroundableUIElement):
-    """Implements a menu which can be used to navigate through your application, output a list of values or select actions to perform. Is one of the most used elements, used both in system core and in most of the applications.
+    """Implements a menu which can be used to navigate through your application, 
+    output a list of values or select actions to perform. Is one of the most used 
+    UI elements, used both in system core and in most of the applications."""
 
-    Attributes:
-
-    * ``contents``: list of menu entries which was passed either to ``Menu`` constructor or to ``menu.set_contents()``.
-
-      Menu entry is a list, where:
-         * ``entry[0]`` (entry label) is usually a string which will be displayed in the UI, such as "Menu entry 1". If ``entry_height`` > 1, can be a list of strings, each of those strings will be shown on a separate display row.
-         * ``entry[1]`` (entry callback) is a function which is called when the user presses Enter.
-           * Can be omitted if you don't need to have any actions taken upon activation of the entry.
-           * You can supply 'exit' (string instead of a function) if you want a menu entry that exits the menu when the user presses Enter.
-
-      *If you want to set contents after the initalisation, please, use set_contents() method.*
-    * ``pointer``: currently selected menu entry's number, starting from 0.
-    * ``in_background``: a flag which indicates whether menu is currently active, either being displayed or just waiting in background (for example, you go into a sub-menu, the parent menu will still be considered active.
-    * ``in_foreground`` : a flag which indicates whether menu is currently displayed. 
-
-    """
-
+    pointer = 0 #: number of currently selected menu entry, starting from 0.
+    in_background = False #: flag which indicates whether menu is currently active, either being displayed or just waiting in background (for example, when you go into a sub-menu, the parent menu will still be considered active).
+    in_foreground = False #: flag which indicates whether menu is currently displayed. 
     exit_exception = False
 
     def __init__(self, *args, **kwargs):
@@ -37,7 +25,16 @@ class Menu(BaseListBackgroundableUIElement):
 
         Args:
 
-            * ``contents``: a list of menu entries, which can be constructed as described in the Menu object's docstring.
+            * ``contents``: list of menu entries which was passed either to ``Menu`` constructor or to ``menu.set_contents()``.
+
+              Menu entry is a list, where:
+                 * ``entry[0]`` (entry label) is usually a string which will be displayed in the UI, such as "Menu entry 1". If ``entry_height`` > 1, can be a list of strings, each of those strings will be shown on a separate display row.
+                 * ``entry[1]`` (entry callback) is a function which is called when the user presses Enter.
+
+                   * Can be omitted if you don't need to have any actions taken upon activation of the entry.
+                   * You can supply 'exit' (a string, not a function) if you want a menu entry that exits the menu when the user presses Enter.
+
+              If you want to set contents after the initialisation, please, use set_contents() method.*
             * ``i``, ``o``: input&output device objects
 
         Kwargs:
