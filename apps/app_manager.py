@@ -103,9 +103,11 @@ class AppManager(object):
             print(e)
             return os.path.split(subdir_path)[1].capitalize()
 
-    def get_ordering(self, path, cache={}):
+    def get_ordering(self, path, cache=None):
         """This function gets a subdirectory path and imports __init__.py from it. It then gets _ordering attribute from __init__.py and returns it. It also caches the attribute for faster initialization.
         If failed to either import __init__.py or get the _ordering attribute, it returns an empty list."""
+        if cache is None:
+            cache = {}
         if path in cache:
             return cache[path]
         import_path = path.replace('/', '.')
