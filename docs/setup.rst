@@ -1,3 +1,5 @@
+.. _setup:
+
 Installing and updating ZPUI
 ############################
 
@@ -75,7 +77,9 @@ For testing configuration or development, you will want to launch ZPUI directly
 so that you will see the logs and will be able to stop it with a simple Ctrl^C. 
 In that case, just run ZPUI with ``sudo python main.py`` from your local (or system-wide) directory. 
 
-Using the ZPUI emulator
+.. _emulator:
+
+Installing the ZPUI emulator
 =======================
 
 If you want to develop ZPUI apps, but don't yet have the ZeroPhone hardware, 
@@ -103,6 +107,7 @@ Assuming Python 2 is the default Python version:
     git clone https://github.com/ZeroPhone/ZPUI
     cd ZPUI
     ./setup_emulator.sh
+    #Run the emulator
     python main.py
 
 OpenSUSE installation
@@ -115,6 +120,7 @@ OpenSUSE installation
     git clone https://github.com/ZeroPhone/ZPUI
     cd ZPUI
     ./setup_emulator.sh
+    #Run the emulator
     python2 main.py
 
 Emulator credits
