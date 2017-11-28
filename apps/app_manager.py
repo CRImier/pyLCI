@@ -40,10 +40,10 @@ class AppManager(object):
                 # First, we create subdir menus (not yet linking because they're not created in correct order) and put them in subdir_menus.
                 subdir_path = os.path.join(path, subdir)
                 self.subdir_menus[subdir_path] = self.menu_class([], self.i, self.o, subdir_path)
-            for module in modules:
+            for _module in modules:
                 # Then, we load modules and store them along with their paths
                 try:
-                    module_path = os.path.join(path, module)
+                    module_path = os.path.join(path, _module)
                     app = self.load_app(module_path)
                     print("Loaded app {}".format(module_path))
                     self.app_list[module_path] = app
