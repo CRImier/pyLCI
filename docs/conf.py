@@ -287,7 +287,7 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 autodoc_member_order = 'bysource'
-autodoc_mock_imports = ['evdev', 'smbus', 'pifacecad', 'RPi', 'RPi.GPIO' 'serial']
+autodoc_mock_imports = ['evdev', 'smbus', 'pifacecad', 'RPi', 'RPi.GPIO' 'serial', 'luma', 'luma.core', 'luma.core.render']
 
 sys.path.insert(0,os.path.abspath("../"))
 
