@@ -128,7 +128,6 @@ class StopwatchApp(ZeroApp):
 
 
 def callback():
-    global app  # hack, todo: remove when manager.py is refactored
     app.on_start()
 
 
