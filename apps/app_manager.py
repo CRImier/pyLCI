@@ -83,15 +83,13 @@ class AppManager(object):
         return base_menu
 
     def load_app(self, app_path):
-        # If user runs in single-app mode and by accident autocompletes the app name too far, it shouldn't fail
-        if app_path.endswith('/'):
-            app_path = app_path[:-1]
-
+        app_import_path = app_path.replace('/', '.')
+        # If user runs in single-app mode and by accident
+        # autocompletes the app name too far, it shouldn't fail
         main_py_string = ".main.py"
-        if app_path.endswith(main_py_string):
-            app_path = app_path[:-len(main_py_string)]
-
-        app = importlib.import_module(app_path + '.main', package='apps')
+        if app_import_path.endswith(main_py_string):
+            app_import_path = app_import_path[:-len(main_py_string)]
+        app = importlib.import_module(app_import_path + '.main', package='apps')
         app.init_app(self.i, self.o)
         return app
 
@@ -167,7 +165,7 @@ def app_walk(base_dir):
     walk_results = []
     modules = []
     subdirs = []
-    for element in os.listdir(base_dir):  # todo: see if refactor with os.path.walk() is possible
+    for element in os.listdir(base_dir):
         full_path = os.path.join(base_dir, element)
         if os.path.isdir(full_path):
             if is_subdir(full_path):
