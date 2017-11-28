@@ -181,15 +181,9 @@ def app_walk(base_dir):
 
 def is_module_dir(dir_path):
     contents = os.listdir(dir_path)
-    if "main.py" in contents:
-        if 'do_not_load' not in contents:
-            return True
-    return False
+    return "main.py" in contents and "do_not_load" not in contents
 
 
 def is_subdir(dir_path):
     contents = os.listdir(dir_path)
-    if "__init__.py" in contents and "main.py" not in contents and "do_not_load" not in contents:
-        return True
-    else:
-        return False
+    return "__init__.py" in contents and "main.py" not in contents and "do_not_load" not in contents
