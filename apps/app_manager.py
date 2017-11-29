@@ -133,11 +133,9 @@ class AppManager(object):
         except ImportError as e:
             print("Exception while loading __init__.py for directory {}".format(path))
             print(e)
-            ordering = []
         except AttributeError as e:  # todo: refactor as a single 'except' statement
-            print("Exception while loading __init__.py for directory {}".format(path))
+            print("No ordering for directory {}".format(path))
             print(e)
-            ordering = []
         finally:
             cache[path] = ordering
             return ordering
