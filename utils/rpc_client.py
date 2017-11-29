@@ -50,3 +50,6 @@ class RPCFunction():
                 error = RPCCommError("Connection refused")
                 error.errno = e.errno
                 raise error
+
+if __name__ == "__main__":
+    c = RPCClient("127.0.0.1", 5923)
