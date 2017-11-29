@@ -4,6 +4,8 @@ import importlib
 import os
 import traceback
 
+from apps import zero_app
+
 
 class ListWithMetadata(list):
     ordering_alias = None
@@ -73,14 +75,23 @@ class AppManager(object):
             subdir_path, app_dirname = os.path.split(app_path)
             ordering = self.get_ordering(subdir_path)
             menu_name = app.menu_name if hasattr(app, "menu_name") else app_dirname.capitalize()
-            if hasattr(app, "callback") and callable(app.callback):
-                subdir_menu = self.subdir_menus[subdir_path]
-                subdir_menu_contents = self.insert_by_ordering([menu_name, app.callback], os.path.split(app_path)[1],
-                                                               subdir_menu.contents, ordering)
-                subdir_menu.set_contents(subdir_menu_contents)
-            else:
-                print("App \"{}\" has no callback; loading silently".format(menu_name))
+            self.bind_callback(app, app_path, menu_name, ordering, subdir_path)
         return base_menu
+
+    def bind_callback(self, app, app_path, menu_name, ordering, subdir_path):
+        if hasattr(app, "callback") and callable(app.callback):  # for function based apps
+            subdir_menu = self.subdir_menus[subdir_path]
+            subdir_menu_contents = self.insert_by_ordering([menu_name, app.callback], os.path.split(app_path)[1],
+                                                           subdir_menu.contents, ordering)
+            subdir_menu.set_contents(subdir_menu_contents)
+            return True
+        if hasattr(app, "on_start") and callable(app.on_start):  # for class based apps
+            subdir_menu = self.subdir_menus[subdir_path]
+            subdir_menu_contents = self.insert_by_ordering([menu_name, app.on_start], os.path.split(app_path)[1],
+                                                           subdir_menu.contents, ordering)
+            subdir_menu.set_contents(subdir_menu_contents)
+        else:
+            print("App \"{}\" has no callback; loading silently".format(menu_name))
 
     def load_app(self, app_path):
         app_import_path = app_path.replace('/', '.')
@@ -90,7 +101,11 @@ class AppManager(object):
         if app_import_path.endswith(main_py_string):
             app_import_path = app_import_path[:-len(main_py_string)]
         app = importlib.import_module(app_import_path + '.main', package='apps')
-        app.init_app(self.i, self.o)
+        if is_class_based_module(app):
+            zero_app_subclass = get_zeroapp_class_in_module(app)
+            app = zero_app_subclass(self.i, self.o)
+        else:
+            app.init_app(self.i, self.o)
         return app
 
     def get_subdir_menu_name(self, subdir_path):
@@ -177,6 +192,24 @@ def app_walk(base_dir):
                 modules.append(element)
     walk_results.append((base_dir, subdirs, modules))
     return walk_results
+
+
+def get_zeroapp_class_in_module(module_):
+    if 'init_app' in dir(module_):
+        return None
+    module_content = [item for item in dir(module_) if not item.startswith('__')]
+    for item in module_content:
+        class_ = getattr(module_, item)
+        try:
+            if issubclass(class_, zero_app.ZeroApp):
+                return class_
+        except Exception as e:
+            pass  # todo : check why isinstance(class_, ClassType)==False in python2
+    return None
+
+
+def is_class_based_module(module_):
+    return get_zeroapp_class_in_module(module_) is not None
 
 
 def is_module_dir(dir_path):
