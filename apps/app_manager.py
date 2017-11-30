@@ -51,11 +51,11 @@ class AppManager(object):
                 try:
                     module_path = os.path.join(path, _module)
                     app = self.load_app(module_path)
-                    logger.debug("Loaded app {}".format(module_path))
+                    logger.info("Loaded app {}".format(module_path))
                     self.app_list[module_path] = app
                 except Exception as e:
-                    logger.debug("Failed to load app {}".format(module_path))
-                    traceback.print_exc()
+                    logger.error("Failed to load app {}".format(module_path))
+                    logger.error(traceback.format_exc())
                     self.printer_func(["Failed to load", os.path.split(module_path)[1]], self.i, self.o, 2)
         for subdir_path in self.subdir_menus:
             # Now it's time to link menus to parent menus
