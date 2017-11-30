@@ -6,7 +6,7 @@ Here are some answers to questions that arise. Don't forget to look through the 
 Got a question that isn't answered here? Try to look through `GitHub issues`_. If not found, create a new one!
 If you have another questions, `e-mail me`_ .
 
-.. _GitHub issues: https://github.com/CRImier/pyLCI/issues
+.. _GitHub issues: https://github.com/ZeroPhone/ZPUI/issues
 .. _e-mail me: mailto:crimier@yandex.ru
 
 .. contents::

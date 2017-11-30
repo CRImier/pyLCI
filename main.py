@@ -69,7 +69,7 @@ from ui import Printer, Menu
 
 
 try: #If there's an internal error, we show it on display and exit
-    from apps.manager import AppManager
+    from apps.app_manager import AppManager
     #Now we init the input subsystem
     from input import input
     input.init(config["input"])

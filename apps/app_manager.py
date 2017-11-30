@@ -1,11 +1,15 @@
-import traceback
 import importlib
 import os
+import traceback
+
+from apps import zero_app
+
 
 class ListWithMetadata(list):
     ordering_alias = None
 
-class AppManager():
+
+class AppManager(object):
     subdir_menus = {}
     """ Example of subdir_menus:
     {'apps/network_apps': <ui.menu.Menu instance at 0x7698ac10>, 
@@ -28,21 +32,20 @@ class AppManager():
         self.o = o
 
     def load_all_apps(self):
-        base_menu = self.menu_class([], self.i, self.o, "Main app menu", exitable=False) #Main menu for all applications.
+        base_menu = self.menu_class([], self.i, self.o, "Main app menu",
+                                    exitable=False)  # Main menu for all applications.
         base_menu.exit_entry = ["Exit", "exit"]
         base_menu.process_contents()
-        orderings = {}
         self.subdir_menus[self.app_directory] = base_menu
-        for path, subdirs, modules in app_walk(self.app_directory): 
-            #print("Loading path {} with modules {} and subdirs {}".format(path, modules, subdirs))
+        for path, subdirs, modules in app_walk(self.app_directory):
             for subdir in subdirs:
-                #First, we create subdir menus (not yet linking because they're not created in correct order) and put them in subdir_menus.
+                # First, we create subdir menus (not yet linking because they're not created in correct order) and put them in subdir_menus.
                 subdir_path = os.path.join(path, subdir)
                 self.subdir_menus[subdir_path] = self.menu_class([], self.i, self.o, subdir_path)
-            for module in modules:
-                #Then, we load modules and store them along with their paths
+            for _module in modules:
+                # Then, we load modules and store them along with their paths
                 try:
-                    module_path = os.path.join(path, module)
+                    module_path = os.path.join(path, _module)
                     app = self.load_app(module_path)
                     print("Loaded app {}".format(module_path))
                     self.app_list[module_path] = app
@@ -51,44 +54,56 @@ class AppManager():
                     traceback.print_exc()
                     self.printer_func(["Failed to load", os.path.split(module_path)[1]], self.i, self.o, 2)
         for subdir_path in self.subdir_menus:
-            #Now it's time to link menus to parent menus
+            # Now it's time to link menus to parent menus
             if subdir_path == self.app_directory:
                 continue
             parent_path = os.path.split(subdir_path)[0]
             ordering = self.get_ordering(parent_path)
-            #print("Adding subdir {} to parent {}".format(subdir_path, parent_path))
             parent_menu = self.subdir_menus[parent_path]
             subdir_menu = self.subdir_menus[subdir_path]
             subdir_menu_name = self.get_subdir_menu_name(subdir_path)
-            #Inserting by the ordering given
-            parent_menu_contents = self.insert_by_ordering([subdir_menu_name, subdir_menu.activate], os.path.split(subdir_path)[1], parent_menu.contents, ordering)
+            # Inserting by the ordering given
+            parent_menu_contents = self.insert_by_ordering([subdir_menu_name, subdir_menu.activate],
+                                                           os.path.split(subdir_path)[1], parent_menu.contents,
+                                                           ordering)
             parent_menu.set_contents(parent_menu_contents)
         for app_path in self.app_list:
-            #Last thing is attaching applications to the menu structure created.
+            # Last thing is attaching applications to the menu structure created.
             app = self.app_list[app_path]
             subdir_path, app_dirname = os.path.split(app_path)
             ordering = self.get_ordering(subdir_path)
             menu_name = app.menu_name if hasattr(app, "menu_name") else app_dirname.capitalize()
-            #print("Adding app {} to subdir {}".format(app_path, subdir_path))
-            if hasattr(app, "callback") and callable(app.callback):
-                subdir_menu = self.subdir_menus[subdir_path]
-                subdir_menu_contents = self.insert_by_ordering([menu_name, app.callback], os.path.split(app_path)[1], subdir_menu.contents, ordering)
-                subdir_menu.set_contents(subdir_menu_contents)
-            else:
-                print("App \"{}\" has no callback; loading silently".format(menu_name))
-        #print(app_list)
-        #print(subdir_menus)
+            self.bind_callback(app, app_path, menu_name, ordering, subdir_path)
         return base_menu
+
+    def bind_callback(self, app, app_path, menu_name, ordering, subdir_path):
+        if hasattr(app, "callback") and callable(app.callback):  # for function based apps
+            subdir_menu = self.subdir_menus[subdir_path]
+            subdir_menu_contents = self.insert_by_ordering([menu_name, app.callback], os.path.split(app_path)[1],
+                                                           subdir_menu.contents, ordering)
+            subdir_menu.set_contents(subdir_menu_contents)
+            return True
+        if hasattr(app, "on_start") and callable(app.on_start):  # for class based apps
+            subdir_menu = self.subdir_menus[subdir_path]
+            subdir_menu_contents = self.insert_by_ordering([menu_name, app.on_start], os.path.split(app_path)[1],
+                                                           subdir_menu.contents, ordering)
+            subdir_menu.set_contents(subdir_menu_contents)
+        else:
+            print("App \"{}\" has no callback; loading silently".format(menu_name))
 
     def load_app(self, app_path):
         app_import_path = app_path.replace('/', '.')
-        #If user runs in single-app mode and by accident 
-        #autocompletes the app name too far, it shouldn't fail
-        main_py_string = ".main.py" 
+        # If user runs in single-app mode and by accident
+        # autocompletes the app name too far, it shouldn't fail
+        main_py_string = ".main.py"
         if app_import_path.endswith(main_py_string):
             app_import_path = app_import_path[:-len(main_py_string)]
-        app = importlib.import_module(app_import_path+'.main', package='apps')
-        app.init_app(self.i, self.o)
+        app = importlib.import_module(app_import_path + '.main', package='apps')
+        if is_class_based_module(app):
+            zero_app_subclass = get_zeroapp_class_in_module(app)
+            app = zero_app_subclass(self.i, self.o)
+        else:
+            app.init_app(self.i, self.o)
         return app
 
     def get_subdir_menu_name(self, subdir_path):
@@ -96,54 +111,58 @@ class AppManager():
         If failed to either import __init__.py or get the _menu_name attribute, it returns the subdirectory name."""
         subdir_import_path = subdir_path.replace('/', '.')
         try:
-            subdir_object = importlib.import_module(subdir_import_path+'.__init__')
+            subdir_object = importlib.import_module(subdir_import_path + '.__init__')
             return subdir_object._menu_name
         except Exception as e:
             print("Exception while loading __init__.py for subdir {}".format(subdir_path))
             print(e)
             return os.path.split(subdir_path)[1].capitalize()
 
-    def get_ordering(self, path, cache={}):
+    def get_ordering(self, path, cache=None):
         """This function gets a subdirectory path and imports __init__.py from it. It then gets _ordering attribute from __init__.py and returns it. It also caches the attribute for faster initialization.
         If failed to either import __init__.py or get the _ordering attribute, it returns an empty list."""
+        if cache is None:
+            cache = {}
         if path in cache:
             return cache[path]
         import_path = path.replace('/', '.')
+        ordering = []
         try:
-            imported_module = importlib.import_module(import_path+'.__init__')
+            imported_module = importlib.import_module(import_path + '.__init__')
             ordering = imported_module._ordering
         except ImportError as e:
             print("Exception while loading __init__.py for directory {}".format(path))
             print(e)
-            ordering = []
-        except AttributeError as e:
-            #print("No ordering for directory {}".format(path))
-            #print(e)
-            ordering = []
+        except AttributeError as e:  # todo: refactor as a single 'except' statement
+            print("No ordering for directory {}".format(path))
+            print(e)
         finally:
             cache[path] = ordering
             return ordering
 
     def insert_by_ordering(self, to_insert, alias, l, ordering):
-        #print("Inserting {} by ordering {}".format(alias, ordering))
         if alias in ordering:
-            #HAAAAAAAAAAAAAAXXXXXXXXXX
+            # HAAAAAAAAAAAAAAXXXXXXXXXX
             to_insert = ListWithMetadata(to_insert)
-            #Marking the object we're inserting with its alias 
-            #so that we won't mix up ordering of elements later
-            to_insert.ordering_alias = alias 
-            if not l: #No conditions to check
-                l.append(to_insert); return l
+            # Marking the object we're inserting with its alias
+            # so that we won't mix up ordering of elements later
+            to_insert.ordering_alias = alias
+            if not l:  # No conditions to check
+                l.append(to_insert)
+                return l
             for e in l:
-                #print("{} - {}".format(type(e), e))
                 if hasattr(e, "ordering_alias"):
                     if ordering.index(e.ordering_alias) > ordering.index(alias):
-                        l.insert(l.index(e), to_insert); return l
+                        l.insert(l.index(e), to_insert)
+                        return l
                     else:
-                        pass #going to next element
+                        pass  # going to next element
                 else:
-                    l.insert(l.index(e), to_insert); return l
-        l.append(to_insert); return l #Catch-all
+                    l.insert(l.index(e), to_insert)
+                    return l
+        l.append(to_insert)
+        return l  # Catch-all
+
 
 def app_walk(base_dir):
     """Example of app_walk(directory):  
@@ -158,7 +177,7 @@ def app_walk(base_dir):
     modules = []
     subdirs = []
     for element in os.listdir(base_dir):
-        full_path = os.path.join(base_dir,element)
+        full_path = os.path.join(base_dir, element)
         if os.path.isdir(full_path):
             if is_subdir(full_path):
                 subdirs.append(element)
@@ -170,17 +189,30 @@ def app_walk(base_dir):
     walk_results.append((base_dir, subdirs, modules))
     return walk_results
 
+
+def get_zeroapp_class_in_module(module_):
+    if 'init_app' in dir(module_):
+        return None
+    module_content = [item for item in dir(module_) if not item.startswith('__')]
+    for item in module_content:
+        class_ = getattr(module_, item)
+        try:
+            if issubclass(class_, zero_app.ZeroApp):
+                return class_
+        except Exception as e:
+            pass  # todo : check why isinstance(class_, ClassType)==False in python2
+    return None
+
+
+def is_class_based_module(module_):
+    return get_zeroapp_class_in_module(module_) is not None
+
+
 def is_module_dir(dir_path):
     contents = os.listdir(dir_path)
-    if "main.py" in contents:
-        if 'do_not_load' not in contents:
-            return True
-    return False
+    return "main.py" in contents and "do_not_load" not in contents
+
 
 def is_subdir(dir_path):
     contents = os.listdir(dir_path)
-    if "__init__.py" in contents and "main.py" not in contents and "do_not_load" not in contents:
-        return True
-    else:
-        return False
-
+    return "__init__.py" in contents and "main.py" not in contents and "do_not_load" not in contents
