@@ -1,8 +1,12 @@
 import importlib
+import logging
 import os
 import traceback
 
 from apps import zero_app
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class ListWithMetadata(list):
@@ -47,10 +51,10 @@ class AppManager(object):
                 try:
                     module_path = os.path.join(path, _module)
                     app = self.load_app(module_path)
-                    print("Loaded app {}".format(module_path))
+                    logger.debug("Loaded app {}".format(module_path))
                     self.app_list[module_path] = app
                 except Exception as e:
-                    print("Failed to load app {}".format(module_path))
+                    logger.debug("Failed to load app {}".format(module_path))
                     traceback.print_exc()
                     self.printer_func(["Failed to load", os.path.split(module_path)[1]], self.i, self.o, 2)
         for subdir_path in self.subdir_menus:
@@ -89,7 +93,7 @@ class AppManager(object):
                                                            subdir_menu.contents, ordering)
             subdir_menu.set_contents(subdir_menu_contents)
         else:
-            print("App \"{}\" has no callback; loading silently".format(menu_name))
+            logger.debug("App \"{}\" has no callback; loading silently".format(menu_name))
 
     def load_app(self, app_path):
         app_import_path = app_path.replace('/', '.')
@@ -114,8 +118,8 @@ class AppManager(object):
             subdir_object = importlib.import_module(subdir_import_path + '.__init__')
             return subdir_object._menu_name
         except Exception as e:
-            print("Exception while loading __init__.py for subdir {}".format(subdir_path))
-            print(e)
+            logger.error("Exception while loading __init__.py for subdir {}".format(subdir_path))
+            logger.error(e)
             return os.path.split(subdir_path)[1].capitalize()
 
     def get_ordering(self, path, cache=None):
@@ -130,12 +134,12 @@ class AppManager(object):
         try:
             imported_module = importlib.import_module(import_path + '.__init__')
             ordering = imported_module._ordering
+            logger.debug("Found ordering for {} directory!".format(import_path))
         except ImportError as e:
-            print("Exception while loading __init__.py for directory {}".format(path))
-            print(e)
-        except AttributeError as e:  # todo: refactor as a single 'except' statement
-            print("No ordering for directory {}".format(path))
-            print(e)
+            logger.error("Exception while loading __init__.py for directory {}".format(path))
+            logger.debug(e)
+        except AttributeError as e:
+            pass
         finally:
             cache[path] = ordering
             return ordering
