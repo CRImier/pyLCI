@@ -9,37 +9,42 @@ and 30-key numpad (though it still retains input&output drivers from pyLCI), and
 it also ships with ZeroPhone-specific applications.
 
 Guides:
-=================================
+=======
 
+* :doc:`Installing and updating ZPUI <setup>`
+* :ref:`Installing ZPUI emulator <emulator>`
 * :doc:`Hacking on UI <hacking_ui>`
-* :doc:`Debugging issues <debugging>`
-* :doc:`Managing and developing applications <app_mgmt>`
 
-ZPUI core consists of 5 parts:
+References:
+===========
 
-#. :doc:`Input system <input>`
-#. :doc:`Output system <output>`
-#. :doc:`UI elements <ui>`
-#. :doc:`Applications <apps>`
-#. Glue logic (mostly main.py launcher)
+* :doc:`UI elements <ui>`
+* :doc:`Helper functions <helpers>`
+* :doc:`Input system <input>`
+* :doc:`Output system <output>`
+
 
 :doc:`Development plans <plans>`
 
+:doc:`Contact us <contact>`
+
 :doc:`Working on documentation <docs_development>`
+
 
 .. toctree::
    :maxdepth: 1
    :hidden:
 
-   hardware.rst
    setup.rst
-   debugging.rst
+   ui.rst
+   helpers.rst
    hacking_ui.rst
+   hardware.rst
+   debugging.rst
    input.rst
    output.rst
-   ui.rst
    apps.rst
    app_mgmt.rst
-   helpers.rst
    plans.rst
    docs_development.rst
+   contact.rst

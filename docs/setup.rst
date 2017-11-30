@@ -1,8 +1,7 @@
-#############################
-Installing and updating pyLCI
-#############################
+.. _setup:
 
-.. code-block:: bash
+Installing and updating ZPUI
+############################
 
     git clone https://github.com/ZeroPhone/ZPUI
     cd pyLCI/
@@ -13,74 +12,134 @@ Installing and updating pyLCI
     #Once configured:
     ./update.sh #Transfer the working system to your install directory
 
-.. note:: 
-   **Behind the scenes:**
-   
-   When you run ``./setup.sh``, pyLCI is copied to ``/opt/pylci``, this is done to make autorun code easier and allow experimentation while making it harder to lock you out of the system if pyLCI is your main control interface. ``/opt/pylci`` will be referred to as "install directory", while the directory you cloned the repository to will be referred to as "download directory". ``./update.sh``, when run from download directory, will transfer the changes from the download directory (and GitHub) to the install directory.
-
-Setup
-=====
-
-``setup.sh`` is the first script to be run after installation. It checks if you have python and python-pip installed and installs them if they aren't (using apt-get), then creates the install directory, copies all the files to it and installs a ``systemd`` unit file for system to run at boot. Perfect for Raspbian and Debian Jessie, TODO: add support for other systems.
-   
-.. note:: The system typically runs as root, and therefore is to be run as sudo/root user. Curious about the reasons? It's :doc:`explained in the FAQ <faq_contact>`.
-
-Installing dependencies for hardware
-====================================
-
-``config.sh`` is the script that installs all the necessary packages and python libraries, depending on which hardware you're using. It will also set proper ``config.json`` contents if you're using a shield which has a pyLCI driver.
-
-Configuring input and output devices
-====================================
-
-``config.json`` is the file currently responsible for input and output hardware module configuration. It's JSON, so if you launch the system manually and see ``JSONError`` exceptions in the output, you know you have misspelled something. 
-
-.. note:: Generally, you won't need to edit ``config.json`` if you're using any shields recognised by ``config.sh``  because the configuration will be done automatically.
-
-Its format is as follows: 
-
-.. code:: json
-
-   {
-     "input":
-     [{
-       "driver":"driver_filename",
-       "args":[ "value1", "value2", "value3"...]
-     }],
-   "output":
-     [{
-       "driver":"driver_filename",
-       "kwargs":{ "key":"value", "key2":"value2"}
-     }]
-   }
-
-Documentation for :doc:`input <input>` and :doc:`output <output>` drivers have sample ``config.json`` for each driver. ``"args"`` and ``"kwargs"`` get passed directly to drivers' ``__init__`` method, so you can read the driver documentation/files to see if there are any options you could tweak.
-
-Systemctl commands
-==================
-
-* ``systemctl start pylci.service``
-* ``systemctl stop pylci.service``
+Installing ZPUI on a ZeroPhone
+==============================
 
 
-.. note:: 
-   This document refers to two pyLCI directories. First is "download directory", this is the directory which has been created by running ``git clone`` command. Second is "install directory", which is where pyLCI has been copied over by the ``setup.sh`` script.
- 
-   Directory separation is good for being able to experiment with configuration options without breaking the current install, as well as for developing applications for the system while not cluttering your install version.
+ZPUI is installed by default on official ZeroPhone SD card images. However, if 
+for some reason you don't have it installed on your ZeroPhone's SD card, or if you'd like to 
+install ZPUI on some other OS, this is what you have to do:
 
+Installation
+------------
 
-Launching the system manually
-=============================
+.. code-block:: bash
 
-For testing configuration or development, you will want to launch the system directly so that you'll see system exception logs and will be able to stop it with a simple Ctrl^C. In that case, just run the system like ``python main.py`` from your download/install directory. 
+    git clone https://github.com/ZeroPhone/ZPUI
+    cd ZPUI/
+    #Install main dependencies and create a system-wide ZPUI copy
+    sudo ./setup.sh 
+    #Start the system to test your configuration - do screen and buttons work OK?
+    sudo python main.py 
+    #Once tested:
+    sudo ./update.sh #Transfer the working system to your system-wide ZPUI copy
 
-.. tip:: If system refuses to shut down (happens due to input subsystem threads not finishing sometimes), feel free to find its PID using ``ps ax|grep "python main.py"`` and do a ``kill -KILL $PID`` on it.
+.. admonition:: Behind the scenes
+   :class: note
 
-After you're done configuring/developing on the system, you can use ``update.sh`` to transfer your changes to the install directory.
+   There are two ZPUI copies on your system - your local copy, which you downloaded ZPUI into, 
+   and a system-wide copy, which is where ZPUI is launched from when it's started
+   as a service (typically, ``/opt/zpui``).
+   When you run ``./setup.sh``, the system-wide (``/opt/zpui``) ZPUI copy is created,
+   and a ``systemd`` unit file registered to run ZPUI from ``/opt/zpui`` at boot. 
+   The system-wide copy can then be updated from the local copy using the ``./update.sh`` script.
+   If you plan on modifying your ZPUI install, it's suggested you stick to a workflow like this:
+
+   * Make your changes in the local copy
+   * Stop the ZPUI service (to prevent it from grabbing the input&output devices), using ``sudo systemctl stop zpui.service``.
+   * Test your changes in the local directory, using ``sudo python main.py``
+   * If your changes work, transfer them to the system-wide directory using ``sudo ./update.sh``
+
+   Such a workflow is suggested to allow experimentation while making it harder 
+   to lock you out of the system, given that ZPUI is the primary interface for ZeroPhone
+   and if it's inaccessible, it might prevent you from knowing its IP address, 
+   connecting it to a wireless network or turning on SSH.
+   In documentation, ``/opt/zpui`` will be referred to as **system-wide copy**, 
+   while the directory you cloned the repository into will be referred to 
+   as **local copy**.
 
 Updating
-========
+--------
 
-``update.sh`` is for updating your pyLCI install, pulling new commits from GitHub and copying all the new files from download directory to the install directory. This is useful to make your installed system up-to-date if there have been new commits or if you made some changes and want to transfer them to pyLCI install directory. 
+To get new ZPUI changes from GitHub, you can run **"Settings"** -> **"Update ZPUI"** 
+from the main ZPUI menu, which will update the system-wide copy by doing ``git pull``.
 
-.. note:: ``update.sh`` automatically pulls all the GitHub commits - just comment the corresponding line out if you don't want it. It also runs ``systemctl start pylci.service``.
+If you want to sync your local copy to the system-wide copy, you can run ``update.sh``
+It **1)** automatically pulls new commits from GitHub and **2)** copies all the 
+changes from local directory to the system-wide directory. 
+
+.. tip:: To avoid pulling the new commits from GitHub when running ``./update.sh``, 
+          just comment the corresponding line out from the ``update.sh`` script. 
+
+
+Systemctl commands
+------------------
+
+To control the system-wide ZPUI copy, you can use the following commands:
+
+* ``systemctl start zpui.service``
+* ``systemctl stop zpui.service``
+* ``systemctl status zpui.service``
+
+Launching the system manually
+-----------------------------
+
+For testing configuration or development, you will want to launch ZPUI directly 
+so that you will see the logs and will be able to stop it with a simple Ctrl^C. 
+In that case, just run ZPUI with ``sudo python main.py`` from your local (or system-wide) directory. 
+
+-----------
+
+.. _emulator:
+
+Installing the ZPUI emulator
+=======================
+
+If you want to develop ZPUI apps, but don't yet have the ZeroPhone hardware, 
+there's an option to use the emulator with a Linux PC - the emulator can use your 
+screen and keyboard instead of ZeroPhone hardware. The emulator works very well for 
+app development, as well as for UI element and ZPUI core feature development.
+
+System requirements
+-------------------
+
+* Some kind of Linux - there are install instructions for Ubuntu, Debian and OpenSUSE, but it will likely work with other systems, too
+* Graphical environment (the emulator is based on Pygame)
+* A keyboard (the same keyboard that you're using for the system will work great)
+
+Ubuntu/Debian installation
+--------------------------
+
+Assuming Python 2 is the default Python version:
+
+.. code-block:: bash
+
+    sudo apt-get update
+    sudo apt-get install python-pip git python-dev build-essential python-pygame
+    sudo pip install luma.emulator
+    git clone https://github.com/ZeroPhone/ZPUI
+    cd ZPUI
+    ./setup_emulator.sh
+    #Run the emulator
+    python main.py
+
+OpenSUSE installation
+---------------------
+
+.. code-block:: bash
+
+    sudo zypper install python2-pip git python2-devel gcc python2-curses python2-pygame #If python2- version is not available, try python- and report on IRC - can't test it now
+    sudo pip2 install luma.emulator
+    git clone https://github.com/ZeroPhone/ZPUI
+    cd ZPUI
+    ./setup_emulator.sh
+    #Run the emulator
+    python2 main.py
+
+Emulator credits
+----------------
+Most of the emulator research and work was done by Doug, and later 
+refactored by Brian Dunlay. The input driver was done by Arsenijs. 
+OpenSUSE instructions were compiled with help of `piajesse`_.
+
+.. _piajesse: https://hackaday.io/piajesse

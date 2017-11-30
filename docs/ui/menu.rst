@@ -16,9 +16,12 @@ Menu UI element
     ]
     Menu(menu_contents, i, o, "My menu").activate()
 
-.. automodule:: ui.menu
+.. automodule:: ui
  
 .. autoclass:: Menu
-    :members: __init__,activate,deactivate,set_contents,print_name,print_contents
-
+    :show-inheritance:
+    :members: __init__,activate,deactivate,set_contents,print_name,print_contents,pointer,in_background,in_foreground
+    
 .. autoclass:: MenuExitException
+    :show-inheritance:
+
