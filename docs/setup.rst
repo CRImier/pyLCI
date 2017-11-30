@@ -4,7 +4,7 @@ Installing and updating pyLCI
 
 .. code-block:: bash
 
-    git clone https://github.com/CRImier/pyLCI
+    git clone https://github.com/ZeroPhone/ZPUI
     cd pyLCI/
     ./setup.sh #Install main dependencies and create a install directory
     ./config.sh #Install dependencies for your input&output devices 
