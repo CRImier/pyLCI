@@ -5,14 +5,8 @@ import logging
 from threading import Event
 
 #logging.basicConfig(level=logging.DEBUG)
+from ui.utils import to_be_foreground
 
-def to_be_foreground(func): #A safety check wrapper so that certain functions don't get called if refresher is not the one active
-    def wrapper(self, *args, **kwargs):
-        if self.in_foreground:
-            return func(self, *args, **kwargs)
-        else:
-            print(func.__name__+" misbehaves")
-    return wrapper
 
 class Refresher():
     """Implements a state where display is refreshed from time to time, updating the screen with information from a function.

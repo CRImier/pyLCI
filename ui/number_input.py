@@ -2,13 +2,8 @@ from time import sleep
 from copy import copy
 import logging
 
-def to_be_foreground(func): #A safety check wrapper so that certain checks don't get called if menu is not the one active
-    def wrapper(self, *args, **kwargs):
-        if self.in_foreground:
-            return func(self, *args, **kwargs)
-        else:
-            return False
-    return wrapper
+from ui.utils import to_be_foreground
+
 
 class IntegerAdjustInput():
     """Implements a simple number input dialog which allows you to increment/decrement a number using  which can be used to navigate through your application, output a list of values or select actions to perform. Is one of the most used elements, used both in system core and in most of the applications.

@@ -6,7 +6,7 @@ from copy import copy
 from time import sleep
 from PIL import ImageFont
 from threading import Event
-from traceback import print_exc
+from utils import to_be_foreground
 from luma.core.render import canvas as luma_canvas
 
 #Documentation building process has problems with this import
@@ -21,18 +21,6 @@ else:
         config = cm.get_global_config()
     except OSError:
         print("Config files not available, running under ReadTheDocs?")
-
-
-def to_be_foreground(func):
-    """A safety check wrapper so that certain checks don't get called if UI element is
-       not the one active"""
-
-    def wrapper(self, *args, **kwargs):
-        if self.in_foreground:
-            return func(self, *args, **kwargs)
-        else:
-            return False
-    return wrapper
 
 
 class BaseListUIElement():

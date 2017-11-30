@@ -3,14 +3,6 @@ from math import ceil
 import logging
 
 
-def to_be_foreground(func): #A safety check wrapper so that certain checks don't get called if menu is not the one active
-    def wrapper(self, *args, **kwargs):
-        if self.in_foreground:
-            return func(self, *args, **kwargs)
-        else:
-            return False
-    return wrapper
-
 class NumberKeypadInputLayer():
     """Experimental UI element. Suited for multi-row screens, not tested on and developed for 2x16 and no cursor implemented yet.
 

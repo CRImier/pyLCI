@@ -3,13 +3,8 @@ import logging
 
 import string
 
-def to_be_foreground(func): #A safety check wrapper so that certain checks don't get called if menu is not the one active
-    def wrapper(self, *args, **kwargs):
-        if self.in_foreground:
-            return func(self, *args, **kwargs)
-        else:
-            return False
-    return wrapper
+from ui.utils import to_be_foreground
+
 
 class CharArrowKeysInput():
     """Implements a character input dialog which allows to input a character string using arrow keys to scroll through characters

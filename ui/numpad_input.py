@@ -1,22 +1,13 @@
 from time import sleep
 from copy import copy
-from math import ceil
 import logging
 from functools import wraps
 from threading import Lock
 
-def to_be_foreground(func): 
-    #A safety check wrapper so that certain functions can't possibly be called 
-    #if UI element is not the one active
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        if self.in_foreground:
-            return func(self, *args, **kwargs)
-        else:
-            return False
-    return wrapper
+from ui.utils import to_be_foreground
 
-def check_value_lock(func): 
+
+def check_value_lock(func):
     #A safety check wrapper so that there's no race conditions between functions able to change position/value
     @wraps(func)
     def wrapper(self, *args, **kwargs):
