@@ -2,9 +2,7 @@ from threading import Lock
 from time import sleep, time
 
 from ui import Menu
-from ui.base_list_ui import BaseListUIElement
-from ui.numpad_input import check_value_lock
-from ui.utils import clamp
+from ui.utils import clamp, check_value_lock, to_be_foreground
 
 
 class UIWidget(object):
@@ -13,16 +11,21 @@ class UIWidget(object):
 
 class NumberedMenu(UIWidget, Menu):
     """
-    todo: options:
-    - delay for keypresses
-    """
+    This subclass of Menu allows the user to navigate using the keypad in the menu. If the menu is 10 entries or less
+    the navigation is instant. If it has more than 10, it let's the user type multiple digits to navigate.
 
+    The `input_delay` parameter controls how long the menu waits before considering an input as definitive.
+    If `input_delay` is 0, then only the 10 first entries are considered navigable with the keypad.
+
+    The `prepend_numbers` parameters controls whether the entries should be prefixed by their number.
+    The default value is `True`
+    """
     def __init__(self, *args, **kwargs):
         self.prepend_numbers = kwargs.pop('prepend_numbers') if 'prepend_numbers' in kwargs else True
         self.input_delay = kwargs.pop('input_delay') if 'input_delay' in kwargs else 1
         Menu.__init__(self, *args, **kwargs)
         self.value_lock = Lock()
-        self.key_map = {
+        self.custom_key_map = {
             "KEY_1": 1,
             "KEY_2": 2,
             "KEY_3": 3,
@@ -39,12 +42,12 @@ class NumberedMenu(UIWidget, Menu):
         self.current_input = None
 
     def activate(self):
-        self.i.set_streaming(self.on_key_pressed)
-        # Menu.activate(self)
+        self.set_keymap()
+        # self.i.set_streaming(self.on_key_pressed)
         self.before_activate()
         self.to_foreground()
         if not self.is_multi_digit():
-            Menu.activate(self)  # no need to check for character state since we are in instant mode
+            # Menu.activate(self)  # no need to check for character state since we are in instant mode
             return
 
         self.last_input_time = -self.input_delay
@@ -53,15 +56,20 @@ class NumberedMenu(UIWidget, Menu):
             self.idle_loop()
             self.check_character_state()
 
+    def set_keymap(self):
+        Menu.set_keymap(self)
+        self.i.set_streaming(self.on_key_pressed)
+
     def deactivate(self):
         Menu.deactivate(self)
         self.i.remove_streaming()
 
+    @to_be_foreground
     def on_key_pressed(self, key):
         if key == "KEY_RIGHT" and self.is_multi_digit():
             self.confirm_current_input()
 
-        if key not in self.key_map.keys(): return
+        if key not in self.custom_key_map: return
         if self.is_multi_digit():
             self.process_multi_digit_input(key)
         else:
@@ -70,23 +78,22 @@ class NumberedMenu(UIWidget, Menu):
 
     def process_single_digit_input(self, key):
         print('single')
-        self.move_to_entry(self.key_map[key])
+        self.move_to_entry(self.custom_key_map[key])
 
     def process_multi_digit_input(self, key):
         self.last_input_time = time()
         if not self.current_input:
-            self.current_input = str(self.key_map[key])
+            self.current_input = str(self.custom_key_map[key])
         else:
-            self.current_input += str(self.key_map[key])
+            self.current_input += str(self.custom_key_map[key])
 
     def move_to_entry(self, index):
-        print("moving")
         self.pointer = clamp(index, 0, len(self.contents) - 1)
         self.current_input = None
         self.view.refresh()
 
     def process_contents(self):
-        BaseListUIElement.process_contents(self)
+        Menu.process_contents(self)
         if self.prepend_numbers:
             self.prepend_entry_text()
 
