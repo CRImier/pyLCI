@@ -5,6 +5,7 @@ from refresher import Refresher
 from checkbox import Checkbox
 from path_picker import PathPicker
 from number_input import IntegerAdjustInput
+from ui.numbered_menu import NumberedMenu
 IntegerInDecrementInput = IntegerAdjustInput #Compatibility with old ugly name
 from char_input import CharArrowKeysInput
 from dialog import DialogBox

@@ -40,7 +40,7 @@ class NumberedInputTestApp(ZeroApp):
             self.main_menu_contents,
             self.i,
             self.o,
-            "Skeleton app menu",
+            self.menu_name,
             prepend_numbers=True,
             input_delay=1)
         self.n_menu.activate()
