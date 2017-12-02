@@ -1,7 +1,7 @@
 # coding=utf-8
 
 from apps.zero_app import ZeroApp
-from ui.numbered_menu import NumberedMenu
+from ui import NumberedMenu
 
 
 class NumberedInputTestApp(ZeroApp):
