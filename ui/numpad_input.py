@@ -4,24 +4,8 @@ import logging
 from functools import wraps
 from threading import Lock
 
-from ui.utils import to_be_foreground
+from ui.utils import to_be_foreground, check_value_lock
 
-
-def check_value_lock(func):
-    #A safety check wrapper so that there's no race conditions between functions able to change position/value
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        #Value-changing code likely to run in concurrent thread and therefore we need a lock
-        #if self.__locked_name__ is not None: print("Another function already locked the thread! Name is {}, current is {}".format(self.__locked_name__, func.__name__))
-        self.value_lock.acquire()
-        #self.__locked_name__ = func.__name__
-        #print("Locked function {}".format(func.__name__))
-        result = func(self, *args, **kwargs)
-        self.value_lock.release()
-        #print("Unlocked function {}".format(func.__name__))
-        #self.__locked_name__ = None
-        return result
-    return wrapper
 
 def check_position_overflow(condition):
     """Returns a decorator which can check for different ways of "self.position" counter overflow """
@@ -57,7 +41,7 @@ class NumpadCharInput():
     * ``in_foreground``: A flag which indicates if UI element is currently displayed. If it's not active, inhibits any of element's actions which can interfere with other UI element being displayed.
 
     """
-    
+
     default_mapping = {"1":"1!?$&|\\",
                "2":"abc2ABC",
                "3":"def3DEF",
@@ -71,7 +55,7 @@ class NumpadCharInput():
                "*":"*.,'\"^",
                "#":"#/()[]<>"
               }
-    
+
     bottom_row_buttons = ["Cancel", "OK", "Erase"]
 
     in_foreground = False
@@ -80,7 +64,7 @@ class NumpadCharInput():
     position = 0
     value_lock = None
     pending_character = None
-    pending_counter = 0 
+    pending_counter = 0
     pending_counter_start = 10 #Multiples of 0.1 second interval
     current_letter_num = 0
     __locked_name__ = None
@@ -109,11 +93,11 @@ class NumpadCharInput():
         self.value_lock = Lock()
         self.value_accepted = False
 
-    #Default set of UI element functions - 
+    #Default set of UI element functions -
 
     def to_foreground(self):
         """ Is called when ``activate()`` method is used, sets flags and performs all the actions so that UI element can display its contents and receive keypresses. Also, refreshes the screen."""
-        logging.info("{0} enabled".format(self.name))    
+        logging.info("{0} enabled".format(self.name))
         self.value_accepted = False
         self.in_foreground = True
         self.refresh()
@@ -123,9 +107,9 @@ class NumpadCharInput():
         """ A method which is called when input element needs to start operating. Is blocking, sets up input&output devices, renders the element and waits until self.in_background is False, while menu callbacks are executed from the input device thread.
         This method returns the selected value if KEY_ENTER was pressed, thus accepting the selection.
         This method returns None when the UI element was exited by KEY_LEFT and thus the value was not accepted. """
-        logging.info("{0} activated".format(self.name))    
+        logging.info("{0} activated".format(self.name))
         self.o.cursor()
-        self.to_foreground() 
+        self.to_foreground()
         while self.in_foreground: #Most of the work is done in input callbacks
             sleep(0.1)
             self.check_character_state()
@@ -140,10 +124,10 @@ class NumpadCharInput():
     def deactivate(self):
         """ Deactivates the UI element, exiting it and thus making activate() return."""
         self.in_foreground = False
-        logging.info("{0} deactivated".format(self.name))    
+        logging.info("{0} deactivated".format(self.name))
 
     def accept_value(self):
-        logging.info("{0}: accepted value".format(self.name))    
+        logging.info("{0}: accepted value".format(self.name))
         self.value_accepted = True
         self.deactivate()
 
@@ -184,7 +168,7 @@ class NumpadCharInput():
                 letter = self.mapping[key][0]
                 self.insert_letter_in_value(letter)
                 if len(self.mapping[key]) == 1:
-                    #No other characters that could be entered 
+                    #No other characters that could be entered
                     #Thus, just setting pending_character to None
                     self.pending_character = None
                     #Need to move forward once again - cursor still points at the previous character
@@ -252,7 +236,7 @@ class NumpadCharInput():
             value_after_letter = self.value[self.position:]
             self.value = "".join(value_before_letter, value_after_letter)
             self.position -= 1
-        elif self.position == len(self.value): 
+        elif self.position == len(self.value):
             #Just removing the last character
             self.value = self.value[:-1]
             self.position -= 1
@@ -268,7 +252,7 @@ class NumpadCharInput():
                 #Counter reset
                 self.pending_character = None
                 #Advancing position so that next letter takes the next space
-                self.position += 1 
+                self.position += 1
                 self.refresh()
 
     #Functions that set up the input listener
@@ -327,13 +311,13 @@ class NumpadCharInput():
 
     def print_name(self):
         """ A debug method. Useful for hooking up to an input event so that you can see which UI element is currently processing input events. """
-        logging.info("{0} active".format(self.name))    
+        logging.info("{0} active".format(self.name))
 
 
 
 class NumpadNumberInput(NumpadCharInput):
     """Implements a number input UI element for a numeric keypad, allowing to translate number keys into numbers."""
-    
+
     #Quite straightforward mapping for now
     default_mapping = {"1":"1",
                "2":"2",
