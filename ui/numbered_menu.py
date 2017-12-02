@@ -77,7 +77,6 @@ class NumberedMenu(UIWidget, Menu):
         self.view.refresh()
 
     def process_single_digit_input(self, key):
-        print('single')
         self.move_to_entry(self.custom_key_map[key])
 
     def process_multi_digit_input(self, key):
