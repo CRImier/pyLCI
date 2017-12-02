@@ -37,9 +37,12 @@ class NumberedMenu(UIWidget, Menu):
             "KEY_9": 9,
             "KEY_0": 0,
         }
-        self.entry_count = len(self.contents)
         self.last_input_time = 0
         self.current_input = None
+
+    @property
+    def entry_count(self):
+        return len(self.contents)
 
     def activate(self):
         self.set_keymap()
