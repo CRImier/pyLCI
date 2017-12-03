@@ -25,7 +25,7 @@ class NumberedMenu(UIWidget, Menu):
         self.input_delay = kwargs.pop('input_delay') if 'input_delay' in kwargs else 1
         Menu.__init__(self, *args, **kwargs)
         self.value_lock = Lock()
-        self.custom_key_map = {
+        self.numeric_keymap = {
             "KEY_1": 1,
             "KEY_2": 2,
             "KEY_3": 3,
@@ -72,7 +72,7 @@ class NumberedMenu(UIWidget, Menu):
         if key == "KEY_RIGHT" and self.is_multi_digit():
             self.confirm_current_input()
 
-        if key not in self.custom_key_map: return
+        if key not in self.numeric_keymap: return
         if self.is_multi_digit():
             self.process_multi_digit_input(key)
         else:
@@ -80,14 +80,14 @@ class NumberedMenu(UIWidget, Menu):
         self.view.refresh()
 
     def process_single_digit_input(self, key):
-        self.move_to_entry(self.custom_key_map[key])
+        self.move_to_entry(self.numeric_keymap[key])
 
     def process_multi_digit_input(self, key):
         self.last_input_time = time()
         if not self.current_input:
-            self.current_input = str(self.custom_key_map[key])
+            self.current_input = str(self.numeric_keymap[key])
         else:
-            self.current_input += str(self.custom_key_map[key])
+            self.current_input += str(self.numeric_keymap[key])
 
     def move_to_entry(self, index):
         self.pointer = clamp(index, 0, len(self.contents) - 1)
