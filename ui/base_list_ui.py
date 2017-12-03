@@ -6,7 +6,7 @@ from copy import copy
 from time import sleep
 from PIL import ImageFont
 from threading import Event
-from utils import to_be_foreground
+from utils import to_be_foreground, clamp, clamp_list_index
 from luma.core.render import canvas as luma_canvas
 
 #Documentation building process has problems with this import
@@ -394,9 +394,7 @@ class TextView():
     def fix_pointers_on_contents_update(self):
         """Boundary-checks ``pointer``, re-sets ``last`` & ``first_displayed_entry`` pointers
            and calculates the value for ``last_displayed_entry`` pointer."""
-        if  self.el.pointer > len(self.el.contents)-1:
-            #Pointer went too far, setting it to last entry position
-            self.el.pointer = len(self.el.contents) - 1
+        self.el.pointer = clamp_list_index(self.el.pointer, self.el.contents) # Makes sure the pointer isn't > 
         full_entries_shown = self.get_entry_count_per_screen()
         entry_count = len(self.el.contents)
         self.first_displayed_entry = 0

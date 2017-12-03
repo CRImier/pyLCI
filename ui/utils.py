@@ -22,6 +22,10 @@ def clamp(value, _min, _max):
     return max(_min, min(value, _max))
 
 
+def clamp_list_index(value, _list):
+    return clamp(value, 0, len(_list) - 1)
+
+
 def check_value_lock(func):
     # A safety check wrapper so that there's no race conditions between functions able to change position/value
     @wraps(func)
