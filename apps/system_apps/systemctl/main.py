@@ -55,7 +55,7 @@ def pinned_units():
     menu_contents = []
     units = systemctl.list_units()
     for unit_name in config["pinned_units"]:
-        menu_contents.append([unit_name, lambda x=unit_name: unit_menu(x)])
+        menu_contents.append([unit_name, lambda x=unit_name: unit_menu({"name":x}, in_pinned=True)])
     Menu(menu_contents, i, o, "Pinned unit list menu").activate()
 
 def filtered_units():
@@ -66,7 +66,7 @@ def filtered_units():
             menu_contents.append([unit["basename"], lambda x=unit: unit_menu(x)])
     Menu(menu_contents, i, o, "Systemctl: filtered unit list menu").activate()
 
-def unit_menu(unit):
+def unit_menu(unit, in_pinned=False):
     name = unit["name"]
     unit_menu_contents = [
     ["Full name", lambda x=name: Printer(x, i, o)],
@@ -75,8 +75,11 @@ def unit_menu(unit):
     ["Restart unit", lambda x=name: restart_unit(x)],
     ["Reload unit", lambda x=name: reload_unit(x)],
     ["Enable unit", lambda x=name: enable_unit(x)],
-    ["Disable unit", lambda x=name: disable_unit(x)],
-    ["Pin unit", lambda x=name: pin_unit(x)]]
+    ["Disable unit", lambda x=name: disable_unit(x)]]
+    if in_pinned:
+        unit_menu_contents.append(["Unpin unit", lambda x=name: unpin_unit(x)])
+    else:
+        unit_menu_contents.append(["Pin unit", lambda x=name: pin_unit(x)])
     Menu(unit_menu_contents, i, o, "{} unit menu".format(name)).activate()
 
 def pin_unit(name):
@@ -84,6 +87,15 @@ def pin_unit(name):
     config["pinned_units"].append(name)
     write_config(config, config_path)
     PrettyPrinter("Pinned unit {}".format(name), i, o, 1)
+
+def unpin_unit(name):
+    global config
+    if name in config["pinned_units"]:
+        config["pinned_units"].remove(name)
+        write_config(config, config_path)
+        PrettyPrinter("Unpinned unit {}".format(name), i, o, 1)
+    else:
+        PrettyPrinter("Error: unit {} not pinned!".format(name), i, o, 1)
 
 #Those functions might benefit from being turned into one generic function, I think
 
