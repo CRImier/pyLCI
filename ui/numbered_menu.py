@@ -34,20 +34,13 @@ class NumberedMenu(UIWidget, Menu):
     def entry_count(self):
         return len(self.contents)
 
-    def activate(self):
-        self.set_keymap()
-        # self.i.set_streaming(self.on_key_pressed)
-        self.before_activate()
-        self.to_foreground()
-        if not self.is_multi_digit():
-            # Menu.activate(self)  # no need to check for character state since we are in instant mode
-            return
-
+    def before_activate(self):
+        Menu.before_activate(self)
         self.last_input_time = -self.input_delay
-        while self.in_background:  # Most of the work is done in input callbacks
-            sleep(0.1)
-            self.idle_loop()
-            self.check_character_state()
+
+    def idle_loop(self):
+        Menu.idle_loop(self)
+        self.check_character_state()
 
     def set_keymap(self):
         Menu.set_keymap(self)
