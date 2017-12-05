@@ -6,8 +6,8 @@ logger.setLevel(logging.INFO)
 
 
 def to_be_foreground(func):
-    # A safety check wrapper so that certain functions can't possibly be called
-    # if UI element is not the one active
+    """ A safety check wrapper so that certain functions can't possibly be called
+    if UI element is not the one active"""
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         if self.in_foreground:
@@ -27,14 +27,15 @@ def clamp_list_index(value, _list):
 
 
 def check_value_lock(func):
-    # A safety check wrapper so that there's no race conditions between functions able to change position/value
+    """ A safety check wrapper so that there's no race conditions
+    between functions that are able to change position/value"""
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         assert self.value_lock, "Class has no member self.value_lock"  # todo:maybe we should create it here ?
-        # Value-changing code likely to run in concurrent thread and therefore we need a lock
+        # Value-changing code is likely to run in concurrent thread and therefore we need a lock
         if self.__locked_name__ is not None:
             logger.warning(
-                "Another function already locked the thread! Name is {}, current is {}".format(
+                "Another function already working with the value! Name is {}, current is {}".format(
                     self.__locked_name__,
                     func.__name__
                 )
