@@ -2,6 +2,7 @@ from time import sleep
 from math import ceil
 import logging
 
+from ui.utils import to_be_foreground
 
 class NumberKeypadInputLayer():
     """Experimental UI element. Suited for multi-row screens, not tested on and developed for 2x16 and no cursor implemented yet.
