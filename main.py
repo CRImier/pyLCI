@@ -115,7 +115,7 @@ def launch(name=None):
         except:
             i.atexit()
             raise
-        exception_wrapper(app.callback)
+        exception_wrapper(app.on_start if hasattr(app, "on_start") else app.callback)
     else:
         splash_screen()
         app_menu = app_man.load_all_apps()
