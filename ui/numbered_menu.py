@@ -90,21 +90,13 @@ class NumberedMenu(UIWidget, Menu):
 
     def prepend_entry_text(self):
         # prepend numbers to each entry name
-        has_exit_entry = self.exit_entry in self.contents
-        if self.is_multi_digit():  # prepend 10 first only
-            self.contents = [["{} {}".format(i, e[0]), e[1]] for i, e in enumerate(self.contents) if
-                             e is not self.exit_entry]
-
-        else:  # prepend all entries
-            content = []
-            for i, e in enumerate(self.contents):
-                if i < 10:
-                    content.append(["{} {}".format(i, e[0]), e[1]])
-                else:
-                    content.append([e[0], e[1]])
-            self.contents = content
-        if has_exit_entry:
-            self.contents.append(self.exit_entry)
+        if self.is_multi_digit():
+            self.contents = [["{} {}".format(i, entry[0]), entry[1]]
+                             for i, entry in enumerate(self.contents)
+                             if entry is not self.exit_entry]
+        else:
+            for i, entry in enumerate(self.contents[:10]):
+                self.contents[0] = "{} {}".format(i, self.contents[0])
 
     @check_value_lock
     def check_character_state(self):
