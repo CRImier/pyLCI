@@ -107,7 +107,7 @@ def exception_wrapper(callback):
 
 def launch(name=None):
     """Function that launches ZPUI, either in full mode or single-app mode (if ``name`` kwarg is passed)."""
-    app_man = AppManager("apps", Menu, Printer, i, o)
+    app_man = AppManager("apps", i, o)
     if name != None:
         name = name.rstrip('/') #If using autocompletion from main folder, it might append a / at the name end, which isn't acceptable for load_app
         try:
