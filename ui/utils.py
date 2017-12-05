@@ -40,11 +40,10 @@ def check_value_lock(func):
                     func.__name__
                 )
             )
-        self.value_lock.acquire()
-        self.__locked_name__ = func.__name__
-        logger.debug("Locked function {}".format(func.__name__))
-        result = func(self, *args, **kwargs)
-        self.value_lock.release()
+        with self.value_lock:
+            self.__locked_name__ = func.__name__
+            logger.debug("Locked function {}".format(func.__name__))
+            result = func(self, *args, **kwargs)
         logger.debug("Unlocked function {}".format(func.__name__))
         self.__locked_name__ = None
         return result
