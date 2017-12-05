@@ -73,6 +73,12 @@ class NumberedMenu(UIWidget, Menu):
             self.current_input += str(self.numeric_keymap[key])
 
     def move_to_entry(self, index):
+        if self.pointer == index:
+            #Moving to the same item that's already selected
+            #let's interpret this as KEY_ENTER
+            self.current_input = None
+            self.select_entry()
+            return
         self.pointer = clamp(index, 0, len(self.contents) - 1)
         self.current_input = None
         self.view.refresh()
