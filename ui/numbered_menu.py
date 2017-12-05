@@ -117,6 +117,10 @@ class NumberedMenu(UIWidget, Menu):
         if len(str(self.current_input)) == len(str(self.entry_count)):
             return True
 
+        # user typed 2 and we have 19 entries, going to the most likely option
+        if int(self.current_input)*10 > self.entry_count:
+            return True
+
         # user typed 17 and we have 12 entries
         if int(self.current_input) >= self.entry_count:
             return True
