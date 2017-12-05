@@ -2,7 +2,7 @@
 
 from apps.zero_app import ZeroApp
 from ui import NumberedMenu
-
+import random
 
 class NumberedInputTestApp(ZeroApp):
 
@@ -10,29 +10,14 @@ class NumberedInputTestApp(ZeroApp):
         super(NumberedInputTestApp, self).__init__(i, o)
         self.n_menu = None
         self.menu_name = "Numbered Input Menu"
-        self.main_menu_contents = [
-            ["hello", self.print_hello],
-            ["hello again", self.print_hello],
-            ["same", self.print_hello],
-            ["ditto", self.print_hello],
-            ["hello", self.print_hello],
-            ["hello again", self.print_hello],
-            ["same", self.print_hello],
-            ["ditto", self.print_hello],
-            ["hello", self.print_hello],
-            ["hello again", self.print_hello],
-            ["same", self.print_hello],
-            ["ditto", self.print_hello],
-            ["ditto", self.print_hello],
-            ["ditto", self.print_hello],
-            ["ditto", self.print_hello],
-            ["ditto", self.print_hello],
-            ["nothing new here", self.print_hello]
-        ]
+        hellos = ["hello", "hello again", "ditto", "same"]
+        self.main_menu_contents = [ [hellos[i%4],
+                                    lambda x=i: self.print_hello(x, hellos[x%4])]
+                                     for i in range(16) ]
 
     @staticmethod
-    def print_hello():
-        print("hello")
+    def print_hello(index, hello):
+        print("{} {}".format(index, hello))
 
     def on_start(self):
         super(NumberedInputTestApp, self).on_start()
