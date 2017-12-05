@@ -1,6 +1,6 @@
 menu_name = "Systemctl"
 
-config_filename = "config.json" 
+config_filename = "config.json"
 default_config = '{"allowed_types":["service","target"], "pinned_units":["pylci.service"]}'
 
 callback = None
@@ -9,7 +9,7 @@ o = None
 
 from time import sleep
 
-from ui import Menu, Printer, Checkbox, MenuExitException
+from ui import Menu, Printer, PrettyPrinter, Checkbox, MenuExitException
 
 import systemctl
 
@@ -83,54 +83,56 @@ def pin_unit(name):
     global config
     config["pinned_units"].append(name)
     write_config(config, config_path)
-    Printer(["Pinned unit", name], i, o, 1)
+    PrettyPrinter("Pinned unit {}".format(name), i, o, 1)
+
+#Those functions might benefit from being turned into one generic function, I think
 
 def start_unit(name):
     status = systemctl.action_unit("start", name)
     if status:
-        Printer(["Started unit", name], i, o, 1)
+        PrettyPrinter("Started unit {}".format(name), i, o, 1)
     else:
-        Printer(["Can't start", name], i, o, 1)
+        PrettyPrinter("Can't start {}".format(name), i, o, 1)
     raise MenuExitException
 
 def stop_unit(name):
     status = systemctl.action_unit("stop", name)
     if status:
-        Printer(["Stopped unit", name], i, o, 1)
+        PrettyPrinter("Stopped unit {}".format(name), i, o, 1)
     else:
-        Printer(["Can't stop", name], i, o, 1)
+        PrettyPrinter("Can't stop {}".format(name), i, o, 1)
     raise MenuExitException
 
 def restart_unit(name):
     status = systemctl.action_unit("restart", name)
     if status:
-        Printer(["Restarted unit", name], i, o, 1)
+        PrettyPrinter("Restarted unit {}".format(name), i, o, 1)
     else:
-        Printer(["Can't restart", name], i, o, 1)
+        PrettyPrinter("Can't restart {}".format(name), i, o, 1)
     raise MenuExitException
 
 def reload_unit(name):
     status = systemctl.action_unit("reload", name)
     if status:
-        Printer(["Reloaded unit", name], i, o, 1)
+        PrettyPrinter("Reloaded unit {}".format(name), i, o, 1)
     else:
-        Printer(["Can't reload", name], i, o, 1)
+        PrettyPrinter("Can't reload {}".format(name), i, o, 1)
     raise MenuExitException
 
 def enable_unit(name):
     status = systemctl.action_unit("enable", name)
     if status:
-        Printer(["Enabled unit", name], i, o, 1)
+        PrettyPrinter("Enabled unit {}".format(name), i, o, 1)
     else:
-        Printer(["Can't enable", name], i, o, 1)
+        PrettyPrinter("Can't enable {}".format(name), i, o, 1)
     raise MenuExitException
 
 def disable_unit(name):
     status = systemctl.action_unit("disable", name)
     if status:
-        Printer(["Disabled unit", name], i, o, 1)
+        PrettyPrinter("Disabled unit {}".format(name), i, o, 1)
     else:
-        Printer(["Can't disable", name], i, o, 1)
+        PrettyPrinter("Can't disable {}".format(name), i, o, 1)
     raise MenuExitException
 
 def launch():
@@ -138,7 +140,7 @@ def launch():
        systemctl.list_units()
     except OSError as e:
        if e.errno == 2:
-           Printer(["Do you use", "systemctl?"], i, o, 3, skippable=True)
+           PrettyPrinter("Do you use systemctl?", i, o, 3, skippable=True)
            return
        else:
            raise e
