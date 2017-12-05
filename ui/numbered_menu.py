@@ -11,14 +11,14 @@ class UIWidget(object):
 
 class NumberedMenu(UIWidget, Menu):
     """
-    This subclass of Menu allows the user to navigate using the keypad in the menu. If the menu is 10 entries or less
-    the navigation is instant. If it has more than 10, it lets the user type multiple digits to navigate.
+    This Menu allows the user to jump to entries using the numpad. If the menu is 10 entries or less
+    the navigation is instant. Othrewise, it lets the user type multiple digits to navigate to entries beyond 10th.
 
     The `input_delay` parameter controls how long, and if, the menu waits before considering an input as definitive.
-    If `input_delay` is 0, then only the 10 first entries are considered navigable with the keypad.
+    If `input_delay` is 0, then only the 10 first entries can be navigated to using the keypad.
 
     The `prepend_numbers` parameters controls whether the entries should be prefixed by their number.
-    The default value is `True`
+    (default: `True`)
     """
     def __init__(self, *args, **kwargs):
         self.prepend_numbers = kwargs.pop('prepend_numbers') if 'prepend_numbers' in kwargs else True
