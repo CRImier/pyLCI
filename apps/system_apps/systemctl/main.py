@@ -147,7 +147,8 @@ def disable_unit(name):
         PrettyPrinter("Can't disable {}".format(name), i, o, 1)
     raise MenuExitException
 
-def launch():
+
+def callback():
     try:
        systemctl.list_units()
     except OSError as e:
@@ -164,8 +165,6 @@ def launch():
     main_menu = Menu(main_menu_contents, i, o, "systemctl main menu")
     main_menu.activate()
 
-
 def init_app(input, output):
-    global callback, i, o
+    global i, o
     i = input; o = output
-    callback = launch
