@@ -1,8 +1,4 @@
-class ProxyInput(object):
-    pass
-
-class ProxyOutput(object):
-    pass
+from input import InputProxy
 
 class ContextManager(object):
     current_context = None
@@ -15,7 +11,7 @@ class ContextManager(object):
 
     def init_contexts(self):
         for context_alias in self.list_contexts():
-            self.context_objects[context_alias] = (ProxyInput(self, context_alias), ProxyOutput(self, context_alias))
+            self.context_objects[context_alias] = (InputProxy(self, context_alias), OutputProxy(self, context_alias))
             self.context_activation_callbacks[context_alias] = []
 
     def list_contexts(self):
