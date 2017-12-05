@@ -24,6 +24,7 @@ class NumberedMenu(UIWidget, Menu):
         self.prepend_numbers = kwargs.pop('prepend_numbers') if 'prepend_numbers' in kwargs else True
         self.input_delay = kwargs.pop('input_delay') if 'input_delay' in kwargs else 1
         Menu.__init__(self, *args, **kwargs)
+        self.__locked_name__ = None
         self.value_lock = Lock()
         self.numeric_keymap = { "KEY_{}".format(i): i for i in range(10) }
         self.last_input_time = 0
