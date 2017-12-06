@@ -10,26 +10,23 @@ import traceback
 from logging.handlers import RotatingFileHandler
 
 from apps.app_manager import AppManager
-from helpers import read_config
+from helpers import read_config, local_path_gen
 from input import input
 from output import output
 from ui import Printer, Menu
 
-LOGGING_PATH = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)),
-    'zpui.log'
-)
+emulator_flag_filename = "emulator"
+local_path = local_path_gen(__name__)
+is_emulator = emulator_flag_filename in os.listdir(".")
 
-LOGGING_FMT = (
+logging_path = local_path('zpui.log')
+logging_format = (
     '[%(levelname)s] %(asctime)s %(filename)s [%(process)d]: %(message)s',
     '%Y-%m-%d %H:%M:%S'
 )
 
-CONFIG_PATHS = [
-    '/boot/zpui_config.json',
-    './config.json'
-]
-
+config_paths = ['/boot/zpui_config.json'] if not is_emulator else []
+config_paths.append(local_path('config.json'))
 
 def init():
     """
@@ -39,7 +36,7 @@ def init():
     config = None
 
     # Load config
-    for path in CONFIG_PATHS:
+    for path in config_paths:
         try:
             logging.debug('Loading config from {0}'.format(path))
             config = read_config(path)
@@ -175,11 +172,11 @@ if __name__ == '__main__':
 
     # Setup logging
     logger = logging.getLogger()
-    formatter = logging.Formatter(*LOGGING_FMT)
+    formatter = logging.Formatter(*logging_format)
 
     # Rotating file logs (for debugging crashes)
     rotating_handler = RotatingFileHandler(
-        LOGGING_PATH,
+        logging_path,
         maxBytes=10000,
         backupCount=5)
     rotating_handler.setFormatter(formatter)
