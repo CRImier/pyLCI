@@ -63,21 +63,24 @@ else:
     config = read_config(backup_config_path)
 
 
-output.init(config["output"])
-o = output.screen
+screen = output.init(config["output"])
 from ui import Printer, Menu
 
 
 try: #If there's an internal error, we show it on display and exit
     from apps.app_manager import AppManager
+    from context_manager import ContextManager
+    cm = ContextManager()
     #Now we init the input subsystem
     from input import input
-    input.init(config["input"])
-    i = input.listener
-    if hasattr(o, "set_backlight_callback"):
-        o.set_backlight_callback(i)
+    input_processor = input.init(config["input"], cm)
+    if hasattr(screen, "set_backlight_callback"):
+        screen.set_backlight_callback(input_processor)
+    cm.init_io(input_processor, screen)
+    cm.switch_to_context("app")
+    i, o = cm.get_io_for_context("app")
 except:
-    Printer(["Oops. :(", "y u make mistake"], None, o, 0) #Yeah, that's about all the debug data. 
+    Printer(["Oops. :(", "y u make mistake"], None, screen, 0) #Yeah, that's about all the debug data.
     raise
 
 def splash_screen():
@@ -93,16 +96,16 @@ def exception_wrapper(callback):
         callback()
     except KeyboardInterrupt:
         Printer(["Does Ctrl+C", "hurt scripts?"], None, o, 0)
-        i.atexit()
+        input_processor.atexit()
         sys.exit(1)
     except Exception as e:
         traceback.print_exc()
         Printer(["A wild exception", "appears!"], None, o, 0)
-        i.atexit()
+        input_processor.atexit()
         sys.exit(1)
     else:
         Printer("Exiting ZPUI", None, o, 0)
-        i.atexit()
+        input_processor.atexit()
         sys.exit(0)
 
 def launch(name=None):

@@ -1,4 +1,4 @@
-from input import InputProxy
+from input.input import InputProxy
 
 class ContextManager(object):
     current_context = None
@@ -6,12 +6,20 @@ class ContextManager(object):
     context_activation_callbacks = {}
 
     def __init__(self):
+        pass
+
+    def init_io(self, input_processor, screen):
+        self.input_processor = input_processor
+        self.screen = screen
         self.init_contexts()
         self.set_context_callbacks()
 
     def init_contexts(self):
         for context_alias in self.list_contexts():
-            self.context_objects[context_alias] = (InputProxy(self, context_alias), OutputProxy(self, context_alias))
+            input_proxy = InputProxy(context_alias)
+            output_proxy = self.screen
+            self.context_objects[context_alias] = (input_proxy, output_proxy)
+            self.input_processor.register_proxy(input_proxy, context_alias)
             self.context_activation_callbacks[context_alias] = []
 
     def list_contexts(self):
@@ -22,13 +30,13 @@ class ContextManager(object):
 
     def switch_to_context(self, context_alias):
         if context_alias not in self.list_contexts():
-            raise ValueError("pyLCI context not found!")
+            raise ValueError("ZPUI context \"{}\" not found!".format(context_alias))
         self.current_context = context_alias
         proxy_i, proxy_o = self.get_io_for_context(context_alias)
-        self.i.detach_current_proxy()
-        self.i.attach_proxy(proxy_i)
-        self.o.detach_current_proxy()
-        self.o.attach_proxy(proxy_i)
+        #self.i.detach_current_proxy()
+        #self.i.attach_proxy(proxy_i)
+        #self.o.detach_current_proxy()
+        #self.o.attach_proxy(proxy_i)
         for callback in self.context_activation_callbacks[context_alias]:
             callback()
 
@@ -43,10 +51,10 @@ class ContextManager(object):
         self.context_activation_callbacks[context_alias].append(callback)
 
     def get_io_for_context(self, context_alias):
-        proxy_i, proxy_o = self.context_objects[context_alias]
-        return proxy_i, proxy_o
+        return self.context_objects[context_alias]
     
     def set_context_callbacks(self):
-        app_i = self.context_objects["app"][0]
-        app_i.set_nonmaskable_callback("KEY_ANSWER", lambda: self.switch_to_context("phone"))
-        app_i.set_nonmaskable_callback("KEY_PROG2", lambda: self.switch_to_context("clock+lock"))
+        pass
+        #app_i = self.context_objects["app"][0]
+        #app_i.set_nonmaskable_callback("KEY_ANSWER", lambda: self.switch_to_context("phone"))
+        #app_i.set_nonmaskable_callback("KEY_PROG2", lambda: self.switch_to_context("clock+lock"))
