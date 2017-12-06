@@ -22,3 +22,6 @@ write_config(config, CONFIG_PATH)
 # Until then, the app will likely have to be 
 # disabled on emulators
 subprocess.call('touch apps/phone/do_not_load'.split())
+subprocess.call('touch apps/flashlight/do_not_load'.split())
+subprocess.call('touch apps/hardware_apps/do_not_load'.split())
+subprocess.call('touch apps/hardware_test/do_not_load'.split())
