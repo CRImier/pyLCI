@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 import argparse
 import logging
@@ -7,10 +7,7 @@ import signal
 import sys
 import threading
 import traceback
-
 from logging.handlers import RotatingFileHandler
-from subprocess import call
-from time import sleep
 
 from apps.app_manager import AppManager
 from helpers import read_config
@@ -19,10 +16,9 @@ from output import output
 from splash import splash
 from ui import Printer, Menu
 
-
 LOGGING_PATH = os.path.join(
     os.path.dirname(os.path.realpath(__file__)),
-    'pylci.log'
+    'zpui.log'
 )
 
 LOGGING_FMT = (
@@ -31,7 +27,7 @@ LOGGING_FMT = (
 )
 
 CONFIG_PATHS = [
-    '/boot/pylci_config.json',
+    '/boot/zpui_config.json',
     './config.json'
 ]
 
@@ -80,7 +76,7 @@ def init():
 
 def launch(name=None, **kwargs):
     """
-    Launches pyLCI, either in full mode or in
+    Launches ZPUI, either in full mode or in
     single-app mode (if ``name`` kwarg is passed).
     """
 
@@ -135,13 +131,13 @@ def exception_wrapper(callback, i, o):
         i.atexit()
         sys.exit(1)
     else:
-        logging.info('Exiting pyLCI')
-        Printer("Exiting pyLCI", None, o, 0)
+        logging.info('Exiting ZPUI')
+        Printer("Exiting ZPUI", None, o, 0)
         i.atexit()
         sys.exit(0)
 
 
-def dumpthreads(*args):
+def dump_threads(*args):
     """
     Helpful signal handler for debugging threads
     """
@@ -155,18 +151,18 @@ def dumpthreads(*args):
 
 if __name__ == '__main__':
     """
-    Parses arguments, initializes logging, launches pyLCI
+    Parses arguments, initializes logging, launches ZPUI
     """
 
     # Signal handler for debugging
-    signal.signal(signal.SIGUSR1, dumpthreads)
+    signal.signal(signal.SIGUSR1, dump_threads)
 
     # Setup argument parsing
-    parser = argparse.ArgumentParser(description='pyLCI runner')
+    parser = argparse.ArgumentParser(description='ZPUI runner')
     parser.add_argument(
         '--app',
         '-a',
-        help='Launch pyLCI with a single app loaded (useful for testing)',
+        help='Launch ZPUI with a single app loaded (useful for testing)',
         dest='name',
         default=None)
     parser.add_argument(
@@ -197,5 +193,6 @@ if __name__ == '__main__':
     # Set log level
     logger.setLevel(args.log_level)
 
-    # Launch pyLCI
+    # Launch ZPUI
+    print(vars(args))
     launch(**vars(args))
