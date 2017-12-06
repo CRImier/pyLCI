@@ -60,5 +60,5 @@ target/
 # Apps are not supposed to ship config.json
 # Instead, they're supposed to create them on first launch
 config.json
-/pylci.log*
+/zpui.log*
 do_not_load
