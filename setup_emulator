@@ -11,7 +11,7 @@ try:
 except:
     config = dict()
 
-config['input'] = [{'driver': 'pyygame_input'}]
+config['input'] = [{'driver': 'pygame_input'}]
 config['output'] = [{"driver": "pygame_emulator"}]
 
 write_config(config, CONFIG_PATH)
