@@ -4,8 +4,7 @@ import os
 import traceback
 
 from apps import zero_app
-
-from ui import Menu, Printer
+from ui import Printer
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -30,13 +29,15 @@ class AppManager(object):
     'apps/network_apps/network': <module 'apps.network_apps.network.main' from '/root/WCS/apps/network_apps/network/main.py'>}
      """
 
-    def __init__(self, app_directory, i, o):
+    def __init__(self, app_directory, menu_class, printer_func, i, o):
         self.app_directory = app_directory
+        self.menu_class = menu_class
+        self.printer_func = printer_func
         self.i = i
         self.o = o
 
     def load_all_apps(self):
-        base_menu = Menu([], self.i, self.o, "Main app menu",
+        base_menu = self.menu_class([], self.i, self.o, "Main app menu",
                                     exitable=False)  # Main menu for all applications.
         base_menu.exit_entry = ["Exit", "exit"]
         base_menu.process_contents()
@@ -45,7 +46,7 @@ class AppManager(object):
             for subdir in subdirs:
                 # First, we create subdir menus (not yet linking because they're not created in correct order) and put them in subdir_menus.
                 subdir_path = os.path.join(path, subdir)
-                self.subdir_menus[subdir_path] = Menu([], self.i, self.o, subdir_path)
+                self.subdir_menus[subdir_path] = self.menu_class([], self.i, self.o, subdir_path)
             for _module in modules:
                 # Then, we load modules and store them along with their paths
                 try:
@@ -56,6 +57,7 @@ class AppManager(object):
                 except Exception as e:
                     logger.error("Failed to load app {}".format(module_path))
                     logger.error(traceback.format_exc())
+                    self.printer_func(["Failed to load", os.path.split(module_path)[1]], self.i, self.o, 2)
                     Printer(["Failed to load", os.path.split(module_path)[1]], self.i, self.o, 2)
         for subdir_path in self.subdir_menus:
             # Now it's time to link menus to parent menus
