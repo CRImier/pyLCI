@@ -29,21 +29,19 @@ config_paths = ['/boot/zpui_config.json'] if not is_emulator else []
 config_paths.append(local_path('config.json'))
 
 def init():
-    """
-    Initialize input and output objects
-    """
+    """Initialize input and output objects"""
 
     config = None
 
     # Load config
     for path in config_paths:
         try:
-            logging.debug('Loading config from {0}'.format(path))
+            logging.debug('Loading config from {}'.format(path))
             config = read_config(path)
         except:
-            logging.exception('Failed to load config')
+            logging.exception('Failed to load config from {}'.format(path))
         else:
-            logging.debug('Successfully loaded config')
+            logging.info('Successfully loaded config from {}'.format(path))
             break
 
     if config is None:
@@ -55,7 +53,8 @@ def init():
         o = output.screen
     except:
         logging.exception('Failed to initialize the output object')
-        raise
+        logging.exception(traceback.format_exc())
+        sys.exit(2)
 
     # Initialize input
     try:
@@ -64,8 +63,9 @@ def init():
         i = input.listener
     except:
         logging.exception('Failed to initialize the input object')
+        logging.exception(traceback.format_exc())
         Printer(['Oops. :(', 'y u make mistake'], None, o, 0)
-        raise
+        sys.exit(3)
 
     return i, o
 
@@ -85,6 +85,7 @@ def launch(name=None, **kwargs):
             splash(i, o)
         except:
             logging.exception('Failed to load the splash screen')
+            logging.exception(traceback.format_exc())
 
         # Load all apps
         app_menu = app_man.load_all_apps()
@@ -114,24 +115,24 @@ def exception_wrapper(callback, i, o):
     way when something bad happens, be that a Ctrl+c or
     an exception in one of the applications.
     """
-
+    status = 0
     try:
         callback()
     except KeyboardInterrupt:
         logging.info('Caught KeyboardInterrupt')
         Printer(["Does Ctrl+C", "hurt scripts?"], None, o, 0)
-        i.atexit()
-        sys.exit(1)
+        status = 1
     except:
         logging.exception('A wild exception appears!')
+        logging.exception(format_exc())
         Printer(["A wild exception", "appears!"], None, o, 0)
-        i.atexit()
-        sys.exit(1)
+        status = 1
     else:
         logging.info('Exiting ZPUI')
         Printer("Exiting ZPUI", None, o, 0)
+    finally:
         i.atexit()
-        sys.exit(0)
+        sys.exit(status)
 
 
 def dump_threads(*args):
