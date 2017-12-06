@@ -13,7 +13,6 @@ from apps.app_manager import AppManager
 from helpers import read_config
 from input import input
 from output import output
-from splash import splash
 from ui import Printer, Menu
 
 LOGGING_PATH = os.path.join(
@@ -85,6 +84,7 @@ def launch(name=None, **kwargs):
 
     if name is None:
         try:
+            from splash import splash
             splash(i, o)
         except:
             logging.exception('Failed to load the splash screen')
