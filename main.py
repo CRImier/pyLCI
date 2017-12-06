@@ -77,7 +77,7 @@ def launch(name=None, **kwargs):
     """
 
     i, o = init()
-    app_man = AppManager('apps', Menu, Printer, i, o)
+    app_man = AppManager('apps', i, o)
 
     if name is None:
         try:
@@ -89,7 +89,7 @@ def launch(name=None, **kwargs):
 
         # Load all apps
         app_menu = app_man.load_all_apps()
-        app_entry = app_menu.activate
+        runner = app_menu.activate
     else:
         # If using autocompletion from main folder, it might
         # append a / at the name end, which isn't acceptable
@@ -103,9 +103,9 @@ def launch(name=None, **kwargs):
             logging.exception('Failed to load the app: {0}'.format(name))
             i.atexit()
             raise
-        app_entry = app.callback
+        runner = app.on_start if hasattr(app, "on_start") else app.callback
 
-    exception_wrapper(app_entry, i, o)
+    exception_wrapper(runner, i, o)
 
 
 def exception_wrapper(callback, i, o):
@@ -192,5 +192,4 @@ if __name__ == '__main__':
     logger.setLevel(args.log_level)
 
     # Launch ZPUI
-    print(vars(args))
     launch(**vars(args))
