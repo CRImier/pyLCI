@@ -1,27 +1,37 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
-import subprocess
+import os
 
 from helpers import (read_config, write_config)
 
 CONFIG_PATH = 'config.json'
 
-try:
-    config = read_config(CONFIG_PATH)
-except:
-    config = dict()
 
-config['input'] = [{'driver': 'pygame_input'}]
-config['output'] = [{"driver": "pygame_emulator"}]
+def touch(filename):
+    if os.path.exists(filename):
+        os.utime(filename, None)
+    else:
+        open(filename, 'a').close()
 
-write_config(config, CONFIG_PATH)
 
-# Phone app will try to connect to a modem.
-# The emulator environment is unlikely to have one
-# In the future, the modem could be emulated.
-# Until then, the app will likely have to be 
-# disabled on emulators
-subprocess.call('touch apps/phone/do_not_load'.split())
-subprocess.call('touch apps/flashlight/do_not_load'.split())
-subprocess.call('touch apps/hardware_apps/do_not_load'.split())
-subprocess.call('touch apps/hardware_test/do_not_load'.split())
+if __name__ == '__main__':
+    try:
+        config = read_config(CONFIG_PATH)
+    except:
+        config = dict()
+
+    config['input'] = [{'driver': 'pygame_input'}]
+    config['output'] = [{"driver": "pygame_emulator"}]
+
+    write_config(config, CONFIG_PATH)
+
+    # Phone app will try to connect to a modem.
+    # The emulator environment is unlikely to have one
+    # In the future, the modem could be emulated.
+    # Until then, the app will likely have to be
+    # disabled on emulators
+    touch('apps/phone/do_not_load')
+    touch('apps/phone/do_not_load')
+    touch('apps/flashlight/do_not_load')
+    touch('apps/hardware_apps/do_not_load')
+    touch('apps/hardware_apps/do_not_load')
