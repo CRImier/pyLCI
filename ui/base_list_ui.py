@@ -9,6 +9,9 @@ from threading import Event
 from utils import to_be_foreground, clamp, clamp_list_index
 from luma.core.render import canvas as luma_canvas
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
+
 #Documentation building process has problems with this import
 try:
     import ui.config_manager as config_manager
@@ -117,7 +120,7 @@ class BaseListUIElement():
         """ Is called when UI element's ``activate()`` method is used, sets flags
             and performs all the actions so that UI element can display its contents
             and receive keypresses. Also, refreshes the screen."""
-        logging.info("{0} enabled".format(self.name))
+        logger.info("{0} enabled".format(self.name))
         self.before_foreground()
         self.reset_scrolling()
         self.in_foreground = True
@@ -135,13 +138,13 @@ class BaseListUIElement():
             Is blocking, sets up input&output devices, renders the UI element and
             waits until self.in_foreground is False, while UI element callbacks
             are executed from the input listener thread."""
-        logging.info("{0} activated".format(self.name))
+        logger.info("{0} activated".format(self.name))
         self.before_activate()
         self.to_foreground()
         while self.in_foreground: #All the work is done in input callbacks
             self.idle_loop()
         return_value = self.get_return_value()
-        logging.info("{} exited".format(self.name))
+        logger.info("{} exited".format(self.name))
         return return_value
 
     def get_return_value(self):
@@ -153,7 +156,7 @@ class BaseListUIElement():
         """Sets a flag that signals the UI element's ``activate()`` to return."""
         self.in_foreground = False
         self.o.noCursor()
-        logging.info("{} deactivated".format(self.name))
+        logger.info("{} deactivated".format(self.name))
 
     #Scroll functions - will likely be moved into a mixin or views later on
 
@@ -176,12 +179,12 @@ class BaseListUIElement():
     def print_contents(self):
         """ A debug method. Useful for hooking up to an input event so that
             you can see the representation of current UI element's contents. """
-        logging.info(self.contents)
+        logger.info(self.contents)
 
     def print_name(self):
         """ A debug method. Useful for hooking up to an input event so that
             you can see which UI element is currently processing input events. """
-        logging.info("Active UI element is {0}".format(self.name))
+        logger.info("Active UI element is {0}".format(self.name))
 
     #Callbacks for moving up and down in the entry list
 
@@ -192,7 +195,7 @@ class BaseListUIElement():
         |TODO: support going from bottom to top when pressing "down" with
         last entry selected."""
         if self.pointer < (len(self.contents)-1):
-            logging.debug("moved down")
+            logger.debug("moved down")
             self.pointer += 1
             self.reset_scrolling()
             self.view.refresh()
@@ -206,7 +209,7 @@ class BaseListUIElement():
             If not possible, moves as far as it can."""
         counter = self.view.get_entry_count_per_screen()
         while counter != 0 and self.pointer < (len(self.contents)-1):
-            logging.debug("moved down")
+            logger.debug("moved down")
             self.pointer += 1
             counter -= 1
         self.view.refresh()
@@ -220,7 +223,7 @@ class BaseListUIElement():
         |TODO: support going from top to bottom when pressing "up" with
         first entry selected."""
         if self.pointer != 0:
-            logging.debug("moved up")
+            logger.debug("moved up")
             self.pointer -= 1
             self.view.refresh()
             self.reset_scrolling()
@@ -234,7 +237,7 @@ class BaseListUIElement():
             If not possible, moves as far as it can."""
         counter = self.view.get_entry_count_per_screen()
         while counter != 0 and self.pointer != 0:
-            logging.debug("moved down")
+            logger.debug("moved down")
             self.pointer -= 1
             counter -= 1
         self.view.refresh()
@@ -305,7 +308,7 @@ class BaseListUIElement():
                 if len(entry) > 1 and entry[1] == 'exit':
                     self.contents.remove(entry)
             self.contents.append(self.exit_entry)
-        logging.debug("{}: contents processed".format(self.name))
+        logger.debug("{}: contents processed".format(self.name))
 
 
 class BaseListBackgroundableUIElement(BaseListUIElement):
@@ -344,20 +347,20 @@ class BaseListBackgroundableUIElement(BaseListUIElement):
         """ Inhibits all UI element's refreshes, effectively bringing it to background."""
         self.o.noCursor()
         self.in_foreground = False
-        logging.info("{0} disabled".format(self.name))
+        logger.debug("{0} disabled".format(self.name))
 
     def activate(self):
         """ A method which is called when UI element needs to start operating.
             Is blocking, sets up input&output devices, renders the UI element and
             waits until self.in_background is False, while UI element callbacks
             are executed from the input listener thread."""
-        logging.info("{0} activated".format(self.name))
+        logger.info("{0} activated".format(self.name))
         self.before_activate()
         self.to_foreground()
         while self.in_background: #All the work is done in input callbacks
             self.idle_loop()
         return_value = self.get_return_value()
-        logging.info("{} exited".format(self.name))
+        logger.info("{} exited".format(self.name))
         return return_value
 
     def deactivate(self):
@@ -409,15 +412,15 @@ class TextView():
 
     def fix_pointers_on_refresh(self):
         if self.el.pointer < self.first_displayed_entry:
-            logging.debug("Pointer went too far to top, correcting")
+            logger.debug("Pointer went too far to top, correcting")
             self.last_displayed_entry -=  self.first_displayed_entry - self.el.pointer #The difference will mostly be 1 but I guess it might be more in case of concurrency issues
             self.first_displayed_entry = self.el.pointer
         if self.el.pointer > self.last_displayed_entry:
-            logging.debug("Pointer went too far to bottom, correcting")
+            logger.debug("Pointer went too far to bottom, correcting")
             self.first_displayed_entry += self.el.pointer - self.last_displayed_entry
             self.last_displayed_entry = self.el.pointer
-        logging.debug("First displayed entry is {}".format(self.first_displayed_entry))
-        logging.debug("Last displayed entry is {}".format(self.last_displayed_entry))
+        logger.debug("First displayed entry is {}".format(self.first_displayed_entry))
+        logger.debug("Last displayed entry is {}".format(self.last_displayed_entry))
 
     def entry_is_active(self, entry_num):
         return entry_num == self.el.pointer
@@ -432,7 +435,7 @@ class TextView():
         for entry_num in disp_entry_positions:
             displayed_entry = self.render_displayed_entry(entry_num)
             displayed_data += displayed_entry
-        logging.debug("Displayed data: {}".format(displayed_data))
+        logger.debug("Displayed data: {}".format(displayed_data))
         return displayed_data
 
     def render_displayed_entry(self, entry_num):
@@ -469,7 +472,7 @@ class TextView():
         else:
             #How did this slip past the check on set_contents?
             raise Exception("Entries may contain either strings or lists of strings as their representations")
-        logging.debug("Rendered entry: {}".format(rendered_entry))
+        logger.debug("Rendered entry: {}".format(rendered_entry))
         return rendered_entry
 
     def get_active_line_num(self):
@@ -477,7 +480,7 @@ class TextView():
 
     @to_be_foreground
     def refresh(self):
-        logging.debug("{}: refreshed data on display".format(self.el.name))
+        logger.debug("{}: refreshed data on display".format(self.el.name))
         self.fix_pointers_on_refresh()
         displayed_data = self.get_displayed_text()
         self.o.noCursor()
@@ -501,7 +504,7 @@ class EightPtView(TextView):
 
     @to_be_foreground
     def refresh(self):
-        logging.debug("{}: refreshed data on display".format(self.el.name))
+        logger.debug("{}: refreshed data on display".format(self.el.name))
         self.fix_pointers_on_refresh()
         canvas = self.get_displayed_canvas(cursor_y=self.get_active_line_num())
         self.o.display_image(canvas)
