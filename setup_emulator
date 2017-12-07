@@ -7,10 +7,8 @@ from helpers import (read_config, write_config)
 CONFIG_PATH = 'config.json'
 
 
-def touch(filename):
-    if os.path.exists(filename):
-        os.utime(filename, None)
-    else:
+def create_file(filename):
+    if not os.path.exists(filename):
         open(filename, 'a').close()
 
 
@@ -30,8 +28,6 @@ if __name__ == '__main__':
     # In the future, the modem could be emulated.
     # Until then, the app will likely have to be
     # disabled on emulators
-    touch('apps/phone/do_not_load')
-    touch('apps/phone/do_not_load')
-    touch('apps/flashlight/do_not_load')
-    touch('apps/hardware_apps/do_not_load')
-    touch('apps/hardware_apps/do_not_load')
+    create_file('apps/phone/do_not_load')
+    create_file('apps/flashlight/do_not_load')
+    create_file('apps/hardware_apps/do_not_load')
