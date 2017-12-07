@@ -26,7 +26,7 @@ Some information on maintaining and writing applications:
 
    * :ref:`Developing and managing applications <app_mgmt>`
    * :ref:`Skeleton application <skeleton_app>`
-   * :ref:`App-based skeleton application <class_skeleton_app>`
+   * :ref:`Class-based skeleton application <class_skeleton_app>`
 
 .. toctree::
    :maxdepth: 1
