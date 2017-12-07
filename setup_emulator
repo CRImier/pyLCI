@@ -31,3 +31,4 @@ if __name__ == '__main__':
     create_file('apps/phone/do_not_load')
     create_file('apps/flashlight/do_not_load')
     create_file('apps/hardware_apps/do_not_load')
+    create_file('apps/test_hardware/do_not_load')
