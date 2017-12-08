@@ -1,5 +1,6 @@
 from ui import Refresher
 from ui.utils import clamp
+from threading import Thread
 
 
 class LoadingIndicator(Refresher):
@@ -9,6 +10,11 @@ class LoadingIndicator(Refresher):
 
     def on_refresh(self):
         pass
+
+    def run_in_background(self):
+        self.t = Thread(target=self.activate)
+        self.t.daemon=True
+        self.t.start()
 
 
 class DottedProgressIndicator(LoadingIndicator):
