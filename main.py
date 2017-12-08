@@ -144,8 +144,9 @@ def dump_threads(*args):
     logger.critical('\nSIGUSR received, dumping threads\n')
     for th in threading.enumerate():
         logger.critical(th)
-        log = traceback.extract_stack(sys._current_frames()[th.ident])
-        logger.critical(log)
+        log = traceback.format_stack(sys._current_frames()[th.ident])
+        for frame in log:
+            logger.critical(frame)
 
 
 if __name__ == '__main__':
