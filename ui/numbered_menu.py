@@ -3,10 +3,9 @@ from time import time
 
 from ui import Menu
 from ui.utils import clamp, check_value_lock, to_be_foreground
-from ui.widget import UIWidget
 
 
-class NumberedMenu(UIWidget, Menu):
+class NumberedMenu(Menu):
     """
     This Menu allows the user to jump to entries using the numpad. If the menu is 10 entries or less
     the navigation is instant. Othrewise, it lets the user type multiple digits to navigate to entries beyond 10th.
