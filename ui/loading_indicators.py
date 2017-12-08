@@ -39,6 +39,7 @@ class ProgressBar(LoadingIndicator):
         self.empty_char = kwargs.pop("empty_char") if "empty_char" in kwargs else " "
         self.border_chars = kwargs.pop("border_chars") if "border_chars" in kwargs else "[]"
         self.show_percentage = kwargs.pop("show_percentage") if "show_percentage" in kwargs else False
+        self.percentage_offset = kwargs.pop("percentage_offset") if "percentage_offset" in kwargs else 4
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
         self._progress = 0 # 0-1 range
 
@@ -50,16 +51,19 @@ class ProgressBar(LoadingIndicator):
     def progress(self, value):
         self._progress = clamp(value, 0, 1)
 
-    def get_progress_percentage(self):
-        return '{}%'.format(self.progress * 100)
+    def get_progress_percentage_string(self):
+        return '{}%'.format(int(self.progress * 100))
 
     def get_bar_str(self, size):
+        size -= len(self.border_chars)  # to let room for the border chars and/or percentage string
         bar_end = self.border_chars[1]
         if self.show_percentage:
-            bar_end += self.get_progress_percentage()
-        size -= len(bar_end)  # to let room for the border chars and/or percentage string
+            percentage = self.get_progress_percentage_string()
+            #Leaving room for the border chars and/or percentage string
+            size -= self.percentage_offset if self.percentage_offset > 0 else len(percentage)
+            bar_end += percentage.rjust(self.percentage_offset)
 
-        filled_col_count = size * self.progress
+        filled_col_count = int(size * self.progress)
         unfilled_col_count = size - filled_col_count
         fill_str = self.fill_char * int(filled_col_count) + self.empty_char * int(unfilled_col_count)
 
