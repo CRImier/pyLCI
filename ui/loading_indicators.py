@@ -7,11 +7,14 @@ class LoadingIndicator(Refresher):
 
     def __init__(self, i, o, *args, **kwargs):
         Refresher.__init__(self, self.on_refresh, i, o, *args, **kwargs)
+        self.t = None
 
     def on_refresh(self):
         raise NotImplementedError
 
     def run_in_background(self):
+        if self.t is not None or self.in_foreground:
+            raise Exception("LoadingIndicator already running!")
         self.t = Thread(target=self.activate)
         self.t.daemon=True
         self.t.start()
