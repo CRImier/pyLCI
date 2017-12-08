@@ -6,10 +6,10 @@ from threading import Thread
 class LoadingIndicator(Refresher):
 
     def __init__(self, i, o, *args, **kwargs):
-        Refresher.__init__(self, self.on_refresh, i, o)
+        Refresher.__init__(self, self.on_refresh, i, o, *args, **kwargs)
 
     def on_refresh(self):
-        pass
+        raise NotImplementedError
 
     def run_in_background(self):
         self.t = Thread(target=self.activate)
@@ -25,20 +25,22 @@ class DottedProgressIndicator(LoadingIndicator):
         self.dot_count = 0
 
     def on_refresh(self):
-        LoadingIndicator.on_refresh(self)
         self.dot_count = (self.dot_count + 1) % 4
         return self.message + '.' * self.dot_count
 
 
 class ProgressBar(LoadingIndicator):
+
     def __init__(self, i, o, *args, **kwargs):
-        LoadingIndicator.__init__(self, i, o, *args, **kwargs)
+        #We need to pop() these arguments instead of using kwargs.get() because they 
+        #have to be removed from kwargs to prevent TypeErrors
         self.message = kwargs.pop("message") if "message" in kwargs else "Loading"
         self.fill_char = kwargs.pop("fill_char") if "fill_char" in kwargs else "="
         self.empty_char = kwargs.pop("empty_char") if "empty_char" in kwargs else " "
         self.border_chars = kwargs.pop("border_chars") if "border_chars" in kwargs else "[]"
         self.show_percentage = kwargs.pop("show_percentage") if "show_percentage" in kwargs else False
-        self._progress = 0  # 0-1 range
+        LoadingIndicator.__init__(self, i, o, *args, **kwargs)
+        self._progress = 0 # 0-1 range
 
     @property
     def progress(self):
@@ -69,6 +71,5 @@ class ProgressBar(LoadingIndicator):
         return bar
 
     def on_refresh(self):
-        LoadingIndicator.on_refresh(self)
         bar = self.get_bar_str(self.o.cols)
         return [self.message, bar]
