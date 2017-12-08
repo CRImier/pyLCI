@@ -50,6 +50,7 @@ class ProgressBar(LoadingIndicator):
     @progress.setter
     def progress(self, value):
         self._progress = clamp(value, 0, 1)
+        self.refresh()
 
     def get_progress_percentage_string(self):
         return '{}%'.format(int(self.progress * 100))
