@@ -13,7 +13,7 @@ from apps.app_manager import AppManager
 from helpers import read_config, local_path_gen
 from input import input
 from output import output
-from ui import Printer, Menu
+from ui import Printer
 
 emulator_flag_filename = "emulator"
 local_path = local_path_gen(__name__)
@@ -27,6 +27,7 @@ logging_format = (
 
 config_paths = ['/boot/zpui_config.json'] if not is_emulator else []
 config_paths.append(local_path('config.json'))
+
 
 def init():
     """Initialize input and output objects"""
@@ -124,7 +125,7 @@ def exception_wrapper(callback, i, o):
         status = 1
     except:
         logging.exception('A wild exception appears!')
-        logging.exception(format_exc())
+        logging.exception(traceback.format_exc())
         Printer(["A wild exception", "appears!"], None, o, 0)
         status = 1
     else:
@@ -140,11 +141,11 @@ def dump_threads(*args):
     Helpful signal handler for debugging threads
     """
 
-    print('\nSIGUSR received, dumping threads\n')
+    logger.critical('\nSIGUSR received, dumping threads\n')
     for th in threading.enumerate():
-        print(th)
-        traceback.print_stack(sys._current_frames()[th.ident])
-        print('')
+        logger.critical(th)
+        log = traceback.extract_stack(sys._current_frames()[th.ident])
+        logger.critical(log)
 
 
 if __name__ == '__main__':
