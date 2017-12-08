@@ -21,7 +21,7 @@ class DottedProgressIndicator(LoadingIndicator):
 
     def __init__(self, i, o, *args, **kwargs):
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
-        self.message = kwargs.pop("message") if "message" in kwargs else "Loading"
+        self.message = kwargs.pop("message") if "message" in kwargs else "Loading".center(o.cols).rstrip()
         self.dot_count = 0
 
     def on_refresh(self):
@@ -72,4 +72,4 @@ class ProgressBar(LoadingIndicator):
 
     def on_refresh(self):
         bar = self.get_bar_str(self.o.cols)
-        return [self.message, bar]
+        return [self.message.center(self.o.cols), bar]
