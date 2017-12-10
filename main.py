@@ -68,6 +68,9 @@ def init():
         Printer(['Oops. :(', 'y u make mistake'], None, o, 0)
         sys.exit(3)
 
+    if hasattr(o, "set_backlight_callback"):
+        o.set_backlight_callback(i)
+
     return i, o
 
 
