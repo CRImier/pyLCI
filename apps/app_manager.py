@@ -95,12 +95,14 @@ class AppManager(object):
             logger.debug("App \"{}\" has no callback; loading silently".format(menu_name))
 
     def load_app(self, app_path):
+        main_py_string = "/main.py"
+        if app_path.endswith(main_py_string):
+            app_path = app_import_path[:-len(main_py_string)]
+        if "__init__.py" not in os.listdir(app_path):
+            raise ImportError("Trying to import an app with no __init__.py in its folder!")
         app_import_path = app_path.replace('/', '.')
         # If user runs in single-app mode and by accident
         # autocompletes the app name too far, it shouldn't fail
-        main_py_string = ".main.py"
-        if app_import_path.endswith(main_py_string):
-            app_import_path = app_import_path[:-len(main_py_string)]
         app = importlib.import_module(app_import_path + '.main', package='apps')
         if is_class_based_module(app):
             zero_app_subclass = get_zeroapp_class_in_module(app)
