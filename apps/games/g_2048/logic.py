@@ -20,127 +20,138 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE."""
 
-from random import *
+from random import randint, choice
 
-def new_game(n):
-    matrix = []
+class GameOf2048():
 
-    for i in range(n):
-        matrix.append([0] * n)
-    return matrix
+    matrix = None
 
-def add_two(mat):
-    a=randint(0,len(mat)-1)
-    b=randint(0,len(mat)-1)
-    while(mat[a][b]!=0):
-        a=randint(0,len(mat)-1)
-        b=randint(0,len(mat)-1)
-    mat[a][b]=2
-    return mat
+    def __init__(self, x_dim=4, y_dim=4):
+        self.x_dim = x_dim
+        self.y_dim = y_dim
+        self.matrix = self.get_new_matrix(self.x_dim, self.y_dim)
+        self.add_random_digit()
 
+    def get_new_matrix(self, x, y):
+        new = []
+        for i in range(y):
+            row = []
+            for i in range(x):
+                row.append(0)
+            new.append(row)
+        return new
 
-def game_state(mat):
-    for i in range(len(mat)):
-        for j in range(len(mat[0])):
-            if mat[i][j]==2048:
-                return 'win'
-    for i in range(len(mat)-1): #intentionally reduced to check the row on the right and below
-        for j in range(len(mat[0])-1): #more elegant to use exceptions but most likely this will be their solution
-            if mat[i][j]==mat[i+1][j] or mat[i][j+1]==mat[i][j]:
-                return 'not over'
-    for i in range(len(mat)): #check for any zero entries
-        for j in range(len(mat[0])):
-            if mat[i][j]==0:
-                return 'not over'
-    for k in range(len(mat)-1): #to check the left/right entries on the last row
-        if mat[len(mat)-1][k]==mat[len(mat)-1][k+1]:
+    def add_random_digit(self):
+        if not any([i == 0 for row in self.matrix for i in row]):
+            #No place available to add
+            return
+        a=randint(0,self.y_dim-1)
+        b=randint(0,self.x_dim-1)
+        while(self.matrix[a][b]!=0):
+            a=randint(0,self.y_dim-1)
+            b=randint(0,self.x_dim-1)
+        digit = choice([2]*9 +[4])
+        self.matrix[a][b]=digit
+
+    def get_game_state(self):
+        if any([i == 2048 for row in self.matrix for i in row]):
+            return 'win'
+        #If there are empty fields, the game isn't over yet
+        if any([i == 0 for row in self.matrix for i in row]):
             return 'not over'
-    for j in range(len(mat)-1): #check up/down entries on last column
-        if mat[j][len(mat)-1]==mat[j+1][len(mat)-1]:
-            return 'not over'
-    return 'lose'
+        for i in range(len(self.matrix)-1): #intentionally reduced to check the row on the right and below
+            for j in range(len(self.matrix[0])-1): #more elegant to use exceptions but most likely this will be their solution
+                if self.matrix[i][j]==self.matrix[i+1][j] or self.matrix[i][j+1]==self.matrix[i][j]:
+                    return 'not over'
+        for k in range(len(self.matrix)-1): #to check the left/right entries on the last row
+            if self.matrix[len(self.matrix)-1][k]==self.matrix[len(self.matrix)-1][k+1]:
+                return 'not over'
+        for j in range(len(self.matrix)-1): #check up/down entries on last column
+            if self.matrix[j][len(self.matrix)-1]==self.matrix[j+1][len(self.matrix)-1]:
+                return 'not over'
+        return 'lose'
 
-def reverse(mat):
-    new=[]
-    for i in range(len(mat)):
-        new.append([])
-        for j in range(len(mat[0])):
-            new[i].append(mat[i][len(mat[0])-j-1])
-    return new
+    def get_field(self):
+        return self.matrix
 
-def transpose(mat):
-    new=[]
-    for i in range(len(mat[0])):
-        new.append([])
-        for j in range(len(mat)):
-            new[i].append(mat[j][i])
-    return new
+    def reverse(self):
+        new = []
+        for i in range(len(self.matrix)):
+            new.append([])
+            for j in range(len(self.matrix[0])):
+                new[i].append(self.matrix[i][len(self.matrix[0])-j-1])
+        self.matrix = new
 
-def cover_up(mat):
-    new=[[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
-    done=False
-    for i in range(4):
-        count=0
-        for j in range(4):
-            if mat[i][j]!=0:
-                new[i][count]=mat[i][j]
-                if j!=count:
-                    done=True
-                count+=1
-    return (new,done)
+    def transpose(self):
+        new=[]
+        for i in range(len(self.matrix[0])):
+            new.append([])
+            for j in range(len(self.matrix)):
+                new[i].append(self.matrix[j][i])
+        self.matrix = new
 
-def merge(mat):
-    done=False
-    for i in range(4):
-         for j in range(3):
-             if mat[i][j]==mat[i][j+1] and mat[i][j]!=0:
-                 mat[i][j]*=2
-                 mat[i][j+1]=0
-                 done=True
-    return (mat,done)
+    def cover_up(self):
+        new = self.get_new_matrix(self.x_dim, self.y_dim)
+        changed=False
+        for i in range(4):
+            count=0
+            for j in range(4):
+                if self.matrix[i][j]!=0:
+                    new[i][count]=self.matrix[i][j]
+                    if j!=count:
+                        changed=True
+                    count+=1
+        self.matrix = new
+        return changed
 
+    def merge(self):
+        changed=False
+        for i in range(4):
+            for j in range(3):
+                if self.matrix[i][j]==self.matrix[i][j+1] and self.matrix[i][j]!=0:
+                    self.matrix[i][j]*=2
+                    self.matrix[i][j+1]=0
+                    changed=True
+        return changed
 
-def up(game):
-        print("up")
-        # return matrix after shifting up
-        game=transpose(game)
-        game,done=cover_up(game)
-        temp=merge(game)
-        game=temp[0]
-        done=done or temp[1]
-        game=cover_up(game)[0]
-        game=transpose(game)
-        return (game,done)
+    #UI-focused functions
 
-def down(game):
-        print("down")
-        game=reverse(transpose(game))
-        game,done=cover_up(game)
-        temp=merge(game)
-        game=temp[0]
-        done=done or temp[1]
-        game=cover_up(game)[0]
-        game=transpose(reverse(game))
-        return (game,done)
+    def up(self):
+        self.transpose()
+        coverup_changed = self.cover_up()
+        merge_changed = self.merge()
+        has_changed = coverup_changed or merge_changed
+        self.cover_up()
+        self.transpose()
+        if has_changed:
+            self.add_random_digit()
 
-def left(game):
-        print("left")
-        # return matrix after shifting left
-        game,done=cover_up(game)
-        temp=merge(game)
-        game=temp[0]
-        done=done or temp[1]
-        game=cover_up(game)[0]
-        return (game,done)
+    def down(self):
+        self.transpose()
+        self.reverse()
+        coverup_changed = self.cover_up()
+        merge_changed = self.merge()
+        has_changed = coverup_changed or merge_changed
+        self.cover_up()
+        self.reverse()
+        self.transpose()
+        if has_changed:
+            self.add_random_digit()
 
-def right(game):
-        print("right")
-        # return matrix after shifting right
-        game=reverse(game)
-        game,done=cover_up(game)
-        temp=merge(game)
-        game=temp[0]
-        done=done or temp[1]
-        game=cover_up(game)[0]
-        game=reverse(game)
-        return (game,done)
+    def left(self):
+        coverup_changed = self.cover_up()
+        merge_changed = self.merge()
+        has_changed = coverup_changed or merge_changed
+        self.cover_up()
+        if has_changed:
+            self.add_random_digit()
+
+    def right(self):
+        self.reverse()
+        coverup_changed = self.cover_up()
+        merge_changed = self.merge()
+        has_changed = coverup_changed or merge_changed
+        self.cover_up()
+        self.reverse()
+        if has_changed:
+            self.add_random_digit()
