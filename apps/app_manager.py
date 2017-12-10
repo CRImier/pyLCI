@@ -28,6 +28,7 @@ class AppManager(object):
     ...
     'apps/network_apps/network': <module 'apps.network_apps.network.main' from '/root/WCS/apps/network_apps/network/main.py'>}
      """
+    ordering_cache = {}
 
     def __init__(self, app_directory, i, o):
         self.app_directory = app_directory
@@ -123,13 +124,11 @@ class AppManager(object):
             logger.error(e)
             return os.path.split(subdir_path)[1].capitalize()
 
-    def get_ordering(self, path, cache=None):
+    def get_ordering(self, path):
         """This function gets a subdirectory path and imports __init__.py from it. It then gets _ordering attribute from __init__.py and returns it. It also caches the attribute for faster initialization.
         If failed to either import __init__.py or get the _ordering attribute, it returns an empty list."""
-        if cache is None:
-            cache = {}
-        if path in cache:
-            return cache[path]
+        if path in self.ordering_cache:
+            return self.ordering_cache[path]
         import_path = path.replace('/', '.')
         ordering = []
         try:
@@ -142,7 +141,7 @@ class AppManager(object):
         except AttributeError as e:
             pass
         finally:
-            cache[path] = ordering
+            self.ordering_cache[path] = ordering
             return ordering
 
     def insert_by_ordering(self, to_insert, alias, l, ordering):
