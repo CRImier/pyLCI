@@ -12,3 +12,6 @@ _ordering = [
 "scripts", 
 "clock", 
 "update"]
+
+
+from zero_app import ZeroApp
