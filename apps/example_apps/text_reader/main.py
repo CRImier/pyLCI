@@ -33,5 +33,3 @@ Namespaces are one honking great idea—let's do more of those!
     def on_start(self):
         super(TextReaderExample, self).on_start()
         self.scroll.activate()
-        # self.v = EightPtView(self.o, 8, )
-        # self.view = TextView(self.o, )
