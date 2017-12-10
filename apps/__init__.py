@@ -3,6 +3,7 @@ _ordering = [
 "network_apps",
 "phone",
 "hardware_apps",
+"games",
 "privacy_apps",
 "system_apps", 
 "media_apps", 
