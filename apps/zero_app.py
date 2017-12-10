@@ -10,7 +10,8 @@ class ZeroApp(object):
         # type: (InputListener, object) -> ZeroApp
         self.__output = o
         self.__input = i
-        self.menu_name = "ZeroApp template"  # Name as presented in the menu
+        if not hasattr(self, "menu_name"):
+            self.menu_name = "ZeroApp template"  # Name as presented in the menu
 
     @property
     def i(self):
