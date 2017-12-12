@@ -26,6 +26,15 @@ of the task. (range [0-1])
 """
 
 
+class CenteredTextRenderer(object):
+    def draw_centered_text(self, draw, content, device_size):
+        # type: (ImageDraw, str, tuple) -> None
+        w, h = draw.textsize(content)
+        dw, dh = device_size
+        coords = (dw / 2 - w / 2, dh / 2 - h / 2)
+        draw.text(coords, content, fill=True)
+
+
 class LoadingIndicator(Refresher):
 
     def __init__(self, i, o, *args, **kwargs):
@@ -41,7 +50,7 @@ class LoadingIndicator(Refresher):
         if self.t is not None or self.in_foreground:
             raise Exception("LoadingIndicator already running!")
         self.t = Thread(target=self.activate)
-        self.t.daemon=True
+        self.t.daemon = True
         self.t.start()
 
 
@@ -57,16 +66,8 @@ class ProgressIndicator(LoadingIndicator):
         self.refresh()  # doesn't work ? todo : check out why
 
 
-class CenteredTextRenderer(object):
-    def draw_centered_text(self, draw, content, device_size):
-        # type: (ImageDraw, str, tuple) -> None
-        w, h = draw.textsize(content)
-        dw, dh = device_size
-        coords = (dw / 2 - w / 2, dh / 2 - h / 2)
-        draw.text(coords, content, fill=True)
-
-
-class IdleThrobber(LoadingIndicator):
+# =========================concrete classes=========================
+class IdleCircular(LoadingIndicator):
 
     def __init__(self, i, o, *args, **kwargs):
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
@@ -109,25 +110,7 @@ class IdleThrobber(LoadingIndicator):
         self.counter.restart()
 
 
-class CircularProgressIndicator(ProgressIndicator, CenteredTextRenderer):
-
-    def __init__(self, i, o, *args, **kwargs):
-        LoadingIndicator.__init__(self, i, o, *args, **kwargs)
-
-    def refresh(self):
-        c = canvas(self.o.device)
-        c.__enter__()
-        x, y = c.device.size
-        radius = min(x, y) / 4
-        draw = c.draw
-        center_coordinates = (x / 2 - radius, y / 2 - radius, x / 2 + radius, y / 2 + radius)
-        draw.arc(center_coordinates, start=0, end=360 * self.progress, fill=True)
-        self.draw_centered_text(draw, "{:.0%}".format(self.progress), self.o.device.size)
-
-        self.o.display_image(c.image)
-
-
-class DottedIdleIndicator(LoadingIndicator):
+class IdleDottedMessage(LoadingIndicator):
 
     def __init__(self, i, o, *args, **kwargs):
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
@@ -140,10 +123,30 @@ class DottedIdleIndicator(LoadingIndicator):
         return self.message + '.' * self.dot_count
 
 
-class TextProgressBar(ProgressIndicator):
+class ProgressCircular(ProgressIndicator, CenteredTextRenderer):
+
     def __init__(self, i, o, *args, **kwargs):
-        #We need to pop() these arguments instead of using kwargs.get() because they
-        #have to be removed from kwargs to prevent TypeErrors
+        self.show_percentage = kwargs.pop("show_percentage") if "show_percentage" in kwargs else True
+        LoadingIndicator.__init__(self, i, o, *args, **kwargs)
+
+    def refresh(self):
+        c = canvas(self.o.device)
+        c.__enter__()
+        x, y = c.device.size
+        radius = min(x, y) / 4
+        draw = c.draw
+        center_coordinates = (x / 2 - radius, y / 2 - radius, x / 2 + radius, y / 2 + radius)
+        draw.arc(center_coordinates, start=0, end=360 * self.progress, fill=True)
+        if self.show_percentage:
+            self.draw_centered_text(draw, "{:.0%}".format(self.progress), self.o.device.size)
+
+        self.o.display_image(c.image)
+
+
+class ProgressTextBar(ProgressIndicator):
+    def __init__(self, i, o, *args, **kwargs):
+        # We need to pop() these arguments instead of using kwargs.get() because they
+        # have to be removed from kwargs to prevent TypeErrors
         self.message = kwargs.pop("message") if "message" in kwargs else "Loading"
         self.fill_char = kwargs.pop("fill_char") if "fill_char" in kwargs else "="
         self.empty_char = kwargs.pop("empty_char") if "empty_char" in kwargs else " "
@@ -151,10 +154,11 @@ class TextProgressBar(ProgressIndicator):
         self.show_percentage = kwargs.pop("show_percentage") if "show_percentage" in kwargs else False
         self.percentage_offset = kwargs.pop("percentage_offset") if "percentage_offset" in kwargs else 4
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
-        self._progress = 0 # 0-1 range
+        self._progress = 0  # 0-1 range
 
     def get_progress_percentage(self):
         return '{}%'.format(self.progress * 100)
+
     @property
     def progress(self):
         return float(self._progress)
@@ -172,7 +176,7 @@ class TextProgressBar(ProgressIndicator):
         bar_end = self.border_chars[1]
         if self.show_percentage:
             percentage = self.get_progress_percentage_string()
-            #Leaving room for the border chars and/or percentage string
+            # Leaving room for the border chars and/or percentage string
             size -= self.percentage_offset if self.percentage_offset > 0 else len(percentage)
             bar_end += percentage.rjust(self.percentage_offset)
 
