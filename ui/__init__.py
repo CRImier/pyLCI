@@ -10,6 +10,7 @@ from path_picker import PathPicker
 from printer import Printer, PrettyPrinter, GraphicsPrinter
 from refresher import Refresher
 from ui.numbered_menu import NumberedMenu
-from ui.loading_indicators import ProgressBar, DottedProgressIndicator
+from ui.loading_indicators import TextProgressBar, DottedIdleIndicator, ProgressIndicator, LoadingIndicator, \
+    CircularProgressIndicator
 
 IntegerInDecrementInput = IntegerAdjustInput  # Compatibility with old ugly name
