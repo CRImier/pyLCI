@@ -1,131 +1,209 @@
 #!/usr/bin/env python2
-import sys
-import os
-from subprocess import call
-from time import sleep
+
 import argparse
-#Welcome to ZPUI innards
-#Here, things are about i and o, which are input and output
-#And we output things for debugging, so o goes first.
-from output import output
-
-main_config_path = "/boot/zpui_config.json"
-backup_config_path = "./config.json"
-config_error_file = "/boot/zpui_config_error.repr"
-emulator_flag_filename = "emulator"
-
-#Debugging helper snippet
-import threading
-import traceback
+import logging
+import os
 import signal
 import sys
-def dumpthreads(*args):
-    print("")
-    print("SIGUSR received, dumping threads")
-    print("")
-    for th in threading.enumerate():
-        print(th)
-        traceback.print_stack(sys._current_frames()[th.ident])
-        print("")
-signal.signal(signal.SIGUSR1, dumpthreads)
+import threading
+import traceback
+from logging.handlers import RotatingFileHandler
 
-#Getting ZPUI config, it will be passed to input and output initializers
-#If config at main_config_path exists, use that
-#If not, use the backup path
-#Also, log the errors to a file so that it can be debugged later
+from context_manager import ContextManager
+from apps.app_manager import AppManager
+from helpers import read_config, local_path_gen
+from input import input
+from output import output
+from ui import Printer
 
-from helpers import read_config
-
+emulator_flag_filename = "emulator"
+local_path = local_path_gen(__name__)
 is_emulator = emulator_flag_filename in os.listdir(".")
 
-if not is_emulator:
-    try:
-        error_file = open(config_error_file, "w+")
-        config = read_config(main_config_path)
-    except Exception as e:
-        print(repr(e))
-        print("------------------------------")
-        print("Couldn't read main config, using backup config!")
-        error_file.write("Couldn't read main config: {}\n".format(repr(e)))
-        error_file.write("Using backup config!\n")
+logging_path = local_path('zpui.log')
+logging_format = (
+    '[%(levelname)s] %(asctime)s %(filename)s [%(process)d]: %(message)s',
+    '%Y-%m-%d %H:%M:%S'
+)
+
+config_paths = ['/boot/zpui_config.json'] if not is_emulator else []
+config_paths.append(local_path('config.json'))
+
+input_processor = None
+screen = None
+
+def init():
+    """Initialize input and output objects"""
+
+    global input_processor, screen
+    config = None
+
+    # Load config
+    for path in config_paths:
         try:
-            config = read_config(backup_config_path)
-        except Exception as e:
-            print("Couldn't read backup config, exiting!")
-            error_file.write("Couldn't read backup config: {}\n".format(repr(e)))
-            error_file.write("Exiting!\n")
-            error_file.close()
-            sys.exit(1)
-    else:
-        if os.path.exists(config_error_file): os.remove(config_error_file)
-        error_file.close()
-else:
-    config = read_config(backup_config_path)
+            logging.debug('Loading config from {}'.format(path))
+            config = read_config(path)
+        except:
+            logging.exception('Failed to load config from {}'.format(path))
+        else:
+            logging.info('Successfully loaded config from {}'.format(path))
+            break
 
+    if config is None:
+        sys.exit('Failed to load any config file')
 
-screen = output.init(config["output"])
-from ui import Printer, Menu
+    # Initialize output
+    try:
+        screen = output.init(config['output'])
+    except:
+        logging.exception('Failed to initialize the output object')
+        logging.exception(traceback.format_exc())
+        sys.exit(2)
 
-
-try: #If there's an internal error, we show it on display and exit
-    from apps.app_manager import AppManager
-    from context_manager import ContextManager
+    # Initialize the context manager
     cm = ContextManager()
-    #Now we init the input subsystem
-    from input import input
-    input_processor = input.init(config["input"], cm)
+
+    # Initialize input
+    try:
+        # Now we can show errors on the display
+        input_processor = input.init(config["input"], cm)
+    except:
+        logging.exception('Failed to initialize the input object')
+        logging.exception(traceback.format_exc())
+        Printer(['Oops. :(', 'y u make mistake'], None, screen, 0)
+        sys.exit(3)
+
+    # Tying objects together
     if hasattr(screen, "set_backlight_callback"):
         screen.set_backlight_callback(input_processor)
     cm.init_io(input_processor, screen)
     cm.switch_to_context("app")
     i, o = cm.get_io_for_context("app")
-except:
-    Printer(["Oops. :(", "y u make mistake"], None, screen, 0) #Yeah, that's about all the debug data.
-    raise
 
-def splash_screen():
-    try:
-        from splash import splash
-        splash(i, o)
-    except ImportError:
-        pass
+    return i, o
 
-def exception_wrapper(callback):
-    """This is a wrapper for all applications and menus. It catches exceptions and stops the system the right way when something bad happens, be that a Ctrl+c or an exception in one of the applications."""
-    try:
-        callback()
-    except KeyboardInterrupt:
-        Printer(["Does Ctrl+C", "hurt scripts?"], None, o, 0)
-        input_processor.atexit()
-        sys.exit(1)
-    except Exception as e:
-        traceback.print_exc()
-        Printer(["A wild exception", "appears!"], None, o, 0)
-        input_processor.atexit()
-        sys.exit(1)
+
+def launch(name=None, **kwargs):
+    """
+    Launches ZPUI, either in full mode or in
+    single-app mode (if ``name`` kwarg is passed).
+    """
+
+    i, o = init()
+    app_man = AppManager('apps', i, o)
+
+    if name is None:
+        try:
+            from splash import splash
+            splash(i, o)
+        except:
+            logging.exception('Failed to load the splash screen')
+            logging.exception(traceback.format_exc())
+
+        # Load all apps
+        app_menu = app_man.load_all_apps()
+        runner = app_menu.activate
     else:
-        Printer("Exiting ZPUI", None, o, 0)
-        input_processor.atexit()
-        sys.exit(0)
+        # If using autocompletion from main folder, it might
+        # append a / at the name end, which isn't acceptable
+        # for load_app
+        name = name.rstrip('/')
 
-def launch(name=None):
-    """Function that launches ZPUI, either in full mode or single-app mode (if ``name`` kwarg is passed)."""
-    app_man = AppManager("apps", i, o)
-    if name != None:
-        name = name.rstrip('/') #If using autocompletion from main folder, it might append a / at the name end, which isn't acceptable for load_app
+        # Load only single app
         try:
             app = app_man.load_app(name)
         except:
+            logging.exception('Failed to load the app: {0}'.format(name))
             i.atexit()
             raise
-        exception_wrapper(app.on_start if hasattr(app, "on_start") else app.callback)
-    else:
-        splash_screen()
-        app_menu = app_man.load_all_apps()
-        exception_wrapper(app_menu.activate)
+        runner = app.on_start if hasattr(app, "on_start") else app.callback
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="ZPUI runner")
-    parser.add_argument('-a', '--app', action="store", help="Launch ZPUI with a single app loaded (useful for testing)", default=None)
+    exception_wrapper(runner, i, o)
+
+
+def exception_wrapper(callback, i, o):
+    """
+    This is a wrapper for all applications and menus.
+    It catches exceptions and stops the system the right
+    way when something bad happens, be that a Ctrl+c or
+    an exception in one of the applications.
+    """
+    status = 0
+    try:
+        callback()
+    except KeyboardInterrupt:
+        logging.info('Caught KeyboardInterrupt')
+        Printer(["Does Ctrl+C", "hurt scripts?"], None, o, 0)
+        status = 1
+    except:
+        logging.exception('A wild exception appears!')
+        logging.exception(traceback.format_exc())
+        Printer(["A wild exception", "appears!"], None, o, 0)
+        status = 1
+    else:
+        logging.info('Exiting ZPUI')
+        Printer("Exiting ZPUI", None, o, 0)
+    finally:
+        input_processor.atexit()
+        sys.exit(status)
+
+
+def dump_threads(*args):
+    """
+    Helpful signal handler for debugging threads
+    """
+
+    logger.critical('\nSIGUSR received, dumping threads\n')
+    for th in threading.enumerate():
+        logger.critical(th)
+        log = traceback.format_stack(sys._current_frames()[th.ident])
+        for frame in log:
+            logger.critical(frame)
+
+
+if __name__ == '__main__':
+    """
+    Parses arguments, initializes logging, launches ZPUI
+    """
+
+    # Signal handler for debugging
+    signal.signal(signal.SIGUSR1, dump_threads)
+
+    # Setup argument parsing
+    parser = argparse.ArgumentParser(description='ZPUI runner')
+    parser.add_argument(
+        '--app',
+        '-a',
+        help='Launch ZPUI with a single app loaded (useful for testing)',
+        dest='name',
+        default=None)
+    parser.add_argument(
+        '--log-level',
+        '-l',
+        help='The minimum log level to output',
+        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+        default='INFO')
     args = parser.parse_args()
-    launch(name=args.app)
+
+    # Setup logging
+    logger = logging.getLogger()
+    formatter = logging.Formatter(*logging_format)
+
+    # Rotating file logs (for debugging crashes)
+    rotating_handler = RotatingFileHandler(
+        logging_path,
+        maxBytes=10000,
+        backupCount=5)
+    rotating_handler.setFormatter(formatter)
+    logger.addHandler(rotating_handler)
+
+    # Live console logging
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+
+    # Set log level
+    logger.setLevel(args.log_level)
+
+    # Launch ZPUI
+    launch(**vars(args))

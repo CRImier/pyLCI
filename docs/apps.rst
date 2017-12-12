@@ -26,7 +26,7 @@ Some information on maintaining and writing applications:
 
    * :ref:`Developing and managing applications <app_mgmt>`
    * :ref:`Skeleton application <skeleton_app>`
-   * :ref:`Skeleton application <class_skeleton_app>`
+   * :ref:`Class-based skeleton application <class_skeleton_app>`
 
 .. toctree::
    :maxdepth: 1
@@ -41,6 +41,7 @@ Some information on maintaining and writing applications:
    apps/scripts.rst
    apps/shutdown.rst
    apps/skeleton.rst
+   apps/class_based_skeleton.rst
    apps/system_info.rst
    apps/systemctl.rst
    apps/tvservice.rst

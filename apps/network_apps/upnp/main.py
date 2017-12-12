@@ -54,7 +54,6 @@ def run_scan():
         Menu(data, i, o).activate()
 
 def read_info(ip_str, data):
-    print("[+] {}\n{}".format(ip_str, data))
     Printer(ffs("[+] {}\n{}".format(ip_str, data), o.cols), i, o, 5)
 
 def adjust_timeout():

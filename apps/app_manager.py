@@ -4,8 +4,7 @@ import os
 import traceback
 
 from apps import zero_app
-
-from ui import Menu, Printer
+from ui import Printer, Menu
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -29,6 +28,7 @@ class AppManager(object):
     ...
     'apps/network_apps/network': <module 'apps.network_apps.network.main' from '/root/WCS/apps/network_apps/network/main.py'>}
      """
+    ordering_cache = {}
 
     def __init__(self, app_directory, i, o):
         self.app_directory = app_directory
@@ -96,12 +96,14 @@ class AppManager(object):
             logger.debug("App \"{}\" has no callback; loading silently".format(menu_name))
 
     def load_app(self, app_path):
+        main_py_string = "/main.py"
+        if app_path.endswith(main_py_string):
+            app_path = app_import_path[:-len(main_py_string)]
+        if "__init__.py" not in os.listdir(app_path):
+            raise ImportError("Trying to import an app with no __init__.py in its folder!")
         app_import_path = app_path.replace('/', '.')
         # If user runs in single-app mode and by accident
         # autocompletes the app name too far, it shouldn't fail
-        main_py_string = ".main.py"
-        if app_import_path.endswith(main_py_string):
-            app_import_path = app_import_path[:-len(main_py_string)]
         app = importlib.import_module(app_import_path + '.main', package='apps')
         if is_class_based_module(app):
             zero_app_subclass = get_zeroapp_class_in_module(app)
@@ -122,13 +124,11 @@ class AppManager(object):
             logger.error(e)
             return os.path.split(subdir_path)[1].capitalize()
 
-    def get_ordering(self, path, cache=None):
+    def get_ordering(self, path):
         """This function gets a subdirectory path and imports __init__.py from it. It then gets _ordering attribute from __init__.py and returns it. It also caches the attribute for faster initialization.
         If failed to either import __init__.py or get the _ordering attribute, it returns an empty list."""
-        if cache is None:
-            cache = {}
-        if path in cache:
-            return cache[path]
+        if path in self.ordering_cache:
+            return self.ordering_cache[path]
         import_path = path.replace('/', '.')
         ordering = []
         try:
@@ -141,7 +141,7 @@ class AppManager(object):
         except AttributeError as e:
             pass
         finally:
-            cache[path] = ordering
+            self.ordering_cache[path] = ordering
             return ordering
 
     def insert_by_ordering(self, to_insert, alias, l, ordering):

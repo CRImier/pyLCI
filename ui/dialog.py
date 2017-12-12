@@ -1,6 +1,9 @@
 from time import sleep
 import logging
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 class DialogBox():
     """Implements a dialog box with given values (or some default ones if chosen)."""
 
@@ -49,7 +52,7 @@ class DialogBox():
         self.set_keymap()
 
     def activate(self):
-        logging.info("{0} activated".format(self.name))    
+        logger.debug("{0} activated".format(self.name))
         self.o.cursor()
         self.to_foreground() 
         self.value_selected = False
@@ -57,7 +60,7 @@ class DialogBox():
         while self.in_foreground: #All the work is done in input callbacks
             sleep(0.1)
         self.o.noCursor()
-        logging.debug(self.name+" exited")
+        logger.debug(self.name+" exited")
         if self.value_selected:
             return self.values[self.pointer][1]
         else:
@@ -65,7 +68,7 @@ class DialogBox():
 
     def deactivate(self):
         self.in_foreground = False
-        logging.info("{0} deactivated".format(self.name))    
+        logger.debug("{0} deactivated".format(self.name))
 
     def generate_keymap(self):
         self.keymap = {

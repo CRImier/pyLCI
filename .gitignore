@@ -59,4 +59,6 @@ target/
 # ZPUI
 # Apps are not supposed to ship config.json
 # Instead, they're supposed to create them on first launch
-config.json 
+config.json
+/zpui.log*
+do_not_load

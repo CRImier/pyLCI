@@ -68,14 +68,14 @@ class LumaScreen(BacklightManager):
     @activate_backlight_wrapper
     def display_image(self, image):
         """Displays a PIL Image object onto the display
-        Also saves it fo the case where display needs to be refreshed"""
+        Also saves it for the case where display needs to be refreshed"""
         while self.busy_flag.isSet():
             sleep(0.01)
         self.busy_flag.set()
         if self.current_image:
             del self.current_image #Freeing memory
-        self.device.display(image)
         self.current_image = image
+        self.device.display(image)
         self.busy_flag.clear()
 
     @activate_backlight_wrapper
@@ -87,14 +87,17 @@ class LumaScreen(BacklightManager):
             sleep(0.01)
         self.busy_flag.set()
         args = args[:self.rows]
-        with canvas(self.device) as draw:
-            if self.cursor_enabled:
-                dims = (self.cursor_pos[0]-1+2, self.cursor_pos[1]-1, self.cursor_pos[0]+self.charwidth+2, self.cursor_pos[1]+self.charheight+1)
-                draw.rectangle(dims, outline="white")
-            for line, arg in enumerate(args):
-                y = (line*self.charheight - 1) if line != 0 else 0
-                draw.text((2, y), arg, fill="white")
+        draw = canvas(self.device)
+        d = draw.__enter__()
+        if self.cursor_enabled:
+            dims = (self.cursor_pos[0]-1+2, self.cursor_pos[1]-1, self.cursor_pos[0]+self.charwidth+2, self.cursor_pos[1]+self.charheight+1)
+            d.rectangle(dims, outline="white")
+        for line, arg in enumerate(args):
+            y = (line*self.charheight - 1) if line != 0 else 0
+            d.text((2, y), arg, fill="white")
         self.busy_flag.clear()
+        self.display_image(draw.image)
+        del d;del draw;
 
     def home(self):
         """Returns cursor to home position. If the display is being scrolled, reverts scrolled data to initial position.."""

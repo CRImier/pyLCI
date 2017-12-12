@@ -14,10 +14,10 @@ class InputDevice(InputSkeleton):
     "KEY_DOWN",
     "KEY_LEFT",
     "KEY_RIGHT",
-    "KEY_KPENTER",
-    "KEY_DELETE",
-    "KEY_HOME",
-    "KEY_END"]
+    "KEY_ENTER",
+    "KEY_PAGEUP",
+    "KEY_PAGEDOWN",
+    "KEY_PROG1"]
 
     def __init__(self, button_pins=[], pullups=True, **kwargs):
         """Initialises the ``InputDevice`` object. 
