@@ -8,17 +8,34 @@ ZPUI_HOME = "~/.zpui/"
 SAVE_FILENAME = "contacts.pickle"
 
 
-class AddressBook(object):
-    # todo : encrypt ?
+class Singleton(object):
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not isinstance(cls._instance, cls):
+            cls._instance = object.__new__(cls, *args, **kwargs)
+        return cls._instance
+
+
+class AddressBook(Singleton):
     def __init__(self):
-        self.contacts = []
+        # todo : encrypt ?
+        self._contacts = []
         self.load_from_file()
 
+    @property
+    def contacts(self):
+        # type: () -> list
+        return self._contacts
+
+    def add_contact(self, contact, auto_merge=False):
+        pass  # todo : remove
+
     def load_from_file(self):
-        self.contacts = pickle.load(self.get_save_file_path())
+        self._contacts = pickle.load(self.get_save_file_path())
 
     def save_to_file(self):
-        pickle.dump(self.contacts, self.get_save_file_path())
+        pickle.dump(self._contacts, self.get_save_file_path())
 
     @staticmethod
     def get_save_file_path():
@@ -53,21 +70,6 @@ class VCardContactConverter(object):
         'title': 'title'
     }
 
-    # list of content found in my file :
-    # {'adr',
-    #  'email',
-    #  'fn',
-    #  'n',
-    #  'note',
-    #  'org',
-    #  'photo',
-    #  'tel',
-    #  'title',
-    #  'url',
-    #  'version',
-    #  'x-android-custom',
-    #  'x-phonetic-first-name'
-
     @staticmethod
     def to_zpui_contact(v_contact):
         # type: (vobject.base.Component) -> Contact
@@ -80,7 +82,7 @@ class VCardContactConverter(object):
         return contact
 
     @staticmethod
-    def parse_contact_file(file_path):
+    def parse_vcard_file(file_path):
         # type: (str) -> list
         file_content = VCardContactConverter.read_file_content(file_path)
         contacts = [c for c in vobject.readComponents(file_content, ignoreUnreadable=True)]
@@ -94,13 +96,13 @@ class VCardContactConverter(object):
             return file_content
 
     @staticmethod
-    def load_contacts(contact_card_files):
+    def from_vcards(contact_card_files):
         # type: (list) -> list
         contacts = []
         for file_path in contact_card_files:
-            contacts += VCardContactConverter.parse_contact_file(file_path)
+            contacts += VCardContactConverter.parse_vcard_file(file_path)
         logging.info("finished : {} contacts loaded", len(contacts))
-        return contacts
+        return [VCardContactConverter.to_zpui_contact(c) for c in contacts]
 
 
 def find_contact_files(folder):
@@ -112,23 +114,21 @@ def find_contact_files(folder):
     return contact_card_files
 
 
-def store_contacts(contacts):
-    # type: (list) -> None
-    cts = [VCardContactConverter.to_zpui_contact(contact) for contact in contacts]
-
-
-
 def load_vcf(folder):
     # type: (str) -> None
     contact_card_files = find_contact_files(folder)
-    contacts = VCardContactConverter.load_contacts(contact_card_files)
-    store_contacts(contacts)
+    contacts = VCardContactConverter.from_vcards(contact_card_files)
+
+    address_book = AddressBook()
+    for contact in contacts:
+        address_book.add_contact(contact)
+    address_book.save_to_file()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--src-folder', dest='src_folder', action='store', metavar="DIR",
                         help='Folder to read vcard from')
-    args = parser.parse_args()
+    arguments = parser.parse_args()
 
-    load_vcf(args.src_folder)
+    load_vcf(arguments.src_folder)
