@@ -5,6 +5,14 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
+def flatten(foo):
+    for x in foo:
+        if hasattr(x, '__iter__'):
+            for y in flatten(x):
+                yield y
+        else:
+            yield x
+
 def to_be_foreground(func):
     """ A safety check wrapper so that certain functions can't possibly be called
     if UI element is not the one active"""
