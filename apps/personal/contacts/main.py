@@ -9,7 +9,7 @@ import vobject
 
 from helpers.general import flatten
 
-ZPUI_HOME = "~/.zpui/"  # todo : XDG_DATA_DIR/zpui
+ZPUI_HOME = "~/.phone/"
 SAVE_FILENAME = "contacts.pickle"
 
 
