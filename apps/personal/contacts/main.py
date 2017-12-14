@@ -2,11 +2,12 @@
 import argparse
 import doctest
 import logging
-import pickle
 import os
+import pickle
+
 import vobject
 
-from ui.utils import flatten
+from helpers.general import flatten
 
 ZPUI_HOME = "~/.zpui/"  # todo : XDG_DATA_DIR/zpui
 SAVE_FILENAME = "contacts.pickle"
@@ -105,7 +106,7 @@ class AddressBook(Singleton):
     def find_duplicates(self, contact):
         # type: (Contact) -> list
         if contact in self._contacts:
-            return list(1, contact)
+            return [1, contact]
         match_score_contact_list = [(c.match_score(contact), c) for c in self.contacts]
 
         def cmp(a1, a2):
