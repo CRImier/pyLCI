@@ -1,12 +1,11 @@
 """test for Checkbox"""
-import unittest
-from mock import patch, Mock
 import logging
 import os
-import sys
+import unittest
+
 os.sys.path.append(os.path.dirname(os.path.abspath('.')))
 
-from config_manager import UIConfigManager
+from ui.config_manager import UIConfigManager
 
 #set up logging
 LOG_FORMAT = '%(levelname)s %(asctime)-15s %(name)s  %(message)s'
