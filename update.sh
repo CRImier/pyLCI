@@ -1,5 +1,5 @@
 #!/bin/bash
-INSTALL_DIR="/opt/pylci"
+INSTALL_DIR="/opt/zpui"
 SUDO=''
 if (( $EUID != 0 )); then
     SUDO='sudo'
