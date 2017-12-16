@@ -1,8 +1,13 @@
 import logging
 
-import vobject
+from helpers import install_from_pip
 
 from apps.personal.contacts.address_book import Contact
+try:
+    import vobject
+except ImportError:
+    vobject = None
+    install_from_pip("vobject")
 
 
 class VCardContactConverter(object):
