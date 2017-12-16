@@ -2,7 +2,7 @@ import logging
 import os
 import pickle
 
-from helpers.general import Singleton, flatten
+from helpers import Singleton, flatten
 
 
 class AddressBook(Singleton):
