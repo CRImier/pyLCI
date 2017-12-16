@@ -2,13 +2,13 @@ import logging
 
 from helpers import install_from_pip
 
-from apps.personal.contacts.address_book import Contact
 try:
     import vobject
 except ImportError:
     vobject = None
     install_from_pip("vobject")
 
+from address_book import Contact
 
 class VCardContactConverter(object):
     vcard_mapping = {

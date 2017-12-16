@@ -3,12 +3,11 @@ import argparse
 import doctest
 import os
 
-from address_book import AddressBook
 from apps import ZeroApp
-from apps.personal.contacts.address_book import ZPUI_HOME, Contact
-from apps.personal.contacts.vcard_converter import VCardContactConverter
 from ui import NumberedMenu, Listbox
 
+from address_book import AddressBook, ZPUI_HOME, Contact
+from vcard_converter import VCardContactConverter
 
 class ContactApp(ZeroApp):
     def __init__(self, i, o):
