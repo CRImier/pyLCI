@@ -6,5 +6,5 @@ if (( $EUID != 0 )); then
 fi
 git pull
 $SUDO rsync -av --delete ./  $INSTALL_DIR
-$SUDO systemctl restart pylci.service
+$SUDO systemctl restart zpui.service
 
