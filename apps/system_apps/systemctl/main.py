@@ -1,7 +1,7 @@
 menu_name = "Systemctl"
 
 config_filename = "config.json"
-default_config = '{"allowed_types":["service","target"], "pinned_units":["pylci.service"]}'
+default_config = '{"allowed_types":["service","target"], "pinned_units":["zpui.service"]}'
 
 callback = None
 i = None
@@ -20,7 +20,7 @@ config = read_or_create_config(config_path, default_config, menu_name+" app")
 
 #Migrating config in case it's preserved from older app versions
 if "pinned_units" not in config:
-    config["pinned_units"] = []
+    config["pinned_units"] = ["zpui.service"]
     write_config(config, config_path)
 
 def change_filters():
