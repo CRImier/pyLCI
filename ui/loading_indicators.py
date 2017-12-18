@@ -10,7 +10,7 @@ from PIL import ImageDraw
 from luma.core.render import canvas
 
 from ui import Refresher
-from ui.utils import clamp, Counter
+from ui.utils import clamp, Counter, to_be_foreground
 
 """
 These classes subclass `Refresher` to show an animated screen.
@@ -96,6 +96,7 @@ class Throbber(LoadingIndicator):
         self.counter.start()
         return Refresher.activate(self)
 
+    @to_be_foreground
     def refresh(self):
         self.update_throbber_angle()
         c = canvas(self.o.device)
