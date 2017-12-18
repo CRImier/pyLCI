@@ -18,12 +18,6 @@ Those screens are used to show the user something is happening in the background
 
 There are two possibility : either you know how much work is happening in the background, or you don't.
 
-Vocabulary:
-*Idle* word is used for classes that don't know how much processing is left to do
-Example : throbber, dotted loading screen
-*Progress* word is used for classes that know how much work is done and how much work is left.
-Progress classes have a property `progress` that is used by the app programmer to indicate the advancement
-of the task. (range [0-1])
 
 """
 
@@ -47,7 +41,9 @@ class CenteredTextRenderer(object):
 
 
 class LoadingIndicator(Refresher):
-
+    """
+    Abstract class to indicate a loading time to the user
+    """
     def __init__(self, i, o, *args, **kwargs):
         Refresher.__init__(self, self.on_refresh, i, o)
         self._progress = 0
@@ -66,7 +62,10 @@ class LoadingIndicator(Refresher):
 
 
 class ProgressIndicator(LoadingIndicator):
-
+    """
+    Abstract class used to indicate a finite-time loading. Subclasses of
+    ProgressIndicator usually show a percentage of the progress done or left
+    """
     @property
     def progress(self):
         return float(self._progress)
@@ -78,7 +77,10 @@ class ProgressIndicator(LoadingIndicator):
 
 
 # =========================concrete classes=========================
-class IdleCircular(LoadingIndicator):
+class Throbber(LoadingIndicator):
+    """
+    A throbber is a circular LoadingIndicator. Usually used in website or Android.
+    """
 
     def __init__(self, i, o, *args, **kwargs):
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
@@ -122,7 +124,10 @@ class IdleCircular(LoadingIndicator):
 
 
 class IdleDottedMessage(LoadingIndicator):
-
+    """
+    A simple message to which dots are appended to show the user
+    something is happenning and the UI did not freeze.
+    """
     def __init__(self, i, o, *args, **kwargs):
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
         self.message = kwargs.pop("message") if "message" in kwargs else "Loading".center(o.cols).rstrip()
@@ -134,8 +139,9 @@ class IdleDottedMessage(LoadingIndicator):
         return self.message + '.' * self.dot_count
 
 
-class ProgressCircular(ProgressIndicator, CenteredTextRenderer):
-
+class CircularProgressBar(ProgressIndicator, CenteredTextRenderer):
+    """CircularProgressBar is half Throbber, half progressbar. Makes your app
+    look all sci-fi !"""
     def __init__(self, i, o, *args, **kwargs):
         self.show_percentage = kwargs.pop("show_percentage") if "show_percentage" in kwargs else True
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
@@ -154,7 +160,8 @@ class ProgressCircular(ProgressIndicator, CenteredTextRenderer):
         self.o.display_image(c.image)
 
 
-class ProgressTextBar(ProgressIndicator):
+class TextProgressBar(ProgressIndicator):
+    """Usual text-based fallback for a classical loading bar"""
     def __init__(self, i, o, *args, **kwargs):
         # We need to pop() these arguments instead of using kwargs.get() because they
         # have to be removed from kwargs to prevent TypeErrors
@@ -199,8 +206,11 @@ class ProgressTextBar(ProgressIndicator):
         return [self.message.center(self.o.cols), bar]
 
 
-class GraphicalLoadingBar(ProgressIndicator, CenteredTextRenderer):
-
+class ProgressBar(ProgressIndicator, CenteredTextRenderer):
+    """
+    The usual progress bar you would expect. Optionaly handles padding and margin
+    for some customization
+    """
     def __init__(self, i, o, *args, **kwargs):
         self.show_percentage = kwargs.pop("show_percentage") if "show_percentage" in kwargs else True
         self.margin = kwargs.pop("margin") if "margin" in kwargs else 15

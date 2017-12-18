@@ -1,8 +1,8 @@
 from time import sleep
 
 from apps.zero_app import ZeroApp
-from ui import ProgressTextBar, ProgressCircular, IdleDottedMessage, IdleCircular, Listbox
-from ui.loading_indicators import GraphicalLoadingBar
+from ui import TextProgressBar, CircularProgressBar, IdleDottedMessage, Throbber, Listbox
+from ui.loading_indicators import ProgressBar
 
 
 class LoadingBarExampleApp(ZeroApp):
@@ -10,12 +10,12 @@ class LoadingBarExampleApp(ZeroApp):
         super(LoadingBarExampleApp, self).__init__(i, o)
         self.menu_name = "Loading bar test app"
 
-        self.text_progress = ProgressTextBar(self.i, self.o, refresh_interval=.1, show_percentage=True,
+        self.text_progress = TextProgressBar(self.i, self.o, refresh_interval=.1, show_percentage=True,
                                              percentage_offset=0)
-        self.circular_progress = ProgressCircular(self.i, self.o, show_percentage=True)
+        self.circular_progress = CircularProgressBar(self.i, self.o, show_percentage=True)
         self.dotted_progress_bar = IdleDottedMessage(self.i, self.o, refresh_interval=.1)
-        self.throbber = IdleCircular(self.i, self.o, refresh_interval=.1)
-        self.progress_bar = GraphicalLoadingBar(self.i, self.o, refresh_interval=.1)
+        self.throbber = Throbber(self.i, self.o, refresh_interval=.1)
+        self.progress_bar = ProgressBar(self.i, self.o, refresh_interval=.1)
         lb_contents = [
             ["Text progress bar", self.text_progress],
             ["Dotted idle ", self.dotted_progress_bar],
