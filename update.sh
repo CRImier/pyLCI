@@ -7,13 +7,10 @@ IGNORE_TEST=false
 cd "$(dirname "$0")"  # Make sure we are in the script's directory when running
 set -e  # Strict mode : script stops if any command fails
 
-while :; do
-    case "$1" in
-        -i|--ignore-tests) IGNORE_TEST=true; shift 1 ;;
-        --) shift; break ;;
-        *) echo "Unknown parameter !"; exit 1
-    esac
-done
+case "$1" in
+    -i|--ignore-tests) IGNORE_TEST=true; shift 1 ;;
+    --) shift; break ;;
+esac
 
 
 SUDO=''
@@ -30,7 +27,21 @@ mkdir -p ${TMP_DIR}
 # update a copy of zpui in TMP_DIR
 git clone . ${TMP_DIR}
 cd ${TMP_DIR}
-git pull origin master  # Always tell the branch we pull from
+
+UPSTREAM=${1:-'@{u}'}
+LOCAL=$(git rev-parse @)
+REMOTE=$(git rev-parse "$UPSTREAM")
+BASE=$(git merge-base @ "$UPSTREAM")
+
+
+# from https://stackoverflow.com/questions/3258243/check-if-pull-needed-in-git#3278427
+if [ ${LOCAL} = ${REMOTE} ]; then
+    echo "Already Up-to-date"
+    exit 126  # 1, 127 and 128 error codes are used by git, 126 is free
+fi
+
+# --ff-only Refuse to merge and exit with a non-zero status unless the current HEAD is already up to date or the merge can be resolved as a fast-forward.
+git pull origin master --ff-only
 
 ${SUDO} pip install -r requirements.txt  # Make sure we have the latest dependencies installed
 
@@ -42,3 +53,5 @@ fi
 ${SUDO} mkdir -p ${INSTALL_DIR}
 ${SUDO} rsync -av --delete ./  ${INSTALL_DIR}
 ${SUDO} systemctl restart zpui.service
+rm -rf ${TMP_DIR}
+exit 0
