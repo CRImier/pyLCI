@@ -1,6 +1,7 @@
 from __future__ import division
 
 import math
+from collections import namedtuple
 from math import cos
 from threading import Thread
 from time import time
@@ -26,14 +27,23 @@ of the task. (range [0-1])
 
 """
 
+Rect = namedtuple('Rect', ['left', 'top', 'right', 'bottom'])
+
 
 class CenteredTextRenderer(object):
     def draw_centered_text(self, draw, content, device_size):
         # type: (ImageDraw, str, tuple) -> None
+        # draws a centered text on the canvas and returns a 4-tuple of the coordinates taken by the text
+        coords = self.get_centered_text_bounds(draw, content, device_size)
+        draw.text((coords.left, coords.top), content, fill=True)
+
+    @staticmethod
+    def get_centered_text_bounds(draw, content, device_size):
+        # type: (ImageDraw, str, tuple) -> Rect
+        # returns the coordinates of the centered text (min_x, min_y, max_x, max_y)
         w, h = draw.textsize(content)
         dw, dh = device_size
-        coords = (dw / 2 - w / 2, dh / 2 - h / 2)
-        draw.text(coords, content, fill=True)
+        return Rect(dw / 2 - w / 2, dh / 2 - h / 2, dw / 2 + w / 2, dh / 2 + h / 2)
 
 
 class LoadingIndicator(Refresher):
@@ -64,7 +74,7 @@ class ProgressIndicator(LoadingIndicator):
     @progress.setter
     def progress(self, value):
         self._progress = clamp(value, 0, 1)
-        self.refresh()  # doesn't work ? todo : check out why
+        self.refresh()
 
 
 # =========================concrete classes=========================
@@ -187,3 +197,52 @@ class ProgressTextBar(ProgressIndicator):
         LoadingIndicator.on_refresh(self)
         bar = self.get_bar_str(self.o.cols)
         return [self.message.center(self.o.cols), bar]
+
+
+class GraphicalLoadingBar(ProgressIndicator, CenteredTextRenderer):
+
+    def __init__(self, i, o, *args, **kwargs):
+        self.show_percentage = kwargs.pop("show_percentage") if "show_percentage" in kwargs else True
+        self.margin = kwargs.pop("margin") if "margin" in kwargs else 15
+        self.padding = kwargs.pop("padding") if "padding" in kwargs else 2
+        self.bar_height = kwargs.pop("bar_height") if "bar_height" in kwargs else 15
+        LoadingIndicator.__init__(self, i, o, *args, **kwargs)
+
+    def refresh(self):
+        c = canvas(self.o.device)
+        c.__enter__()
+        draw = c.draw
+        bar_top = self.o.device.size[1] / 2
+        if self.show_percentage:
+            percentage_text = "{:.0%}".format(self.progress)
+            coords = self.get_centered_text_bounds(draw, percentage_text, self.o.device.size)
+            draw.text((coords.left, self.margin), percentage_text, fill=True)  # Drawn top-centered (with margin)
+            bar_top = self.margin + (coords.bottom - coords.top)
+
+        self.draw_bar(draw, bar_top)
+
+        self.o.display_image(c.image)
+
+    def draw_bar(self, draw, top_y):
+        # type: (ImageDraw, float) -> None
+        width, height = self.o.device.size
+
+        outline_coords = Rect(
+            self.margin,
+            top_y,
+            width - self.margin,
+            min(top_y + self.bar_height, height - self.margin)
+        )
+
+        bar_width = outline_coords.right - outline_coords.left - self.padding * 2
+        bar_width *= self.progress
+
+        bar_coords = Rect(
+            outline_coords.left + self.padding,
+            outline_coords.top + self.padding,
+            outline_coords.left + self.padding + bar_width,
+            outline_coords.bottom - self.padding
+        )
+
+        draw.rectangle(outline_coords, fill=False, outline=True)
+        draw.rectangle(bar_coords, fill=True, outline=False)

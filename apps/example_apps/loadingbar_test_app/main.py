@@ -1,6 +1,8 @@
 from time import sleep
+
 from apps.zero_app import ZeroApp
 from ui import ProgressTextBar, ProgressCircular, IdleDottedMessage, IdleCircular, Listbox
+from ui.loading_indicators import GraphicalLoadingBar
 
 
 class LoadingBarExampleApp(ZeroApp):
@@ -13,11 +15,13 @@ class LoadingBarExampleApp(ZeroApp):
         self.circular_progress = ProgressCircular(self.i, self.o, show_percentage=True)
         self.dotted_progress_bar = IdleDottedMessage(self.i, self.o, refresh_interval=.1)
         self.throbber = IdleCircular(self.i, self.o, refresh_interval=.1)
+        self.progress_bar = GraphicalLoadingBar(self.i, self.o, refresh_interval=.1)
         lb_contents = [
             ["Text progress bar", self.text_progress],
             ["Dotted idle ", self.dotted_progress_bar],
             ["Circular progress ", self.circular_progress],
             ["Idle Throbber", self.throbber],
+            ["Graphical Loading bar", self.progress_bar],
         ]
         self.bar_choice_listbox = Listbox(lb_contents, self.i, self.o)
 
@@ -32,7 +36,7 @@ class LoadingBarExampleApp(ZeroApp):
             sleep(1)
             for i in range(101)[::-1]:
                 chosen_loading_bar.progress = float(i) / 100
-                sleep(0.01)
+                sleep(0.1)
         else:
             sleep(3)
             chosen_loading_bar.deactivate()
