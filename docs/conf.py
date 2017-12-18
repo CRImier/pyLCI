@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# pyLCI documentation build configuration file, created by
+# ZPUI documentation build configuration file, created by
 # sphinx-quickstart on Mon Mar 28 01:03:08 2016.
 #
 # This file is execfile()d with the current directory set to its
