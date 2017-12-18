@@ -13,7 +13,7 @@ fi
 
 git pull origin master  # Always tell the branch we pull from
 
-${SUDO} pip install -r requirement.txt  # Make sure we have the latest dependencies installed
+${SUDO} pip install -r requirements.txt  # Make sure we have the latest dependencies installed
 
 # Run tests
 pytest2 --doctest-modules -v --doctest-ignore-import-errors --ignore=apps/example_apps/fire_detector/ --ignore=ui/tests/test_checkbox.py  #  todo : fixes checkbox testing not working at the moment
