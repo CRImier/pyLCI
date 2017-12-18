@@ -1,14 +1,15 @@
 from __future__ import division
 
+import math
 from math import cos
+from threading import Thread
 from time import time
 
-import math
 from PIL import ImageDraw
 from luma.core.render import canvas
+
 from ui import Refresher
 from ui.utils import clamp, Counter
-from threading import Thread
 
 """
 These classes subclass `Refresher` to show an animated screen.
@@ -158,15 +159,6 @@ class ProgressTextBar(ProgressIndicator):
 
     def get_progress_percentage(self):
         return '{}%'.format(self.progress * 100)
-
-    @property
-    def progress(self):
-        return float(self._progress)
-
-    @progress.setter
-    def progress(self, value):
-        self._progress = clamp(value, 0, 1)
-        self.refresh()
 
     def get_progress_percentage_string(self):
         return '{}%'.format(int(self.progress * 100))
