@@ -85,7 +85,7 @@ class TextReader(object):
             self.scrollbar = HideableScrollbar(self.o, width=2, margin=2)
         else:
             self.scrollbar = Scrollbar(self.o, width=2, margin=2)
-        text_width = self.o.cols - (self.scrollbar.width // self.o.char_width)
+        text_width = self.o.cols - (self.scrollbar.width // self.o.charwidth)
         self.content = wrap(text_content, text_width)
         self.in_foreground = False
         self.scroll_index = 0
@@ -115,7 +115,7 @@ class TextReader(object):
 
     def draw_text(self, text, draw, x_offset=2):
         for line, arg in enumerate(text):
-            y = (line * self.o.char_height)
+            y = (line * self.o.charheight)
             draw.text((x_offset, y), arg, fill='white')
 
     def get_displayed_text(self):
