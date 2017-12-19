@@ -1,6 +1,6 @@
 import logging
 from functools import wraps
-from time import time
+from time import time, sleep
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -52,49 +52,102 @@ def check_value_lock(func):
     return wrapper
 
 
-class Counter(object):
+class Chronometer(object):
+    """
+    This object measures time.
+    >>> cron = Chronometer()
+    >>> cron.active
+    False
+    >>> cron.start()
+    >>> cron.active
+    True
+    >>> sleep(1)
+    >>> cron.update()
+    >>> round(cron.elapsed)
+    1.0
+    >>> cron.pause()
+    >>> sleep(1)
+    >>> round(cron.elapsed)
+    1.0
+    >>> cron.toggle()  # or cron.resume()
+    >>> sleep(1)
+    >>> cron.update()
+    >>> round(cron.elapsed)
+    2.0
+    >>> cron.restart()
+    >>> sleep(1)
+    >>> cron.update()
+    >>> round(cron.elapsed)
+    1.0
+    """
     def __init__(self):
         self.__active = False
-        self.__cron = Chronometer()
+        self.__cron = Ticker()
         self.__elapsed = 0
 
     @property
     def active(self):
+        # type: () -> bool
+        """whether the Chronometer is counting time"""
         return self.__active
 
     @property
     def elapsed(self):
+        # type: () -> float
+        """returns the elapsed time"""
         return self.__elapsed
 
     def update(self):
+        # type: () -> None
+        """Updates the chronometer with the current time"""
         if not self.__active:
             return
         self.__elapsed += self.__cron.tick()
 
     def stop(self):
+        # type: () -> None
+        """Stop and resets the Chronometer"""
         self.__cron.tick()
         self.__elapsed = 0
         self.__active = False
 
     def pause(self):
+        # type: () -> None
+        """Pauses the Chronometer, but keeps the measured time so far"""
         self.__active = False
 
     def resume(self):
+        # type: () -> None
+        """Resumes measuring time after a pause"""
         self.__cron.tick()
         self.__active = True
 
     def start(self):
+        # type: () -> None
+        """Starts measuring time"""
         self.stop()
         self.resume()
 
     def toggle(self):
+        # type: () -> None
+        """Toggles between pause and resume"""
         self.pause() if self.active else self.resume()
 
     def restart(self):
+        # type: () -> None
+        """Resets the Chronometer and starts a new measure immediatly"""
         self.start()
 
 
-class Chronometer(object):
+class Ticker(object):
+    """
+    This object returns the time elapsed between two calls to it's `tick()` function
+    >>> ticker = Ticker()
+    >>> sleep(1)
+    >>> elapsed = ticker.tick()
+    >>> round(elapsed)  #rounded because time.sleep() is not that precise
+    1.0
+    """
     def __init__(self):
         self.__active = False
         self.__last_call = time()
@@ -108,3 +161,9 @@ class Chronometer(object):
         elapsed = now - self.__last_call
         self.__last_call = now
         return elapsed
+
+
+if __name__ == '__main__':
+    import doctest
+
+    doctest.testmod()

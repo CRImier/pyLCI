@@ -2,14 +2,14 @@
 
 from apps.zero_app import ZeroApp
 from ui import Refresher
-from ui.utils import Counter
+from ui.utils import Chronometer
 
 
 class StopwatchApp(ZeroApp):
     def __init__(self, i, o):
         super(StopwatchApp, self).__init__(i, o)
         self.menu_name = "Stopwatch"
-        self.counter = Counter()
+        self.counter = Chronometer()
         self.refresher = None
         self.__instructions = ["", "UP/ENTER to start/pause", "RIGHT : restart", "DOWN : reset"]
 

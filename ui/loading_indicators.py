@@ -10,7 +10,7 @@ from PIL import ImageDraw
 from luma.core.render import canvas
 
 from ui import Refresher
-from ui.utils import clamp, Counter, to_be_foreground
+from ui.utils import clamp, Chronometer, to_be_foreground
 
 """
 These classes subclass `Refresher` to show an animated screen.
@@ -87,7 +87,7 @@ class Throbber(LoadingIndicator):
         self._current_angle = 0
         self._current_range = 0  # range or width of the throbber
         self.rotation_speed = 360  # degree per second
-        self.counter = Counter()  # We use a counter to make the animation independent of the refresh-rate
+        self.counter = Chronometer()  # We use a counter to make the animation independent of the refresh-rate
         self.start_time = 0
 
     def activate(self):
