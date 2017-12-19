@@ -45,7 +45,6 @@ class LoadingIndicator(Refresher):
     Abstract class to indicate a loading time to the user
     """
     def __init__(self, i, o, *args, **kwargs):
-        Refresher.__init__(self, self.on_refresh, i, o)
         self._progress = 0
         Refresher.__init__(self, self.on_refresh, i, o, *args, **kwargs)
         self.t = None
