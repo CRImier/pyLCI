@@ -11,5 +11,6 @@ from printer import Printer, PrettyPrinter, GraphicsPrinter
 from refresher import Refresher
 from numbered_menu import NumberedMenu
 from loading_indicators import ProgressBar, DottedProgressIndicator
+from scrollable_element import TextReader
 
 IntegerInDecrementInput = IntegerAdjustInput  # Compatibility with old ugly name
