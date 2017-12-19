@@ -94,7 +94,6 @@ class TextReader(object):
         logger.info("{0} activated".format(self.name))
         self.to_foreground()
         while self.in_foreground:  # All the work is done in input callbacks
-            self.refresh()
             sleep(self.sleep_interval)
         logger.info("{} exited".format(self.name))
         return None
@@ -143,6 +142,7 @@ class TextReader(object):
     def to_foreground(self):
         logger.info("{0} enabled".format(self.name))
         self.in_foreground = True
+        self.refresh()
         self.set_keymap()
 
     def deactivate(self):
@@ -167,3 +167,4 @@ class TextReader(object):
     def after_move(self):
         self.scroll_index = clamp(self.scroll_index, 0, len(self.content) - self.o.rows + 1)
         self.scrollbar.progress = self.scroll_index / len(self.content)
+        self.refresh()
