@@ -20,10 +20,46 @@ def to_be_foreground(func):
 
 
 def clamp(value, _min, _max):
+    """
+    Returns a value clamped between two bounds (inclusive)
+    >>> clamp(17, 0, 100)
+    17
+    >>> clamp(-89, 0, 100)
+    0
+    >>> clamp(65635, 0, 100)
+    100
+    """
     return max(_min, min(value, _max))
 
 
+def modulo_list_index(value, _list):
+    """
+    Returns an always valid list index. Repeats the list circularly.
+    >>> robots=['R2D2', 'C3PO', 'HAL9000']
+    >>> robots[modulo_list_index(0, robots)]
+    'R2D2'
+    >>> robots[modulo_list_index(3, robots)]
+    'R2D2'
+    >>> [robots[modulo_list_index(i, robots)] for i in range(10)]
+    ['R2D2', 'C3PO', 'HAL9000', 'R2D2', 'C3PO', 'HAL9000', 'R2D2', 'C3PO', 'HAL9000', 'R2D2']
+    """
+    return value % len(_list)
+
+
 def clamp_list_index(value, _list):
+    """
+    Returns a list index clamped to the bounds of the list.
+    Useful to prevent iterating out of bounds, repeats the bounds values.
+    >>> astronauts = ['Collins', 'Armstrong', 'Aldrin']
+    >>> astronauts[clamp_list_index(0, astronauts)]
+    'Collins'
+    >>> astronauts[clamp_list_index(2, astronauts)]
+    'Aldrin'
+    >>> astronauts[clamp_list_index(9000, astronauts)]
+    'Aldrin'
+    >>> astronauts[clamp_list_index(-666, astronauts)]
+    'Collins'
+    """
     return clamp(value, 0, len(_list) - 1)
 
 
@@ -161,9 +197,3 @@ class Ticker(object):
         elapsed = now - self.__last_call
         self.__last_call = now
         return elapsed
-
-
-if __name__ == '__main__':
-    import doctest
-
-    doctest.testmod()
