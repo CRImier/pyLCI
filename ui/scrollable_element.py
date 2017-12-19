@@ -74,7 +74,7 @@ class HideableScrollbar(Scrollbar):
 class TextReader(object):
     """A vertical-scrollable ui element used to read text"""
 
-    def __init__(self, text_content, i, o, name, sleep_interval=1, scroll_speed=10, hide_scrollbar=False):
+    def __init__(self, text_content, i, o, name="TextReader", sleep_interval=1, scroll_speed=10, hide_scrollbar=False):
         self.i = i
         self.o = o
         self.name = name
