@@ -1,6 +1,6 @@
 # coding=utf-8
 from apps.zero_app import ZeroApp
-from ui.scrollable_element import ScrollableThingy
+from ui.scrollable_element import TextReader
 
 
 class TextReaderExample(ZeroApp):
@@ -28,7 +28,7 @@ If the implementation is easy to explain, it may be a good idea.
 Namespaces are one honking great idea—let's do more of those!
 """
         self.menu_name = "TextReader test app"
-        self.scroll = ScrollableThingy(zen_of_python, i, o, self.menu_name)
+        self.scroll = TextReader(zen_of_python, i, o, self.menu_name)
 
     def on_start(self):
         super(TextReaderExample, self).on_start()

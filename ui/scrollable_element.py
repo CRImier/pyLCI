@@ -2,7 +2,7 @@ from __future__ import division
 
 import logging
 from textwrap import wrap
-from time import sleep
+from time import sleep, time
 
 from PIL.ImageDraw import ImageDraw
 from luma.core.render import canvas
@@ -22,19 +22,21 @@ class Scrollbar(object):
         self.color = color
         self._progress = 0  # 0-1 range, 0 is top, 1 is bottom
         self.height = 0  # 0-1 range, 0 is minimum size, 1 is whole screen
-        # todo margin, color
 
     def draw(self, draw):
         # type: (ImageDraw) -> None
+        rect = self.get_coords()
+        draw.rectangle(rect, fill=self.color)
+
+    def get_coords(self):
         height_px = self.screen.height * self.height
         height_px = max(height_px, self.min_height)  # so we always have something to show
-
         y_pos = self.progress * self.screen.height
         rect = (
             self.margin, y_pos,
             self._width, y_pos + height_px
         )
-        draw.rectangle(rect, fill=self.color)
+        return rect
 
     @property
     def width(self):
@@ -51,18 +53,38 @@ class Scrollbar(object):
 
 
 class HideableScrollbar(Scrollbar):
-    pass  # todo: fades out when not moved in while
+
+    def __init__(self, o, width=2, min_height=1, margin=1, color="white", fade_time=1.5):
+        super(HideableScrollbar, self).__init__(o, width, min_height, margin, color)
+        self.fade_time = fade_time
+        self.last_activity = -fade_time
+
+    def draw(self, draw):
+        # type: (ImageDraw) -> None
+        rect = self.get_coords()
+        color = self.color if time() - self.last_activity < self.fade_time else False
+        draw.rectangle(rect, fill=color, outline=color)
+
+    @Scrollbar.progress.setter
+    def progress(self, value):
+        self.last_activity = time()
+        self._progress = clamp(value, 0, 1)
 
 
-class ScrollableThingy(object):
-    def __init__(self, text_content, i, o, name, sleep_interval=1, scroll_speed=10):
+class TextReader(object):
+    """A vertical-scrollable ui element used to read text"""
+
+    def __init__(self, text_content, i, o, name, sleep_interval=1, scroll_speed=10, hide_scrollbar=False):
         self.i = i
         self.o = o
         self.name = name
         self.sleep_interval = sleep_interval
         self.scroll_speed = scroll_speed
         self.keymap = dict
-        self.scrollbar = Scrollbar(self.o, width=2, margin=2)  # todo: maybe expose those parameters in constructor ?
+        if hide_scrollbar:
+            self.scrollbar = HideableScrollbar(self.o, width=2, margin=2)
+        else:
+            self.scrollbar = Scrollbar(self.o, width=2, margin=2)
         text_width = self.o.cols - (self.scrollbar.width // self.o.char_width)
         self.content = wrap(text_content, text_width)
         self.in_foreground = False
@@ -79,7 +101,6 @@ class ScrollableThingy(object):
 
     @to_be_foreground
     def refresh(self):
-        self.scrollbar.progress = self.scroll_index / len(self.content)
         self.scrollbar.height = self.o.rows / len(self.content)
         text = self.get_displayed_text()
         tmp_canvas = canvas(self.o.device)
@@ -89,7 +110,7 @@ class ScrollableThingy(object):
 
         self.o.display_image(tmp_canvas.image)
 
-        del tmp_canvas  # todo: ask -> shouldn't I keep it instead ?
+        del tmp_canvas
         del image_drawer
 
     def draw_text(self, text, draw, x_offset=2):
@@ -129,17 +150,20 @@ class ScrollableThingy(object):
 
     def move_up(self):
         self.scroll_index -= 1
-        self.clamp_scroll()
+        self.after_move()
 
     def move_down(self):
         self.scroll_index += 1
-        self.clamp_scroll()
+        self.after_move()
 
     def page_up(self):
         self.scroll_index -= self.scroll_speed
+        self.after_move()
 
     def page_down(self):
         self.scroll_index += self.scroll_speed
+        self.after_move()
 
-    def clamp_scroll(self):
+    def after_move(self):
         self.scroll_index = clamp(self.scroll_index, 0, len(self.content) - self.o.rows + 1)
+        self.scrollbar.progress = self.scroll_index / len(self.content)
