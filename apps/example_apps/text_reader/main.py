@@ -6,8 +6,7 @@ from ui.scrollable_element import TextReader
 class TextReaderExample(ZeroApp):
     def __init__(self, i, o):
         super(TextReaderExample, self).__init__(i, o)
-        zen_of_python = """
-Beautiful is better than ugly.
+        zen_of_python = """Beautiful is better than ugly.
 Explicit is better than implicit.
 Simple is better than complex.
 Complex is better than complicated.
@@ -19,17 +18,17 @@ Although practicality beats purity.
 Errors should never pass silently.
 Unless explicitly silenced.
 In the face of ambiguity, refuse the temptation to guess.
-There should be one—and preferably only one—obvious way to do it.
+There should be one - and preferably only one - obvious way to do it.
 Although that way may not be obvious at first unless you're Dutch.
 Now is better than never.
 Although never is often better than right now.
 If the implementation is hard to explain, it's a bad idea.
 If the implementation is easy to explain, it may be a good idea.
-Namespaces are one honking great idea—let's do more of those!
+Namespaces are one honking great idea - let's do more of those!
 """
         self.menu_name = "TextReader test app"
-        self.scroll = TextReader(zen_of_python, i, o, self.menu_name)
+        self.textreader = TextReader(zen_of_python, i, o, self.menu_name)
 
     def on_start(self):
         super(TextReaderExample, self).on_start()
-        self.scroll.activate()
+        self.textreader.activate()
