@@ -1,8 +1,7 @@
 from time import sleep
 
-from apps.zero_app import ZeroApp
-from ui import TextProgressBar, CircularProgressBar, IdleDottedMessage, Throbber, Listbox
-from ui.loading_indicators import ProgressBar
+from apps import ZeroApp
+from ui import ProgressBar, TextProgressBar, CircularProgressBar, GraphicalProgressBar, IdleDottedMessage, Throbber, Listbox
 
 
 class LoadingBarExampleApp(ZeroApp):
@@ -10,18 +9,21 @@ class LoadingBarExampleApp(ZeroApp):
         super(LoadingBarExampleApp, self).__init__(i, o)
         self.menu_name = "Loading bar test app"
 
-        self.text_progress = TextProgressBar(self.i, self.o, refresh_interval=.1, show_percentage=True,
+        self.default_progress_bar = ProgressBar(self.i, self.o)
+        self.text_progress_bar = TextProgressBar(self.i, self.o, refresh_interval=.1, show_percentage=True,
                                              percentage_offset=0)
         self.circular_progress = CircularProgressBar(self.i, self.o, show_percentage=True)
-        self.dotted_progress_bar = IdleDottedMessage(self.i, self.o, refresh_interval=.1)
-        self.throbber = Throbber(self.i, self.o, refresh_interval=.1)
-        self.progress_bar = ProgressBar(self.i, self.o, refresh_interval=.1)
+        self.dotted_progress_bar = IdleDottedMessage(self.i, self.o)
+        self.throbber = Throbber(self.i, self.o)
+        self.graphical_progress_bar = GraphicalProgressBar(self.i, self.o)
+        self.default_progress_bar = ProgressBar(self.i, self.o)
         lb_contents = [
-            ["Text progress bar", self.text_progress],
+            ["Default progress bar", self.default_progress_bar],
+            ["Text progress bar", self.text_progress_bar],
             ["Dotted idle ", self.dotted_progress_bar],
             ["Circular progress ", self.circular_progress],
             ["Idle Throbber", self.throbber],
-            ["Graphical Loading bar", self.progress_bar],
+            ["Graphical Loading bar", self.graphical_progress_bar],
         ]
         self.bar_choice_listbox = Listbox(lb_contents, self.i, self.o)
 
