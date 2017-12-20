@@ -31,11 +31,12 @@ config_paths.append(local_path('config.json'))
 
 input_processor = None
 screen = None
+cm = None
 
 def init():
     """Initialize input and output objects"""
 
-    global input_processor, screen
+    global input_processor, screen, cm
     config = None
 
     # Load config
@@ -77,8 +78,8 @@ def init():
     if hasattr(screen, "set_backlight_callback"):
         screen.set_backlight_callback(input_processor)
     cm.init_io(input_processor, screen)
-    cm.switch_to_context("app")
-    i, o = cm.get_io_for_context("app")
+    cm.switch_to_context("main")
+    i, o = cm.get_io_for_context("main")
 
     return i, o
 
@@ -90,7 +91,7 @@ def launch(name=None, **kwargs):
     """
 
     i, o = init()
-    app_man = AppManager('apps', i, o)
+    app_man = AppManager('apps', cm)
 
     if name is None:
         try:

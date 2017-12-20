@@ -5,6 +5,7 @@ import traceback
 
 from apps import zero_app
 from ui import Printer, Menu
+from context_manager import call_in_context
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -30,10 +31,10 @@ class AppManager(object):
      """
     ordering_cache = {}
 
-    def __init__(self, app_directory, i, o):
+    def __init__(self, app_directory, context_manager):
         self.app_directory = app_directory
-        self.i = i
-        self.o = o
+        self.cm = context_manager
+        self.i, self.o = self.cm.get_io_for_context("main")
 
     def load_all_apps(self):
         base_menu = Menu([], self.i, self.o, "Main app menu",
@@ -82,18 +83,17 @@ class AppManager(object):
 
     def bind_callback(self, app, app_path, menu_name, ordering, subdir_path):
         if hasattr(app, "callback") and callable(app.callback):  # for function based apps
-            subdir_menu = self.subdir_menus[subdir_path]
-            subdir_menu_contents = self.insert_by_ordering([menu_name, app.callback], os.path.split(app_path)[1],
-                                                           subdir_menu.contents, ordering)
-            subdir_menu.set_contents(subdir_menu_contents)
-            return True
-        if hasattr(app, "on_start") and callable(app.on_start):  # for class based apps
-            subdir_menu = self.subdir_menus[subdir_path]
-            subdir_menu_contents = self.insert_by_ordering([menu_name, app.on_start], os.path.split(app_path)[1],
-                                                           subdir_menu.contents, ordering)
-            subdir_menu.set_contents(subdir_menu_contents)
+            app_callback = call_in_context(app.callback, self.cm, app_path)
+        elif hasattr(app, "on_start") and callable(app.on_start):  # for class based apps
+            app_callback = call_in_context(app.on_start, self.cm, app_path)
         else:
             logger.debug("App \"{}\" has no callback; loading silently".format(menu_name))
+            return
+        #App callback is available and wrapped, inserting
+        subdir_menu = self.subdir_menus[subdir_path]
+        subdir_menu_contents = self.insert_by_ordering([menu_name, app_callback], os.path.split(app_path)[1],
+                                                       subdir_menu.contents, ordering)
+        subdir_menu.set_contents(subdir_menu_contents)
 
     def load_app(self, app_path):
         main_py_string = "/main.py"
@@ -107,9 +107,9 @@ class AppManager(object):
         app = importlib.import_module(app_import_path + '.main', package='apps')
         if is_class_based_module(app):
             zero_app_subclass = get_zeroapp_class_in_module(app)
-            app = zero_app_subclass(self.i, self.o)
+            app = zero_app_subclass(*self.cm.get_io_for_context(app_path))
         else:
-            app.init_app(self.i, self.o)
+            app.init_app(*self.cm.get_io_for_context(app_path))
         return app
 
     def get_subdir_menu_name(self, subdir_path):
