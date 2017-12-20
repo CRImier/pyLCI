@@ -83,14 +83,13 @@ class Throbber(LoadingIndicator):
     or in smartphones. Suitable for graphical displays and looks great on them!"""
 
     def __init__(self, i, o, *args, **kwargs):
-        LoadingIndicator.__init__(self, i, o, *args, **kwargs)
-        self.refresh_interval = 0.01
         self._current_angle = 0
         self._current_range = 0  # range or width of the throbber
         self.rotation_speed = 360  # degree per second
         # We use a counter to make the rotation speed independent of the refresh-rate
         self.counter = Chronometer()
         self.start_time = 0
+        LoadingIndicator.__init__(self, i, o, refresh_interval=0.01, *args, **kwargs)
 
     def activate(self):
         self.start_time = time()
