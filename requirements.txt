@@ -1,3 +1,5 @@
+vobject
+pydbus
 luma.oled
 python-nmap
 smspdu
