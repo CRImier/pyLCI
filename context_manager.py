@@ -1,5 +1,26 @@
 from input.input import InputProxy
 
+import logging
+from functools import wraps
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
+
+
+def call_in_context(func, cm, context_alias):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        previous_context = cm.get_current_context()
+        cm.switch_to_context(context_alias)
+        try:
+            func(*args, **kwargs)
+        except:
+            raise
+        finally:
+            cm.switch_to_context(previous_context)
+    return wrapper
+
+
 class ContextManager(object):
     current_context = None
     context_objects = {}
@@ -31,6 +52,7 @@ class ContextManager(object):
     def switch_to_context(self, context_alias):
         if context_alias not in self.list_contexts():
             raise ValueError("ZPUI context \"{}\" not found!".format(context_alias))
+        logger.info("Switching to context {}".format(context_alias))
         self.current_context = context_alias
         proxy_i, proxy_o = self.get_io_for_context(context_alias)
         #self.i.detach_current_proxy()
@@ -41,10 +63,12 @@ class ContextManager(object):
             callback()
 
     def request_context_activation(self, context_alias):
+        logger.info("Received a request to activate the {} context".format(context_alias))
         if context_alias in ["notification", "phone"]:
             self.switch_to_context(context_alias)
             return True
         else:
+            logger.info("Request to switch context accepted")
             return False
         
     def set_context_activation_callback(self, context_alias, callback):
