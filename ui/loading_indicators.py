@@ -212,7 +212,7 @@ class TextProgressBar(ProgressIndicator):
         return [self.message.center(self.o.cols), bar]
 
 
-class ProgressBar(ProgressIndicator, CenteredTextRenderer):
+class GraphicalProgressBar(ProgressIndicator, CenteredTextRenderer):
     """ A horizontal progress bar for graphical displays, showing a message to the user.
     Allows to adjust padding and margin for a little bit of customization,
     as well as to show or hide the progress percentage."""
@@ -261,3 +261,14 @@ class ProgressBar(ProgressIndicator, CenteredTextRenderer):
 
         draw.rectangle(outline_coords, fill=False, outline=True)
         draw.rectangle(bar_coords, fill=True, outline=False)
+
+
+def ProgressBar(i, o, *args, **kwargs):
+    """Instantiates and returns the appropriate kind of progress bar
+    for the output device - either graphical or text-based."""
+    if "b&w-pixel" in o.type:
+        return GraphicalProgressBar(i, o, *args, **kwargs)
+    elif "char" in o.type:
+        return TextProgressBar(i, o, *args, **kwargs)
+    else:
+        raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
