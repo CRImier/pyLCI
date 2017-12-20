@@ -25,6 +25,7 @@ class InputProcessor():
     thread_index = 0
     backlight_cb = None
 
+    current_proxy = None
     proxy_methods = ["listen", "stop_listen"]
 
     def __init__(self, drivers, context_manager):
@@ -36,8 +37,19 @@ class InputProcessor():
             driver.start()
         atexit.register(self.atexit)
 
+    def attach_proxy(self, proxy):
+        if self.current_proxy:
+            raise ValueError("A proxy is already attached!")
+        logger.info("Attaching proxy for context: {}".format(proxy.context_alias))
+        self.current_proxy = proxy
+
+    def detach_current_proxy(self):
+        if self.current_proxy:
+            logger.info("Detaching proxy for context: {}".format(self.current_proxy.context_alias))
+            self.current_proxy = None
+
     def get_current_proxy(self):
-        return self.cm.get_io_for_context(self.cm.get_current_context())[0]
+        return self.current_proxy
 
     def receive_key(self, key):
         """ This is the method that receives keypresses from drivers and puts
