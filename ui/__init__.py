@@ -9,8 +9,9 @@ from numpad_input import NumpadCharInput, NumpadNumberInput
 from path_picker import PathPicker
 from printer import Printer, PrettyPrinter, GraphicsPrinter
 from refresher import Refresher
-from numbered_menu import NumberedMenu
-from loading_indicators import ProgressBar, DottedProgressIndicator
 from scrollable_element import TextReader
+from ui.loading_indicators import TextProgressBar, IdleDottedMessage, ProgressIndicator, LoadingIndicator, \
+    CircularProgressBar, Throbber, ProgressBar
+from ui.numbered_menu import NumberedMenu
 
 IntegerInDecrementInput = IntegerAdjustInput  # Compatibility with old ugly name
