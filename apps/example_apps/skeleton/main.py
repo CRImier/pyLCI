@@ -1,4 +1,4 @@
-menu_name = "Skeleton app" #App name as seen in main menu while using the system
+menu_name = "Skeleton app"  # App name as seen in main menu while using the system
 
 from subprocess import call
 from time import sleep
@@ -21,7 +21,8 @@ o = None #Output device
 
 def init_app(input, output):
     global callback, i, o
-    i = input; o = output #Getting references to output and input device objects and saving them as globals
+    i = input;
+    o = output  # Getting references to output and input device objects and saving them as globals
     main_menu_contents = [
     ["Internal command", call_internal],
     ["External command", call_external],
