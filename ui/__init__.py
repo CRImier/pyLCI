@@ -1,3 +1,10 @@
+"""This file exports app developer-accessible UI elements,
+so that they can be imported like:
+
+from ui import UIElement
+
+"""
+
 from char_input import CharArrowKeysInput
 from checkbox import Checkbox
 from dialog import DialogBox
