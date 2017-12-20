@@ -39,8 +39,14 @@ class DialogBox():
             #value_str = " ".join([value[0] for value in values])
             #assert(len(value_str) <= o.cols, "Resulting string too long for the display!")
         else:
-            assert type(values) in (list, tuple), "Unsupported 'values' argument!"
-            assert values, "DialogBox: Empty/invalid 'values' argument!"
+            if not type(values) in (list, tuple):
+                raise ValueError("Unsupported 'values' argument - needs a list, supplied {}".format(repr(values)))
+            if not values:
+                raise ValueError("Empty/invalid 'values' argument!")
+            for i, value in enumerate(values):
+                if isinstance(value, basestring) and value in self.default_options:
+                    #"y", "n" or "c" supplied as a shorthand for one of three default arguments
+                    values[i] = self.default_options[value]
             self.values = values
         self.message = message
         self.process_values()

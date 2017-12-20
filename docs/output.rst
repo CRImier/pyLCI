@@ -2,7 +2,7 @@
 Output subsystem
 ################
 
-Currently pyLCI uses HD44780-compatible screens as output devices. Minimum screen size is 16x2, 20x4 screens are tested and working.
+Currently ZPUI uses HD44780-compatible screens as output devices. Minimum screen size is 16x2, 20x4 screens are tested and working.
 Available output drivers:
 
    * :ref:`output_pcf8574`
@@ -25,7 +25,7 @@ Most of drivers just provide low-level functions for ``HD44780`` object, which, 
 
 .. rubric:: Glue logic functions
 
-.. warning:: Not for user interaction, are called by ``main.py``, which is pyLCI launcher.
+.. warning:: Not for user interaction, are called by ``main.py``, which is ZPUI launcher.
 
 .. autofunction:: output.output.init
 

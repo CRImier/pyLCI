@@ -108,7 +108,7 @@ class Emulator(object):
         while self._quit is False:
             self._poll_parent()
             self._poll_input()
-            sleep(0.05)
+            sleep(0.001)
 
     def setCursor(self, row, col):
         self.cursor_pos = [

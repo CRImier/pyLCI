@@ -21,6 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE."""
 
 from random import randint, choice
+from helpers import flatten
 
 class GameOf2048():
 
@@ -42,7 +43,7 @@ class GameOf2048():
         return new
 
     def add_random_digit(self):
-        if not any([i == 0 for row in self.matrix for i in row]):
+        if not any([cell == 0 for cell in flatten(self.matrix)]):
             #No place available to add
             return
         a=randint(0,self.y_dim-1)
@@ -54,10 +55,10 @@ class GameOf2048():
         self.matrix[a][b]=digit
 
     def get_game_state(self):
-        if any([i == 2048 for row in self.matrix for i in row]):
+        if any([cell == 2048 for cell in flatten(self.matrix)]):
             return 'win'
         #If there are empty fields, the game isn't over yet
-        if any([i == 0 for row in self.matrix for i in row]):
+        if any([cell == 0 for cell in flatten(self.matrix)]):
             return 'not over'
         for i in range(len(self.matrix)-1): #intentionally reduced to check the row on the right and below
             for j in range(len(self.matrix[0])-1): #more elegant to use exceptions but most likely this will be their solution

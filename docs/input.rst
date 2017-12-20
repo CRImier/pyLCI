@@ -45,7 +45,7 @@ If you do set callbacks/keymap yourself (very useful for making your own UI elem
 
 .. rubric:: Glue logic functions
 
-.. warning:: Not for user interaction, are called by ``main.py``, which is pyLCI launcher.
+.. warning:: Not for user interaction, are called by ``main.py``, which is ZPUI launcher.
 
 .. autofunction:: init
 

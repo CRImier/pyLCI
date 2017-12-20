@@ -46,9 +46,16 @@ class GameApp(ZeroApp):
 
     def confirm_exit(self):
         with self.moving:
-            ordering = "ny" if self.game.get_game_state() == 'not over' else "yn"
-            do_exit = DialogBox(ordering, self.i, self.o, message="Exit the game?").activate()
-            if do_exit:
+            if self.game.get_game_state() == 'not over':
+                choices = ["n", ["Restart", "restart"], "y"]
+            else:
+                choices = ["y", ["Restart", "restart"], "n"]
+            choice = DialogBox(choices, self.i, self.o, message="Exit the game?").activate()
+            if choice == "restart":
+                self.start_new_game()
+                self.set_keymap()
+                self.refresh()
+            elif choice is True:
                 self.do_exit.set()
             else:
                 self.set_keymap()

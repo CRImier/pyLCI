@@ -1,7 +1,6 @@
+import logging
 from threading import Event
 from time import sleep
-from copy import copy
-import logging
 
 from ui.utils import to_be_foreground
 
@@ -9,7 +8,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class Refresher():
+class Refresher(object):
     """Implements a state where display is refreshed from time to time, updating the screen with information from a function.
     """
     refresh_function = None

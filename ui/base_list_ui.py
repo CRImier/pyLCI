@@ -3,11 +3,13 @@ Best example of such an element is a Menu element - it has menu entries you can 
 
 import logging
 from copy import copy
-from time import sleep
-from PIL import ImageFont
 from threading import Event
-from utils import to_be_foreground, clamp, clamp_list_index
+from time import sleep
+
+from PIL import ImageFont
 from luma.core.render import canvas as luma_canvas
+
+from utils import to_be_foreground, clamp_list_index
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -600,7 +602,7 @@ class MainMenuTripletView(SixteenPtView):
     charheight = 16
     
     def __init__(self, *args, **kwargs):
-        PrettyGraphicalView.__init__(self, *args, **kwargs)
+        SixteenPtView.__init__(self, *args, **kwargs)
         self.charheight = self.o.height / 3
 
     @to_be_foreground

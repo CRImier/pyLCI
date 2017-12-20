@@ -14,7 +14,7 @@ Defining applications is done in ``config.json`` file which is located in the ap
 
    [
     {"path":"./s/login.sh", #Defining a script which's located relative to application directory (``apps/scripts``)
-     "name":"Hotspot login"}, #Defining a pretty name which'll be displayed by pyLCI in the application menu
+     "name":"Hotspot login"}, #Defining a pretty name which'll be displayed by ZPUI in the application menu
     {"path":"/root/backup.sh", #Defining a script by absolute path
      "name":"Backup things",
      "args":["--everything", "--now"]}, #Giving command-line arguments to a script

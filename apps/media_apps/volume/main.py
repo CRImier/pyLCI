@@ -12,13 +12,15 @@ local_path = local_path_gen(__name__)
 config_path = local_path(config_filename)
 config = read_or_create_config(config_path, default_config, menu_name+" app")
 
+import os
 from subprocess import call, check_output
 
 from ui import Menu, IntegerAdjustInput, Listbox, ellipsize
 
 #amixer commands
 def amixer_command(command):
-    return call(['amixer'] + list(command))
+    with open(os.devnull, "w") as f:
+        return call(['amixer'] + list(command), stdout=f)
 
 def amixer_get_channels():
     controls = []

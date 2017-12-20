@@ -7,9 +7,10 @@ import atexit
 import Queue
 import sys
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+import inspect
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 class CallbackException(Exception):
     def __init__(self, errno=0, message=""):
@@ -107,13 +108,21 @@ class InputProcessor():
         
     def handle_callback(self, callback, key, pass_key=False):
         try:
+            logger.info("Processing a callback for key {}".format(key))
+            logger.debug("pass_key = {}".format(pass_key))
+            logger.debug("callback name: {}".format(callback.__name__))
             if pass_key:
                 callback(key)
             else:
                 callback()
         except Exception as e:
-            logger.error("Exception {} caused by callback {} when key {} was received".format(e, callback, key))
+            locals = inspect.trace()[-1][0].f_locals
+            logger.error("Exception {} caused by callback {} when key {} was received".format(e.__str__() or e.__class__, callback, key))
             logger.error(format_exc())
+            logger.error("Locals:")
+            logger.error(locals)
+        finally:
+            return
 
     def listen(self):
         """Start event_loop in a thread. Nonblocking."""

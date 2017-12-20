@@ -84,13 +84,13 @@ class Menu(BaseListBackgroundableUIElement):
                 entry[1]()
             except MenuExitException:
                 self.exit_exception = True
-            except:
-                #the callback produced an exception
-                #for now, let's print it and do nothing
-                print_exc()
             finally:
                 if self.exit_exception:
                     self.deactivate()
                     return
-        self.reset_scrolling()
-        self.to_foreground()
+                else:
+                    self.reset_scrolling()
+                    self.to_foreground()
+        else:
+            self.reset_scrolling()
+            self.to_foreground()

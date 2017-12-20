@@ -1,3 +1,10 @@
+"""This file exports app developer-accessible UI elements,
+so that they can be imported like:
+
+from ui import UIElement
+
+"""
+
 from char_input import CharArrowKeysInput
 from checkbox import Checkbox
 from dialog import DialogBox
@@ -9,7 +16,8 @@ from numpad_input import NumpadCharInput, NumpadNumberInput
 from path_picker import PathPicker
 from printer import Printer, PrettyPrinter, GraphicsPrinter
 from refresher import Refresher
-from numbered_menu import NumberedMenu
-from loading_indicators import ProgressBar, DottedProgressIndicator
+from scrollable_element import TextReader
+from ui.loading_indicators import ProgressBar, TextProgressBar, GraphicalProgressBar, CircularProgressBar, IdleDottedMessage, Throbber
+from ui.numbered_menu import NumberedMenu
 
 IntegerInDecrementInput = IntegerAdjustInput  # Compatibility with old ugly name
