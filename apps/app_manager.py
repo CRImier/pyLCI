@@ -98,7 +98,7 @@ class AppManager(object):
     def load_app(self, app_path):
         main_py_string = "/main.py"
         if app_path.endswith(main_py_string):
-            app_path = app_import_path[:-len(main_py_string)]
+            app_path = app_path[:-len(main_py_string)]
         if "__init__.py" not in os.listdir(app_path):
             raise ImportError("Trying to import an app with no __init__.py in its folder!")
         app_import_path = app_path.replace('/', '.')
