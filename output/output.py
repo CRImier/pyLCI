@@ -10,7 +10,7 @@ class OutputDevice(object):
 
 def init(output_config):
     # type: (list) -> None
-    """ This function is called by main.py to read the output configuration, pick the corresponding drivers and initialize a Screen object. Returns the screen object created.
+    """ This function is called by main.py to read the output configuration, pick the corresponding drivers and initialize a Screen object. Returns the screen object created. """
     global screen
     # Currently only the first screen in the config is initialized
     screen_config = output_config[0]
