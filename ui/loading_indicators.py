@@ -144,7 +144,7 @@ class CircularProgressBar(ProgressIndicator, CenteredTextRenderer):
     Makes your app look all sci-fi!
 
     A circular progress bar for graphical displays.
-    Allows to tweak the circle radius, as well as to show or hide the progress percentage."""
+    Allows to show or hide the progress percentage."""
     def __init__(self, i, o, *args, **kwargs):
         self.show_percentage = kwargs.pop("show_percentage") if "show_percentage" in kwargs else True
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
