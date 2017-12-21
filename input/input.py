@@ -1,12 +1,18 @@
-from threading import Thread, Event
 from traceback import print_exc, format_exc
+from threading import Thread, Event
 from time import sleep
 import importlib
+import logging
 import atexit
 import Queue
 import sys
 
+import inspect
+
 listener = None
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 class CallbackException(Exception):
     def __init__(self, errno=0, message=""):
@@ -164,13 +170,19 @@ class InputListener():
         
     def handle_callback(self, callback, key, pass_key=False):
         try:
+            logger.info("Processing a callback for key {}".format(key))
+            logger.debug("pass_key = {}".format(pass_key))
+            logger.debug("callback name: {}".format(callback.__name__))
             if pass_key:
                 callback(key)
             else:
                 callback()
         except Exception as e:
-            print("Exception {} caused by callback {} when key {} was received".format(e, callback, key))
-            print(format_exc())
+            locals = inspect.trace()[-1][0].f_locals
+            logger.error("Exception {} caused by callback {} when key {} was received".format(e.__str__() or e.__class__, callback, key))
+            logger.error(format_exc())
+            logger.error("Locals:")
+            logger.error(locals)
         finally:
             return
 
