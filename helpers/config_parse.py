@@ -35,13 +35,24 @@ def read_or_create_config(config_path, default_config, app_name):
     True
     >>> c['default_config']
     True
+
+    >>> print('{{{zzz', file=open('/tmp/a_invalid_config_file',"w"))
+    >>> c = read_or_create_config("/tmp/a_invalid_config_file", '{"default_config":true}', "test_runner")
+    test_runner: broken/nonexistent config, restoring with defaults...
+    >>> os.path.exists("/tmp/a_invalid_config_file.failed_1")
+    True
     """
     try:
         config_dict = read_config(config_path)
     except (ValueError, IOError):
         print("{}: broken/nonexistent config, restoring with defaults...".format(app_name))
         if os.path.exists(config_path):
-            shutil.move(config_path, config_path + ".failed")
+            counter = 1
+            new_path = config_path + ".failed"
+            while os.path.exists(new_path):
+                new_path = config_path + ".failed_{}".format(counter)
+                counter += 1
+            shutil.move(config_path, new_path)
         with open(config_path, 'w') as f:
             f.write(default_config)
         config_dict = read_config(config_path)
