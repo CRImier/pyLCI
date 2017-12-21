@@ -1,6 +1,13 @@
 #!/usr/bin/env python2
-import json
+from __future__ import print_function
 
+import json
+import os
+import shutil
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 def read_config(config_path):
     with open(config_path, 'r') as f:
@@ -14,10 +21,40 @@ def write_config(config_dict, config_path):
 
 
 def read_or_create_config(config_path, default_config, app_name):
+    # type: (str, str, str) -> dict
+    """
+    reads the config in `config_path` if invalid, replaces it with `default_config` and saves the erroneous config
+    in `config_path`.failed
+
+    >>> print('{"configtype":"sample", "version":1}', file=open('/tmp/a_valid_config_file',"w"))
+    >>> c = read_or_create_config("/tmp/a_valid_config_file", '{"default_config":True}', "test_runner")
+    >>> c['configtype']
+    u'sample'
+
+    >>> print('{{{zzz', file=open('/tmp/a_invalid_config_file',"w"))
+    >>> c = read_or_create_config("/tmp/a_invalid_config_file", '{"default_config":true}', "test_runner")
+    >>> os.path.exists("/tmp/a_invalid_config_file.failed")
+    True
+    >>> c['default_config']
+    True
+
+    >>> print('{{{zzz', file=open('/tmp/a_invalid_config_file',"w"))
+    >>> c = read_or_create_config("/tmp/a_invalid_config_file", '{"default_config":true}', "test_runner")
+    >>> os.path.exists("/tmp/a_invalid_config_file.failed_1")
+    True
+    """
     try:
         config_dict = read_config(config_path)
     except (ValueError, IOError):
-        print("{}: broken/nonexistent config, restoring with defaults...".format(app_name))
+        logger.warning("{}: broken/nonexistent config, restoring with defaults...".format(app_name))
+        if os.path.exists(config_path):
+            counter = 1
+            new_path = config_path + ".failed"
+            while os.path.exists(new_path):
+                new_path = config_path + ".failed_{}".format(counter)
+                counter += 1
+            logger.warning("Moving the faulty config file into {}".format(new_path))
+            shutil.move(config_path, new_path)
         with open(config_path, 'w') as f:
             f.write(default_config)
         config_dict = read_config(config_path)

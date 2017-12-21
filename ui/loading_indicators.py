@@ -28,15 +28,15 @@ Rect = namedtuple('Rect', ['left', 'top', 'right', 'bottom'])
 class CenteredTextRenderer(object):
     # TODO: refactor into the ZPUI canvas wrapper that's bound to appear in the future.
     def draw_centered_text(self, draw, content, device_size):
-        """Draws a centered text on the canvas and returns a 4-tuple of the coordinates taken by the text"""
         # type: (ImageDraw, str, tuple) -> None
+        """Draws a centered text on the canvas and returns a 4-tuple of the coordinates taken by the text"""
         coords = self.get_centered_text_bounds(draw, content, device_size)
         draw.text((coords.left, coords.top), content, fill=True)
 
     @staticmethod
     def get_centered_text_bounds(draw, content, device_size):
-        """Returns the coordinates of the centered text (min_x, min_y, max_x, max_y)"""
         # type: (ImageDraw, str, tuple) -> Rect
+        """Returns the coordinates of the centered text (min_x, min_y, max_x, max_y)"""
         w, h = draw.textsize(content)
         dw, dh = device_size
         return Rect(dw / 2 - w / 2, dh / 2 - h / 2, dw / 2 + w / 2, dh / 2 + h / 2)
