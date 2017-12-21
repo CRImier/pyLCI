@@ -31,6 +31,8 @@ def read_or_create_config(config_path, default_config, app_name):
 
     >>> c = read_or_create_config("/tmp/a_invalid_config_file", '{"default_config":true}', "test_runner")
     test_runner: broken/nonexistent config, restoring with defaults...
+    >>> os.path.exists("/tmp/a_invalid_config_file.failed")
+    True
     >>> c['default_config']
     True
     """
