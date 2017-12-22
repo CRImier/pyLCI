@@ -5,7 +5,6 @@ import traceback
 
 from apps import zero_app
 from ui import Printer, Menu
-from context_manager import call_in_context
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -83,15 +82,17 @@ class AppManager(object):
 
     def bind_callback(self, app, app_path, menu_name, ordering, subdir_path):
         if hasattr(app, "callback") and callable(app.callback):  # for function based apps
-            app_callback = call_in_context(app.callback, self.cm, app_path)
+            app_callback = app.callback
         elif hasattr(app, "on_start") and callable(app.on_start):  # for class based apps
-            app_callback = call_in_context(app.on_start, self.cm, app_path)
+            app_callback = app.on_start
         else:
             logger.debug("App \"{}\" has no callback; loading silently".format(menu_name))
             return
+        self.cm.register_thread_target(app_callback, app_path)
+        menu_callback = lambda: self.cm.switch_to_context(app_path)
         #App callback is available and wrapped, inserting
         subdir_menu = self.subdir_menus[subdir_path]
-        subdir_menu_contents = self.insert_by_ordering([menu_name, app_callback], os.path.split(app_path)[1],
+        subdir_menu_contents = self.insert_by_ordering([menu_name, menu_callback], os.path.split(app_path)[1],
                                                        subdir_menu.contents, ordering)
         subdir_menu.set_contents(subdir_menu_contents)
 

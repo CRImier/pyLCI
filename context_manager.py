@@ -2,22 +2,23 @@ from input.input import InputProxy
 
 import logging
 from functools import wraps
+from threading import Thread
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.DEBUG)
 
 
-def call_in_context(func, cm, context_alias):
+def context_target_wrapper(func, cm, context_alias, previous_context):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        previous_context = cm.get_current_context()
-        cm.switch_to_context(context_alias)
         try:
             func(*args, **kwargs)
         except:
             raise
         finally:
-            cm.switch_to_context(previous_context)
+            #Only switch to the previous context if this context is the one active
+            if cm.get_current_context() == context_alias:
+                cm.switch_to_context(previous_context)
     return wrapper
 
 
@@ -28,13 +29,13 @@ class ContextManager(object):
 
     def __init__(self):
         self.context_objects = {}
-        self.context_activation_callbacks = {}
+        self.context_threads = {}
+        self.context_targets = {}
 
     def init_io(self, input_processor, screen):
         self.input_processor = input_processor
         self.screen = screen
         self.init_contexts()
-        self.set_context_callbacks()
 
     def init_contexts(self):
         for context_alias in self.initial_contexts:
@@ -46,44 +47,63 @@ class ContextManager(object):
     def get_current_context(self):
         return self.current_context
 
+    def register_thread_target(self, target, context_alias):
+        logger.debug("Registering a thread target for the {} context".format(context_alias))
+        self.context_targets[context_alias] = target
+
+    def create_thread_for_context(self, context_alias, previous_context):
+        logger.info("Creating a new thread for the {} context".format(context_alias))
+        wrapped_target = context_target_wrapper(self.context_targets[context_alias], self, context_alias, previous_context)
+        t = Thread(target=wrapped_target)
+        t.daemon = True
+        if context_alias in self.context_threads:
+            del self.context_threads[context_alias]
+        self.context_threads[context_alias] = t
+
+    def activate_thread_for_context(self, context_alias, previous_context = "main"):
+        if context_alias not in self.context_targets:
+            raise ValueError("Can't switch to {} context - no context target available!".format(context_alias))
+        if context_alias in self.context_threads and self.context_threads[context_alias].isAlive():
+            #A thread already exists and is active, doing nothing
+            return
+        #Thread either doesn't exist yet or was created but already stopped running
+        self.create_thread_for_context(context_alias, previous_context)
+        self.context_threads[context_alias].start()
+
     def switch_to_context(self, context_alias):
-        logger.info("Switching to context {}".format(context_alias))
+        logger.info("Switching to {} context".format(context_alias))
+        previous_context = self.current_context
         self.current_context = context_alias
+        if context_alias is not "main":
+            self.activate_thread_for_context(context_alias, previous_context)
+        self.activate_context_io(context_alias)
+        logger.info("Switched to {} context!".format(context_alias))
+
+    def activate_context_io(self, context_alias):
+        """
+        This method activates input and output objects associated with a context.
+        """
+        logger.debug("Activating IO for {} context".format(context_alias))
         proxy_i, proxy_o = self.get_io_for_context(context_alias)
         self.input_processor.detach_current_proxy()
         self.input_processor.attach_proxy(proxy_i)
-        #self.o.detach_current_proxy()
-        #self.o.attach_proxy(proxy_i)
-        for callback in self.context_activation_callbacks[context_alias]:
-            callback()
-
-    def request_context_activation(self, context_alias):
-        logger.info("Received a request to activate the {} context".format(context_alias))
-        if context_alias in ["notification", "phone"]:
-            self.switch_to_context(context_alias)
-            return True
-        else:
-            logger.info("Request to switch context accepted")
-            return False
-        
-    def set_context_activation_callback(self, context_alias, callback):
-        self.context_activation_callbacks[context_alias].append(callback)
+        if self.screen.current_image:
+            self.screen.display_image(self.screen.current_image)
+        #self.screen.detach_current_proxy()
+        #self.screen.attach_proxy(proxy_o)
 
     def create_context(self, context_alias):
-        logger.info("Creating context {}".format(context_alias))
+        logger.info("Creating {} context".format(context_alias))
         input_proxy = InputProxy(context_alias)
         output_proxy = self.screen
-        self.context_objects[context_alias] = (input_proxy, output_proxy)
+        self.set_context_callbacks(input_proxy)
         self.input_processor.register_proxy(input_proxy, context_alias)
-        self.context_activation_callbacks[context_alias] = []
+        self.context_objects[context_alias] = (input_proxy, output_proxy)
 
     def get_io_for_context(self, context_alias):
         if context_alias not in self.context_objects:
             self.create_context(context_alias)
         return self.context_objects[context_alias]
     
-    def set_context_callbacks(self):
-        pass
-        #app_i = self.context_objects["app"][0]
-        #app_i.set_nonmaskable_callback("KEY_ANSWER", lambda: self.switch_to_context("phone"))
-        #app_i.set_nonmaskable_callback("KEY_PROG2", lambda: self.switch_to_context("clock+lock"))
+    def set_context_callbacks(self, proxy_i):
+        proxy_i.set_nonmaskable_callback("KEY_PROG2", lambda: self.switch_to_context("apps/zeromenu"))
