@@ -2,8 +2,9 @@ import logging
 from functools import wraps
 from time import time, sleep
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+from helpers.logger import setup_logger
+
+logger = setup_logger(__name__, logging.INFO)
 
 
 def to_be_foreground(func):

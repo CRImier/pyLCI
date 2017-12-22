@@ -1,7 +1,6 @@
 """Contains base classes for UI elements that deal with lists of entries, that can be scrolled through using arrow keys.
 Best example of such an element is a Menu element - it has menu entries you can scroll through, which execute a callback when you click on them. """
 
-import logging
 from copy import copy
 from threading import Event
 from time import sleep
@@ -9,10 +8,12 @@ from time import sleep
 from PIL import ImageFont
 from luma.core.render import canvas as luma_canvas
 
+from helpers.logger import setup_logger
 from utils import to_be_foreground, clamp_list_index
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
+import logging
+
+logger = setup_logger(__name__, logging.WARNING)
 
 #Documentation building process has problems with this import
 try:

@@ -1,8 +1,9 @@
 from time import sleep
 import logging
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+from helpers.logger import setup_logger
+
+logger = setup_logger(__name__, logging.INFO)
 
 class DialogBox():
     """Implements a dialog box with given values (or some default ones if chosen)."""

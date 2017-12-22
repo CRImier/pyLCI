@@ -7,10 +7,11 @@ from time import sleep, time
 from PIL.ImageDraw import ImageDraw
 from luma.core.render import canvas
 
+from helpers.logger import setup_logger
 from ui.utils import to_be_foreground, clamp
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
+
+logger = setup_logger(__name__, logging.WARNING)
 
 
 class Scrollbar(object):

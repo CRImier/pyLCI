@@ -4,14 +4,17 @@ from mock import patch, Mock
 import logging
 import os
 import sys
-os.sys.path.append(os.path.dirname(os.path.abspath('.')))
 
-from config_manager import UIConfigManager
+from helpers.logger import setup_logger
+from ui.config_manager import UIConfigManager
+
+os.sys.path.append(os.path.dirname(os.path.abspath('.')))
 
 #set up logging
 LOG_FORMAT = '%(levelname)s %(asctime)-15s %(name)s  %(message)s'
 logging.basicConfig(format=LOG_FORMAT, level=logging.INFO)
-logger = logging.getLogger(__name__)
+
+logger = setup_logger(__name__, logging.WARNING)
 
 
 class TestUIConfigManager(unittest.TestCase):
