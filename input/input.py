@@ -206,7 +206,14 @@ class InputProxy():
         self.streaming = None
 
     def set_callback(self, key_name, callback):
-        """Sets a single callback of the listener."""
+        """
+        Sets a single callback of the listener.
+
+        >>> self.clear_keymap()
+        >>> self.set_callback("KEY_ENTER", lambda: None)
+        >>> "KEY_ENTER" in self.keymap
+        True
+        """
         self.keymap[key_name] = callback
 
     def check_special_callback(self, key_name):
@@ -254,15 +261,30 @@ class InputProxy():
         """Returns the current keymap."""
         return self.keymap
 
-    def set_keymap(self, keymap):
+    def set_keymap(self, new_keymap):
         """Sets all the callbacks supplied, removing the previously set keymap completely."""
-        self.keymap = keymap
+        self.keymap = new_keymap
 
-    def replace_keymap_entries(self, keymap):
-        """Sets all the callbacks supplied, not removing previously set
-        but overwriting those with same keycodes."""
-        for key in keymap.keys:
-            set_callback(key, keymap[key])
+    def update_keymap(self, new_keymap):
+        """
+        Updates the InputProxy keymap with entries from another keymap.
+        Will add/replace callbacks for keys in the new keymap,
+        but will leave the existing keys that are not in new keymap intact
+
+        >>> self.set_keymap({"KEY_LEFT":lambda:1, "KEY_DOWN":lambda:2})
+        >>> self.keymap["KEY_LEFT"]()
+        1
+        >>> self.keymap["KEY_DOWN"]()
+        2
+        >>> self.update_keymap({"KEY_LEFT":lambda:3, "KEY_1":lambda:4})
+        >>> self.keymap["KEY_LEFT"]()
+        3
+        >>> self.keymap["KEY_DOWN"]()
+        2
+        >>> self.keymap["KEY_1"]()
+        4
+        """
+        self.keymap.update(new_keymap)
 
     def clear_keymap(self):
         """Removes all the callbacks set."""
@@ -282,3 +304,7 @@ def init(driver_configs, context_manager):
         driver = driver_module.InputDevice(*args, **kwargs)
         drivers[driver_name] = driver
     return InputProcessor(drivers, context_manager)
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod(extraglobs={'self': InputProxy("test")})
