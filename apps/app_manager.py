@@ -1,13 +1,12 @@
 import importlib
-import logging
 import os
 import traceback
 
 from apps import zero_app
 from ui import Printer, Menu
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+from helpers import setup_logger
+logger = setup_logger(__name__, "info")
 
 
 class ListWithMetadata(list):

@@ -1,6 +1,6 @@
-import logging
 
-from helpers.logger import setup_logger
+
+from helpers import setup_logger
 
 menu_name = "I2C tools"
 
@@ -11,7 +11,7 @@ from time import sleep
 
 import smbus
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 current_bus = None
 
 def i2c_detect():

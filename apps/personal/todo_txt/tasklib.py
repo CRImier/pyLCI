@@ -1,11 +1,11 @@
-import logging
+
 from datetime import datetime, date
 import re
 
 #from qtodotxt.lib.task_htmlizer import TaskHtmlizer
-from helpers.logger import setup_logger
+from helpers import setup_logger
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 
 class Task(object):
     """

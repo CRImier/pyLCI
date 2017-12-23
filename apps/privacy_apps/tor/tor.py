@@ -16,7 +16,7 @@ as well as to discuss application UX."""
 #https://github.com/jamesacampbell/python-examples/
 #http://stackoverflow.com/questions/18561778/how-do-i-get-the-ip-address-of-the-tor-entry-node-in-use
 #... some other places - lost links =(
-import logging
+
 
 from stem.control import Controller
 from stem import Signal, CircStatus
@@ -24,9 +24,9 @@ import requests
 import socks
 import socket
 
-from helpers.logger import setup_logger
+from helpers import setup_logger
 
-logger = setup_logger(__name__, logging.INFO)
+logger = setup_logger(__name__, "info")
 
 socks.set_default_proxy(socks.SOCKS5, "127.0.0.1", 9050)
 

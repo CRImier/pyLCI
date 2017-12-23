@@ -1,9 +1,9 @@
-import logging
 import os
 import pickle
 
 from helpers import Singleton, flatten
-
+from helpers import setup_logger
+logger = setup_logger(__name__, "warning")
 
 class AddressBook(Singleton):
     def __init__(self):
@@ -60,7 +60,7 @@ class AddressBook(Singleton):
     def load_from_file(self):
         save_path = self.get_save_file_path()
         if not os.path.exists(save_path):
-            logging.error("Could not load. File {} not found".format(save_path))
+            logger.error("Could not load. File {} not found".format(save_path))
             return
         with open(self.get_save_file_path(), 'r') as f_save:
             self._contacts = pickle.load(f_save)

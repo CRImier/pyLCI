@@ -1,4 +1,5 @@
-import logging
+from helpers import setup_logger
+logger = setup_logger(__name__, "warning")
 
 from base_list_ui import BaseListUIElement, to_be_foreground
 
@@ -49,6 +50,6 @@ class Listbox(BaseListUIElement):
     def select_entry(self):
         """ Gets the currently specified entry's index and sets it as selected_entry attribute.
         |Is typically used as a callback from input event processing thread."""
-        logging.debug("entry selected")
+        logger.debug("entry selected")
         self.selected_entry = self.pointer
         self.deactivate()

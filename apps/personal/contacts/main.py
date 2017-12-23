@@ -1,16 +1,16 @@
 # coding=utf-8
 import argparse
 import doctest
-import logging
+
 import os
 
 from address_book import AddressBook, ZPUI_HOME, Contact
 from apps import ZeroApp
-from helpers.logger import setup_logger
+from helpers import setup_logger
 from ui import NumberedMenu, Listbox
 from vcard_converter import VCardContactConverter
 
-logger = setup_logger(__name__, logging.INFO)
+logger = setup_logger(__name__, "info")
 
 
 class ContactApp(ZeroApp):

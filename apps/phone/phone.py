@@ -4,15 +4,15 @@ from datetime import datetime
 from serial import Serial
 from time import sleep
 from copy import copy
-import logging
+
 import string
 import shlex
 
 import smspdu
 
-from helpers.logger import setup_logger
+from helpers import setup_logger
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 
 #Personal data protection technique:
 #All the logging statements&prints that can contain private data

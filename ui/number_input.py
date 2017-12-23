@@ -1,6 +1,7 @@
 from time import sleep
 from copy import copy
-import logging
+from helpers import setup_logger
+logger = setup_logger(__name__, "warning")
 
 from ui.utils import to_be_foreground
 
@@ -53,7 +54,7 @@ class IntegerAdjustInput():
 
     def to_foreground(self):
         """ Is called when ``activate()`` method is used, sets flags and performs all the actions so that UI element can display its contents and receive keypresses. Also, refreshes the screen."""
-        logging.info("{0} enabled".format(self.name))    
+        logger.info("{0} enabled".format(self.name))    
         self.in_foreground = True
         self.refresh()
         self.set_keymap()
@@ -62,25 +63,25 @@ class IntegerAdjustInput():
         """ A method which is called when input element needs to start operating. Is blocking, sets up input&output devices, renders the UI element and waits until self.in_background is False, while callbacks are executed from the input device thread.
         This method returns the selected number if KEY_ENTER was pressed, thus accepting the selection.
         This method returns None when the UI element was exited by KEY_LEFT and thus it's assumed changes to the number were not accepted."""
-        logging.info("{0} activated".format(self.name))    
+        logger.info("{0} activated".format(self.name))    
         self.to_foreground() 
         while self.in_foreground: #All the work is done in input callbacks
             sleep(0.1)
-        logging.debug(self.name+" exited")
+        logger.debug(self.name+" exited")
         return self.selected_number
 
     def deactivate(self):
         """ Deactivates the UI element, exiting it and thus making activate() return."""
         self.in_foreground = False
-        logging.info("{0} deactivated".format(self.name))    
+        logger.info("{0} deactivated".format(self.name))    
 
     def print_number(self):
         """ A debug method. Useful for hooking up to an input event so that you can see current number value. """
-        logging.info(self.number)
+        logger.info(self.number)
 
     def print_name(self):
         """ A debug method. Useful for hooking up to an input event so that you can see which UI element is currently processing input events. """
-        logging.info("{0} active".format(self.name))    
+        logger.info("{0} active".format(self.name))    
 
     @to_be_foreground
     def decrement(self):
@@ -97,21 +98,21 @@ class IntegerAdjustInput():
     @to_be_foreground
     def reset(self):
         """Resets the number, setting it to the number passed to the constructor."""
-        logging.debug("Number reset")
+        logger.debug("Number reset")
         self.number = self.initial_number
         self.refresh()    
 
     @to_be_foreground
     def select_number(self):
         """Selects the currently active number value, making activate() return it."""
-        logging.debug("Number accepted")
+        logger.debug("Number accepted")
         self.selected_number = self.number
         self.deactivate()
 
     @to_be_foreground
     def exit(self):
         """Exits discarding all the changes to the number."""
-        logging.debug("{} exited without changes".format(self.name))
+        logger.debug("{} exited without changes".format(self.name))
         self.deactivate()
 
     def generate_keymap(self):
@@ -137,10 +138,10 @@ class IntegerAdjustInput():
 
     @to_be_foreground
     def refresh(self):
-        logging.debug("{0}: refreshed data on display".format(self.name))
+        logger.debug("{0}: refreshed data on display".format(self.name))
         self.display_callback(*self.get_displayed_data())
 
     def set_display_callback(self, callback):
-        logging.debug("{0}: display callback set".format(self.name))
+        logger.debug("{0}: display callback set".format(self.name))
         self.display_callback = callback
 

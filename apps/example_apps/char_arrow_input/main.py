@@ -1,11 +1,11 @@
-import logging
 
-from helpers.logger import setup_logger
+
+from helpers import setup_logger
 
 menu_name = "Char input app"
 
 from ui import CharArrowKeysInput as Input
-logger = setup_logger(__name__, logging.INFO)
+logger = setup_logger(__name__, "info")
 
 #Some globals for us
 i = None #Input device

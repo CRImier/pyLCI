@@ -1,6 +1,6 @@
-import logging
 
-from helpers.logger import setup_logger
+
+from helpers import setup_logger
 
 menu_name = "Phone"
 
@@ -15,7 +15,7 @@ from helpers import BackgroundRunner, ExitHelper
 from phone import Phone, Modem, ATError
 
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 
 i = None
 o = None

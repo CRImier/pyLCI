@@ -1,7 +1,7 @@
 #Code taken from here: https://habrahabr.ru/post/332812/ and, consequently, from here: https://www.electricmonk.nl/log/2016/07/05/exploring-upnp-with-python/
-import logging
 
-from helpers.logger import setup_logger
+
+from helpers import setup_logger
 
 menu_name = "UPnP/SSDP scan"
 
@@ -16,7 +16,7 @@ import sys
 import os
 
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 
 #Some globals for us
 i = None

@@ -1,18 +1,18 @@
 """test for Checkbox"""
 import unittest
 from mock import patch, Mock
-import logging
+
 import os
 import sys
 
-from helpers.logger import setup_logger
+from helpers import setup_logger
 from ui import Checkbox
 
 os.sys.path.append(os.path.dirname(os.path.abspath('.')))
 
 #set up logging
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 
 
 def get_mock_input():

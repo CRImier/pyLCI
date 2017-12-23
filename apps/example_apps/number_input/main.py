@@ -1,6 +1,6 @@
-import logging
 
-from helpers.logger import setup_logger
+
+from helpers import setup_logger
 
 menu_name = "Number input app"
 
@@ -8,7 +8,7 @@ from datetime import datetime
 
 from ui import IntegerInDecrementInput as Input
 
-logger = setup_logger(__name__, logging.INFO)
+logger = setup_logger(__name__, "info")
 
 i = None #Input device
 o = None #Output device

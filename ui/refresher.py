@@ -1,11 +1,11 @@
-import logging
+
 from threading import Event
 from time import sleep
 
-from helpers.logger import setup_logger
+from helpers import setup_logger
 from ui.utils import to_be_foreground
 
-logger = setup_logger(__name__, logging.INFO)
+logger = setup_logger(__name__, "info")
 
 
 class Refresher(object):

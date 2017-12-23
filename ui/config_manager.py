@@ -1,12 +1,12 @@
 import os
 import json
-import logging
+
 import traceback
 import collections
 
-from helpers.logger import setup_logger
+from helpers import setup_logger
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 
 _UI_CONFIG_MANAGER = None
 

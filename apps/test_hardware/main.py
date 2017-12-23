@@ -1,6 +1,6 @@
-import logging
 
-from helpers.logger import setup_logger
+
+from helpers import setup_logger
 
 menu_name = "Hardware test"
 
@@ -14,7 +14,7 @@ import os
 from ui import Menu, Printer, PrettyPrinter, GraphicsPrinter
 from helpers import ExitHelper, local_path_gen
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 
 i = None
 o = None

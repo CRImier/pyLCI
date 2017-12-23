@@ -1,13 +1,13 @@
-import logging
+
 
 import smbus
 from time import sleep
 
-from helpers.logger import setup_logger
+from helpers import setup_logger
 from output.output import OutputDevice
 
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 
 def delay(time):
     sleep(time/1000.0)

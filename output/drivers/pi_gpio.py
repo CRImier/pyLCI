@@ -6,14 +6,14 @@
 # LiquidCrystal - https://github.com/arduino/Arduino/blob/master/libraries/LiquidCrystal/LiquidCrystal.cpp
 # Adafruit - https://github.com/adafruit/Adafruit-Raspberry-Pi-Python-Code
 #
-import logging
+
 from time import sleep
 
-from helpers.logger import setup_logger
+from helpers import setup_logger
 from output.output import OutputDevice
 
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 
 def delayMicroseconds(microseconds):
     seconds = microseconds / float(1000000)  # divide microseconds by 1 million for seconds

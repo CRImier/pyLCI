@@ -1,6 +1,6 @@
-import logging
 
-from helpers.logger import setup_logger
+
+from helpers import setup_logger
 
 menu_name = "Skeleton app"  # App name as seen in main menu while using the system
 
@@ -9,7 +9,7 @@ from time import sleep
 
 from ui import Menu, Printer
 
-logger = setup_logger(__name__, logging.INFO)
+logger = setup_logger(__name__, "info")
 
 def call_internal():
     Printer(["Calling internal", "command"], i, o, 1)

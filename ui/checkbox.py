@@ -1,5 +1,6 @@
 from copy import copy
-import logging
+from helpers import setup_logger
+logger = setup_logger(__name__, "warning")
 
 from base_list_ui import BaseListUIElement, TextView, EightPtView, SixteenPtView, to_be_foreground
 
@@ -69,7 +70,7 @@ class Checkbox(BaseListUIElement):
     def select_entry(self):
         """ Changes the current element's state to the opposite.
         |Is typically used as a callback from input event processing thread. Afterwards, refreshes the screen."""
-        logging.debug("element selected")
+        logger.debug("element selected")
         if len(self.contents[self.pointer]) > 2 and self.contents[self.pointer][2] == self.exit_entry[2]:
             self.accepted = True
             self.deactivate()
@@ -88,7 +89,7 @@ class Checkbox(BaseListUIElement):
         self.states = [element[2] if len(element)>2 else self.default_state for element in self.contents]
         self.contents.append(self.exit_entry)
         self.states.append(False) #For the final button, to maintain "len(states) == len(self.contents)"
-        logging.debug("{}: menu contents processed".format(self.name))
+        logger.debug("{}: menu contents processed".format(self.name))
 
 
 class CheckboxRenderingMixin():
@@ -140,7 +141,7 @@ class CheckboxRenderingMixin():
             return entry
         else:
             raise Exception("Entry labels have to be either strings or lists of strings, found: {}, type: {}".format(entry, type(entry)))
-        logging.debug("Rendered entry: {}".format(rendered_entry))
+        logger.debug("Rendered entry: {}".format(rendered_entry))
         return rendered_entry
 
 class ChEightPtView(CheckboxRenderingMixin, EightPtView):

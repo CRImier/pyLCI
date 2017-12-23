@@ -1,10 +1,10 @@
-import logging
+
 from subprocess import check_output, CalledProcessError
 from time import sleep
 
-from helpers.logger import setup_logger
+from helpers import setup_logger
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 
 #wpa_cli related functions and objects
 def wpa_cli_command(*command):

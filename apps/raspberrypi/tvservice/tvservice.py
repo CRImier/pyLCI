@@ -1,8 +1,8 @@
 import json
 from subprocess import check_output, CalledProcessError
 from time import sleep
-from helpers.logger import setup_logger
-logger = setup_logger(__name__, logging.INFO)
+from helpers import setup_logger
+logger = setup_logger(__name__, "info")
 """
 #Not yet implemented:
   -t, --ntsc                        Use NTSC frequency for HDMI mode (e.g. 59.94Hz rather than 60Hz)
@@ -67,7 +67,7 @@ def status():
        result["tv_mode"] = mode
        result["ratio"] = ratio
     else:
-       logger.warning("TVSERVICE APP WARNING: Unexpected tvservice -s output {}".format(output))
+       logger.warning("Unexpected tvservice -s output: {}".format(output))
        result["mode"] = "UNKNOWN"
     return result
 

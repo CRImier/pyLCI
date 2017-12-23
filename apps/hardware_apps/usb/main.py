@@ -1,6 +1,6 @@
-import logging
 
-from helpers.logger import setup_logger
+
+from helpers import setup_logger
 
 menu_name = "USB control"
 
@@ -9,7 +9,7 @@ from ui import Menu, Printer
 from time import sleep
 import os
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 i = None
 o = None
 

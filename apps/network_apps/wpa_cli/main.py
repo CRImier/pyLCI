@@ -1,6 +1,6 @@
-import logging
 
-from helpers.logger import setup_logger
+
+from helpers import setup_logger
 
 menu_name = "Wireless"
 
@@ -15,7 +15,7 @@ from ui import Menu, Printer, MenuExitException, NumpadCharInput, Refresher, Dia
 
 import wpa_cli
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 def show_scan_results():
     network_menu_contents = []
     networks = wpa_cli.get_scan_results()

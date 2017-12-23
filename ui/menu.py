@@ -1,4 +1,5 @@
-import logging
+from helpers import setup_logger
+logger = setup_logger(__name__, "warning")
 from traceback import print_exc
 
 from base_list_ui import BaseListBackgroundableUIElement, to_be_foreground
@@ -71,7 +72,7 @@ class Menu(BaseListBackgroundableUIElement):
         |Is typically used as a callback from input event processing thread.
         |After callback's execution is finished, sets the keymap again and refreshes the screen.
         |If MenuExitException is returned from the callback, exits menu."""
-        logging.debug("entry selected")
+        logger.debug("entry selected")
         self.to_background()
         entry = self.contents[self.pointer]
         if len(entry) > 1:

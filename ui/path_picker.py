@@ -1,9 +1,10 @@
 import os
-import logging
 
 from base_list_ui import BaseListBackgroundableUIElement, to_be_foreground
 from menu import Menu, MenuExitException
 from printer import Printer
+from helpers import setup_logger
+logger = setup_logger(__name__, "warning")
 
 class PathPicker(BaseListBackgroundableUIElement):
 
@@ -50,7 +51,7 @@ class PathPicker(BaseListBackgroundableUIElement):
         |After callback's execution is finished, sets the keymap again and refreshes the screen.
         |If menu has no elements, exits the menu.
         |If MenuExitException is returned from the callback, exits menu, too."""
-        logging.debug("element selected")
+        logger.debug("element selected")
         if len(self.contents) > 0:
             self.to_background()
             self.contents[self.pointer][1]()

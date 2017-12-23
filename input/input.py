@@ -2,16 +2,16 @@ from traceback import format_exc
 from threading import Thread, Event
 from time import sleep
 import importlib
-import logging
+
 import atexit
 import Queue
-from helpers.logger import setup_logger
+from helpers import setup_logger
 
 import inspect
 
 listener = None
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 
 class CallbackException(Exception):
     def __init__(self, errno=0, message=""):

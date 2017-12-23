@@ -1,6 +1,5 @@
 #!/usr/bin/env python2
 
-import logging
 from multiprocessing import Process, Pipe
 from time import sleep
 
@@ -9,6 +8,8 @@ import luma.emulator.device
 import pygame
 from luma.core.render import canvas
 
+from helpers import setup_logger
+logger = setup_logger(__name__, "warning")
 
 __EMULATOR_PROXY = None
 
@@ -86,9 +87,9 @@ class Emulator(object):
         try:
             self._event_loop()
         except KeyboardInterrupt:
-            logging.info('Caught KeyboardIterrupt')
+            logger.info('Caught KeyboardIterrupt')
         except:
-            logging.exception('Unknown exception during event loop')
+            logger.exception('Unknown exception during event loop')
             raise
         finally:
             self.child_conn.close()
@@ -135,23 +136,23 @@ class Emulator(object):
             )
 
             if self.cursor_enabled:
-                logging.debug('Drawing cursor with dims: %s', dims)
+                logger.debug('Drawing cursor with dims: %s', dims)
                 draw.rectangle(dims, outline='white')
 
             args = args[:self.rows]
-            logging.debug("type(args)=%s", type(args))
+            logger.debug("type(args)=%s", type(args))
 
             for line, arg in enumerate(args):
-                logging.debug('line %s: arg=%s, type=%s', line, arg, type(arg))
+                logger.debug('line %s: arg=%s, type=%s', line, arg, type(arg))
                 # Emulator only:
                 # Passing anything except a string to draw.text will cause
                 # PIL to throw an exception.  Warn 'em here via the log.
                 if not isinstance(arg, basestring):
-                    logging.warning('emulator only likes strings fed to '
+                    logger.warning('emulator only likes strings fed to '
                         'draw.text, prepare for exception')
                 y = (line * self.char_height - 1) if line != 0 else 0
                 draw.text((2, y), arg, fill='white')
-                logging.debug('after draw.text(2, %d), %s', y, arg)
+                logger.debug('after draw.text(2, %d), %s', y, arg)
 
     def display_image(self, image):
         self.device.display(image)

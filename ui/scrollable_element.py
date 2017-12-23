@@ -1,17 +1,17 @@
 from __future__ import division
 
-import logging
+
 from textwrap import wrap
 from time import sleep, time
 
 from PIL.ImageDraw import ImageDraw
 from luma.core.render import canvas
 
-from helpers.logger import setup_logger
+from helpers import setup_logger
 from ui.utils import to_be_foreground, clamp
 
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 
 
 class Scrollbar(object):

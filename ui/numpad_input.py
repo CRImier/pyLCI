@@ -1,14 +1,14 @@
 from time import sleep
 from copy import copy
-import logging
+
 from functools import wraps
 from threading import Lock
 
-from helpers.logger import setup_logger
+from helpers import setup_logger
 from ui.utils import to_be_foreground, check_value_lock
 
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 def check_position_overflow(condition):
     """Returns a decorator which can check for different ways of "self.position" counter overflow """
     def decorator(func):

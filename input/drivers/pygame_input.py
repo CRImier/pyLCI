@@ -1,14 +1,14 @@
-import logging
+
 from time import sleep
 
 import pygame
 
 import emulator
-from helpers.logger import setup_logger
+from helpers import setup_logger
 from skeleton import InputSkeleton
 
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 USED_KEYS = [
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
     'UP', 'DOWN', 'LEFT', 'RIGHT', 'RETURN', 'PAGEUP', 'PAGEDOWN'

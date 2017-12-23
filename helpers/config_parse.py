@@ -4,10 +4,10 @@ from __future__ import print_function
 import json
 import os
 import shutil
-import logging
+
 
 from helpers.logger import setup_logger
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 
 def read_config(config_path):
     with open(config_path, 'r') as f:

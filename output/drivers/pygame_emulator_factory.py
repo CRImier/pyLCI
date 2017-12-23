@@ -4,9 +4,9 @@ sets minimum attributes,
 creates device
 returns it to caller
 """
-import logging
+
 import luma.emulator.device
-from helpers.logger import setup_logger
+from helpers import setup_logger
 
 # ignore PIL debug messages
 

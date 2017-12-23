@@ -1,9 +1,9 @@
-import logging
+
 import subprocess
 
-from helpers.logger import setup_logger
+from helpers import setup_logger
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 
 def list_units():
     units = []

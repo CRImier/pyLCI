@@ -1,12 +1,12 @@
-import logging
 
-from helpers.logger import setup_logger
+
+from helpers import setup_logger
 
 menu_name = "DialogBox test" #App name as seen in main menu while using the system
 
 from ui import DialogBox
 
-logger = setup_logger(__name__, logging.INFO)
+logger = setup_logger(__name__, "info")
 #Some globals for us
 i = None #Input device
 o = None #Output device

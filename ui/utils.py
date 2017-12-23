@@ -1,10 +1,10 @@
-import logging
+
 from functools import wraps
 from time import time, sleep
 
-from helpers.logger import setup_logger
+from helpers import setup_logger
 
-logger = setup_logger(__name__, logging.INFO)
+logger = setup_logger(__name__, "info")
 
 
 def to_be_foreground(func):

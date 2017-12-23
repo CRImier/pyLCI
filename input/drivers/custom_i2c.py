@@ -1,11 +1,11 @@
-import logging
+
 
 import smbus
 from time import sleep
 
-from helpers.logger import setup_logger
+from helpers import setup_logger
 from skeleton import InputSkeleton
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 
 class InputDevice(InputSkeleton):
     default_mapping = [

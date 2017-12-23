@@ -8,12 +8,12 @@ from time import sleep
 from PIL import ImageFont
 from luma.core.render import canvas as luma_canvas
 
-from helpers.logger import setup_logger
+from helpers import setup_logger
 from utils import to_be_foreground, clamp_list_index
 
-import logging
 
-logger = setup_logger(__name__, logging.WARNING)
+
+logger = setup_logger(__name__, "warning")
 
 #Documentation building process has problems with this import
 try:

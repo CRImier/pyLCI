@@ -1,12 +1,12 @@
-import logging
+
 
 from evdev import InputDevice as HID, list_devices, ecodes
 from time import sleep
 
-from helpers.logger import setup_logger
+from helpers import setup_logger
 from skeleton import InputSkeleton
 
-logger = setup_logger(__name__, logging.WARNING)
+logger = setup_logger(__name__, "warning")
 def get_input_devices():
     """Returns list of all the available InputDevices"""
     devices = []

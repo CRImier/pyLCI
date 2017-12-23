@@ -1,12 +1,12 @@
 # coding=utf-8
-import logging
+
 
 from apps.zero_app import ZeroApp
-from helpers.logger import setup_logger
+from helpers import setup_logger
 from ui import NumberedMenu
 import random
 
-logger = setup_logger(__name__, logging.INFO)
+logger = setup_logger(__name__, "info")
 class NumberedInputTestApp(ZeroApp):
 
     def __init__(self, i, o):
