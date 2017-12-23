@@ -1,6 +1,7 @@
 import json
 from subprocess import check_output, CalledProcessError
 from time import sleep
+from helpers.logger import setup_logger
 logger = setup_logger(__name__, logging.INFO)
 """
 #Not yet implemented:
