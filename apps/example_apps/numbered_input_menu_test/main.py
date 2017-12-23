@@ -1,9 +1,12 @@
 # coding=utf-8
+import logging
 
 from apps.zero_app import ZeroApp
+from helpers.logger import setup_logger
 from ui import NumberedMenu
 import random
 
+logger = setup_logger(__name__, logging.INFO)
 class NumberedInputTestApp(ZeroApp):
 
     def __init__(self, i, o):
@@ -17,7 +20,7 @@ class NumberedInputTestApp(ZeroApp):
 
     @staticmethod
     def print_hello(index, hello):
-        print("{} {}".format(index, hello))
+        logger.info("{} {}".format(index, hello))
 
     def on_start(self):
         super(NumberedInputTestApp, self).on_start()

@@ -1,13 +1,17 @@
 # coding=utf-8
 import argparse
 import doctest
+import logging
 import os
 
-from apps import ZeroApp
-from ui import NumberedMenu, Listbox
-
 from address_book import AddressBook, ZPUI_HOME, Contact
+from apps import ZeroApp
+from helpers.logger import setup_logger
+from ui import NumberedMenu, Listbox
 from vcard_converter import VCardContactConverter
+
+logger = setup_logger(__name__, logging.INFO)
+
 
 class ContactApp(ZeroApp):
     def __init__(self, i, o):
@@ -49,7 +53,7 @@ def load_vcf(folder):
     for contact in contacts:
         address_book.add_contact(contact)
     address_book.save_to_file()
-    print("Saved to {}".format(address_book.get_save_file_path()))
+    logger.info("Saved to {}".format(address_book.get_save_file_path()))
 
 
 if __name__ == '__main__':
@@ -60,7 +64,7 @@ if __name__ == '__main__':
     arguments = parser.parse_args()
 
     if arguments.test:
-        print("Running tests...")
+        logger.info("Running tests...")
         doctest.testmod()
 
     load_vcf(arguments.src_folder)

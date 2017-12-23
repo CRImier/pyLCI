@@ -4,9 +4,11 @@ import logging
 from functools import wraps
 from threading import Lock
 
+from helpers.logger import setup_logger
 from ui.utils import to_be_foreground, check_value_lock
 
 
+logger = setup_logger(__name__, logging.WARNING)
 def check_position_overflow(condition):
     """Returns a decorator which can check for different ways of "self.position" counter overflow """
     def decorator(func):
@@ -138,7 +140,7 @@ class NumpadCharInput():
         #This function processes all keycodes that are not in the keymap - such as number keycodes
         header = "KEY_"
         key = key_name[len(header):]
-        if self.debug: print("Received "+key_name)
+        if self.debug: logger.debug("Received "+key_name)
         if key in self.mapping.keys():
             #It's one of the keys we can process
             #NO INSERT IN MIDDLE/START SUPPORT

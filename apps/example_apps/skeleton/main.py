@@ -1,3 +1,7 @@
+import logging
+
+from helpers.logger import setup_logger
+
 menu_name = "Skeleton app"  # App name as seen in main menu while using the system
 
 from subprocess import call
@@ -5,9 +9,11 @@ from time import sleep
 
 from ui import Menu, Printer
 
+logger = setup_logger(__name__, logging.INFO)
+
 def call_internal():
     Printer(["Calling internal", "command"], i, o, 1)
-    print("Success")
+    logger.info("Success")
 
 def call_external():
     Printer(["Calling external", "command"], i, o, 1)

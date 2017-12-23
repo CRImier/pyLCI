@@ -10,6 +10,10 @@ import shlex
 
 import smspdu
 
+from helpers.logger import setup_logger
+
+logger = setup_logger(__name__, logging.WARNING)
+
 #Personal data protection technique:
 #All the logging statements&prints that can contain private data
 #are to be marked with PDATA. If the data is to be sent to developers,
@@ -45,7 +49,7 @@ class Phone():
         self.modem = modem
         self.modem.update_state_cb = self.state_update_cb
         self.modem_state = copy(self.modem.status)
-        print(self.modem_state)
+        logger.debug(self.modem_state)
         self.modem.init()
         self.modem.start_monitor()
 
@@ -138,7 +142,7 @@ class Modem():
         self.port = Serial(self.serial_path, 115200, timeout=self.serial_timeout)
         self.at()
         self.enable_verbosity()
-        print("Battery voltage is: {}".format(self.get_voltage()))
+        logger.debug("Battery voltage is: {}".format(self.get_voltage()))
         self.enable_clcc()
         self.enable_clip()
         self.set_message_mode("pdu")
@@ -259,7 +263,7 @@ class Modem():
 
     def on_incoming_message(self, cmti_line):
         #New message signal
-        print("You've got mail! Line: {}".format(cmti_line[len("+CMTI:"):]).strip())
+        logger.debug("You've got mail! Line: {}".format(cmti_line[len("+CMTI:"):]).strip())
         self.read_all_messages()
 
     def read_all_messages(self):
@@ -268,25 +272,25 @@ class Modem():
         output = self.at_command("AT+CMGL")
         self.serial_timeout = prev_timeout
         if len(output) % 2 == 1:
-            print("CMGL output lines not in pairs?")
-            print("PDATA: {}".format(repr(output)))
+            logger.warning("CMGL output lines not in pairs?")
+            logger.debug("PDATA: {}".format(repr(output)))
             return False
         cmgl_header = "+CMGL: "
         for i in range(len(output)/2):
             header = output[i*2]
             if not header.startswith(cmgl_header):
-                print("Line presumed to be CMGL doesn't start with CMGL header!")
+                logger.warning("Line presumed to be CMGL doesn't start with CMGL header!")
                 continue
             id, x, x, pdu_len = header[len(cmgl_header):].split(",")
             smsc_pdu_str = output[(i*2)+1]
             self.decode_message(smsc_pdu_str, pdu_len, id)
 
     def decode_message(self, smsc_pdu_str, pdu_len, id):
-        print("Reading message {}".format(id))
+        logger.debug("Reading message {}".format(id))
         pdu_len = int(pdu_len) #Just in case
         smsc_len = len(smsc_pdu_str) - pdu_len*2 #We get PDU length in octets
         if smsc_len == 0:
-            print("No SMSC in PDU - seems like it can happen!")
+            logger.warning("No SMSC in PDU - seems like it can happen!")
         pdu_str = smsc_pdu_str[smsc_len:] #Discarding SMSC info
         #SMSC info might actually be useful in the future - maybe its spoofing could be detected? Does it even happen?
         smspdu.pdu.dump(pdu_str)
@@ -294,7 +298,7 @@ class Modem():
     #Non-CLCC exclusive callbacks
     #(the non-CLCC path might not even work that well, for what I know)
     def on_ring(self):
-        print("Ring ring ring bananaphone!")
+        logger.debug("Ring ring ring bananaphone!")
 
     #AT command-controlled modem settings and simple functions
 
@@ -351,12 +355,12 @@ class Modem():
         clcc_line = clcc_line.strip()
         elements = clcc_line.split(',')
         if len(elements) < 5:
-            print("Unrecognized number of CLCC elements!")
-            print("PDATA: "+repr(elements))
+            logger.debug("Unrecognized number of CLCC elements!")
+            logger.debug("PDATA: "+repr(elements))
             return
         elif len(elements) > 8:
-            print("Too much CLCC elements!")
-            print("PDATA: "+repr(elements))
+            logger.warning("Too much CLCC elements!")
+            logger.warning("PDATA: "+repr(elements))
             elements = elements[:8]
         if len(elements) > 7: #Elements 5 and 6 are present
             self.set_callerid(elements[5], elements[6])
@@ -373,11 +377,11 @@ class Modem():
         if len(elements) < 2:
             raise ATError(expected="valid CLIP string with >2 elements", received=line)
         elif len(elements) < 6:
-            print("Less than 6 CLIP elements, noting")
-            print("PDATA: "+repr(elements))
+            logger.warning("Less than 6 CLIP elements, noting")
+            logger.warning("PDATA: "+repr(elements))
         elif len(elements) > 6:
-            print("Too much CLIP elements, what's wrong?!")
-            print("PDATA: "+repr(elements))
+            logger.error("Too much CLIP elements, what's wrong?!")
+            logger.error("PDATA: "+repr(elements))
             elements = elements[:6]
         number = elements[0]
         type_id = elements[1]
@@ -389,7 +393,7 @@ class Modem():
                              "145":"international",
                              "177":"network-specific"}
         if type_id not in clip_type_mapping.keys():
-            print("PDATA: CLIP type id {} not found in type mapping!".format(type_id))
+            logger.error("PDATA: CLIP type id {} not found in type mapping!".format(type_id))
             type = "unknown"
         else:
             type = clip_type_mapping[type_id]
@@ -410,18 +414,18 @@ class Modem():
         for i in range(4):
             if not has_nonascii(clcc_line) or not is_csv(clcc_line): 
                 break
-            print("Garbled call info line! Try {}, line: {}".format(i, clcc_line))
+            logger.error("Garbled call info line! Try {}, line: {}".format(i, clcc_line))
             sleep(1)
             clcc_response = self.at_command("AT+CLCC", nook=True)
-            print(repr(lines))
+            logger.error(repr(lines))
             for line in lines:
                 if line.startswith(self.clcc_header):
                     clcc_line = line
                 else:
                     self.queue_unexpected_data(line)
         if has_nonascii(clcc_line) or not is_csv(clcc_line):
-            print("Still garbled CLCC line!"); return
-        #print("Call info OK, line: {}".format(repr(clcc_line[len(self.clcc_header):])).strip())
+            logger.error("Still garbled CLCC line!"); return
+        logger.info("Call info OK, line: {}".format(repr(clcc_line[len(self.clcc_header):])).strip())
         self.process_clcc(clcc_line)
 
     def on_clip(self, line):
@@ -523,19 +527,18 @@ class Modem():
         if self.linesep[::-1] in "".join(data):
             lines = "".join(data).split(self.linesep[::-1])
         logging.debug("Unexpected line: {}".format(data))
-        print("Unexpected line: {}".format(data))
-        
+
     #The monitor thread - it receives data from the modem and calls callbacks
 
     def monitor(self):
         while self.should_monitor.isSet():
-            #print("Monitoring...")
+            logger.info("Monitoring...")
             if not self.executing_command.isSet():
                 #First, the serial port
                 #print("Reading data through serial!")
                 data = self.port.read(self.read_buffer_size)
                 if data: 
-                    print("Got data through serial!")
+                    logger.debug("Got data through serial!")
                     self.process_incoming_data(data)
                 #Then, the queue of unexpected messages received from other commands
                 #print("Reading data from queue!")
@@ -544,7 +547,7 @@ class Modem():
                 except Empty:
                     pass
                 else:
-                    print("Got data from queue!")
+                    logger.debug("Got data from queue!")
                     self.process_incoming_data(data)
             #print("Got to sleep")
             sleep(self.serial_timeout)
@@ -553,7 +556,7 @@ class Modem():
             #    print(modem.at_command("AT+CPAS"))
             #except:
             #    print("CPAS exception")
-        print("Stopped monitoring!")
+        logger.info("Stopped monitoring!")
 
     def start_monitor(self):
         self.should_monitor.set()

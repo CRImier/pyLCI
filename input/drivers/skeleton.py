@@ -1,4 +1,9 @@
+import logging
 import threading
+
+from helpers.logger import setup_logger
+
+logger = setup_logger(__name__, logging.WARNING)
 
 class InputSkeleton():
     """Base class for input devices. Expectations from children:
@@ -18,8 +23,9 @@ class InputSkeleton():
             self.mapping = self.default_mapping
         try:
             self.init_hw()
-        except AtrributeError:
-            print("init_hw function not found!")
+        except Exception as e:
+            logger.error("init_hw function not found!")
+            logger.exception(e)
         if threaded:
             self.start_thread()
 
@@ -33,7 +39,7 @@ class InputSkeleton():
 
     def send_key(self, key):
         """A hook to be overridden by ``InputListener``. Otherwise, prints out key names as soon as they're pressed so is useful for debugging (to test things, just launch the driver as ``python driver.py``)"""
-        print(key)
+        logger.debug(key)
 
     def start_thread(self):
         """Starts a thread with ``start`` function as target."""

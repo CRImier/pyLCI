@@ -16,12 +16,17 @@ as well as to discuss application UX."""
 #https://github.com/jamesacampbell/python-examples/
 #http://stackoverflow.com/questions/18561778/how-do-i-get-the-ip-address-of-the-tor-entry-node-in-use
 #... some other places - lost links =(
+import logging
 
 from stem.control import Controller
 from stem import Signal, CircStatus
 import requests
 import socks
 import socket
+
+from helpers.logger import setup_logger
+
+logger = setup_logger(__name__, logging.INFO)
 
 socks.set_default_proxy(socks.SOCKS5, "127.0.0.1", 9050)
 
@@ -102,11 +107,11 @@ def tor_is_available():
 
 def main():
     info = get_traffic_info
-    print("My Tor relay has read %s bytes and written %s." % info )
-    print(get_external_ip())
-    print(get_entry_ips())
+    logger.info("My Tor relay has read %s bytes and written %s." % info )
+    logger.info(get_external_ip())
+    logger.info(get_entry_ips())
     ddg = get_duckduckgo()	
-    print(ddg.content[:100])
+    logger.debug(ddg.content[:100])
 
     #desc = controller.get_hidden_service_descriptor('3g2upl4pq6kufc4m') #not supported in Raspbian Tor
   

@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
-
+import logging
 from subprocess import call
 from apps.zero_app import ZeroApp
+from helpers.logger import setup_logger
 from ui import Menu, Printer
+
+
+logger = setup_logger(__name__, logging.INFO)
 
 
 class SkeletonApp(ZeroApp):
@@ -22,7 +26,7 @@ class SkeletonApp(ZeroApp):
 
     def call_internal(self):
         Printer(["Calling internal", "command"], self.i, self.o, 1)
-        print("Success")
+        logger.info("Success")
 
     def call_external(self):
         Printer(["Calling external", "command"], self.i, self.o, 1)

@@ -1,7 +1,12 @@
-menu_name = "Char input app" 
+import logging
+
+from helpers.logger import setup_logger
+
+menu_name = "Char input app"
 
 from ui import NumpadCharInput as CharInput, NumpadNumberInput as NumberInput
 
+logger = setup_logger(__name__, logging.INFO)
 #Some globals for us
 i = None #Input device
 o = None #Output device
@@ -9,9 +14,9 @@ o = None #Output device
 #Callback for ZPUI. It gets called when application is activated in the main menu
 def callback():
     char_input = CharInput(i, o, message="Input characters")
-    print(repr(char_input.activate()))
+    logger.info(repr(char_input.activate()))
     number_input = NumberInput(i, o, message="Input numbers")
-    print(repr(number_input.activate()))
+    logger.info(repr(number_input.activate()))
 
 def init_app(input, output):
     global i, o

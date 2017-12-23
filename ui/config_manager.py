@@ -4,6 +4,10 @@ import logging
 import traceback
 import collections
 
+from helpers.logger import setup_logger
+
+logger = setup_logger(__name__, logging.WARNING)
+
 _UI_CONFIG_MANAGER = None
 
 def get_ui_config_manager():
@@ -56,9 +60,9 @@ class UIConfigManager():
         file_path = os.path.join(path, self.base_config_name)
         try:
             base_config = self.load_config(file_path)
-        except:
-            print("Exception while loading base config!".format(file_path))
-            traceback.print_exc()
+        except Exception as e:
+            logger.error("Exception while loading base config!".format(file_path))
+            logger.exception(e)
             base_config = {}
         user_configs = []
         for file in files:
@@ -69,9 +73,9 @@ class UIConfigManager():
             file_path = os.path.join(path, file)
             try:
                 config = self.load_config(file_path)
-            except:
-                print("Exception while loading {} config".format(file_path))
-                traceback.print_exc()
+            except Exception as e:
+                logger.error("Exception while loading {} config".format(file_path))
+                logger.exception(e)
             else:
                 base_config = self.update_config(base_config, config)
         self.global_config = base_config

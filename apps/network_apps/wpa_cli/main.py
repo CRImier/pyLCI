@@ -1,3 +1,7 @@
+import logging
+
+from helpers.logger import setup_logger
+
 menu_name = "Wireless"
 
 i = None
@@ -11,6 +15,7 @@ from ui import Menu, Printer, MenuExitException, NumpadCharInput, Refresher, Dia
 
 import wpa_cli
 
+logger = setup_logger(__name__, logging.WARNING)
 def show_scan_results():
     network_menu_contents = []
     networks = wpa_cli.get_scan_results()
@@ -83,11 +88,12 @@ def etdn_runner():
     saved_networks = wpa_cli.list_configured_networks()
     for network in saved_networks:
         if network["flags"] == "[TEMP-DISABLED]":
-            print("Network {} is temporarily disabled, re-enabling".format(network["ssid"]))
+            logger.warning("Network {} is temporarily disabled, re-enabling".format(network["ssid"]))
             try:
                 enable_network(network["network_id"])
-            except:
-                print(format_exc())
+            except Exception as e:
+                logger.error(format_exc())
+                logger.exception(e)
     etdn_thread = None
 
 def scan(delay = True):

@@ -4,9 +4,11 @@ from time import sleep
 import pygame
 
 import emulator
+from helpers.logger import setup_logger
 from skeleton import InputSkeleton
 
 
+logger = setup_logger(__name__, logging.WARNING)
 USED_KEYS = [
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
     'UP', 'DOWN', 'LEFT', 'RIGHT', 'RETURN', 'PAGEUP', 'PAGEDOWN'
@@ -35,7 +37,7 @@ class InputDevice(InputSkeleton):
 
         #TODO: debug and fix race condition
         while not hasattr(self, "emulator"):
-            print("Input emulator not yet ready (a bug, TOFIX)")
+            logger.debug("Input emulator not yet ready (a bug, TOFIX)")
             sleep(0.1)
 
         while not self.stop_flag:

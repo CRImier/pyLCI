@@ -1,5 +1,10 @@
+import logging
 from subprocess import check_output, CalledProcessError
 from time import sleep
+
+from helpers.logger import setup_logger
+
+logger = setup_logger(__name__, logging.WARNING)
 
 #wpa_cli related functions and objects
 def wpa_cli_command(*command):
@@ -35,13 +40,13 @@ def connect_new_network(network_info):
     #Then, if it's an open network, just connecting
     if is_open_network(network_info):
         network_id = add_network()
-        print(set_network(network_id, 'ssid', '"'+network_info['ssid']+'"'))
+        logger.info(set_network(network_id, 'ssid', '"'+network_info['ssid']+'"'))
         set_network(network_id, 'key_mgmt', 'NONE')
         select_network(network_id)
         return True
     #Else, there's not enough implemented as for now
     if not network_found:
-        print("Hell, I dunno.")
+        logger.warning("Hell, I dunno.")
         return False  
 
 def is_open_network(network_info):

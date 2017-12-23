@@ -9,7 +9,6 @@ from helpers.logger import setup_logger
 
 import inspect
 
-
 listener = None
 
 logger = setup_logger(__name__, logging.WARNING)
@@ -146,9 +145,10 @@ class InputListener():
         if callable(self.backlight_cb):
             try:
                 backlight_was_off = self.backlight_cb()
-            except:
-                print("Exception while calling the backlight callback!")
-                print(format_exc())
+            except Exception as e:
+                logger.error("Exception while calling the backlight callback!")
+                print(format_exc())# todo : to be removed ?
+                logger.exception(e)
             else:
                 #If backlight was off, ignore the keypress
                 if backlight_was_off is True:

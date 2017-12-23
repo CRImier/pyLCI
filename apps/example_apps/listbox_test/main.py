@@ -1,7 +1,12 @@
+import logging
+
+from helpers.logger import setup_logger
+
 menu_name = "Listbox test" #App name as seen in main menu while using the system
 
 from ui import Listbox
 
+logger = setup_logger(__name__, logging.INFO)
 #Some globals for us
 i = None #Input device
 o = None #Output device
@@ -11,7 +16,7 @@ def callback():
     ["Number", 101],
     ["String", "stringstring"],
     ["Tuple", (1, 2, 3)]]
-    print(Listbox(listbox_contents, i, o).activate())
+    logger.info(Listbox(listbox_contents, i, o).activate())
 
 def init_app(input, output):
     global i, o

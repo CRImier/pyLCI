@@ -1,4 +1,8 @@
-menu_name = "Phone" 
+import logging
+
+from helpers.logger import setup_logger
+
+menu_name = "Phone"
 
 from subprocess import call as os_call
 from time import sleep
@@ -9,6 +13,9 @@ from ui.experimental import NumberKeypadInputLayer
 from helpers import BackgroundRunner, ExitHelper
 
 from phone import Phone, Modem, ATError
+
+
+logger = setup_logger(__name__, logging.WARNING)
 
 i = None
 o = None
@@ -48,7 +55,7 @@ def call(number):
         phone.call(number)
     except ATError as e:
         Printer(ffs("Calling fail! "+repr(e), o.cols), i, o, 0)
-    print("Function stopped executing")
+    logger.error("Function stopped executing")
  
 def call_view():
     keymap = {"KEY_ANSWER":[call, "value"]}
@@ -96,7 +103,7 @@ def init_app(input, output):
         #This not good enough - either make the systemctl library system-wide or add more checks
         os_call(["systemctl", "stop", "serial-getty@ttyAMA0.service"])
     except Exception as e:
-        print(repr(e))
+        logger.exception(e)
         #import pdb;pdb.set_trace()
     init = BackgroundRunner(init_hardware)
     init.run()

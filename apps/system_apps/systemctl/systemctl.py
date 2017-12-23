@@ -1,5 +1,9 @@
+import logging
 import subprocess
 
+from helpers.logger import setup_logger
+
+logger = setup_logger(__name__, logging.WARNING)
 
 def list_units():
     units = []
@@ -17,7 +21,7 @@ def list_units():
             name = name.replace('\\x2d', '-') #Replacing unicode dashes with normal ones
             units.append({"name":name, "load":loaded, "active":active, "sub":details, "description":description, "type":type, "basename":basename})
         else:
-            print("Systemctl: couldn't parse line: {}".format(repr(line)))
+            logger.error("Systemctl: couldn't parse line: {}".format(repr(line)))
     return units         
                      
 def action_unit(action, unit):

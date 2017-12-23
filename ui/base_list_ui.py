@@ -25,8 +25,9 @@ else:
     cm.set_path("ui/configs")
     try:
         config = cm.get_global_config()
-    except OSError:
-        print("Config files not available, running under ReadTheDocs?")
+    except OSError as e:
+        logger.error("Config files not available, running under ReadTheDocs?")
+        logger.exception(e)
 
 
 class BaseListUIElement():
@@ -77,7 +78,7 @@ class BaseListUIElement():
             view_config = config["custom_views"][self.name]
             if isinstance(view_config, basestring):
                 if view_config not in self.views:
-                    print('Unknown view "{}" given for UI element "{}"!'.format(view_config, self.name))
+                    logger.warning('Unknown view "{}" given for UI element "{}"!'.format(view_config, self.name))
                 else:
                     view = self.views[view_config]
             elif isinstance(view_config, dict):
@@ -85,12 +86,12 @@ class BaseListUIElement():
                 #This is the part where fine-tuning views will be possible, 
                 #once passing args&kwargs is implemented, that is
             else:
-                print("Custom view description can only be a string or a dictionary; is {}!".format(type(view_config)))
+                logger.error("Custom view description can only be a string or a dictionary; is {}!".format(type(view_config)))
         elif not view and "default" in config:
             view_config = config["default"]
             if isinstance(view_config, basestring):
                 if view_config not in self.views:
-                    print('Unknown view "{}" given for UI element "{}"!'.format(view_config, self.name))
+                    logger.warning('Unknown view "{}" given for UI element "{}"!'.format(view_config, self.name))
                 else: 
                     view = self.views[view_config]
             elif isinstance(view_config, dict):
@@ -251,7 +252,7 @@ class BaseListUIElement():
     def select_entry(self):
         """To be overridden by child UI elements. Is executed when ENTER is pressed
            in UI element."""
-        print(self.contents[self.pointer])
+        logger.debug(self.contents[self.pointer])
 
     #Working with the keymap
 
