@@ -183,6 +183,10 @@ class TextProgressBar(ProgressIndicator):
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
         self._progress = 0  # 0-1 range
 
+    def set_message(self, new_message):
+        self.message = new_message
+        self.refresh()
+
     def get_progress_percentage(self):
         return '{}%'.format(self.progress * 100)
 
