@@ -1,29 +1,31 @@
 """test for Checkbox"""
+import logging
+import os
 import unittest
+
 from mock import patch, Mock
 
-import os
-import sys
-
-from helpers import setup_logger
-from ui import Checkbox
 
 os.sys.path.append(os.path.dirname(os.path.abspath('.')))
+os.sys.path.append(os.path.dirname(os.path.abspath('..')))
 
-#set up logging
-
+from ui import Checkbox
+from helpers import setup_logger
 logger = setup_logger(__name__, "warning")
 
 
 def get_mock_input():
     return Mock()
 
+
 def get_mock_output(rows=2, cols=16):
     m = Mock()
     m.configure_mock(rows=rows, cols=cols, type=["char"])
     return m
 
+
 cb_name = "Test checkbox"
+
 
 class TestCheckbox(unittest.TestCase):
     """tests dialog box class"""
@@ -44,58 +46,62 @@ class TestCheckbox(unittest.TestCase):
         """tests whether the exit label of one Checkbox leaks into another"""
         i = get_mock_input()
         o = get_mock_output()
-        c1 = Checkbox([["a", "1"]], i, o, name=cb_name+"1", final_button_name = "Name1")
-        c2 = Checkbox([["b", "2"]], i, o, name=cb_name+"2", final_button_name = "Name2")
-        c3 = Checkbox([["c", "3"]], i, o, name=cb_name+"3")
-        assert(c1.exit_entry != c2.exit_entry)
-        assert(c2.exit_entry != c3.exit_entry)
-        assert(c1.exit_entry != c3.exit_entry)
+        c1 = Checkbox([["a", "1"]], i, o, name=cb_name + "1", final_button_name="Name1")
+        c2 = Checkbox([["b", "2"]], i, o, name=cb_name + "2", final_button_name="Name2")
+        c3 = Checkbox([["c", "3"]], i, o, name=cb_name + "3")
+        assert (c1.exit_entry != c2.exit_entry)
+        assert (c2.exit_entry != c3.exit_entry)
+        assert (c1.exit_entry != c3.exit_entry)
 
     def test_left_key_returns_none(self):
         num_elements = 3
-        contents = [["A"+str(i), "a"+str(i)] for i in range(num_elements)]
+        contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
         cb = Checkbox(contents, get_mock_input(), get_mock_output(), name=cb_name)
         cb.refresh = lambda *args, **kwargs: None
 
-        #Checking at the start of the list
+        # Checking at the start of the list
         def scenario():
-            cb.deactivate() #KEY_LEFT
+            cb.deactivate()  # KEY_LEFT
             assert not cb.in_foreground
+
         with patch.object(cb, 'idle_loop', side_effect=scenario) as p:
             return_value = cb.activate()
         assert return_value is None
-        
-        #Checking at the end of the list
+
+        # Checking at the end of the list
         def scenario():
             for i in range(num_elements):
-                cb.move_down() #KEY_DOWN x3
-            cb.deactivate() #KEY_LEFT
+                cb.move_down()  # KEY_DOWN x3
+            cb.deactivate()  # KEY_LEFT
             assert not cb.in_foreground
+
         with patch.object(cb, 'idle_loop', side_effect=scenario) as p:
             return_value = cb.activate()
         assert return_value is None
 
     def test_enter_on_last_returns_right(self):
         num_elements = 3
-        contents = [["A"+str(i), "a"+str(i)] for i in range(num_elements)]
+        contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
         cb = Checkbox(contents, get_mock_input(), get_mock_output(), name=cb_name)
         cb.refresh = lambda *args, **kwargs: None
 
-        #Checking at other elements - shouldn't return
+        # Checking at other elements - shouldn't return
         def scenario():
-            cb.select_entry() #KEY_ENTER
-            assert cb.in_foreground #Should still be active
-            cb.deactivate() #because is not deactivated yet and would idle loop otherwise
+            cb.select_entry()  # KEY_ENTER
+            assert cb.in_foreground  # Should still be active
+            cb.deactivate()  # because is not deactivated yet and would idle loop otherwise
+
         with patch.object(cb, 'idle_loop', side_effect=scenario) as p:
             return_value = cb.activate()
         assert return_value is None
-        
-        #Scrolling to the end of the list and pressing Enter - should return a correct dict
+
+        # Scrolling to the end of the list and pressing Enter - should return a correct dict
         def scenario():
             for i in range(num_elements):
-                cb.move_down() #KEY_DOWN x3
-            cb.select_entry() #KEY_ENTER
+                cb.move_down()  # KEY_DOWN x3
+            cb.select_entry()  # KEY_ENTER
             assert not cb.in_foreground
+
         with patch.object(cb, 'idle_loop', side_effect=scenario) as p:
             return_value = cb.activate()
         assert isinstance(return_value, dict)

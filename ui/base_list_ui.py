@@ -28,6 +28,7 @@ else:
     except OSError as e:
         logger.error("Config files not available, running under ReadTheDocs?")
         logger.exception(e)
+        config = {}
 
 
 class BaseListUIElement():
