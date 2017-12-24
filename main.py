@@ -144,7 +144,7 @@ def dump_threads(*args):
     Helpful signal handler for debugging threads
     """
 
-    logger.critical('\nSIGUSR received, dumping threads\n')
+    logger.critical('\nSIGUSR received, dumping threads!\n')
     for th in threading.enumerate():
         logger.critical(th)
         log = traceback.format_stack(sys._current_frames()[th.ident])
