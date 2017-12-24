@@ -61,6 +61,9 @@ class LoadingIndicator(Refresher):
         self.t.daemon = True
         self.t.start()
 
+    def stop(self):
+        self.deactivate()
+        self.t = None
 
 class ProgressIndicator(LoadingIndicator):
     """Abstract class for "loading indicator" elements where the progress can be measured.
