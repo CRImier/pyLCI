@@ -25,6 +25,7 @@ These classes are based on `Refresher`."""
 
 Rect = namedtuple('Rect', ['left', 'top', 'right', 'bottom'])
 
+
 class CenteredTextRenderer(object):
     # TODO: refactor into the ZPUI canvas wrapper that's bound to appear in the future.
     def draw_centered_text(self, draw, content, device_size):
@@ -78,7 +79,7 @@ class ProgressIndicator(LoadingIndicator):
 
 # ========================= concrete classes =========================
 
-class Throbber(LoadingIndicator):
+class Throbber(LoadingIndicator, CenteredTextRenderer):
     """A throbber is a circular LoadingIndicator, similar to those used on websites
     or in smartphones. Suitable for graphical displays and looks great on them!"""
 
@@ -89,6 +90,7 @@ class Throbber(LoadingIndicator):
         # We use a counter to make the rotation speed independent of the refresh-rate
         self.counter = Chronometer()
         self.start_time = 0
+        self.message = kwargs.pop("message") if "message" in kwargs else None
         LoadingIndicator.__init__(self, i, o, refresh_interval=0.01, *args, **kwargs)
 
     def activate(self):
@@ -101,9 +103,22 @@ class Throbber(LoadingIndicator):
         self.update_throbber_angle()
         c = canvas(self.o.device)
         c.__enter__()
+        draw = c.draw
+        self.draw_throbber(c, draw)
+        if self.message:
+            self.draw_message(draw)
+        self.o.display_image(c.image)
+
+    def draw_message(self, draw):
+        # type: (ImageDraw) -> None
+        bounds = self.get_centered_text_bounds(draw, self.message, self.o.device.size)
+
+        draw.text((bounds.left, 0), self.message, fill=True)  # Drawn top-centered (with margin)
+
+    def draw_throbber(self, c, draw):
+        c.__enter__()
         x, y = c.device.size
         radius = min(x, y) / 4
-        draw = c.draw
         draw.arc(
             (
                 x / 2 - radius, y / 2 - radius,
@@ -113,7 +128,6 @@ class Throbber(LoadingIndicator):
             end=(self._current_angle + self._current_range / 2) % 360,
             fill=True
         )
-        self.o.display_image(c.image)
 
     def update_throbber_angle(self):
         self.counter.update()
@@ -266,6 +280,8 @@ class GraphicalProgressBar(ProgressIndicator, CenteredTextRenderer):
 def ProgressBar(i, o, *args, **kwargs):
     """Instantiates and returns the appropriate kind of progress bar
     for the output device - either graphical or text-based."""
+    if not hasattr(o, "type"): # In case we're on an emulator...
+        return GraphicalProgressBar(i, o, *args, **kwargs)
     if "b&w-pixel" in o.type:
         return GraphicalProgressBar(i, o, *args, **kwargs)
     elif "char" in o.type:
