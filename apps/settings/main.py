@@ -109,8 +109,10 @@ class GenericUpdater(object):
                     pb.run_in_background()
                 pb.progress -= progress_per_step
             pb.stop()
+            logger.info("Update failed")
             PrettyPrinter("Update failed, try again later?", i, o, 3)
         else:
+            logger.info("Update successful!")
             sleep(0.5) #showing the completed progressbar
             pb.stop()
             PrettyPrinter("Update successful!", i, o, 3)
@@ -147,6 +149,7 @@ class GitUpdater(GenericUpdater):
             raise OSError()
 
     def do_check_revisions(self):
+        GitInterface.command("fetch")
         current_revision = GitInterface.get_head_for_branch("master")
         remote_revision = GitInterface.get_head_for_branch("origin/master")
         if current_revision == remote_revision:
