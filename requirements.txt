@@ -1,0 +1,7 @@
+luma.oled
+python-nmap
+smspdu
+zerophone_hw
+gpio
+vobject
+pytest
