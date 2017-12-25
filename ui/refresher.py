@@ -50,7 +50,7 @@ class Refresher(object):
 
     def to_foreground(self):
         """ Is called when refresher's ``activate()`` method is used, sets flags and performs all the actions so that refresher can display its contents and receive keypresses."""
-        logger.debug("refresher {0} in foreground".format(self.name))    
+        logger.debug("refresher {0} in foreground".format(self.name))
         self.in_background.set()
         self.in_foreground = True
         self.refresh()
@@ -64,11 +64,11 @@ class Refresher(object):
     def activate(self):
         """ A method which is called when refresher needs to start operating. Is blocking, sets up input&output devices, renders the refresher, periodically calls the refresh function&refreshes the screen while self.in_foreground is True, while refresher callbacks are executed from the input device thread."""
         logger.debug("refresher {0} activated".format(self.name))
-        self.to_foreground() 
+        self.to_foreground()
         counter = 0
         divisor = 20.0
         sleep_time = self.refresh_interval/divisor
-        while self.in_background.isSet(): 
+        while self.in_background.isSet():
             if self.in_foreground:
                 if counter == divisor:
                     counter = 0
@@ -94,11 +94,11 @@ class Refresher(object):
         |Is typically used as a wrapper for a callback from input event processing thread.
         |After callback's execution is finished, sets the keymap again and refreshes the refresher."""
         def wrapper(*args, **kwargs):
-            self.to_background() 
+            self.to_background()
             func(*args, **kwargs)
             logger.debug("Executed wrapped function: {}".format(func.__name__))
             if self.in_background.isSet():
-                self.to_foreground() 
+                self.to_foreground()
         wrapper.__name__ == func.__name__
         return wrapper
 
@@ -137,7 +137,7 @@ class Refresher(object):
             #Passed a tuple. Let's convert it into a list!
             data_to_display = list(data_to_display)
         elif isinstance(data_to_display, PIL.Image.Image):
-            if hasattr(self.o, "type") and not "b&w-pixel" in self.o.type:
+            if "b&w-pixel" not in self.o.type:
                 raise ValueError("The screen doesn't support showing images!")
             self.o.display_image(data_to_display)
             return
