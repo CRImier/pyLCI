@@ -2,6 +2,8 @@
 from threading import Event
 from time import sleep
 
+import PIL
+
 from helpers import setup_logger
 from ui.utils import to_be_foreground
 
@@ -129,6 +131,9 @@ class Refresher(object):
         elif isinstance(data_to_display, tuple):
             #Passed a tuple. Let's convert it into a list!
             data_to_display = list(data_to_display)
+        elif isinstance(data_to_display, PIL.Image.Image):
+            self.o.display_image(data_to_display)
+            return
         elif not isinstance(data_to_display, list):
             raise ValueError("refresh_function returned an unsupported type: {}!".format(type(data_to_display)))
         self.o.display_data(*data_to_display)
