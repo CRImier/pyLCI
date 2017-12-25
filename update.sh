@@ -41,7 +41,7 @@ if [ ${LOCAL} = ${REMOTE} ]; then
 fi
 
 # --ff-only Refuse to merge and exit with a non-zero status unless the current HEAD is already up to date or the merge can be resolved as a fast-forward.
-git pull origin master --ff-only
+git pull --ff-only origin master
 
 ${SUDO} pip install -r requirements.txt  # Make sure we have the latest dependencies installed
 
