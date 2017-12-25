@@ -5,7 +5,7 @@ from helpers import setup_logger
 
 logger = setup_logger(__name__, "info")
 
-class DialogBox():
+class DialogBox(object):
     """Implements a dialog box with given values (or some default ones if chosen)."""
 
     value_selected = False
