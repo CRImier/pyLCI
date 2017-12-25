@@ -10,7 +10,7 @@ except:
     import http.client as httplib
 
 # Using a TextProgressBar because only it shows a message on the screen for now
-from ui import Menu, PrettyPrinter, DialogBox, TextProgressBar
+from ui import Menu, PrettyPrinter, DialogBox, TextProgressBar, Listbox
 from helpers.logger import setup_logger
 
 menu_name = "Settings"
@@ -194,10 +194,23 @@ class GitUpdater(GenericUpdater):
         # requirements.txt now contains old requirements, let's install them back
         self.do_install_requirements()
 
+    def pick_branch(self):
+        #TODO: add branches dynamically instead of having a whitelist
+        available_branches = [["master"], ["devel"]]
+        branch = Listbox(available_branches, i, o, name="Git updater listbox").activate()
+        if branch:
+            try:
+                GitInterface.checkout(branch)
+            except:
+                PrettyPrinter("Couldn't check out the {} branch! Try resolving the conflict through the command-line.".format(branch), i, o, 3)
+            else:
+                PrettyPrinter("Now on {} branch!".format(branch), i, o, 2)
+                #TODO: run tests?
 
 def settings():
     git_updater = GitUpdater()
-    c = [["Update ZPUI", git_updater.update]]
+    c = [["Update ZPUI", git_updater.update],
+         ["Select branch", git_updater.pick_branch]]
     Menu(c, i, o, "ZPUI settings menu").activate()
 
 
