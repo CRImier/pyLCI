@@ -1,15 +1,14 @@
 """test for Checkbox"""
-import logging
 import os
 import unittest
 
-os.sys.path.append(os.path.dirname(os.path.abspath('..')))
-os.sys.path.append(os.path.dirname(os.path.abspath('.')))
 
-from config_manager import UIConfigManager
-
-from helpers import setup_logger
-logger = setup_logger(__name__, "warning")
+try:
+    from ui.config_manager import UIConfigManager
+except ImportError:
+    print("Absolute imports failed, trying relative imports")
+    os.sys.path.append(os.path.dirname(os.path.abspath('.')))
+    from config_manager import UIConfigManager
 
 
 class TestUIConfigManager(unittest.TestCase):

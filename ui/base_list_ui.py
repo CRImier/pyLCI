@@ -15,20 +15,21 @@ from utils import to_be_foreground, clamp_list_index
 
 logger = setup_logger(__name__, "warning")
 
+global_config = {}
+
 #Documentation building process has problems with this import
 try:
     import ui.config_manager as config_manager
 except (ImportError, AttributeError):
-    config = {}
+    pass
 else:
     cm = config_manager.get_ui_config_manager()
     cm.set_path("ui/configs")
     try:
-        config = cm.get_global_config()
+        global_config = cm.get_global_config()
     except OSError as e:
         logger.error("Config files not available, running under ReadTheDocs?")
         logger.exception(e)
-        config = {}
 
 
 class BaseListUIElement():
@@ -45,7 +46,7 @@ class BaseListUIElement():
 
     config_key = "base_list_ui"
 
-    def __init__(self, contents, i, o, name=None, entry_height=1, append_exit=True, exitable=True, scrolling=True, keymap=None):
+    def __init__(self, contents, i, o, name=None, entry_height=1, append_exit=True, exitable=True, scrolling=True, config=None, keymap=None):
         self.i = i
         self.o = o
         self.entry_height = entry_height
@@ -58,7 +59,8 @@ class BaseListUIElement():
                         "current_scrollable":False,
                         "counter":0,
                         "pointer":0}
-        self.set_view(config.get(self.config_key, {}))
+        self.config = config if config is not None else global_config
+        self.set_view(self.config.get(self.config_key, {}))
         self.set_contents(contents)
         self.generate_keymap()
 

@@ -96,9 +96,15 @@ class GenericUpdater(object):
             PrettyPrinter(failed_message, i, o, 2)
             pb.set_message("Reverting update")
             pb.run_in_background()
-            logger.info("Reverting the failed step: {}".format(failed_step))
-            self.revert_step(failed_step)
-            logger.info("Reverting the failed steps")
+            try:
+                logger.info("Reverting the failed step: {}".format(failed_step))
+                self.revert_step(failed_step)
+            except:
+                logger.exception("Can't revert failed step {}".format(failed_step))
+                pb.stop()
+                PrettyPrinter("Can't revert failed step '{}'".format(step), i, o, 2)
+                pb.run_in_background()
+            logger.info("Reverting the previous steps")
             for step in completed_steps:
                 try:
                     self.revert_step(step)
@@ -108,12 +114,14 @@ class GenericUpdater(object):
                     PrettyPrinter("Failed to revert step '{}'".format(step), i, o, 2)
                     pb.run_in_background()
                 pb.progress -= progress_per_step
+            sleep(1) # Needed here so that 1) the progressbar goes to 0 2) run_in_background launches the thread before the final stop() call
+            #TODO: add a way to pause the Refresher
             pb.stop()
             logger.info("Update failed")
             PrettyPrinter("Update failed, try again later?", i, o, 3)
         else:
             logger.info("Update successful!")
-            sleep(0.5) #showing the completed progressbar
+            sleep(0.5) # showing the completed progressbar
             pb.stop()
             PrettyPrinter("Update successful!", i, o, 3)
             needs_restart = DialogBox('yn', i, o, message="Restart ZPUI?").activate()
@@ -175,7 +183,10 @@ class GitUpdater(GenericUpdater):
         GitInterface.pull()
 
     def do_tests(self):
-        import pytest
+        commandline = "python -m pytest --doctest-modules -v --doctest-ignore-import-errors --ignore=output/drivers --ignore=input/drivers --ignore=apps/hardware_apps/status/"
+        output = check_output(commandline.split(" "))
+        logger.debug("pytest output:")
+        logger.debug(output)
 
     def revert_pull(self):
         # do_check_revisions already ran, we now have the previous revision's
