@@ -5,10 +5,12 @@ import unittest
 from mock import patch, Mock
 
 
-os.sys.path.append(os.path.dirname(os.path.abspath('.')))
-os.sys.path.append(os.path.dirname(os.path.abspath('..')))
-
-from ui import Checkbox
+try:
+    from ui import Checkbox
+except ImportError:
+    print("Absolute imports failed, trying relative imports")
+    os.sys.path.append(os.path.dirname(os.path.abspath('.')))
+    from checkbox import Checkbox
 
 
 def get_mock_input():

@@ -2,10 +2,13 @@
 import os
 import unittest
 
-os.sys.path.append(os.path.dirname(os.path.abspath('..')))
-os.sys.path.append(os.path.dirname(os.path.abspath('.')))
 
-from ui.config_manager import UIConfigManager
+try:
+    from ui.config_manager import UIConfigManager
+except ImportError:
+    print("Absolute imports failed, trying relative imports")
+    os.sys.path.append(os.path.dirname(os.path.abspath('.')))
+    from config_manager import UIConfigManager
 
 
 class TestUIConfigManager(unittest.TestCase):
