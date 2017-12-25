@@ -53,7 +53,7 @@ if [ -n ${IGNORE_TEST} ]; then
 fi
 
 ${SUDO} mkdir -p ${INSTALL_DIR}
-${SUDO} rsync -av --delete ./  ${INSTALL_DIR}
+${SUDO} rsync -av --delete ./ --exclude='*.pyc'  ${INSTALL_DIR}
 ${SUDO} systemctl restart zpui.service
 #rm -rf ${TMP_DIR}
 exit 0
