@@ -42,6 +42,10 @@ class CenteredTextRenderer(object):
         dw, dh = device_size
         return Rect(dw / 2 - w / 2, dh / 2 - h / 2, dw / 2 + w / 2, dh / 2 + h / 2)
 
+    @staticmethod
+    def get_center(device_size):
+        # type: (tuple) -> tuple
+        return device_size[0] / 2, device_size[1] / 2
 
 # ========================= abstract classes =========================
 
