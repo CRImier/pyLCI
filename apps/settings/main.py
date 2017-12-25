@@ -1,20 +1,21 @@
-menu_name = "Settings"
 
 import os
 import signal
+from subprocess import check_output
 from time import sleep
-from subprocess import check_output, CalledProcessError
 
 try:
     import httplib
 except:
     import http.client as httplib
 
-#Using a TextProgressBar because only it shows a message on the screen for now
-from ui import Menu, Printer, PrettyPrinter, DialogBox, TextProgressBar
+# Using a TextProgressBar because only it shows a message on the screen for now
+from ui import Menu, PrettyPrinter, DialogBox, TextProgressBar
 from helpers.logger import setup_logger
 
+menu_name = "Settings"
 logger = setup_logger(__name__, "info")
+
 
 class GitInterface():
 
@@ -42,7 +43,7 @@ class GitInterface():
         cls.command("checkout {}".format(reference))
 
     @classmethod
-    def pull(cls, source = "origin", branch = "master", opts="--ff-only"):
+    def pull(cls, source="origin", branch="master", opts="--ff-only"):
         return cls.command("pull {2} {0} {1}".format(source, branch, opts))
 
 
@@ -51,35 +52,34 @@ class UpdateUnnecessary(Exception):
 
 
 class GenericUpdater(object):
-
     steps = []
     progressbar_messages = {}
     failed_messages = {}
 
     def run_step(self, step_name):
         logger.info("Running update step: '{}'".format(step_name))
-        getattr(self, "do_"+step_name)()
+        getattr(self, "do_" + step_name)()
         logger.debug("Update step '{}' completed!".format(step_name))
 
     def revert_step(self, step_name):
-        if hasattr(self, "revert_"+step_name):
+        if hasattr(self, "revert_" + step_name):
             logger.info("Reverting update step: '{}'".format(step_name))
-            getattr(self, "revert_"+step_name)()
+            getattr(self, "revert_" + step_name)()
             logger.debug("Update step '{}' reverted!".format(step_name))
         else:
             logger.debug("Can't revert step {} - no reverter available.".format(step_name))
 
     def update(self):
         logger.info("Starting update process")
-        pb = TextProgressBar(i, o, message = "Updating ZPUI")
+        pb = TextProgressBar(i, o, message="Updating ZPUI")
         pb.run_in_background()
-        progress_per_step = 1.0/len(self.steps)
+        progress_per_step = 1.0 / len(self.steps)
 
         completed_steps = []
         try:
             for step in self.steps:
                 pb.set_message(self.progressbar_messages.get(step, "Loading..."))
-                sleep(0.5) #The user needs some time to read the message
+                sleep(0.5)  # The user needs some time to read the message
                 self.run_step(step)
                 completed_steps.append(step)
                 pb.progress += progress_per_step
@@ -113,35 +113,34 @@ class GenericUpdater(object):
             PrettyPrinter("Update failed, try again later?", i, o, 3)
         else:
             logger.info("Update successful!")
-            sleep(0.5) #showing the completed progressbar
+            sleep(0.5)  # showing the completed progressbar
             pb.stop()
             PrettyPrinter("Update successful!", i, o, 3)
             needs_restart = DialogBox('yn', i, o, message="Restart ZPUI?").activate()
             if needs_restart:
                 os.kill(os.getpid(), signal.SIGTERM)
 
-            
 
 class GitUpdater(GenericUpdater):
     branch = "master"
 
     steps = ["check_connection", "check_git", "check_revisions", "pull", "install_requirements", "tests"]
-    progressbar_messages = { \
-             "check_connection":"Connection check",
-             "check_git":"Running git",
-             "check_revisions":"Comparing code",
-             "pull":"Fetching code",
-             "install_requirements":"Installing packages",
-             "tests":"Running tests",
-             }
-    failed_messages = { \
-             "check_connection":"No Internet connection!",
-             "check_git":"Git binary not found!",
-             "check_revisions":"Exception while comparing revisions!",
-             "pull":"Couldn't get new code!",
-             "install_requirements":"Failed to install new packages!",
-             "tests":"Tests failed!"
-             }
+    progressbar_messages = {
+        "check_connection": "Connection check",
+        "check_git": "Running git",
+        "check_revisions": "Comparing code",
+        "pull": "Fetching code",
+        "install_requirements": "Installing packages",
+        "tests": "Running tests",
+    }
+    failed_messages = {
+        "check_connection": "No Internet connection!",
+        "check_git": "Git binary not found!",
+        "check_revisions": "Exception while comparing revisions!",
+        "pull": "Couldn't get new code!",
+        "install_requirements": "Failed to install new packages!",
+        "tests": "Tests failed!"
+    }
 
     def do_check_git(self):
         if not GitInterface.git_available():
@@ -175,7 +174,7 @@ class GitUpdater(GenericUpdater):
         GitInterface.pull()
 
     def do_tests(self):
-        import pytest
+        pass
 
     def revert_pull(self):
         # do_check_revisions already ran, we now have the previous revision's
@@ -183,6 +182,7 @@ class GitUpdater(GenericUpdater):
         GitInterface.checkout(self.previous_revision)
         # requirements.txt now contains old requirements, let's install them back
         self.do_install_requirements()
+
 
 def settings():
     git_updater = GitUpdater()
@@ -197,4 +197,5 @@ o = None  # Output device
 
 def init_app(input, output):
     global i, o
-    i = input; o = output
+    i = input
+    o = output
