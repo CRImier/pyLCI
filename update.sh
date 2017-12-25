@@ -49,7 +49,7 @@ ${SUDO} pip install -r requirements.txt  # Make sure we have the latest dependen
 
 # Run tests
 if [ -n ${IGNORE_TEST} ]; then
-    python -m pytest --doctest-modules -v --doctest-ignore-import-errors --ignore=output/drivers --ignore=input/drivers --ignore=apps/hardware_apps/status/ --ignore=apps/example_apps/fire_detector --ignore=apps/test_hardware
+    python -B -m pytest --doctest-modules -v --doctest-ignore-import-errors --ignore=output/drivers --ignore=input/drivers --ignore=apps/hardware_apps/status/ --ignore=apps/example_apps/fire_detector --ignore=apps/test_hardware
 fi
 
 ${SUDO} mkdir -p ${INSTALL_DIR}
