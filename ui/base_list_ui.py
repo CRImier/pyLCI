@@ -32,7 +32,7 @@ else:
         logger.exception(e)
 
 
-class BaseListUIElement():
+class BaseListUIElement(object):
     """This is a base UI element for list-like UI elements.
 
        This UI element has built-in scrolling of entries - if the entry text is longer
