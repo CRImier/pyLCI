@@ -47,7 +47,7 @@ ${SUDO} pip install -r requirements.txt  # Make sure we have the latest dependen
 
 # Run tests
 if [ -n ${IGNORE_TEST} ]; then
-    pytest2 --doctest-modules -v --doctest-ignore-import-errors --ignore=apps/example_apps/fire_detector/ --ignore=ui/tests/test_checkbox.py  #  todo : fixes checkbox testing not working at the moment
+    python -m pytest --doctest-modules -v --doctest-ignore-import-errors --ignore=output/drivers --ignore=input/drivers --ignore=apps/hardware_apps/status/ --ignore=apps/example_apps/fire_detector
 fi
 
 ${SUDO} mkdir -p ${INSTALL_DIR}
