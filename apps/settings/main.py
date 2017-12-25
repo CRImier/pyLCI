@@ -189,6 +189,8 @@ class GitUpdater(GenericUpdater):
     def do_pull(self):
         current_branch_name = GitInterface.get_current_branch()
         GitInterface.pull(branch = current_branch_name)
+        #Avoid the "detached HEAD" if the previous update was unsuccessful
+        GitInterface.checkout(current_branch_name)
 
     def do_tests(self):
         commandline = "python -B -m pytest --doctest-modules -v --doctest-ignore-import-errors --ignore=output/drivers --ignore=input/drivers --ignore=apps/hardware_apps/status/ --ignore=apps/test_hardware"
