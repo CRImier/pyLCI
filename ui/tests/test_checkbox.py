@@ -1,5 +1,4 @@
 """test for Checkbox"""
-import logging
 import os
 import unittest
 
