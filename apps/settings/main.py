@@ -96,9 +96,15 @@ class GenericUpdater(object):
             PrettyPrinter(failed_message, i, o, 2)
             pb.set_message("Reverting update")
             pb.run_in_background()
-            logger.info("Reverting the failed step: {}".format(failed_step))
-            self.revert_step(failed_step)
-            logger.info("Reverting the failed steps")
+            try:
+                logger.info("Reverting the failed step: {}".format(failed_step))
+                self.revert_step(failed_step)
+            except:
+                logger.exception("Can't revert failed step {}".format(failed_step))
+                pb.stop()
+                PrettyPrinter("Can't revert failed step '{}'".format(step), i, o, 2)
+                pb.run_in_background()
+            logger.info("Reverting the previous steps")
             for step in completed_steps:
                 try:
                     self.revert_step(step)
