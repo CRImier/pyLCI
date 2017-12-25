@@ -114,12 +114,14 @@ class GenericUpdater(object):
                     PrettyPrinter("Failed to revert step '{}'".format(step), i, o, 2)
                     pb.run_in_background()
                 pb.progress -= progress_per_step
+            sleep(1) # Needed here so that 1) the progressbar goes to 0 2) run_in_background launches the thread before the final stop() call
+            #TODO: add a way to pause the Refresher
             pb.stop()
             logger.info("Update failed")
             PrettyPrinter("Update failed, try again later?", i, o, 3)
         else:
             logger.info("Update successful!")
-            sleep(0.5) #showing the completed progressbar
+            sleep(0.5) # showing the completed progressbar
             pb.stop()
             PrettyPrinter("Update successful!", i, o, 3)
             needs_restart = DialogBox('yn', i, o, message="Restart ZPUI?").activate()
