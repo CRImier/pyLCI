@@ -40,7 +40,7 @@ class GitInterface():
 
     @classmethod
     def checkout(cls, reference):
-        cls.command("checkout {}".format(reference))
+        return cls.command("checkout {}".format(reference))
 
     @classmethod
     def pull(cls, source = "origin", branch = "master", opts="--no-edit"):
