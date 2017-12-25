@@ -124,9 +124,12 @@ class GenericUpdater(object):
             sleep(0.5)  # showing the completed progressbar
             pb.stop()
             PrettyPrinter("Update successful!", i, o, 3)
-            needs_restart = DialogBox('yn', i, o, message="Restart ZPUI?").activate()
-            if needs_restart:
-                os.kill(os.getpid(), signal.SIGTERM)
+            self.suggest_restart()
+
+    def suggest_restart(self):
+        needs_restart = DialogBox('yn', i, o, message="Restart ZPUI?").activate()
+        if needs_restart:
+            os.kill(os.getpid(), signal.SIGTERM)
 
 
 class GitUpdater(GenericUpdater):
@@ -205,7 +208,9 @@ class GitUpdater(GenericUpdater):
                 PrettyPrinter("Couldn't check out the {} branch! Try resolving the conflict through the command-line.".format(branch), i, o, 3)
             else:
                 PrettyPrinter("Now on {} branch!".format(branch), i, o, 2)
+                self.suggest_restart()
                 #TODO: run tests?
+
 
 def settings():
     git_updater = GitUpdater()
