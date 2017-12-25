@@ -65,7 +65,7 @@ class TestCheckbox(unittest.TestCase):
 
         with patch.object(cb, 'idle_loop', side_effect=scenario) as p:
             return_value = cb.activate()
-        assert return_value is not None
+        assert return_value is None
 
         # Checking at the end of the list
         def scenario():
