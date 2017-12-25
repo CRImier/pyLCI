@@ -49,6 +49,7 @@ class CenteredTextRenderer(object):
 
 # ========================= abstract classes =========================
 
+
 class LoadingIndicator(Refresher):
     """Abstract class for "loading indicator" elements."""
     def __init__(self, i, o, *args, **kwargs):
@@ -69,6 +70,13 @@ class LoadingIndicator(Refresher):
     def stop(self):
         self.deactivate()
         self.t = None
+
+    def __enter__(self):
+        self.run_in_background()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
 
 class ProgressIndicator(LoadingIndicator):
     """Abstract class for "loading indicator" elements where the progress can be measured.
