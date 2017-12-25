@@ -39,6 +39,10 @@ class GitInterface():
         return output
 
     @classmethod
+    def get_current_branch(cls):
+        return cls.get_head_for_branch("--abbrev-ref HEAD").strip()
+
+    @classmethod
     def checkout(cls, reference):
         return cls.command("checkout {}".format(reference))
 
@@ -160,8 +164,9 @@ class GitUpdater(GenericUpdater):
 
     def do_check_revisions(self):
         GitInterface.command("fetch")
-        current_revision = GitInterface.get_head_for_branch("master")
-        remote_revision = GitInterface.get_head_for_branch("origin/master")
+        current_branch_name = GitInterface.get_current_branch()
+        current_revision = GitInterface.get_head_for_branch(current_branch_name)
+        remote_revision = GitInterface.get_head_for_branch("origin/"+current_branch_name)
         if current_revision == remote_revision:
             raise UpdateUnnecessary
         else:
@@ -182,7 +187,8 @@ class GitUpdater(GenericUpdater):
         logger.debug(output)
 
     def do_pull(self):
-        GitInterface.pull()
+        current_branch_name = GitInterface.get_current_branch()
+        GitInterface.pull(branch = current_branch_name)
 
     def do_tests(self):
         commandline = "python -m pytest --doctest-modules -v --doctest-ignore-import-errors --ignore=output/drivers --ignore=input/drivers --ignore=apps/hardware_apps/status/ --ignore=apps/test_hardware"
