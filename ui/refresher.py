@@ -25,7 +25,12 @@ class Refresher(object):
         
         Args:
 
-            * ``refresh_function``: a function which returns data to be displayed on the screen upon being called, in the format accepted by ``screen.display_data()``
+            * ``refresh_function``: a function which returns data to be displayed on the screen upon being called, in the format accepted by ``screen.display_data()`` or ``screen.display_image()``. To be exact, supported return values are:
+
+              * Tuples and lists - are converted to lists and passed to ``display_data()``
+              * Strings - are converted to a single-element list and passed to ``display_data()``
+              * `PIL.Image` objects - are passed to ``display_image()``
+
             * ``i``, ``o``: input&output device objects
 
         Kwargs:
