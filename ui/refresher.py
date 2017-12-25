@@ -137,7 +137,7 @@ class Refresher(object):
             #Passed a tuple. Let's convert it into a list!
             data_to_display = list(data_to_display)
         elif isinstance(data_to_display, PIL.Image.Image):
-            if not "b&w-pixel" in self.o.type:
+            if hasattr(self.o, "type") and not "b&w-pixel" in self.o.type:
                 raise ValueError("The screen doesn't support showing images!")
             self.o.display_image(data_to_display)
             return
