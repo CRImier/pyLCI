@@ -181,7 +181,10 @@ class GitUpdater(GenericUpdater):
         GitInterface.pull()
 
     def do_tests(self):
-        import pytest
+        commandline = "python -m pytest --doctest-modules -v --doctest-ignore-import-errors --ignore=output/drivers --ignore=input/drivers --ignore=apps/hardware_apps/status/"
+        output = check_output(commandline.split(" "))
+        logger.debug("pytest output:")
+        logger.debug(output)
 
     def revert_pull(self):
         # do_check_revisions already ran, we now have the previous revision's
