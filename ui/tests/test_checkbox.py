@@ -17,7 +17,7 @@ def get_mock_input():
     return Mock()
 
 
-def get_mock_output(rows=2, cols=16):
+def get_mock_output(rows=8, cols=21):
     m = Mock()
     m.configure_mock(rows=rows, cols=cols, type=["char"])
     return m
@@ -31,12 +31,12 @@ class TestCheckbox(unittest.TestCase):
 
     def test_constructor(self):
         """tests constructor"""
-        checkbox = Checkbox([["Option", "option"]], get_mock_input(), get_mock_output(), name=cb_name)
+        checkbox = Checkbox([["Option", "option"]], get_mock_input(), get_mock_output(), name=cb_name, config={})
         self.assertIsNotNone(checkbox)
 
     def test_keymap(self):
         """tests keymap"""
-        checkbox = Checkbox([["Option", "option"]], get_mock_input(), get_mock_output(), name=cb_name)
+        checkbox = Checkbox([["Option", "option"]], get_mock_input(), get_mock_output(), name=cb_name, config={})
         self.assertIsNotNone(checkbox.keymap)
         for key_name, callback in checkbox.keymap.iteritems():
             self.assertIsNotNone(callback)
@@ -45,9 +45,9 @@ class TestCheckbox(unittest.TestCase):
         """tests whether the exit label of one Checkbox leaks into another"""
         i = get_mock_input()
         o = get_mock_output()
-        c1 = Checkbox([["a", "1"]], i, o, name=cb_name + "1", final_button_name="Name1")
-        c2 = Checkbox([["b", "2"]], i, o, name=cb_name + "2", final_button_name="Name2")
-        c3 = Checkbox([["c", "3"]], i, o, name=cb_name + "3")
+        c1 = Checkbox([["a", "1"]], i, o, name=cb_name + "1", final_button_name="Name1", config={})
+        c2 = Checkbox([["b", "2"]], i, o, name=cb_name + "2", final_button_name="Name2", config={})
+        c3 = Checkbox([["c", "3"]], i, o, name=cb_name + "3", config={})
         assert (c1.exit_entry != c2.exit_entry)
         assert (c2.exit_entry != c3.exit_entry)
         assert (c1.exit_entry != c3.exit_entry)
@@ -55,7 +55,7 @@ class TestCheckbox(unittest.TestCase):
     def test_left_key_returns_none(self):
         num_elements = 3
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
-        cb = Checkbox(contents, get_mock_input(), get_mock_output(), name=cb_name)
+        cb = Checkbox(contents, get_mock_input(), get_mock_output(), name=cb_name, config={})
         cb.refresh = lambda *args, **kwargs: None
 
         # Checking at the start of the list
@@ -81,7 +81,7 @@ class TestCheckbox(unittest.TestCase):
     def test_enter_on_last_returns_right(self):
         num_elements = 3
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
-        cb = Checkbox(contents, get_mock_input(), get_mock_output(), name=cb_name)
+        cb = Checkbox(contents, get_mock_input(), get_mock_output(), name=cb_name, config={})
         cb.refresh = lambda *args, **kwargs: None
 
         # Checking at other elements - shouldn't return
