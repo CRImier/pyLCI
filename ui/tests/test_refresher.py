@@ -132,6 +132,25 @@ class TestRefresher(unittest.TestCase):
         r.idle_loop()
         assert o.display_data.call_count == 4 #should be refresh the display normally now
 
+    def test_keymap_restore_on_resume(self):
+        """Tests whether the Refresher re-sets the keymap upon resume."""
+        i = get_mock_input()
+        o = get_mock_output()
+        r = Refresher(lambda: "Hello", i, o, name=r_name, refresh_interval=0.1)
+        r.refresh = lambda *args, **kwargs: None
+        
+        r.to_foreground()
+        assert i.set_keymap.called
+        assert i.set_keymap.call_count == 1
+        assert i.set_keymap.call_args[0][0] == r.keymap
+        r.pause()
+        assert i.set_keymap.call_count == 1 #paused, so count shouldn't change
+        i.set_keymap(None)
+        assert i.set_keymap.call_args[0][0] != r.keymap
+        r.resume()
+        assert i.set_keymap.call_count == 3 #one explicitly done in the test right beforehand
+        assert i.set_keymap.call_args[0][0] == r.keymap
+
 
 if __name__ == '__main__':
     unittest.main()

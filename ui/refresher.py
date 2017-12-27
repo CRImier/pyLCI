@@ -152,7 +152,7 @@ class Refresher(object):
     def activate_keymap(self):
         self.i.stop_listen()
         self.i.clear_keymap()
-        self.i.keymap = self.keymap
+        self.i.set_keymap(self.keymap)
         self.i.listen()
 
     @to_be_foreground
