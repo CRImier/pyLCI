@@ -8,7 +8,6 @@ from time import sleep
 
 from PIL import ImageFont
 from canvas import Canvas
-from luma.core.render import canvas as luma_canvas
 
 from utils import to_be_foreground, clamp_list_index
 
