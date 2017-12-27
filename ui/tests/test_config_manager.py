@@ -2,13 +2,29 @@
 import os
 import unittest
 
+from mock import patch, Mock
 
 try:
     from ui.config_manager import UIConfigManager
 except ImportError:
     print("Absolute imports failed, trying relative imports")
     os.sys.path.append(os.path.dirname(os.path.abspath('.')))
-    from config_manager import UIConfigManager
+    # Store original __import__
+    orig_import = __import__
+
+    def import_mock(name, *args, **kwargs):
+        if name in ['helpers'] and not kwargs:
+            #Have to filter for kwargs since there's a package in 'json'
+            #that calls __builtins__.__import__ with keyword arguments
+            #and we don't want to mock that call
+            return Mock()
+        elif name == 'ui.utils':
+            import utils
+            return utils
+        return orig_import(name, *args, **kwargs)
+
+    with patch('__builtin__.__import__', side_effect=import_mock):
+        from config_manager import UIConfigManager
 
 
 class TestUIConfigManager(unittest.TestCase):
