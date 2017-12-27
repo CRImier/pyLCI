@@ -28,7 +28,7 @@ class OutputDevice(object):
         method_names = [ k for (k, v) in public_attributes if callable(v) and k not in hidden_methods]
         
         for attribute_name in attribute_names:
-            print("attribute: {}".format(attribute_name))
+            #print("attribute: {}".format(attribute_name))
             # Setting attributes of the proxy object to the same values
             # as the current output device has them
             value = getattr(self, attribute_name)
@@ -36,9 +36,9 @@ class OutputDevice(object):
             # won't change the attributes of the original object
             copied_value = deepcopy(value)
             setattr(proxy, attribute_name, copied_value)
-            print("Setting to value {}".format(copied_value))
+            #print("Setting to value {}".format(copied_value))
         for method_name in method_names:
-            print("method: {}".format(method_name))
+            #print("method: {}".format(method_name))
             # Setting functions to proxy the current object's 
             self.proxify_method(proxy, method_name)
         # Proxies have no use for hidden methods
