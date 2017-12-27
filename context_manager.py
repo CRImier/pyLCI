@@ -63,7 +63,11 @@ class ContextManager(object):
 
     def activate_thread_for_context(self, context_alias, previous_context = "main"):
         if context_alias not in self.context_targets:
-            raise ValueError("Can't switch to {} context - no context target available!".format(context_alias))
+            if context_alias in self.initial_contexts:
+                logger.debug("Can't activate a thread for {} context - no context target available!".format(context_alias))
+                return
+            else:
+                raise ValueError("Can't activate a thread for {} context - no context target available!".format(context_alias))
         if context_alias in self.context_threads and self.context_threads[context_alias].isAlive():
             #A thread already exists and is active, doing nothing
             return
