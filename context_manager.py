@@ -1,4 +1,5 @@
 from input.input import InputProxy
+from output.output import OutputProxy
 
 import logging
 from functools import wraps
@@ -89,16 +90,17 @@ class ContextManager(object):
         self.input_processor.attach_proxy(proxy_i)
         if self.screen.current_image:
             self.screen.display_image(self.screen.current_image)
-        #self.screen.detach_current_proxy()
-        #self.screen.attach_proxy(proxy_o)
+        self.screen.detach_current_proxy()
+        self.screen.attach_proxy(proxy_o)
 
     def create_context(self, context_alias):
         logger.info("Creating {} context".format(context_alias))
-        input_proxy = InputProxy(context_alias)
-        output_proxy = self.screen
-        self.set_context_callbacks(input_proxy)
-        self.input_processor.register_proxy(input_proxy, context_alias)
-        self.context_objects[context_alias] = (input_proxy, output_proxy)
+        proxy_i = InputProxy(context_alias)
+        proxy_o = OutputProxy(context_alias)
+        self.set_context_callbacks(proxy_i)
+        self.input_processor.register_proxy(proxy_i)
+        self.screen.init_proxy(proxy_o)
+        self.context_objects[context_alias] = (proxy_i, proxy_o)
 
     def get_io_for_context(self, context_alias):
         if context_alias not in self.context_objects:

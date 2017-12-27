@@ -170,7 +170,8 @@ class InputProcessor():
             logger.debug("Not calling method \"{}\" for proxy \"{}\" since it's not current".format(method_name, context_alias))
             pass #Ignoring method calls from non-current proxies for now
 
-    def register_proxy(self, proxy, context_alias):
+    def register_proxy(self, proxy):
+        context_alias = proxy.context_alias
         for method_name in self.proxy_methods:
             setattr(proxy, method_name, lambda x=method_name, y=context_alias, *a, **k: self.proxy_method(x, y, *a, **k))
 
