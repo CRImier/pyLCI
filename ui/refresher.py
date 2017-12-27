@@ -72,6 +72,21 @@ class Refresher(object):
         logger.debug(self.name+" exited")
         return True
 
+    def pause(self):
+        """
+        Pauses the refresher, not allowing it to print anything on the screen
+        while it's paused.
+        """
+        self.in_foreground = False
+
+    def resume(self):
+        """
+        Resumes the refresher after it's been paused, allowing it to continue
+        printing things on the screen. Refreshes the screen when it's called.
+        """
+        self.in_foreground = True
+        self.refresh()
+
     def calculate_intervals(self):
         """Calculates the sleep intervals of the refresher, so that no matter the
         ``refresh_interval``, the refresher is responsive. Also, sets the counter to zero."""

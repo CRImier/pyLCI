@@ -109,6 +109,29 @@ class TestRefresher(unittest.TestCase):
         assert o.display_data.call_args_list[0][0] == ("Hello", )
         assert o.display_data.call_args_list[1][0] == ("Hello", )
 
+    def test_pause_resume(self):
+        """Tests whether the Refresher stops outputting data on the screen when it's paused,
+        and resumes outputting data on the screen when resumed."""
+        i = get_mock_input()
+        o = get_mock_output()
+        r = Refresher(lambda: "Hello", i, o, name=r_name, refresh_interval=0.1)
+        #refresh_interval is 0.1 so that _counter always stays 0
+        #and idle_loop always refreshes
+
+        #Doing what an activate() would do, but without a loop
+        r.to_foreground()
+        assert o.display_data.called
+        assert o.display_data.call_count == 1 #to_foreground calls refresh()
+        r.idle_loop()
+        assert o.display_data.call_count == 2 #not paused
+        r.pause()
+        r.idle_loop()
+        assert o.display_data.call_count == 2 #paused, so count shouldn't change
+        r.resume()
+        assert o.display_data.call_count == 3 #resume() refreshes the display
+        r.idle_loop()
+        assert o.display_data.call_count == 4 #should be refresh the display normally now
+
 
 if __name__ == '__main__':
     unittest.main()
