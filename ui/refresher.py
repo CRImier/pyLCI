@@ -85,6 +85,7 @@ class Refresher(object):
         printing things on the screen. Refreshes the screen when it's called.
         """
         self.in_foreground = True
+        self.activate_keymap()
         self.refresh()
 
     def calculate_intervals(self):
