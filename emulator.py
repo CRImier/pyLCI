@@ -24,6 +24,7 @@ class EmulatorProxy(object):
 
     width = 128
     height = 64
+    device_mode = "1"
 
     def __init__(self):
         self.device = type("MockDevice", (), {"mode":"1", "size":(128, 64)})
