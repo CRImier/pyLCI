@@ -158,3 +158,8 @@ def init(output_config):
     args = screen_config["args"] if "args" in screen_config else []
     kwargs = screen_config["kwargs"] if "kwargs" in screen_config else {}
     return driver_module.Screen(*args, **kwargs)
+
+if __name__ == "__main__":
+    o = type("OD", (GraphicalOutputDevice, CharacterOutputDevice), {})()
+    op = type("OP", (o.__class__, ), {})()
+    o.init_proxy(op)
