@@ -4,14 +4,24 @@ import unittest
 
 from mock import patch, Mock
 
-
 try:
     from ui import Checkbox
 except ImportError:
     print("Absolute imports failed, trying relative imports")
     os.sys.path.append(os.path.dirname(os.path.abspath('.')))
-    from checkbox import Checkbox
+    # Store original __import__
+    orig_import = __import__
 
+    def import_mock(name, *args):
+        if name in ['helpers']:
+            return Mock()
+        elif name == 'ui.utils':
+            import utils
+            return utils
+        return orig_import(name, *args)
+
+    with patch('__builtin__.__import__', side_effect=import_mock):
+        from checkbox import Checkbox
 
 def get_mock_input():
     return Mock()
