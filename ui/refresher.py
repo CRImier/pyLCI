@@ -1,4 +1,3 @@
-
 from threading import Event
 from time import sleep
 
@@ -33,7 +32,7 @@ class Refresher(object):
 
         Kwargs:
 
-            * ``refresh_interval``: Time between display refreshes (and, accordingly, ``refresh_function`` calls). Refresh intervals less than 0.1 second are not supported.
+            * ``refresh_interval``: Time between display refreshes (and, accordingly, ``refresh_function`` calls).
             * ``keymap``: Keymap entries you want to set while Refresher is active. By default, KEY_LEFT deactivates the Refresher, if you wan tto override it, do it carefully.
             * ``name``: Refresher name which can be used internally and for debugging.
 
@@ -44,7 +43,8 @@ class Refresher(object):
         self.refresh_interval = refresh_interval
         self.refresh_function = refresh_function
         #interval for checking the in_background property in the activate()
-        self.sleep_time = 0.1
+        #when refresh_interval is small enough, is the same as refresh_interval
+        self.sleep_time = 0.1 if refresh_interval > 0.1 else refresh_interval
         self.calculate_intervals()
         self.set_keymap(keymap if keymap else {})
         self.in_foreground = False
@@ -73,22 +73,26 @@ class Refresher(object):
         return True
 
     def calculate_intervals(self):
+        """Calculates the sleep intervals of the refresher, so that no matter the
+        ``refresh_interval``, the refresher is responsive. Also, sets the counter to zero."""
         #in_background of the refresher needs to be checked approx. each 0.1 second,
         #since users expect the refresher to exit almost instantly
-        self.iterations_before_refresh = self.refresh_interval/self.sleep_time
-        if self.iterations_before_refresh < 1:
+        iterations_before_refresh = self.refresh_interval/self.sleep_time
+        if iterations_before_refresh < 1:
+            logger.warning("{}: self.refresh_interval is smaller than self.sleep_time!".format(self.name))
+            #Failsafe
             self.iterations_before_refresh = 1
         else:
-            self.iterations_before_refresh = int(self.iterations_before_refresh)
-        self.counter = 0
+            self.iterations_before_refresh = int(iterations_before_refresh)
+        self._counter = 0
 
     def idle_loop(self):
         if self.in_foreground:
-            if self.counter == self.iterations_before_refresh:
-                self.counter = 0
-            if self.counter == 0:
+            if self._counter == self.iterations_before_refresh:
+                self._counter = 0
+            if self._counter == 0:
                 self.refresh()
-            self.counter += 1
+            self._counter += 1
         sleep(self.sleep_time)
 
     def deactivate(self):
