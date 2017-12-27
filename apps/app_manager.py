@@ -96,10 +96,17 @@ class AppManager(object):
                                                        subdir_menu.contents, ordering)
         subdir_menu.set_contents(subdir_menu_contents)
 
-    def load_app(self, app_path):
+    def get_app_path_for_cmdline(self, cmdline_app_path):
         main_py_string = "/main.py"
-        if app_path.endswith(main_py_string):
-            app_path = app_path[:-len(main_py_string)]
+        if cmdline_app_path.endswith(main_py_string):
+            app_path = cmdline_app_path[:-len(main_py_string)]
+        elif cmdline_app_path.endswith("/"):
+            app_path = cmdline_app_path[:-1]
+        else:
+            app_path = cmdline_app_path
+        return app_path
+
+    def load_app(self, app_path):
         if "__init__.py" not in os.listdir(app_path):
             raise ImportError("Trying to import an app with no __init__.py in its folder!")
         app_import_path = app_path.replace('/', '.')

@@ -71,13 +71,13 @@ class ContextManager(object):
         self.create_thread_for_context(context_alias, previous_context)
         self.context_threads[context_alias].start()
 
-    def switch_to_context(self, context_alias):
+    def switch_to_context(self, context_alias, launch_thread=True):
         logger.info("Switching to {} context".format(context_alias))
         previous_context = self.current_context
         self.current_context = context_alias
-        if context_alias is not "main":
-            self.activate_thread_for_context(context_alias, previous_context)
         self.activate_context_io(context_alias)
+        if launch_thread:
+            self.activate_thread_for_context(context_alias, previous_context)
         logger.info("Switched to {} context!".format(context_alias))
 
     def activate_context_io(self, context_alias):

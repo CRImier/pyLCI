@@ -78,7 +78,7 @@ def init():
     if hasattr(screen, "set_backlight_callback"):
         screen.set_backlight_callback(input_processor)
     cm.init_io(input_processor, screen)
-    cm.switch_to_context("main")
+    cm.switch_to_context("main", launch_thread=False)
     i, o = cm.get_io_for_context("main")
 
     return i, o
@@ -112,17 +112,19 @@ def launch(name=None, **kwargs):
 
         # Load only single app
         try:
-            app = app_man.load_app(name)
+            app_path = app_man.get_app_path_for_cmdline(name)
+            app = app_man.load_app(app_path)
         except:
             logging.exception('Failed to load the app: {0}'.format(name))
-            i.atexit()
+            input_processor.atexit()
             raise
+        cm.switch_to_context(app_path, launch_thread=False)
         runner = app.on_start if hasattr(app, "on_start") else app.callback
 
-    exception_wrapper(runner, i, o)
+    exception_wrapper(runner)
 
 
-def exception_wrapper(callback, i, o):
+def exception_wrapper(callback):
     """
     This is a wrapper for all applications and menus.
     It catches exceptions and stops the system the right
@@ -134,16 +136,16 @@ def exception_wrapper(callback, i, o):
         callback()
     except KeyboardInterrupt:
         logging.info('Caught KeyboardInterrupt')
-        Printer(["Does Ctrl+C", "hurt scripts?"], None, o, 0)
+        Printer(["Does Ctrl+C", "hurt scripts?"], None, screen, 0)
         status = 1
     except:
         logging.exception('A wild exception appears!')
         logging.exception(traceback.format_exc())
-        Printer(["A wild exception", "appears!"], None, o, 0)
+        Printer(["A wild exception", "appears!"], None, screen, 0)
         status = 1
     else:
         logging.info('Exiting ZPUI')
-        Printer("Exiting ZPUI", None, o, 0)
+        Printer("Exiting ZPUI", None, screen, 0)
     finally:
         input_processor.atexit()
         sys.exit(status)
