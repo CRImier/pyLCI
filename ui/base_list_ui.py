@@ -7,6 +7,7 @@ from threading import Event
 from time import sleep
 
 from PIL import ImageFont
+from canvas import Canvas
 from luma.core.render import canvas as luma_canvas
 
 from utils import to_be_foreground, clamp_list_index
@@ -126,7 +127,6 @@ class BaseListUIElement():
         self.before_foreground()
         self.reset_scrolling()
         self.in_foreground = True
-        self.o.cursor()
         self.view.refresh()
         self.set_keymap()
 
@@ -532,8 +532,7 @@ class EightPtView(TextView):
         """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.display_image function.
         |Doesn't support partly-rendering entries yet."""
         menu_text = self.get_displayed_text()
-        draw = luma_canvas(self.o.device)
-        d = draw.__enter__()
+        c = Canvas(self.o)
         scrollbar_coordinates = self.get_scrollbar_top_bottom()
         #Drawing scrollbar, if applicable
         if scrollbar_coordinates == (0, 0):
@@ -542,20 +541,18 @@ class EightPtView(TextView):
         else:
             left_offset = self.x_scrollbar_offset
             y1, y2 = scrollbar_coordinates
-            d.rectangle((1, y1, 2, y2), outline="white")
+            c.rectangle((1, y1, 2, y2), outline="white")
         #Drawing cursor, if enabled
         if cursor_y is not None:
             c_x = cursor_x * self.charwidth
             c_y = cursor_y * self.charheight
             cursor_dims = (c_x-1+left_offset, c_y-1, c_x+self.charwidth+left_offset, c_y+self.charheight+1)
-            d.rectangle(cursor_dims, outline="white")
+            c.rectangle(cursor_dims, outline="white")
         #Drawing the text itself
         for i, line in enumerate(menu_text):
             y = (i*self.charheight - 1) if i != 0 else 0
-            d.text((left_offset, y), line, fill="white")
-        image = draw.image
-        del d;del draw
-        return image
+            c.text((left_offset, y), line, fill="white")
+        return c.get_image()
 
 class SixteenPtView(EightPtView):
 
@@ -567,8 +564,7 @@ class SixteenPtView(EightPtView):
         """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.display_image function.
         |Doesn't support partly-rendering entries yet."""
         menu_text = self.get_displayed_text()
-        draw = luma_canvas(self.o.device)
-        d = draw.__enter__()
+        c = Canvas(self.o)
         scrollbar_coordinates = self.get_scrollbar_top_bottom()
         #Drawing scrollbar, if applicable
         if scrollbar_coordinates == (0, 0):
@@ -577,22 +573,20 @@ class SixteenPtView(EightPtView):
         else:
             left_offset = self.x_scrollbar_offset
             y1, y2 = scrollbar_coordinates
-            d.rectangle((1, y1, 2, y2), outline="white")
+            c.rectangle((1, y1, 2, y2), outline="white")
         #Drawing cursor, if enabled
         if cursor_y is not None:
             c_x = cursor_x * self.charwidth
             c_y = cursor_y * self.charheight
             cursor_dims = (c_x-1+left_offset, c_y-1, c_x+self.charwidth+left_offset, c_y+self.charheight)
-            d.rectangle(cursor_dims, outline="white")
+            c.rectangle(cursor_dims, outline="white")
         #Drawing the text itself
         #http://pillow.readthedocs.io/en/3.1.x/reference/ImageFont.html
         font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 16)
         for i, line in enumerate(menu_text):
             y = (i*self.charheight - 1) if i != 0 else 0
-            d.text((left_offset, y), line, fill="white", font=font)
-        image = draw.image
-        del d;del draw
-        return image
+            c.text((left_offset, y), line, fill="white", font=font)
+        return c.get_image()
 
 class MainMenuTripletView(SixteenPtView):
 
@@ -608,19 +602,17 @@ class MainMenuTripletView(SixteenPtView):
     @to_be_foreground
     def get_displayed_canvas(self, cursor_x=0, cursor_y=None):
         #This view doesn't have a cursor, instead, the entry that's currently active is in the display center
-        draw = luma_canvas(self.o.device)
+        c = Canvas(self.o)
         d = draw.__enter__()
         central_position = (10, 16)
         font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 32)
         current_entry = self.el.contents[self.el.pointer]
-        d.text(central_position, current_entry[0], fill="white", font=font)
+        c.text(central_position, current_entry[0], fill="white", font=font)
         font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 16)
         if self.el.pointer != 0:
             line = self.el.contents[self.el.pointer-1][0]
-            d.text((2, 0), line, fill="white", font=font)
+            c.text((2, 0), line, fill="white", font=font)
         if self.el.pointer < len(self.el.contents)-1:
             line = self.el.contents[self.el.pointer+1][0]
-            d.text((2, 48), line, fill="white", font=font)
-        image = draw.image
-        del d;del draw
-        return image
+            c.text((2, 48), line, fill="white", font=font)
+        return c.get_image()
