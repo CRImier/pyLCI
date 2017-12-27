@@ -6,7 +6,7 @@ from functools import wraps
 from threading import Thread
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 def context_target_wrapper(func, cm, context_alias, previous_context):
@@ -82,7 +82,7 @@ class ContextManager(object):
         self.activate_context_io(context_alias)
         if launch_thread:
             self.activate_thread_for_context(context_alias, previous_context)
-        logger.info("Switched to {} context!".format(context_alias))
+        logger.debug("Switched to {} context!".format(context_alias))
 
     def activate_context_io(self, context_alias):
         """
@@ -98,7 +98,7 @@ class ContextManager(object):
         self.screen.attach_proxy(proxy_o)
 
     def create_context(self, context_alias):
-        logger.info("Creating {} context".format(context_alias))
+        logger.debug("Creating {} context".format(context_alias))
         proxy_i = InputProxy(context_alias)
         proxy_o = OutputProxy(context_alias)
         self.set_context_callbacks(proxy_i)
