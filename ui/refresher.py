@@ -11,14 +11,12 @@ logger = setup_logger(__name__, "info")
 
 
 class Refresher(object):
-    """Implements a state where display is refreshed from time to time, updating the screen with information from a function.
     """
-    refresh_function = None
-    refresh_interval = 0
-    display_callback = None
-    in_foreground = False
-    name = ""
-    keymap = None
+    A Refresher allows you to update the screen on a regular interval.
+    All you need is to provide a function that'll return the text/image you want to display;
+    that function will then be called with the desired frequency and the display
+    will be updated with whatever it returns.
+    """
 
     def __init__(self, refresh_function, i, o, refresh_interval=1, keymap=None, name="Refresher"):
         """Initialises the Refresher object.
@@ -35,8 +33,8 @@ class Refresher(object):
 
         Kwargs:
 
-            * ``refresh_interval``: Time between display refreshes (and, accordingly, ``refresh_function`` calls)
-            * ``keymap``: Keymap entries you want to set while Refresher is active
+            * ``refresh_interval``: Time between display refreshes (and, accordingly, ``refresh_function`` calls). Refresh intervals less than 0.1 second are not supported.
+            * ``keymap``: Keymap entries you want to set while Refresher is active. By default, KEY_LEFT deactivates the Refresher, if you wan tto override it, do it carefully.
             * ``name``: Refresher name which can be used internally and for debugging.
 
         """
@@ -45,12 +43,16 @@ class Refresher(object):
         self.name = name
         self.refresh_interval = refresh_interval
         self.refresh_function = refresh_function
+        #interval for checking the in_background property in the activate()
+        self.sleep_time = 0.1
+        self.calculate_intervals()
         self.set_keymap(keymap if keymap else {})
+        self.in_foreground = False
         self.in_background = Event()
 
     def to_foreground(self):
         """ Is called when refresher's ``activate()`` method is used, sets flags and performs all the actions so that refresher can display its contents and receive keypresses."""
-        logger.debug("refresher {0} in foreground".format(self.name))
+        logger.debug("refresher {} in foreground".format(self.name))
         self.in_background.set()
         self.in_foreground = True
         self.refresh()
@@ -59,35 +61,45 @@ class Refresher(object):
     def to_background(self):
         """ Signals ``activate`` to finish executing """
         self.in_foreground = False
-        logger.debug("refresher {0} in background".format(self.name))
+        logger.debug("refresher {} in background".format(self.name))
 
     def activate(self):
         """ A method which is called when refresher needs to start operating. Is blocking, sets up input&output devices, renders the refresher, periodically calls the refresh function&refreshes the screen while self.in_foreground is True, while refresher callbacks are executed from the input device thread."""
-        logger.debug("refresher {0} activated".format(self.name))
+        logger.debug("refresher {} activated".format(self.name))
         self.to_foreground()
-        counter = 0
-        divisor = 20.0
-        sleep_time = self.refresh_interval/divisor
         while self.in_background.isSet():
-            if self.in_foreground:
-                if counter == divisor:
-                    counter = 0
-                if counter == 0:
-                    self.refresh()
-                counter += 1
-            sleep(sleep_time)
+            self.idle_loop()
         logger.debug(self.name+" exited")
         return True
+
+    def calculate_intervals(self):
+        #in_background of the refresher needs to be checked approx. each 0.1 second,
+        #since users expect the refresher to exit almost instantly
+        self.iterations_before_refresh = self.refresh_interval/self.sleep_time
+        if self.iterations_before_refresh < 1:
+            self.iterations_before_refresh = 1
+        else:
+            self.iterations_before_refresh = int(self.iterations_before_refresh)
+        self.counter = 0
+
+    def idle_loop(self):
+        if self.in_foreground:
+            if self.counter == self.iterations_before_refresh:
+                self.counter = 0
+            if self.counter == 0:
+                self.refresh()
+            self.counter += 1
+        sleep(self.sleep_time)
 
     def deactivate(self):
         """ Deactivates the refresher completely, exiting it."""
         self.in_foreground = False
         self.in_background.clear()
-        logger.debug("refresher {0} deactivated".format(self.name))
+        logger.debug("refresher {} deactivated".format(self.name))
 
     def print_name(self):
         """ A debug method. Useful for hooking up to an input event so that you can see which refresher is currently active. """
-        logger.debug("Active refresher is {0}".format(self.name))
+        logger.debug("Active refresher is {}".format(self.name))
 
     def process_callback(self, func):
         """ Decorates a function to be used by Refresher element.
@@ -103,19 +115,17 @@ class Refresher(object):
         return wrapper
 
     def process_keymap(self, keymap):
-        """Sets the keymap. In future, will allow per-system keycode-to-callback tweaking using a config file. """
+        """Processes the keymap. In future, will allow per-system keycode-to-callback tweaking using a config file. """
         logger.debug("{}: processing keymap - {}".format(self.name, keymap))
         for key in keymap:
             callback = self.process_callback(keymap[key])
             keymap[key] = callback
         if not "KEY_LEFT" in keymap:
             keymap["KEY_LEFT"] = self.deactivate
-        #if not "KEY_RIGHT" in keymap and:
-        #    keymap["KEY_RIGHT"] = self.print_name
         return keymap
 
     def set_keymap(self, keymap):
-        """Generate and sets the input device's keycode-to-callback mapping. Re-starts the input device because of passing-variables-between-threads issues."""
+        """Sets the refresher's keymap (filtered using ``process_keymap`` before setting)."""
         self.keymap = self.process_keymap(keymap)
 
     @to_be_foreground
@@ -127,7 +137,7 @@ class Refresher(object):
 
     @to_be_foreground
     def refresh(self):
-        logger.debug("{0}: refreshed data on display".format(self.name))
+        logger.debug("{}: refreshed data on display".format(self.name))
         data_to_display = self.refresh_function()
         if isinstance(data_to_display, basestring):
             #Passed a string, not a list.
