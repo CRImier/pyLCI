@@ -4,7 +4,7 @@ SUDO=''
 if (( $EUID != 0 )); then
     SUDO='sudo'
 fi
-[ -f config.json ] || cp config.json.example config.json
+[ -f config.json ] || cp default_config.json config.json
 $SUDO apt-get install python python-pip python-smbus python-dev python-pygame libjpeg-dev python-serial nmap
 $SUDO pip2 install -U luma.oled python-nmap smspdu zerophone_hw gpio vobject
 $SUDO mkdir -p $INSTALL_DIR
