@@ -15,13 +15,14 @@ class OutputDevice(object):
 
     def attach_proxy(self, proxy):
         self.current_proxy = proxy
+        proxy.on_attach()
 
     def init_proxy(self, proxy):
         base_classes = self.__base_classes__
         base_classes_items = sum([cls.__dict__.items() for cls in base_classes], [])
         #print(base_classes_items)
         public_attributes = [ (k, v) for (k, v) in base_classes_items if not k.startswith("_") ]
-        hidden_attributes = ["current_proxy"]
+        hidden_attributes = ["current_proxy", "current_image"]
         hidden_methods = ["init_proxy", "proxify_method", "detach_current_proxy", "attach_proxy", "get_proxied_method", "proxify_method"]
         attribute_names = [ k for (k, v) in public_attributes if not callable(v) and k not in hidden_attributes]
         method_names = [ k for (k, v) in public_attributes if callable(v) and k not in hidden_methods]
@@ -49,11 +50,18 @@ class OutputDevice(object):
     def get_proxied_method(o, proxy, method_name, sideeffect):
         method = getattr(o, method_name)
         @wraps(method)
-        def wrapper(self, *args, **kwargs):
-            sideeffect(self, *args, **kwargs)
-            if o.current_proxy == proxy.context_alias:
-                method(o, *args, **kwargs)
-
+        def wrapper(*args, **kwargs):
+            #print("Method: "+method_name)
+            sideeffect(*args, **kwargs)
+            #print("Current: "+o.current_proxy.context_alias)
+            #print("Called from: "+proxy.context_alias)
+            if o.current_proxy.context_alias == proxy.context_alias:
+                #print("Calling the method directly!")
+                #print(args)
+                method(*args, **kwargs)
+            else:
+                pass #print("Not calling the method directly!")
+            #print("")
         return wrapper
 
     def proxify_method(self, proxy, method_name):
@@ -116,14 +124,15 @@ class GraphicalOutputDevice(OutputDevice):
 
 class OutputProxy(CharacterOutputDevice, GraphicalOutputDevice):
 
+    current_image = None
+
     def __init__(self, context_alias):
         self.context_alias = context_alias
 
     def _display_image(self, image):
-        print("Calling the display_image sideeffect!")
         self.current_image = image
 
-    def _display_data(self, data):
+    def _display_data(self, *data):
         self.__displayed_data = data
 
     def _cursor(self):
@@ -134,6 +143,10 @@ class OutputProxy(CharacterOutputDevice, GraphicalOutputDevice):
 
     def _cursor(self):
         self.__cursor_enabled = True
+
+    def on_attach(self):
+        if self.current_image:
+            self.display_image(self.current_image)
 
 def init(output_config):
     # type: (list) -> None
