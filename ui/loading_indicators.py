@@ -7,7 +7,7 @@ from threading import Thread
 from time import time
 
 from PIL import ImageDraw
-from luma.core.render import canvas
+from canvas import Canvas
 
 from ui import Refresher
 from ui.utils import clamp, Chronometer, to_be_foreground
@@ -27,17 +27,17 @@ Rect = namedtuple('Rect', ['left', 'top', 'right', 'bottom'])
 
 class CenteredTextRenderer(object):
     # TODO: refactor into the ZPUI canvas wrapper that's bound to appear in the future.
-    def draw_centered_text(self, draw, content, device_size):
+    def draw_centered_text(self, c, content, device_size):
         """Draws a centered text on the canvas and returns a 4-tuple of the coordinates taken by the text"""
         # type: (ImageDraw, str, tuple) -> None
-        coords = self.get_centered_text_bounds(draw, content, device_size)
-        draw.text((coords.left, coords.top), content, fill=True)
+        coords = self.get_centered_text_bounds(c, content, device_size)
+        c.text((coords.left, coords.top), content, fill=True)
 
     @staticmethod
-    def get_centered_text_bounds(draw, content, device_size):
+    def get_centered_text_bounds(c, content, device_size):
         """Returns the coordinates of the centered text (min_x, min_y, max_x, max_y)"""
         # type: (ImageDraw, str, tuple) -> Rect
-        w, h = draw.textsize(content)
+        w, h = c.textsize(content)
         dw, dh = device_size
         return Rect(dw / 2 - w / 2, dh / 2 - h / 2, dw / 2 + w / 2, dh / 2 + h / 2)
 
@@ -99,12 +99,10 @@ class Throbber(LoadingIndicator):
     @to_be_foreground
     def refresh(self):
         self.update_throbber_angle()
-        c = canvas(self.o.device)
-        c.__enter__()
-        x, y = c.device.size
+        c = Canvas(self.o)
+        x, y = self.o.width, self.o.height
         radius = min(x, y) / 4
-        draw = c.draw
-        draw.arc(
+        c.arc(
             (
                 x / 2 - radius, y / 2 - radius,
                 x / 2 + 1 + radius, y / 2 + radius
@@ -113,7 +111,7 @@ class Throbber(LoadingIndicator):
             end=(self._current_angle + self._current_range / 2) % 360,
             fill=True
         )
-        self.o.display_image(c.image)
+        self.o.display_image(c.get_image())
 
     def update_throbber_angle(self):
         self.counter.update()
@@ -150,17 +148,15 @@ class CircularProgressBar(ProgressIndicator, CenteredTextRenderer):
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
 
     def refresh(self):
-        c = canvas(self.o.device)
-        c.__enter__()
-        x, y = c.device.size
+        c = Canvas(self.o)
+        x, y = self.o.width, self.o.height
         radius = min(x, y) / 4
-        draw = c.draw
         center_coordinates = (x / 2 - radius, y / 2 - radius, x / 2 + radius, y / 2 + radius)
-        draw.arc(center_coordinates, start=0, end=360 * self.progress, fill=True)
+        c.arc(center_coordinates, start=0, end=360 * self.progress, fill=True)
         if self.show_percentage:
-            self.draw_centered_text(draw, "{:.0%}".format(self.progress), self.o.device.size)
+            self.draw_centered_text(c, "{:.0%}".format(self.progress), (self.o.width, self.o.height))
 
-        self.o.display_image(c.image)
+        self.o.display_image(c.get_image())
 
 
 class TextProgressBar(ProgressIndicator):
@@ -224,29 +220,25 @@ class GraphicalProgressBar(ProgressIndicator, CenteredTextRenderer):
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
 
     def refresh(self):
-        c = canvas(self.o.device)
-        c.__enter__()
-        draw = c.draw
-        bar_top = self.o.device.size[1] / 2
+        c = Canvas(self.o)
+        bar_top = self.o.width / 2
         if self.show_percentage:
             percentage_text = "{:.0%}".format(self.progress)
-            coords = self.get_centered_text_bounds(draw, percentage_text, self.o.device.size)
-            draw.text((coords.left, self.margin), percentage_text, fill=True)  # Drawn top-centered (with margin)
+            coords = self.get_centered_text_bounds(c, percentage_text, (self.o.width, self.o.height))
+            c.text((coords.left, self.margin), percentage_text, fill=True)  # Drawn top-centered (with margin)
             bar_top = self.margin + (coords.bottom - coords.top)
 
-        self.draw_bar(draw, bar_top)
+        self.draw_bar(c, bar_top)
 
-        self.o.display_image(c.image)
+        self.o.display_image(c.get_image())
 
-    def draw_bar(self, draw, top_y):
+    def draw_bar(self, c, top_y):
         # type: (ImageDraw, float) -> None
-        width, height = self.o.device.size
-
         outline_coords = Rect(
             self.margin,
             top_y,
-            width - self.margin,
-            min(top_y + self.bar_height, height - self.margin)
+            self.o.width - self.margin,
+            min(top_y + self.bar_height, self.o.height - self.margin)
         )
 
         bar_width = outline_coords.right - outline_coords.left - self.padding * 2
@@ -259,8 +251,8 @@ class GraphicalProgressBar(ProgressIndicator, CenteredTextRenderer):
             outline_coords.bottom - self.padding
         )
 
-        draw.rectangle(outline_coords, fill=False, outline=True)
-        draw.rectangle(bar_coords, fill=True, outline=False)
+        c.rectangle(outline_coords, fill=False, outline=True)
+        c.rectangle(bar_coords, fill=True, outline=False)
 
 
 def ProgressBar(i, o, *args, **kwargs):
