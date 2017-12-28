@@ -4,14 +4,24 @@ import unittest
 
 from mock import patch, Mock
 
-
 try:
     from ui import Checkbox
 except ImportError:
     print("Absolute imports failed, trying relative imports")
     os.sys.path.append(os.path.dirname(os.path.abspath('.')))
-    from checkbox import Checkbox
+    # Store original __import__
+    orig_import = __import__
 
+    def import_mock(name, *args):
+        if name in ['helpers']:
+            return Mock()
+        elif name == 'ui.utils':
+            import utils
+            return utils
+        return orig_import(name, *args)
+
+    with patch('__builtin__.__import__', side_effect=import_mock):
+        from checkbox import Checkbox
 
 def get_mock_input():
     return Mock()
@@ -107,6 +117,26 @@ class TestCheckbox(unittest.TestCase):
         assert all([isinstance(key, basestring) for key in return_value.keys()])
         assert all([isinstance(value, bool) for value in return_value.values()])
 
+    def test_shows_data_on_screen(self):
+        """Tests whether the Checkbox outputs data on screen when it's ran"""
+        num_elements = 3
+        contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        i = get_mock_input()
+        o = get_mock_output()
+        cb = Checkbox(contents, i, o, name=cb_name, config={})
+
+        def scenario():
+            cb.deactivate()
+
+        with patch.object(cb, 'idle_loop', side_effect=scenario) as p:
+            cb.activate()
+            #The scenario should only be called once
+            assert cb.idle_loop.called
+            assert cb.idle_loop.call_count == 1
+
+        assert o.display_data.called
+        assert o.display_data.call_count == 1 #One in to_foreground
+        assert o.display_data.call_args[0] == (' A0', ' A1', ' A2', ' Accept')
 
 if __name__ == '__main__':
     unittest.main()
