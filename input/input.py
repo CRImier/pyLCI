@@ -34,17 +34,27 @@ class InputProcessor():
         self.cm = context_manager
         self.queue = Queue.Queue()
         for driver in self.drivers.values():
-            driver.send_key = self.receive_key #Overriding the send_key method so that keycodes get sent to InputListener
+            driver.send_key = self.receive_key #Overriding the send_key method so that keycodes get sent to InputProcessor
             driver.start()
         atexit.register(self.atexit)
 
     def attach_proxy(self, proxy):
+        """
+        This method is to be called from the ContextManager. Saves a proxy
+        internally, so that when a callback is received, its keymap can be
+        referenced.
+        """
         if self.current_proxy:
             raise ValueError("A proxy is already attached!")
         logger.info("Attaching proxy for context: {}".format(proxy.context_alias))
         self.current_proxy = proxy
 
     def detach_current_proxy(self):
+        """
+        This method is to be called from the ContextManager. Saves a proxy
+        internally, so that when a callback is received, its keymap can be
+        referenced.
+        """
         if self.current_proxy:
             logger.info("Detaching proxy for context: {}".format(self.current_proxy.context_alias))
             self.current_proxy = None
@@ -66,35 +76,60 @@ class InputProcessor():
     def receive_key(self, key):
         """ This is the method that receives keypresses from drivers and puts
         them into ``self.queue``, to be processed by ``self.event_loop`` 
-        Will block with full queue, until the queue will have a free spot."""
+        Will block with full queue until the queue has a free spot.
+        """
         self.queue.put(key)
 
     def event_loop(self, index):
-        """Blocking event loop which just calls callbacks in the keymap
-        once corresponding keys are received in the ``self.queue``."""
+        """
+        Blocking event loop which just calls ``process_key`` once a key
+        is received in the ``self.queue``. Also has some mechanisms that
+        make sure the existing event_loop will exit once flag is set, even
+        if other event_loop has already started (thought an event_loop can't
+        exit if it's still processing a callback.)
+        """
         logger.debug("Starting event loop "+str(index))
         self.stop_flag = Event()
-        stop_flag = self.stop_flag #Saving a reference.
-        #stop_flag is an object that will signal the current input thread to exit or not exit once it's done processing a callback.
-        #It'll be called just before self.stop_flag will be overwritten. However, we've got a reference to it and now can check the exact object this thread itself constructed.
-        #Praise the holy garbage collector.
+        stop_flag = self.stop_flag # Saving a reference.
+        # stop_flag is an object that will signal the current input thread to exit or not exit once it's done processing a callback.
+        # It'll be called just before self.stop_flag will be overwritten. However, we've got a reference to it and now can check the exact flag this thread itself constructed.
+        # Praise the holy garbage collector.
         stop_flag.clear()
         while not stop_flag.isSet():
             if self.get_current_proxy() is not None:
                 try:
                     key = self.queue.get(False, 0.1)
                 except Queue.Empty:
+                    # here an active event_loop spends most of the time
                     sleep(0.1)
                 except AttributeError:
-                    pass #Typically happens if InputListener exits abnormally upon program termination
+                    # typically happens upon program termination
+                    pass
                 else:
+                    # here event_loop is usually busy
                     self.process_key(key)
             else:
-                #No current proxy set yet, not processing anything
+                # No current proxy set yet, not processing anything
                 sleep(0.1)
         logger.debug("Stopping event loop "+str(index))
 
     def process_key(self, key):
+        """
+        This function receives a keyname, finds the corresponding callback/action
+        and handles it. The lookup order is as follows:
+
+            * Global callbacks - set on the InputProcessor itself
+            * Proxy non-maskable callbacks
+            * Backlight callback (doesn't do anything with the keyname, but dismisses the keypress if it turned on the backlight)
+            * Proxy simple callbacks
+            * Proxy maskable callbacks
+            * Streaming callback (if set, just sends the key to it)
+
+        As soon as a match is found, processes the associated callback and returns.
+        """
+        # Global and nonmaskable callbacks are supposed to work
+        # even when the screen backlight is off
+        #
         # First, querying global callbacks - they're more important than
         # even the current proxy nonmaskable callbacks
         if key in self.global_keymap:
@@ -104,25 +139,24 @@ class InputProcessor():
         # Now, all the callbacks are either proxy callbacks or backlight-related
         # Saving a reference to current_proxy, in case it changes during the lookup
         current_proxy = self.get_current_proxy()
-        #Nonmaskable callbacks are supposed to work even when the screen backlight is off
-        #(especially since, right now, they're actions like "volume up/down" and "next song")
         if key in current_proxy.nonmaskable_keymap:
             callback = current_proxy.nonmaskable_keymap[key]
             self.handle_callback(callback, key, type="nonmaskable", context_name=current_proxy.context_alias)
             return
-        #Checking backlight state, turning it on if necessary
+        # Checking backlight state, turning it on if necessary
         if callable(self.backlight_cb):
             try:
+                # backlight_cb turns on the backligth as a side effect
                 backlight_was_off = self.backlight_cb()
             except:
                 logger.warning("Exception while calling the backlight check callback!")
                 logger.warning(format_exc())
             else:
-                #If backlight was off, ignore the keypress
+                # If backlight was off, ignore the keypress
                 if backlight_was_off is True:
                     return
-        #Now, all the other options:
-        #Simple callbacks
+        # Now, all the other callbacks of the proxy:
+        # Simple callbacks
         if key in current_proxy.keymap:
             callback = current_proxy.keymap[key]
             self.handle_callback(callback, key, context_name=current_proxy.context_alias)
@@ -152,17 +186,17 @@ class InputProcessor():
             locals = inspect.trace()[-1][0].f_locals
             logger.error("Exception {} caused by callback {} when key {} was received".format(e.__str__() or e.__class__, callback, key))
             logger.error(format_exc())
-            logger.error("Locals:")
+            logger.error("Locals of the callback:")
             logger.error(locals)
         finally:
             return
 
     def listen(self):
         """Start event_loop in a thread. Nonblocking."""
-        self.listener_thread = Thread(target = self.event_loop, name="InputThread-"+str(self.thread_index), args=(self.thread_index, )) 
+        self.processor_thread = Thread(target = self.event_loop, name="InputThread-"+str(self.thread_index), args=(self.thread_index, ))
         self.thread_index += 1
-        self.listener_thread.daemon = True
-        self.listener_thread.start()
+        self.processor_thread.daemon = True
+        self.processor_thread.start()
 
     def stop_listen(self):
         """This sets a flag for ``event_loop`` to stop. If the ``event_loop()`` is 
@@ -179,7 +213,7 @@ class InputProcessor():
             if hasattr(driver, "atexit"):
                 driver.atexit()
         try:
-            self.listener_thread.join()
+            self.processor_thread.join()
         except AttributeError:
             pass
 
@@ -229,7 +263,7 @@ class InputProxy():
 
     def set_callback(self, key_name, callback):
         """
-        Sets a single callback of the listener.
+        Sets a single callback.
 
         >>> self.clear_keymap()
         >>> self.set_callback("KEY_ENTER", lambda: None)
@@ -251,7 +285,7 @@ class InputProxy():
             raise CallbackException(3, "Special callback for {} can't be set because it's already set as maskable".format(key_name))
 
     def set_maskable_callback(self, key_name, callback):
-        """Sets a single maskable callback of the listener. Raises ``CallbackException``
+        """Sets a single maskable callback. Raises ``CallbackException``
         if the callback is one of the reserved keys or already is in maskable/nonmaskable
         keymap.
 
@@ -261,7 +295,7 @@ class InputProxy():
         self.maskable_keymap[key_name] = callback
 
     def set_nonmaskable_callback(self, key_name, callback):
-        """Sets a single nonmaskable callback of the listener. Raises ``CallbackException``
+        """Sets a single nonmaskable callback. Raises ``CallbackException``
         if the callback is one of the reserved keys or already is in maskable/nonmaskable
         keymap.
 
@@ -272,11 +306,11 @@ class InputProxy():
         self.nonmaskable_keymap[key_name] = callback
 
     def remove_callback(self, key_name):
-        """Removes a single callback of the listener."""
+        """Removes a single callback."""
         self.keymap.pop(key_name)
 
     def remove_maskable_callback(self, key_name):
-        """Removes a single maskable callback of the listener."""
+        """Removes a single maskable callback."""
         self.maskable_keymap.pop(key_name)
 
     def get_keymap(self):
