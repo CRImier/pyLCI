@@ -1,6 +1,5 @@
 from __future__ import division
 
-
 from textwrap import wrap
 from time import sleep, time
 
@@ -9,7 +8,6 @@ from luma.core.render import canvas
 
 from helpers import setup_logger
 from ui.utils import to_be_foreground, clamp
-
 
 logger = setup_logger(__name__, "warning")
 
@@ -86,7 +84,8 @@ class TextReader(object):
             self.scrollbar = HideableScrollbar(self.o, width=2, margin=2)
         else:
             self.scrollbar = Scrollbar(self.o, width=2, margin=2)
-        text_width = self.o.cols - (self.scrollbar.width // self.o.charwidth)
+        char_width = self.o.charwidth if hasattr(self, "charwidth") else 8  # emulator
+        text_width = self.o.cols - (self.scrollbar.width // char_width)
         self.content = wrap(text_content, text_width)
         self.in_foreground = False
         self.scroll_index = 0
@@ -115,7 +114,8 @@ class TextReader(object):
 
     def draw_text(self, text, draw, x_offset=2):
         for line, arg in enumerate(text):
-            y = (line * self.o.charheight)
+            charheight = self.o.charheight if hasattr(self.o, "charheight") else 8
+            y = (line * charheight)
             draw.text((x_offset, y), arg, fill='white')
 
     def get_displayed_text(self):
