@@ -1,5 +1,7 @@
 from copy import copy
+
 from helpers import setup_logger
+
 logger = setup_logger(__name__, "warning")
 
 from base_list_ui import BaseListUIElement, TextView, EightPtView, SixteenPtView, to_be_foreground
@@ -39,7 +41,7 @@ class Checkbox(BaseListUIElement):
             * ``final_button_name``: label for the last button that confirms the selection (default: ``"Accept"``)
 
         """
-        self.default_state = kwargs.pop("default_state") if "default_state" in kwargs else False
+        self.default_state = kwargs.pop("default_state", False)
         if "final_button_name" in kwargs:
             #Avoid propagation of final button name into other Checkbox objects, 
             #since exit_entry is modified in-place

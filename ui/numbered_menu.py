@@ -17,8 +17,8 @@ class NumberedMenu(Menu):
     (default: `True`)
     """
     def __init__(self, *args, **kwargs):
-        self.prepend_numbers = kwargs.pop('prepend_numbers') if 'prepend_numbers' in kwargs else True
-        self.input_delay = kwargs.pop('input_delay') if 'input_delay' in kwargs else 1
+        self.prepend_numbers = kwargs.pop('prepend_numbers', True)
+        self.input_delay = kwargs.pop('input_delay', 1)
         Menu.__init__(self, *args, **kwargs)
         self.__locked_name__ = None
         self.value_lock = Lock()

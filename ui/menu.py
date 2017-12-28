@@ -1,6 +1,5 @@
 from helpers import setup_logger
 logger = setup_logger(__name__, "warning")
-from traceback import print_exc
 
 from base_list_ui import BaseListBackgroundableUIElement, to_be_foreground
 
@@ -48,8 +47,8 @@ class Menu(BaseListBackgroundableUIElement):
             * ``contents_hook``: A function that is called every time menu goes in foreground that returns new menu contents. Allows to almost-dynamically update menu contents.
 
         """
-        self.catch_exit = kwargs.pop("catch_exit") if "catch_exit" in kwargs else True
-        self.contents_hook = kwargs.pop("contents_hook") if "contents_hook" in kwargs else None
+        self.catch_exit = kwargs.pop("catch_exit", True)
+        self.contents_hook = kwargs.pop("contents_hook", None)
         BaseListBackgroundableUIElement.__init__(self, *args, **kwargs)
 
     def before_activate(self):
