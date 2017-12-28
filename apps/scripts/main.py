@@ -2,7 +2,7 @@ import os
 from subprocess import check_output, CalledProcessError, STDOUT
 
 from helpers import read_or_create_config, local_path_gen
-from ui import Menu, Printer, DialogBox, format_for_screen as ffs, PathPicker, NumpadCharInput
+from ui import Menu, Printer, DialogBox, PathPicker, NumpadCharInput, TextReader
 
 menu_name = "Scripts"  # App name as seen in main menu while using the system
 
@@ -36,6 +36,8 @@ def call_external(script_list, shell=False):
     else:
         script_path = os.path.split(script_list[0])[1]
     Printer("Calling {}".format(script_path), i, o, 1)
+
+    output = None
     try:
         output = check_output(script_list, stderr=STDOUT, shell=shell)
     except OSError as e:
@@ -47,7 +49,7 @@ def call_external(script_list, shell=False):
             Printer(["Unknown format,", "forgot header?"], i, o, 1)
         else:
             error_data = ["Unknown error", ""]
-            error_data += ffs(repr(e), o.cols)
+            error_data += repr(e)
             Printer(error_data, i, o, 1)
         output = ""
     except CalledProcessError as e:
@@ -60,7 +62,7 @@ def call_external(script_list, shell=False):
             return
         answer = DialogBox("yn", i, o, message="Show output?").activate()
         if answer:
-            Printer(ffs(output, o.cols, False), i, o, 5, True)
+            TextReader(output, i, o, hide_scrollbar=True).activate()
 
 
 def call_by_path():
