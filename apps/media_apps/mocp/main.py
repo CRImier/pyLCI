@@ -46,9 +46,15 @@ main_menu_contents = [
 ["Autonext", autonext_dialog]
 ]
 
+def set_global_callbacks():
+    import __main__ #HHHHHAAAAAAAAAAAXXXX
+    __main__.input_processor.set_global_callback("KEY_PROG1", mocp_next)
+    __main__.input_processor.set_global_callback("KEY_CAMERA", mocp_prev)
+
 def init_app(input, output):
     global main_menu, callback, i, o
     i = input; o = output
+    set_global_callbacks()
     #i.set_nonmaskable_callback("KEY_PROG1", lambda: mocp_next(silent=True) )
     #i.set_nonmaskable_callback("KEY_CAMERA", lambda: mocp_prev(silent=True) )
     main_menu = Menu(main_menu_contents, i, o, "MOCP menu")
