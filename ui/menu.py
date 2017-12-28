@@ -1,7 +1,7 @@
-from helpers import setup_logger
-logger = setup_logger(__name__, "warning")
-
 from base_list_ui import BaseListBackgroundableUIElement, to_be_foreground
+from helpers import setup_logger
+
+logger = setup_logger(__name__, "warning")
 
 
 class MenuExitException(Exception):
@@ -15,9 +15,9 @@ class Menu(BaseListBackgroundableUIElement):
     output a list of values or select actions to perform. Is one of the most used 
     UI elements, used both in system core and in most of the applications."""
 
-    pointer = 0 #: number of currently selected menu entry, starting from 0.
-    in_background = False #: flag which indicates whether menu is currently active, either being displayed or just waiting in background (for example, when you go into a sub-menu, the parent menu will still be considered active).
-    in_foreground = False #: flag which indicates whether menu is currently displayed. 
+    pointer = 0  #: number of currently selected menu entry, starting from 0.
+    in_background = False  #: flag which indicates whether menu is currently active, either being displayed or just waiting in background (for example, when you go into a sub-menu, the parent menu will still be considered active).
+    in_foreground = False  #: flag which indicates whether menu is currently displayed.
     exit_exception = False
 
     def __init__(self, *args, **kwargs):
@@ -52,7 +52,7 @@ class Menu(BaseListBackgroundableUIElement):
         BaseListBackgroundableUIElement.__init__(self, *args, **kwargs)
 
     def before_activate(self):
-        #Clearing flags before the menu is activated
+        # Clearing flags before the menu is activated
         self.exit_exception = False
 
     def before_foreground(self):
@@ -61,7 +61,7 @@ class Menu(BaseListBackgroundableUIElement):
 
     def return_value(self):
         if self.exit_exception:
-            if self.catch_exit == False:
+            if not self.catch_exit:
                 raise MenuExitException
         return True
 
@@ -75,9 +75,9 @@ class Menu(BaseListBackgroundableUIElement):
         self.to_background()
         entry = self.contents[self.pointer]
         if len(entry) > 1:
-            #Current menu entry has a callback
+            # Current menu entry has a callback
             if entry == self.exit_entry:
-                #It's an exit entry, exiting
+                # It's an exit entry, exiting
                 self.deactivate()
                 return
             try:

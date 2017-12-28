@@ -1,10 +1,10 @@
 from copy import copy
 
+from base_list_ui import BaseListUIElement, TextView, EightPtView, SixteenPtView, to_be_foreground
 from helpers import setup_logger
 
 logger = setup_logger(__name__, "warning")
 
-from base_list_ui import BaseListUIElement, TextView, EightPtView, SixteenPtView, to_be_foreground
 
 class Checkbox(BaseListUIElement):
     """Implements a checkbox which can be used to enable or disable some functions in your application. 
@@ -43,8 +43,8 @@ class Checkbox(BaseListUIElement):
         """
         self.default_state = kwargs.pop("default_state", False)
         if "final_button_name" in kwargs:
-            #Avoid propagation of final button name into other Checkbox objects, 
-            #since exit_entry is modified in-place
+            # Avoid propagation of final button name into other Checkbox objects,
+            # since exit_entry is modified in-place
             final_button_name = kwargs.pop("final_button_name")
             self.exit_entry = copy(self.exit_entry)
             self.exit_entry[0] = final_button_name
@@ -52,20 +52,21 @@ class Checkbox(BaseListUIElement):
 
     def set_views_dict(self):
         self.views = {
-        "PrettyGraphicalView":ChSixteenPtView, #Left for compatibility
-        "SimpleGraphicalView":ChEightPtView, #Left for compatibility
-        "SixteenPtView":ChSixteenPtView,
-        "EightPtView":ChEightPtView,
-        "TextView":ChTextView}
+            "PrettyGraphicalView": ChSixteenPtView,  # Left for compatibility
+            "SimpleGraphicalView": ChEightPtView,  # Left for compatibility
+            "SixteenPtView": ChSixteenPtView,
+            "EightPtView": ChEightPtView,
+            "TextView": ChTextView}
 
     def get_return_value(self):
         if self.accepted:
-            return {self.contents[index][1]:self.states[index] for index, element in enumerate(self.contents) if element != self.exit_entry}
+            return {self.contents[index][1]: self.states[index] for index, element in enumerate(self.contents) if
+                    element != self.exit_entry}
         else:
             return None
 
     def before_activate(self):
-        #Clearing flags
+        # Clearing flags
         self.accepted = False
 
     @to_be_foreground
@@ -77,20 +78,29 @@ class Checkbox(BaseListUIElement):
             self.accepted = True
             self.deactivate()
             return
-        self.states[self.pointer] = not self.states[self.pointer] #Just inverting.
+        self.states[self.pointer] = not self.states[self.pointer]  # Just inverting.
         self.view.refresh()
 
     def validate_contents(self, contents):
         assert isinstance(contents, list), "Checkbox contents should be a list"
         for entry in contents:
-            assert isinstance(entry[0], basestring), "Checkbox entry first element should be a string - got {} instead".format(repr(entry[0]))
+            assert isinstance(
+                entry[0],
+                basestring), "Checkbox entry first element should be a string - got {} instead".format(
+                repr(entry[0]))
+
             if len(entry) > 2:
-                assert entry[2] in ["accept", True, False], "Checkbox entry third element can only be a boolean or  \"accept\" - got {} instead".format(repr(entry[2]))
+                assert entry[2] in [
+                    "accept",
+                    True,
+                    False
+                ], "Checkbox entry third element can only be a boolean or  \"accept\" - got {} instead".format(
+                    repr(entry[2]))
 
     def process_contents(self):
-        self.states = [element[2] if len(element)>2 else self.default_state for element in self.contents]
+        self.states = [element[2] if len(element) > 2 else self.default_state for element in self.contents]
         self.contents.append(self.exit_entry)
-        self.states.append(False) #For the final button, to maintain "len(states) == len(self.contents)"
+        self.states.append(False)  # For the final button, to maintain "len(states) == len(self.contents)"
         logger.debug("{}: menu contents processed".format(self.name))
 
 
@@ -107,7 +117,6 @@ class CheckboxRenderingMixin():
 
     """
 
-
     def entry_is_checked(self, entry_num):
         return self.el.states[entry_num]
 
@@ -117,40 +126,47 @@ class CheckboxRenderingMixin():
         active = self.entry_is_active(entry_num)
         checked = self.entry_is_checked(entry_num)
         display_columns = self.get_fow_width_in_chars()
-        avail_display_chars = (display_columns*self.entry_height)-1 #1 char for "*"/" "
+        avail_display_chars = (display_columns * self.entry_height) - 1  # 1 char for "*"/" "
         if type(entry) in [str, unicode]:
             if active:
                 self.el.scrolling["current_scrollable"] = len(entry) > avail_display_chars
-                self.el.scrolling["current_finished"] = len(entry)-self.el.scrolling["pointer"] < avail_display_chars
+                self.el.scrolling["current_finished"] = len(entry) - self.el.scrolling["pointer"] < avail_display_chars
                 if self.el.scrolling["current_scrollable"] and not self.el.scrolling["current_finished"]:
                     entry = entry[self.el.scrolling["pointer"]:]
             if checked:
-                rendered_entry.append("*"+entry[:display_columns-1]) #First part of string displayed
+                rendered_entry.append("*" + entry[:display_columns - 1])  # First part of string displayed
             else:
-                rendered_entry.append(" "+entry[:display_columns-1])
-            entry_content = entry[display_columns-1:]
-            for row_num in range(self.entry_height-1): #First part of string done, if there are more rows to display, we give them the remains of string
+                rendered_entry.append(" " + entry[:display_columns - 1])
+            entry_content = entry[display_columns - 1:]
+            for row_num in range(
+                    self.entry_height - 1):  # First part of string done, if there are more rows to display, we give them the remains of string
                 rendered_entry.append(entry[:display_columns])
                 entry = entry[display_columns:]
         elif type(entry) == list:
-            entry = entry[:self.entry_height] #Can't have more arguments in the list argument than maximum entry height
+            entry = entry[
+                    :self.entry_height]  # Can't have more arguments in the list argument than maximum entry height
             if checked:
                 entry[0][0] == "*"
             else:
                 entry[0][0] == " "
-            while len(entry) < self.entry_height: #Can't have less either, padding with empty strings if necessary
+            while len(entry) < self.entry_height:  # Can't have less either, padding with empty strings if necessary
                 entry.append('')
             return entry
         else:
-            raise Exception("Entry labels have to be either strings or lists of strings, found: {}, type: {}".format(entry, type(entry)))
+            raise Exception(
+                "Entry labels have to be either strings or lists of strings, found: {}, type: {}".format(entry,
+                                                                                                         type(entry)))
         logger.debug("Rendered entry: {}".format(rendered_entry))
         return rendered_entry
+
 
 class ChEightPtView(CheckboxRenderingMixin, EightPtView):
     pass
 
+
 class ChTextView(CheckboxRenderingMixin, TextView):
     pass
+
 
 class ChSixteenPtView(CheckboxRenderingMixin, SixteenPtView):
     pass

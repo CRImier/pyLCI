@@ -47,11 +47,13 @@ class CenteredTextRenderer(object):
         # type: (tuple) -> tuple
         return device_size[0] / 2, device_size[1] / 2
 
+
 # ========================= abstract classes =========================
 
 
 class LoadingIndicator(Refresher):
     """Abstract class for "loading indicator" elements."""
+
     def __init__(self, i, o, *args, **kwargs):
         self._progress = 0
         Refresher.__init__(self, self.on_refresh, i, o, *args, **kwargs)
@@ -78,10 +80,12 @@ class LoadingIndicator(Refresher):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stop()
 
+
 class ProgressIndicator(LoadingIndicator):
     """Abstract class for "loading indicator" elements where the progress can be measured.
     Subclasses of ProgressIndicator, therefore, indicate a percentage of the progress
     that was done and is left."""
+
     @property
     def progress(self):
         return float(self._progress)
@@ -157,6 +161,7 @@ class IdleDottedMessage(LoadingIndicator):
     """ A simple (text-based) loading indicator, using three dots
     that are appearing and disappearing.
     Shows a message to the user."""
+
     def __init__(self, i, o, *args, **kwargs):
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
         self.message = kwargs.pop("message", "Loading".center(o.cols).rstrip())
@@ -174,6 +179,7 @@ class CircularProgressBar(ProgressIndicator, CenteredTextRenderer):
 
     A circular progress bar for graphical displays.
     Allows to show or hide the progress percentage."""
+
     def __init__(self, i, o, *args, **kwargs):
         self.show_percentage = kwargs.pop("show_percentage", True)
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
@@ -197,6 +203,7 @@ class TextProgressBar(ProgressIndicator):
 
     Allows to adjust characters used for drawing and the percentage field offset,
     as well as to show or hide the progress percentage."""
+
     def __init__(self, i, o, *args, **kwargs):
         # We need to pop() these arguments instead of using kwargs.get() because they
         # have to be removed from kwargs to prevent TypeErrors
@@ -249,6 +256,7 @@ class GraphicalProgressBar(ProgressIndicator, CenteredTextRenderer):
     """ A horizontal progress bar for graphical displays, showing a message to the user.
     Allows to adjust padding and margin for a little bit of customization,
     as well as to show or hide the progress percentage."""
+
     def __init__(self, i, o, *args, **kwargs):
         self.show_percentage = kwargs.pop("show_percentage", True)
         self.margin = kwargs.pop("margin", 15)
@@ -296,14 +304,15 @@ class GraphicalProgressBar(ProgressIndicator, CenteredTextRenderer):
         draw.rectangle(bar_coords, fill=True, outline=False)
 
 
+# noinspection PyPep8Naming
 def ProgressBar(i, o, *args, **kwargs):
     """Instantiates and returns the appropriate kind of progress bar
     for the output device - either graphical or text-based."""
-    if not hasattr(o, "type"): # In case we're on an emulator...
+    if not hasattr(o, "type"):  # In case we're on an emulator...
         return GraphicalProgressBar(i, o, *args, **kwargs)
     if "b&w-pixel" in o.type:
         return GraphicalProgressBar(i, o, *args, **kwargs)
     elif "char" in o.type:
         return TextProgressBar(i, o, *args, **kwargs)
     else:
-        raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
+        raise ValueError("Unsupported display type: {}".format(repr(o.type)))
