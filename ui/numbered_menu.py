@@ -1,8 +1,8 @@
 from threading import Lock
 from time import time
 
-from ui import Menu
-from ui.utils import clamp, check_value_lock, to_be_foreground
+from menu import Menu
+from utils import clamp, check_value_lock, to_be_foreground
 
 
 class NumberedMenu(Menu):
