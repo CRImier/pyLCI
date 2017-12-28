@@ -3,7 +3,7 @@ import os
 import traceback
 
 from apps import zero_app
-from ui import Printer, Menu
+from ui import Printer, Menu, NumberedMenu
 
 from helpers import setup_logger
 logger = setup_logger(__name__, "info")
@@ -35,7 +35,7 @@ class AppManager(object):
         self.o = o
 
     def load_all_apps(self):
-        base_menu = Menu([], self.i, self.o, "Main app menu",
+        base_menu = NumberedMenu([], self.i, self.o, "Main app menu",
                                     exitable=False)  # Main menu for all applications.
         base_menu.exit_entry = ["Exit", "exit"]
         base_menu.process_contents()
@@ -44,7 +44,7 @@ class AppManager(object):
             for subdir in subdirs:
                 # First, we create subdir menus (not yet linking because they're not created in correct order) and put them in subdir_menus.
                 subdir_path = os.path.join(path, subdir)
-                self.subdir_menus[subdir_path] = Menu([], self.i, self.o, subdir_path)
+                self.subdir_menus[subdir_path] = NumberedMenu([], self.i, self.o, subdir_path)
             for _module in modules:
                 # Then, we load modules and store them along with their paths
                 try:
