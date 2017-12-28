@@ -318,6 +318,14 @@ class BaseListUIElement(object):
             self.contents.append(self.exit_entry)
         logger.debug("{}: contents processed".format(self.name))
 
+    def get_displayed_contents(self):
+        """
+        This function is to be used for views, in case an UI element wants to
+        display entries differently than they're stored (for example, this is used
+        in ``NumberedMenu``).
+        """
+        return self.contents
+
 
 class BaseListBackgroundableUIElement(BaseListUIElement):
     """This is a base UI element for list-like UI elements.
@@ -433,7 +441,7 @@ class TextView():
     def entry_is_active(self, entry_num):
         return entry_num == self.el.pointer
         
-    def get_displayed_text(self):
+    def get_displayed_text(self, contents):
         """Generates the displayed data for a character-based output device. The output of this function can be fed to the o.display_data function.
         |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed entries' numbers, renders each one 
         of them and concatenates them into one big list which it returns.
@@ -441,12 +449,12 @@ class TextView():
         displayed_data = []
         disp_entry_positions = range(self.first_displayed_entry, self.last_displayed_entry+1)
         for entry_num in disp_entry_positions:
-            displayed_entry = self.render_displayed_entry(entry_num)
+            displayed_entry = self.render_displayed_entry(entry_num, contents)
             displayed_data += displayed_entry
         logger.debug("Displayed data: {}".format(displayed_data))
         return displayed_data
 
-    def render_displayed_entry(self, entry_num):
+    def render_displayed_entry(self, entry_num, contents):
         """Renders an UI element entry by its position number in self.contents, determined also by display width, self.entry_height and entry's representation type.
         If entry representation is a string, splits it into parts as long as the display's width in characters.
            If active flag is set, appends a "*" as the first entry's character. Otherwise, appends " ".
@@ -454,7 +462,7 @@ class TextView():
         If entry representation is a list, it returns that list as the rendered entry, trimming and padding with empty strings when necessary (to match the ``entry_height``).
         """
         rendered_entry = []
-        entry = self.el.contents[entry_num][0]
+        entry = contents[entry_num][0]
         active = self.entry_is_active(entry_num)
         display_columns = self.get_fow_width_in_chars()
         avail_display_chars = (display_columns*self.entry_height)
@@ -478,7 +486,7 @@ class TextView():
                 entry.append('')
             return [str(entry_str)[:display_columns] for entry_str in entry]
         else:
-            #How did this slip past the check on set_contents?
+            # Something slipped past the check in set_contents
             raise Exception("Entries may contain either strings or lists of strings as their representations")
         logger.debug("Rendered entry: {}".format(rendered_entry))
         return rendered_entry
@@ -490,7 +498,7 @@ class TextView():
     def refresh(self):
         logger.debug("{}: refreshed data on display".format(self.el.name))
         self.fix_pointers_on_refresh()
-        displayed_data = self.get_displayed_text()
+        displayed_data = self.get_displayed_text(self.el.get_displayed_contents())
         self.o.noCursor()
         self.o.display_data(*displayed_data)
         self.o.setCursor(self.get_active_line_num(), 0)
@@ -517,9 +525,9 @@ class EightPtView(TextView):
         canvas = self.get_displayed_canvas(cursor_y=self.get_active_line_num())
         self.o.display_image(canvas)
 
-    def get_scrollbar_top_bottom(self):
+    def get_scrollbar_top_bottom(self, contents):
         scrollbar_max_length = self.o.height-(self.scrollbar_y_offset*2)
-        total_entry_count = len(self.el.contents)
+        total_entry_count = len(contents)
         entries_before = self.first_displayed_entry
         entries_after = total_entry_count - self.last_displayed_entry - 1
         entries_on_screen = total_entry_count - entries_before - entries_after
@@ -537,25 +545,26 @@ class EightPtView(TextView):
     def get_displayed_canvas(self, cursor_x=0, cursor_y=None):
         """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.display_image function.
         |Doesn't support partly-rendering entries yet."""
-        menu_text = self.get_displayed_text()
+        contents = self.el.get_displayed_contents()
+        menu_text = self.get_displayed_text(contents)
         draw = luma_canvas(self.o.device)
         d = draw.__enter__()
-        scrollbar_coordinates = self.get_scrollbar_top_bottom()
-        #Drawing scrollbar, if applicable
+        scrollbar_coordinates = self.get_scrollbar_top_bottom(contents)
+        # Drawing scrollbar, if applicable
         if scrollbar_coordinates == (0, 0):
-            #left offset is dynamic and depends on whether there's a scrollbar or not
+            # left offset is dynamic and depends on whether there's a scrollbar or not
             left_offset = self.x_offset
         else:
             left_offset = self.x_scrollbar_offset
             y1, y2 = scrollbar_coordinates
             d.rectangle((1, y1, 2, y2), outline="white")
-        #Drawing cursor, if enabled
+        # Drawing cursor, if enabled
         if cursor_y is not None:
             c_x = cursor_x * self.charwidth
             c_y = cursor_y * self.charheight
             cursor_dims = (c_x-1+left_offset, c_y-1, c_x+self.charwidth+left_offset, c_y+self.charheight+1)
             d.rectangle(cursor_dims, outline="white")
-        #Drawing the text itself
+        # Drawing the text itself
         for i, line in enumerate(menu_text):
             y = (i*self.charheight - 1) if i != 0 else 0
             d.text((left_offset, y), line, fill="white")
@@ -572,10 +581,11 @@ class SixteenPtView(EightPtView):
     def get_displayed_canvas(self, cursor_x=0, cursor_y=None):
         """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.display_image function.
         |Doesn't support partly-rendering entries yet."""
-        menu_text = self.get_displayed_text()
+        contents = self.el.get_displayed_contents()
+        menu_text = self.get_displayed_text(contents)
         draw = luma_canvas(self.o.device)
         d = draw.__enter__()
-        scrollbar_coordinates = self.get_scrollbar_top_bottom()
+        scrollbar_coordinates = self.get_scrollbar_top_bottom(contents)
         #Drawing scrollbar, if applicable
         if scrollbar_coordinates == (0, 0):
             #left offset is dynamic and depends on whether there's a scrollbar or not
@@ -613,19 +623,21 @@ class MainMenuTripletView(SixteenPtView):
 
     @to_be_foreground
     def get_displayed_canvas(self, cursor_x=0, cursor_y=None):
-        #This view doesn't have a cursor, instead, the entry that's currently active is in the display center
+        # This view doesn't have a cursor, instead, the entry that's currently active is in the display center
+        contents = self.el.get_displayed_contents()
+        pointer = self.el.pointer # A shorthand
         draw = luma_canvas(self.o.device)
         d = draw.__enter__()
         central_position = (10, 16)
         font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 32)
-        current_entry = self.el.contents[self.el.pointer]
+        current_entry = contents[pointer]
         d.text(central_position, current_entry[0], fill="white", font=font)
         font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 16)
-        if self.el.pointer != 0:
-            line = self.el.contents[self.el.pointer-1][0]
+        if pointer != 0:
+            line = contents[pointer-1][0]
             d.text((2, 0), line, fill="white", font=font)
-        if self.el.pointer < len(self.el.contents)-1:
-            line = self.el.contents[self.el.pointer+1][0]
+        if pointer < len(contents)-1:
+            line = contents[pointer+1][0]
             d.text((2, 48), line, fill="white", font=font)
         image = draw.image
         del d;del draw
