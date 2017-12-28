@@ -54,6 +54,7 @@ class BaseListUIElement(object):
         self.name = name
         self.append_exit = append_exit
         self.exitable = exitable
+        self.exit_entry = copy(self.exit_entry)
         self.scrolling={"enabled":scrolling,
                         "current_finished":False,
                         "current_scrollable":False,
