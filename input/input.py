@@ -29,6 +29,7 @@ class InputProcessor():
     proxy_methods = ["listen", "stop_listen"]
 
     def __init__(self, drivers, context_manager):
+        self.global_keymap = {}
         self.drivers = drivers
         self.cm = context_manager
         self.queue = Queue.Queue()
@@ -50,6 +51,17 @@ class InputProcessor():
 
     def get_current_proxy(self):
         return self.current_proxy
+
+    def set_global_callback(self, key, callback):
+        """
+        Sets a global callback for a key. That global callback will be processed
+        before the backlight callback or any proxy callbacks.
+        """
+        logging.info("Setting a global callback for key {}".format(key))
+        if key in self.global_keymap.keys():
+            #Key is already used in the global keymap
+            raise CallbackException(4, "Global callback for {} can't be set because it's already in the keymap!".format(key_name))
+        self.global_keymap[key] = callback
 
     def receive_key(self, key):
         """ This is the method that receives keypresses from drivers and puts
@@ -83,14 +95,20 @@ class InputProcessor():
         logger.debug("Stopping event loop "+str(index))
 
     def process_key(self, key):
-        #Could probably be optimised in some way, that is, not doing dictionary lookup 
-        #each time a key is pressed
+        # First, querying global callbacks - they're more important than
+        # even the current proxy nonmaskable callbacks
+        if key in self.global_keymap:
+            callback = self.global_keymap[key]
+            self.handle_callback(callback, key, type="global")
+            return
+        # Now, all the callbacks are either proxy callbacks or backlight-related
+        # Saving a reference to current_proxy, in case it changes during the lookup
         current_proxy = self.get_current_proxy()
         #Nonmaskable callbacks are supposed to work even when the screen backlight is off
         #(especially since, right now, they're actions like "volume up/down" and "next song")
         if key in current_proxy.nonmaskable_keymap:
             callback = current_proxy.nonmaskable_keymap[key]
-            self.handle_callback(callback, key)
+            self.handle_callback(callback, key, type="nonmaskable", context_name=current_proxy.context_alias)
             return
         #Checking backlight state, turning it on if necessary
         if callable(self.backlight_cb):
@@ -107,20 +125,23 @@ class InputProcessor():
         #Simple callbacks
         if key in current_proxy.keymap:
             callback = current_proxy.keymap[key]
-            self.handle_callback(callback, key)
+            self.handle_callback(callback, key, context_name=current_proxy.context_alias)
         #Maskable callbacks
         elif key in current_proxy.maskable_keymap:
             callback = current_proxy.maskable_keymap[key]
-            self.handle_callback(callback, key)
+            self.handle_callback(callback, key, type="maskable", context_name=current_proxy.context_alias)
         #Keycode streaming
         elif callable(current_proxy.streaming):
-            self.handle_callback(current_proxy.streaming, key, pass_key=True)
+            self.handle_callback(current_proxy.streaming, key, pass_key=True, type="streaming", context_name=current_proxy.context_alias)
         else:
             pass #No handler for the key
         
-    def handle_callback(self, callback, key, pass_key=False):
+    def handle_callback(self, callback, key, pass_key=False, type="simple", context_name=None):
         try:
-            logger.info("Processing a callback for key {}".format(key))
+            if context_name:
+                logger.info("Processing a {} callback for key {}, context {}".format(type, key, context_name))
+            else:
+                logger.info("Processing a {} callback for key {}".format(type, key))
             logger.debug("pass_key = {}".format(pass_key))
             logger.debug("callback name: {}".format(callback.__name__))
             if pass_key:
