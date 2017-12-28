@@ -25,8 +25,10 @@ logging_format = (
     '%Y-%m-%d %H:%M:%S'
 )
 
-config_paths = ['/boot/zpui_config.json'] if not is_emulator else []
+config_paths = ['/boot/zpui_config.json', '/boot/pylci_config.json'] if not is_emulator else []
 config_paths.append(local_path('config.json'))
+#Using the .example config as a last resort
+config_paths.append(local_path('default_config.json'))
 
 
 def init():
@@ -36,14 +38,17 @@ def init():
 
     # Load config
     for path in config_paths:
-        try:
-            logging.debug('Loading config from {}'.format(path))
-            config = read_config(path)
-        except:
-            logging.exception('Failed to load config from {}'.format(path))
-        else:
-            logging.info('Successfully loaded config from {}'.format(path))
-            break
+        #Only try to load the config file if it's present
+        #(unclutters the logs)
+        if os.path.exists(path):
+            try:
+                logging.debug('Loading config from {}'.format(path))
+                config = read_config(path)
+            except:
+                logging.exception('Failed to load config from {}'.format(path))
+            else:
+                logging.info('Successfully loaded config from {}'.format(path))
+                break
 
     if config is None:
         sys.exit('Failed to load any config file')
