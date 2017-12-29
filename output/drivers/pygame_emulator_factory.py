@@ -5,14 +5,11 @@ creates device
 returns it to caller
 """
 
+import logging
 import luma.emulator.device
-from helpers import setup_logger
 
 # ignore PIL debug messages
-
 logging.getLogger("PIL").setLevel(logging.ERROR)
-
-logger = setup_logger(__name__)
 
 def get_pygame_emulator_device(width=128, height=64):
     """
