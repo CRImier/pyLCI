@@ -27,8 +27,8 @@ If the implementation is easy to explain, it may be a good idea.
 Namespaces are one honking great idea - let's do more of those!
 """
         self.menu_name = "TextReader test app"
-        self.textreader = TextReader(zen_of_python, i, o, self.menu_name)
+        self.text_reader = TextReader(zen_of_python, i, o, self.menu_name)
 
     def on_start(self):
         super(TextReaderExample, self).on_start()
-        self.textreader.activate()
+        self.text_reader.activate()
