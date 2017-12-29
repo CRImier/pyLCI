@@ -2,7 +2,7 @@ import os
 from subprocess import check_output, CalledProcessError, STDOUT
 
 from helpers import read_or_create_config, local_path_gen
-from ui import Menu, Printer, DialogBox, PathPicker, NumpadCharInput, TextReader
+from ui import Menu, Printer, PrettyPrinter, DialogBox, PathPicker, NumpadCharInput, TextReader
 
 menu_name = "Scripts"  # App name as seen in main menu while using the system
 
@@ -48,9 +48,8 @@ def call_external(script_list, shell=False):
         elif e.errno == 8:
             Printer(["Unknown format,", "forgot header?"], i, o, 1)
         else:
-            error_data = ["Unknown error", ""]
-            error_data += repr(e)
-            Printer(error_data, i, o, 1)
+            error_message = "Unknown error! \n \n {}".format(e)
+            PrettyPrinter(error_message, i, o, 3)
         output = ""
     except CalledProcessError as e:
         Printer(["Failed with", "code {}".format(e.returncode)], i, o, 1)
