@@ -75,8 +75,19 @@ class BaseListUIElement(object):
         self.generate_keymap()
         self.view = None
 
+    def set_views_dict(self):
+        self.views = {
+            "TextView": TextView,
+            "EightPtView": EightPtView,
+            "SixteenPtView": SixteenPtView,
+            "MainMenuTripletView": MainMenuTripletView,
+            "PrettyGraphicalView": SixteenPtView,  # Not a descriptive name - left for compatibility
+            "SimpleGraphicalView": EightPtView  # Not a descriptive name - left for compatibility
+        }
+
     def set_view(self, config):
         view = None
+        self.set_views_dict()
         if self.name in config.get("custom_views", {}).keys():
             view_config = config["custom_views"][self.name]
             if isinstance(view_config, basestring):
