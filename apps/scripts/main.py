@@ -1,8 +1,15 @@
-menu_name = "Scripts" #App name as seen in main menu while using the system
+import os
+from subprocess import check_output, CalledProcessError, STDOUT
+
+from helpers import read_or_create_config, local_path_gen
+from ui import Menu, Printer, DialogBox, PathPicker, NumpadCharInput, TextReader
+
+menu_name = "Scripts"  # App name as seen in main menu while using the system
 
 scripts_dir = "s/"
 config_filename = "config.json"
-default_config = """[
+default_config = """
+[
  {"path":"./s/login.sh",
   "name":"Hotspot login"},
  {"path":"./s/dmesg.sh",
@@ -18,24 +25,19 @@ default_config = """[
   "args":["http://www.google.com"]}
 ]"""
 
-from subprocess import check_output, CalledProcessError, STDOUT
-from time import sleep
-import os, sys, shlex
-
-from helpers import read_or_create_config, local_path_gen
-from ui import Menu, Printer, DialogBox, format_for_screen as ffs, PathPicker, NumpadCharInput
-
 local_path = local_path_gen(__name__)
 config_path = local_path(config_filename)
-config = read_or_create_config(config_path, default_config, menu_name+" app")
+config = read_or_create_config(config_path, default_config, menu_name + " app")
 
 
 def call_external(script_list, shell=False):
-    if shell == True:
+    if shell:
         script_path = script_list.split(' ')[0]
     else:
         script_path = os.path.split(script_list[0])[1]
     Printer("Calling {}".format(script_path), i, o, 1)
+
+    output = None
     try:
         output = check_output(script_list, stderr=STDOUT, shell=shell)
     except OSError as e:
@@ -47,7 +49,7 @@ def call_external(script_list, shell=False):
             Printer(["Unknown format,", "forgot header?"], i, o, 1)
         else:
             error_data = ["Unknown error", ""]
-            error_data += ffs(repr(e), o.cols)
+            error_data += repr(e)
             Printer(error_data, i, o, 1)
         output = ""
     except CalledProcessError as e:
@@ -59,8 +61,9 @@ def call_external(script_list, shell=False):
         if not output:
             return
         answer = DialogBox("yn", i, o, message="Show output?").activate()
-        if answer == True:
-            Printer(ffs(output, o.cols, False), i, o, 5, True)
+        if answer:
+            TextReader(output, i, o, autohide_scrollbars=True, h_scroll=True).activate()
+
 
 def call_by_path():
     path = PathPicker("/", i, o).activate()
@@ -68,15 +71,16 @@ def call_by_path():
         return
     args = NumpadCharInput(i, o, message="Arguments:", name="Script argument input").activate()
     if args is not None:
-        path = path+" "+args
+        path = path + " " + args
     call_external(path, shell=True)
-        
+
+
 def call_command():
     command = NumpadCharInput(i, o, message="Command:", name="Script command input").activate()
     if command is None:
         return
     call_external(command, shell=True)
-        
+
 
 def callback():
     script_menu_contents = [["Script by path", call_by_path],
@@ -90,7 +94,7 @@ def callback():
             scripts_in_config.append(script_path)
         args = script_def["args"] if "args" in script_def else []
         script_name = script_def["name"] if "name" in script_def else os.path.split(script_path)[1]
-        script_list = [script_path]+args
+        script_list = [script_path] + args
         script_menu_contents.append([script_name, lambda x=script_list: call_external(x)])
     other_scripts = os.listdir(local_path(scripts_dir))
     for script in other_scripts:
@@ -99,8 +103,12 @@ def callback():
             script_menu_contents.append([os.path.join(scripts_dir, script), lambda x=relpath: call_external([x])])
     Menu(script_menu_contents, i, o, "Script menu").activate()
 
-i = None; o = None
 
-def init_app(input, output):
+i = None
+o = None
+
+
+def init_app(input_obj, output_obj):
     global i, o
-    i = input; o = output
+    i = input_obj
+    o = output_obj
