@@ -62,14 +62,6 @@ class BaseListUIElement(object):
             "counter": 0,
             "pointer": 0
         }
-        self.views = {
-            "TextView": TextView,
-            "EightPtView": EightPtView,
-            "SixteenPtView": SixteenPtView,
-            "MainMenuTripletView": MainMenuTripletView,
-            "PrettyGraphicalView": SixteenPtView,  # Not a descriptive name - left for compatibility
-            "SimpleGraphicalView": EightPtView  # Not a descriptive name - left for compatibility
-        }
         self.config = config if config is not None else global_config
         self.set_view(self.config.get(self.config_key, {}))
         self.set_contents(contents)
