@@ -7,6 +7,7 @@ branches:
   except:
     - test_branch_doug
 notifications:
-  irc: "chat.freenode.net#ZeroPhone"
+  irc:
+    channels: "chat.freenode.net#ZeroPhone"
     on_success: change
     on_failure: always
