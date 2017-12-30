@@ -8,7 +8,7 @@ from ui.utils import clamp, check_value_lock, to_be_foreground
 class NumberedMenu(Menu):
     """
     This Menu allows the user to jump to entries using the numpad. If the menu is 10 entries or less
-    the navigation is instant. Othrewise, it lets the user type multiple digits to navigate to entries beyond 10th.
+    the navigation is instant. Otherwise, it lets the user type multiple digits to navigate to entries beyond 10th.
 
     The `input_delay` parameter controls how long, and if, the menu waits before considering an input as definitive.
     If `input_delay` is 0, then only the 10 first entries can be navigated to using the keypad.
@@ -16,13 +16,14 @@ class NumberedMenu(Menu):
     The `prepend_numbers` parameters controls whether the entries should be prefixed by their number.
     (default: `True`)
     """
+
     def __init__(self, *args, **kwargs):
-        self.prepend_numbers = kwargs.pop('prepend_numbers') if 'prepend_numbers' in kwargs else True
-        self.input_delay = kwargs.pop('input_delay') if 'input_delay' in kwargs else 1
+        self.prepend_numbers = kwargs.pop('prepend_numbers', True)
+        self.input_delay = kwargs.pop('input_delay', 1)
         Menu.__init__(self, *args, **kwargs)
         self.__locked_name__ = None
         self.value_lock = Lock()
-        self.numeric_keymap = { "KEY_{}".format(i): i for i in range(10) }
+        self.numeric_keymap = {"KEY_{}".format(i): i for i in range(10)}
         self.last_input_time = 0
         self.current_input = None
 
@@ -51,7 +52,8 @@ class NumberedMenu(Menu):
         if key == "KEY_RIGHT" and self.is_multi_digit():
             self.confirm_current_input()
 
-        if key not in self.numeric_keymap: return
+        if key not in self.numeric_keymap:
+            return
         if self.is_multi_digit():
             self.process_multi_digit_input(key)
         else:
@@ -70,8 +72,8 @@ class NumberedMenu(Menu):
 
     def move_to_entry(self, index):
         if self.pointer == index:
-            #Moving to the same item that's already selected
-            #let's interpret this as KEY_ENTER
+            # Moving to the same item that's already selected
+            # let's interpret this as KEY_ENTER
             self.current_input = None
             self.select_entry()
             return
@@ -111,7 +113,7 @@ class NumberedMenu(Menu):
             return True
 
         # user typed 2 and we have 19 entries, going to the most likely option
-        if int(self.current_input)*10 > self.entry_count:
+        if int(self.current_input) * 10 > self.entry_count:
             return True
 
         # user typed 17 and we have 12 entries
