@@ -120,9 +120,9 @@ class CheckboxRenderingMixin():
     def entry_is_checked(self, entry_num):
         return self.el.states[entry_num]
 
-    def render_displayed_entry(self, entry_num):
+    def render_displayed_entry(self, entry_num, contents):
         rendered_entry = []
-        entry = self.el.contents[entry_num][0]
+        entry = contents[entry_num][0]
         active = self.entry_is_active(entry_num)
         checked = self.entry_is_checked(entry_num)
         display_columns = self.get_fow_width_in_chars()
