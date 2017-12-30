@@ -1,0 +1,9 @@
+language: python
+python:
+  - "2.6"
+  - "2.7"
+# command to install dependencies
+script: python -B -m pytest --doctest-modules -v --doctest-ignore-import-errors --ignore=output/drivers --ignore=input/drivers --ignore=apps/hardware_apps/ --ignore=apps/example_apps/fire_detector --ignore=apps/test_hardware
+branches:
+  except:
+    - test_branch_doug
