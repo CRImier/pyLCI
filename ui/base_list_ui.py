@@ -73,7 +73,6 @@ class BaseListUIElement(object):
         self.set_view(self.config.get(self.config_key, {}))
         self.set_contents(contents)
         self.generate_keymap()
-        self.view = None
 
     def set_views_dict(self):
         self.views = {
