@@ -3,7 +3,9 @@ import pickle
 
 from helpers import Singleton, flatten
 from helpers import setup_logger
+
 logger = setup_logger(__name__, "warning")
+
 
 class AddressBook(Singleton):
     def __init__(self):
@@ -83,6 +85,10 @@ class AddressBook(Singleton):
         # simple wrapper around find_best_duplicate
         c = Contact(**kwargs)
         return self.find_best_duplicate(c)
+
+    def get_contacts_with(self, attribute_name):
+        # type: (str) -> list
+        return [c for c in self.contacts if len(getattr(c, attribute_name))]
 
     def find_best_duplicate(self, contact):
         # type: (Contact) -> Contact
