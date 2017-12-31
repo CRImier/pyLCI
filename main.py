@@ -81,7 +81,9 @@ def launch(name=None, **kwargs):
     """
 
     i, o = init()
-    app_man = AppManager('apps', i, o)
+
+    appman_config = config.get("app_manager", {})
+    app_man = AppManager('apps', i, o, config=appman_config)
 
     if name is None:
         try:
