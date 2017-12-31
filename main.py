@@ -28,25 +28,29 @@ logging_format = (
 config_paths = ['/boot/zpui_config.json'] if not is_emulator else []
 config_paths.append(local_path('config.json'))
 
+config = None
+config_path = None
 
 def init():
     """Initialize input and output objects"""
 
-    config = None
+    global config, config_path
 
     # Load config
-    for path in config_paths:
+    for config_path in config_paths:
         try:
-            logging.debug('Loading config from {}'.format(path))
-            config = read_config(path)
+            logging.debug('Loading config from {}'.format(config_path))
+            config = read_config(config_path)
         except:
-            logging.exception('Failed to load config from {}'.format(path))
+            logging.exception('Failed to load config from {}'.format(config_path))
         else:
-            logging.info('Successfully loaded config from {}'.format(path))
+            logging.info('Successfully loaded config from {}'.format(config_path))
             break
+    # After this loop, the config_path global should contain
+    # path for config that successfully loaded
 
     if config is None:
-        sys.exit('Failed to load any config file')
+        sys.exit('Failed to load any config files!')
 
     # Initialize output
     try:
