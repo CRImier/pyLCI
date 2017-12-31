@@ -13,6 +13,7 @@ Guides:
 
 * :doc:`Installing and updating ZPUI <setup>`
 * :ref:`Installing ZPUI emulator <emulator>`
+* :doc:`ZPUI configuration files <config>`
 * :doc:`Hacking on UI <hacking_ui>`
 
 References:
@@ -36,6 +37,7 @@ References:
    :hidden:
 
    setup.rst
+   config.rst
    ui.rst
    helpers.rst
    hacking_ui.rst
