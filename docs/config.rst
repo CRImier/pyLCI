@@ -61,6 +61,9 @@ sample ``config.json`` sections for each driver. ``"args"`` and ``"kwargs"`` get
 directly to drivers' ``__init__`` method, so you can read the driver documentation
 or source to see if there are options you could tweak.
 
+
+.. _verify_json:
+
 Verifying your changes
 ----------------------
 
@@ -78,10 +81,19 @@ You might need to install ``jq`` beforehand:
 
     ``sudo apt-get install jq``
 
+If you're editing the ``config.json`` file externally, you might not have access to the
+command-line. In that case, you can use an online JSON validator, such as `jsonlint.com`_
+- copy-paste contents of ``config.json`` there to see if the syntax is correct.
+
+.. _jsonlint.com: https://jsonlint.com/
+
 App-specific configuration files
 ++++++++++++++++++++++++++++++++
 
-TODO
+.. admonition:: TODO
+   :class: warning
+
+   This section is not yet ready. Sorry for that!
 
 Useful examples
 +++++++++++++++
@@ -96,8 +108,16 @@ can use a USB-UART to get to a console accessible on the UART port.
 
 Unfortunately, console on the UART is disabled by default - because UART is also used
 for the GSM modem. However, you can tell ZPUI to not disable UART by disabling the phone
-app, and thus enabling the USB-UART debugging. To do that, add an ``"app_manager"`` section
-to ``config.json`` and add the phone app to a ``"do_not_load"`` block inside of it, like this:
+app, and thus enabling the USB-UART debugging. To do that, you need to:
+
+1. Power down your ZeroPhone - since you can't access the UI, you have no other choice but
+   to shutdown it unsafely by unplugging the battery.
+2. Unplug the MicroSD card and plug it into another computer - both Windows and Linux will work
+3. On the first partition (the boot partition), locate the ``zpui_config.json`` file
+4. In that file, add an ``"app_manager"`` dictionary (a "collection" in JSON terms)
+5. Add the path to the phone app to a ``"do_not_load"`` list inside of it
+
+The resulting file should look like this, as a result:
 
 .. code:: json
 
@@ -110,6 +130,7 @@ to ``config.json`` and add the phone app to a ``"do_not_load"`` block inside of 
     }
   }
 
+Now, boot your phone with this config and you should be able to log in over UART!
 
-
-
+.. note:: Since you're editing the ``config.json`` file externally, you should
+          make sure it's valid JSON - :ref:`here's a guide for that. <verify_json>`
