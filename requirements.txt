@@ -5,3 +5,4 @@ zerophone_hw
 gpio
 vobject
 pytest
+mock
