@@ -29,11 +29,11 @@ class AppManager(object):
      """
     ordering_cache = {}
 
-    def __init__(self, app_directory, i, o, config={}):
+    def __init__(self, app_directory, i, o, config=None):
         self.app_directory = app_directory
         self.i = i
         self.o = o
-        self.config = config
+        self.config = config if config else {}
 
     def load_all_apps(self):
         base_menu = Menu([], self.i, self.o, "Main app menu",
