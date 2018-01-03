@@ -1,5 +1,3 @@
-
-
 from evdev import InputDevice as HID, list_devices, ecodes
 from time import sleep
 
