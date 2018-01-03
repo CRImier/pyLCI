@@ -60,6 +60,8 @@ class NumpadCharInput():
     action_keys = {
                "ENTER":"accept_value",
                "F1":"deactivate",
+               "LEFT":"deactivate_if_first",
+               "RIGHT":"skip",
                "F2":"backspace",
               }
 
@@ -130,6 +132,11 @@ class NumpadCharInput():
         """ Deactivates the UI element, exiting it and thus making activate() return."""
         self.in_foreground = False
         logger.info("{0} deactivated".format(self.name))
+
+    def deactivate_if_first(self):
+        """ Deactivates the UI element if it hasn't yet had a character entered """
+        if self.position == 0:
+            self.deactivate()
 
     def accept_value(self):
         logger.info("{0}: accepted value".format(self.name))
@@ -257,11 +264,14 @@ class NumpadCharInput():
             #Character still pending
             self.pending_counter -= 1
             if self.pending_counter == 0:
-                #Counter reset
-                self.pending_character = None
-                #Advancing position so that next letter takes the next space
-                self.position += 1
-                self.refresh()
+                self.skip() # advancing to the next character
+
+    def skip(self):
+        #Counter reset
+        self.pending_character = None
+        #Advancing position so that cursor takes the next space
+        self.position += 1
+        self.refresh()
 
     #Functions that set up the input listener
 
