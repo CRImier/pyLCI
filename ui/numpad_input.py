@@ -118,8 +118,7 @@ class NumpadCharInput():
         self.o.cursor()
         self.to_foreground()
         while self.in_foreground: #Most of the work is done in input callbacks
-            sleep(0.1)
-            self.check_character_state()
+            self.idle_loop()
         self.o.noCursor()
         self.i.remove_streaming()
         logger.debug(self.name+" exited")
@@ -127,6 +126,10 @@ class NumpadCharInput():
             return self.value
         else:
             return None
+
+    def idle_loop(self):
+        sleep(0.1)
+        self.check_character_state()
 
     def deactivate(self):
         """ Deactivates the UI element, exiting it and thus making activate() return."""
@@ -147,12 +150,12 @@ class NumpadCharInput():
 
     @check_value_lock
     def process_streaming_keycode(self, key_name, *args):
-        #This function processes all keycodes that are not in the keymap - such as number keycodes
+        #This function processes all keycodes - both number keycodes and action keycodes
         header = "KEY_"
         key = key_name[len(header):]
         logger.debug("Received "+key_name)
         if key in self.action_keys:
-            #Is one of the keys connected to an action
+            #Is one of the action keys
             getattr(self, self.action_keys[key])()
             return
         if key in self.mapping:
