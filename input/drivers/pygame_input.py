@@ -29,7 +29,7 @@ class InputDevice(InputSkeleton):
         self.emulator = emulator.get_emulator()
         return True
 
-    def get_capabilities(self):
+    def get_available_keys(self):
         return self.KEY_MAP.values()
 
     def runner(self):
