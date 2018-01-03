@@ -1,12 +1,10 @@
-from time import sleep
 from copy import copy
-
-from functools import wraps
+from time import sleep
 from threading import Lock
+from functools import wraps
 
 from helpers import setup_logger
 from ui.utils import to_be_foreground, check_value_lock
-
 
 logger = setup_logger(__name__, "warning")
 
@@ -72,7 +70,7 @@ class NumpadCharInput():
     current_letter_num = 0
     __locked_name__ = None
 
-    def __init__(self, i, o, message="", value="", name="NumpadCharInput", mapping=None, debug=False):
+    def __init__(self, i, o, message="Value:", value="", name="NumpadCharInput", mapping=None):
         """Initialises the NumpadCharInput object.
         
         Args:
@@ -84,7 +82,6 @@ class NumpadCharInput():
         self.o = o
         self.message = message
         self.name = name
-        self.debug = debug
         self.value = value
         self.position = len(self.value)
         if mapping is not None:
@@ -141,7 +138,7 @@ class NumpadCharInput():
         #This function processes all keycodes that are not in the keymap - such as number keycodes
         header = "KEY_"
         key = key_name[len(header):]
-        if self.debug: logger.debug("Received "+key_name)
+        logger.debug("Received "+key_name)
         if key in self.mapping.keys():
             #It's one of the keys we can process
             #NO INSERT IN MIDDLE/START SUPPORT
