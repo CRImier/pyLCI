@@ -2,7 +2,7 @@ import os
 from subprocess import check_output, CalledProcessError, STDOUT
 
 from helpers import read_or_create_config, local_path_gen
-from ui import Menu, Printer, PrettyPrinter, DialogBox, PathPicker, NumpadCharInput, TextReader
+from ui import Menu, Printer, PrettyPrinter, DialogBox, PathPicker, UniversalInput, TextReader
 
 menu_name = "Scripts"  # App name as seen in main menu while using the system
 
@@ -68,14 +68,14 @@ def call_by_path():
     path = PathPicker("/", i, o).activate()
     if path is None:
         return
-    args = NumpadCharInput(i, o, message="Arguments:", name="Script argument input").activate()
+    args = UniversalInput(i, o, message="Arguments:", name="Script argument input").activate()
     if args is not None:
         path = path + " " + args
     call_external(path, shell=True)
 
 
 def call_command():
-    command = NumpadCharInput(i, o, message="Command:", name="Script command input").activate()
+    command = UniversalInput(i, o, message="Command:", name="Script command input").activate()
     if command is None:
         return
     call_external(command, shell=True)
