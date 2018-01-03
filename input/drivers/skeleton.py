@@ -1,8 +1,7 @@
-
 import threading
+from copy import copy
 
 from helpers import setup_logger
-
 logger = setup_logger(__name__, "warning")
 
 class InputSkeleton():
@@ -15,6 +14,7 @@ class InputSkeleton():
 
     enabled = True
     stop_flag = False
+    capabilities = None
 
     def __init__(self, mapping=None, threaded=True):
         if mapping is not None:
@@ -23,15 +23,38 @@ class InputSkeleton():
             self.mapping = self.default_mapping
         try:
             self.init_hw()
-        except Exception as e:
-            logger.error("init_hw function not found!")
-            logger.exception(e)
+        except AttributeError:
+            logger.error("{}: init_hw function not found!".format(self.__class__))
+        try:
+            self.set_capabilities()
+        except AttributeError:
+            logger.error("{}: set_capabilities not available!".format(self.__class__))
         if threaded:
             self.start_thread()
 
     def start(self):
         """Sets the ``enabled`` for loop functions to start sending keycodes."""
         self.enabled = True
+
+    def set_capabilities(self):
+        """
+        A simple ``i.capabilities``-setting code that assumes the driver's mapping is a plain
+        list of key names. If it's not so, the driver needs to override the
+        ``set_capabilities`` method to properly generate the ``capabilities`` list.
+        """
+        if not hasattr(self, "mapping"):
+            logger.warning("mapping not available - the HID driver is used?")
+            logger.warning("capabilities property set to None!")
+            self.capabilities = None
+            return
+        if type(self.mapping) not in (list, tuple):
+            raise ValueError("Can't use mapping as capabilities - not a list/tuple!")
+        if not all([isinstance(el, basestring) for el in self.mapping]):
+            raise ValueError("Can't use mapping as a capability if it's not a list of strings!")
+        if not all([el.startswith("KEY_") for el in self.mapping]):
+            nonkey_items = [el for el in self.mapping if not el.startswith("KEY_")]
+            raise ValueError("Can't use mapping as a capability if its elements don't start with \"KEY_\"! (non-KEY_ items: {})".format(nonkey_items))
+        self.capabilities = copy(list(self.mapping))
 
     def stop(self):
         """Unsets the ``enabled`` for loop functions to stop sending keycodes."""
