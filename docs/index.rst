@@ -43,12 +43,6 @@ References:
    ui.rst
    helpers.rst
    hacking_ui.rst
-   hardware.rst
-   debugging.rst
-   input.rst
-   output.rst
-   apps.rst
    app_mgmt.rst
-   plans.rst
    docs_development.rst
    contact.rst
