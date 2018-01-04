@@ -120,7 +120,7 @@ Assuming Python 2 is the default Python version:
     sudo pip install luma.emulator
     git clone https://github.com/ZeroPhone/ZPUI
     cd ZPUI
-    ./setup_emulator.sh
+    ./setup_emulator
     #Run the emulator
     python main.py
 
@@ -133,7 +133,7 @@ OpenSUSE installation
     sudo pip2 install luma.emulator
     git clone https://github.com/ZeroPhone/ZPUI
     cd ZPUI
-    ./setup_emulator.sh
+    ./setup_emulator
     #Run the emulator
     python2 main.py
 
