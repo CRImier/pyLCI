@@ -1,4 +1,4 @@
-
+from collections import namedtuple
 from functools import wraps
 from time import time, sleep
 
@@ -205,7 +205,7 @@ class Ticker(object):
 
 
 def invert_rect_colors(coordinates, draw, image):
-    # type: ((int, int , int ,int), ImageDraw, Image) -> None
+    # type: (tuple, ImageDraw, Image) -> None
     # inverts colors of the image in the given rectangle
     draw.rectangle(coordinates, outline="white")
     image_subset = image.crop(coordinates)
@@ -217,3 +217,6 @@ def invert_rect_colors(coordinates, draw, image):
 
     draw.rectangle(coordinates, fill="black")  # paint the background black first
     draw.bitmap((coordinates[0], coordinates[1]), image_subset, fill="white")
+
+
+Rect = namedtuple('Rect', ['left', 'top', 'right', 'bottom'])
