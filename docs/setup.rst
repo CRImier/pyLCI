@@ -97,6 +97,17 @@ System requirements
 * Graphical environment (the emulator is based on Pygame)
 * A keyboard (the same keyboard that you're using for the system will work great)
 
+Arch-linux installation
+-----------------------
+.. code-block:: bash
+    sudo pacman -Si python2-pip git python2-pygame
+    sudo pip2 install luma.emulator
+
+    git clone https://github.com/ZeroPhone/ZPUI
+    cd ZPUI
+    ./setup_emulator
+    python2 main.py #Run the emulator
+
 Ubuntu/Debian installation
 --------------------------
 
@@ -109,7 +120,7 @@ Assuming Python 2 is the default Python version:
     sudo pip install luma.emulator
     git clone https://github.com/ZeroPhone/ZPUI
     cd ZPUI
-    ./setup_emulator.sh
+    ./setup_emulator
     #Run the emulator
     python main.py
 
@@ -122,7 +133,7 @@ OpenSUSE installation
     sudo pip2 install luma.emulator
     git clone https://github.com/ZeroPhone/ZPUI
     cd ZPUI
-    ./setup_emulator.sh
+    ./setup_emulator
     #Run the emulator
     python2 main.py
 
