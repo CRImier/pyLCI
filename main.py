@@ -30,28 +30,32 @@ config_paths.append(local_path('config.json'))
 #Using the .example config as a last resort
 config_paths.append(local_path('default_config.json'))
 
+config = None
+config_path = None
 
 def init():
     """Initialize input and output objects"""
 
-    config = None
+    global config, config_path
 
     # Load config
-    for path in config_paths:
+    for config_path in config_paths:
         #Only try to load the config file if it's present
         #(unclutters the logs)
-        if os.path.exists(path):
+        if os.path.exists(config_path):
             try:
-                logging.debug('Loading config from {}'.format(path))
-                config = read_config(path)
+                logging.debug('Loading config from {}'.format(config_path))
+                config = read_config(config_path)
             except:
-                logging.exception('Failed to load config from {}'.format(path))
+                logging.exception('Failed to load config from {}'.format(config_path))
             else:
-                logging.info('Successfully loaded config from {}'.format(path))
+                logging.info('Successfully loaded config from {}'.format(config_path))
                 break
+    # After this loop, the config_path global should contain
+    # path for config that successfully loaded
 
     if config is None:
-        sys.exit('Failed to load any config file')
+        sys.exit('Failed to load any config files!')
 
     # Initialize output
     try:
@@ -86,7 +90,9 @@ def launch(name=None, **kwargs):
     """
 
     i, o = init()
-    app_man = AppManager('apps', i, o)
+
+    appman_config = config.get("app_manager", {})
+    app_man = AppManager('apps', i, o, config=appman_config)
 
     if name is None:
         try:

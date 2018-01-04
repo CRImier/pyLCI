@@ -480,7 +480,7 @@ class Modem():
         self.unexpected_queue.put(data) 
 
     def process_incoming_data(self, data):
-        logging.debug("Incoming data: {}".format(repr(data)))
+        logger.debug("Incoming data: {}".format(repr(data)))
         if isinstance(data, str):
             data = data.split(self.linesep)            
         lines = filter(None, data)
@@ -526,7 +526,7 @@ class Modem():
         #haaaax
         if self.linesep[::-1] in "".join(data):
             lines = "".join(data).split(self.linesep[::-1])
-        logging.debug("Unexpected line: {}".format(data))
+        logger.debug("Unexpected line: {}".format(data))
 
     #The monitor thread - it receives data from the modem and calls callbacks
 

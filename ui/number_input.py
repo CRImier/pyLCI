@@ -6,7 +6,7 @@ logger = setup_logger(__name__, "warning")
 from ui.utils import to_be_foreground
 
 
-class IntegerAdjustInput():
+class IntegerAdjustInput(object):
     """Implements a simple number input dialog which allows you to increment/decrement a number using  which can be used to navigate through your application, output a list of values or select actions to perform. Is one of the most used elements, used both in system core and in most of the applications.
 
     Attributes:

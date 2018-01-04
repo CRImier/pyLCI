@@ -25,6 +25,7 @@ These classes are based on `Refresher`."""
 
 Rect = namedtuple('Rect', ['left', 'top', 'right', 'bottom'])
 
+
 class CenteredTextRenderer(object):
     # TODO: refactor into the ZPUI canvas wrapper that's bound to appear in the future.
     def draw_centered_text(self, draw, content, device_size):
@@ -41,11 +42,18 @@ class CenteredTextRenderer(object):
         dw, dh = device_size
         return Rect(dw / 2 - w / 2, dh / 2 - h / 2, dw / 2 + w / 2, dh / 2 + h / 2)
 
+    @staticmethod
+    def get_center(device_size):
+        # type: (tuple) -> tuple
+        return device_size[0] / 2, device_size[1] / 2
+
 
 # ========================= abstract classes =========================
 
+
 class LoadingIndicator(Refresher):
     """Abstract class for "loading indicator" elements."""
+
     def __init__(self, i, o, *args, **kwargs):
         self._progress = 0
         Refresher.__init__(self, self.on_refresh, i, o, *args, **kwargs)
@@ -61,11 +69,23 @@ class LoadingIndicator(Refresher):
         self.t.daemon = True
         self.t.start()
 
+    def stop(self):
+        self.deactivate()
+        self.t = None
+
+    def __enter__(self):
+        self.run_in_background()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
+
 
 class ProgressIndicator(LoadingIndicator):
     """Abstract class for "loading indicator" elements where the progress can be measured.
     Subclasses of ProgressIndicator, therefore, indicate a percentage of the progress
     that was done and is left."""
+
     @property
     def progress(self):
         return float(self._progress)
@@ -78,7 +98,7 @@ class ProgressIndicator(LoadingIndicator):
 
 # ========================= concrete classes =========================
 
-class Throbber(LoadingIndicator):
+class Throbber(LoadingIndicator, CenteredTextRenderer):
     """A throbber is a circular LoadingIndicator, similar to those used on websites
     or in smartphones. Suitable for graphical displays and looks great on them!"""
 
@@ -89,6 +109,7 @@ class Throbber(LoadingIndicator):
         # We use a counter to make the rotation speed independent of the refresh-rate
         self.counter = Chronometer()
         self.start_time = 0
+        self.message = kwargs.pop("message", None)
         LoadingIndicator.__init__(self, i, o, refresh_interval=0.01, *args, **kwargs)
 
     def activate(self):
@@ -101,9 +122,22 @@ class Throbber(LoadingIndicator):
         self.update_throbber_angle()
         c = canvas(self.o.device)
         c.__enter__()
+        draw = c.draw
+        self.draw_throbber(c, draw)
+        if self.message:
+            self.draw_message(draw)
+        self.o.display_image(c.image)
+
+    def draw_message(self, draw):
+        # type: (ImageDraw) -> None
+        bounds = self.get_centered_text_bounds(draw, self.message, self.o.device.size)
+
+        draw.text((bounds.left, 0), self.message, fill=True)  # Drawn top-centered (with margin)
+
+    def draw_throbber(self, c, draw):
+        c.__enter__()
         x, y = c.device.size
         radius = min(x, y) / 4
-        draw = c.draw
         draw.arc(
             (
                 x / 2 - radius, y / 2 - radius,
@@ -113,7 +147,6 @@ class Throbber(LoadingIndicator):
             end=(self._current_angle + self._current_range / 2) % 360,
             fill=True
         )
-        self.o.display_image(c.image)
 
     def update_throbber_angle(self):
         self.counter.update()
@@ -128,9 +161,10 @@ class IdleDottedMessage(LoadingIndicator):
     """ A simple (text-based) loading indicator, using three dots
     that are appearing and disappearing.
     Shows a message to the user."""
+
     def __init__(self, i, o, *args, **kwargs):
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
-        self.message = kwargs.pop("message") if "message" in kwargs else "Loading".center(o.cols).rstrip()
+        self.message = kwargs.pop("message", "Loading".center(o.cols).rstrip())
         self.dot_count = 0
 
     def on_refresh(self):
@@ -145,8 +179,9 @@ class CircularProgressBar(ProgressIndicator, CenteredTextRenderer):
 
     A circular progress bar for graphical displays.
     Allows to show or hide the progress percentage."""
+
     def __init__(self, i, o, *args, **kwargs):
-        self.show_percentage = kwargs.pop("show_percentage") if "show_percentage" in kwargs else True
+        self.show_percentage = kwargs.pop("show_percentage", True)
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
 
     def refresh(self):
@@ -168,17 +203,22 @@ class TextProgressBar(ProgressIndicator):
 
     Allows to adjust characters used for drawing and the percentage field offset,
     as well as to show or hide the progress percentage."""
+
     def __init__(self, i, o, *args, **kwargs):
         # We need to pop() these arguments instead of using kwargs.get() because they
         # have to be removed from kwargs to prevent TypeErrors
-        self.message = kwargs.pop("message") if "message" in kwargs else "Loading"
-        self.fill_char = kwargs.pop("fill_char") if "fill_char" in kwargs else "="
-        self.empty_char = kwargs.pop("empty_char") if "empty_char" in kwargs else " "
-        self.border_chars = kwargs.pop("border_chars") if "border_chars" in kwargs else "[]"
-        self.show_percentage = kwargs.pop("show_percentage") if "show_percentage" in kwargs else False
-        self.percentage_offset = kwargs.pop("percentage_offset") if "percentage_offset" in kwargs else 4
+        self.message = kwargs.pop("message", "Loading")
+        self.fill_char = kwargs.pop("fill_char", "=")
+        self.empty_char = kwargs.pop("empty_char", " ")
+        self.border_chars = kwargs.pop("border_chars", "[]")
+        self.show_percentage = kwargs.pop("show_percentage", False)
+        self.percentage_offset = kwargs.pop("percentage_offset", 4)
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
         self._progress = 0  # 0-1 range
+
+    def set_message(self, new_message):
+        self.message = new_message
+        self.refresh()
 
     def get_progress_percentage(self):
         return '{}%'.format(self.progress * 100)
@@ -216,11 +256,12 @@ class GraphicalProgressBar(ProgressIndicator, CenteredTextRenderer):
     """ A horizontal progress bar for graphical displays, showing a message to the user.
     Allows to adjust padding and margin for a little bit of customization,
     as well as to show or hide the progress percentage."""
+
     def __init__(self, i, o, *args, **kwargs):
-        self.show_percentage = kwargs.pop("show_percentage") if "show_percentage" in kwargs else True
-        self.margin = kwargs.pop("margin") if "margin" in kwargs else 15
-        self.padding = kwargs.pop("padding") if "padding" in kwargs else 2
-        self.bar_height = kwargs.pop("bar_height") if "bar_height" in kwargs else 15
+        self.show_percentage = kwargs.pop("show_percentage", True)
+        self.margin = kwargs.pop("margin", 15)
+        self.padding = kwargs.pop("padding", 2)
+        self.bar_height = kwargs.pop("bar_height", 15)
         LoadingIndicator.__init__(self, i, o, *args, **kwargs)
 
     def refresh(self):
@@ -263,12 +304,15 @@ class GraphicalProgressBar(ProgressIndicator, CenteredTextRenderer):
         draw.rectangle(bar_coords, fill=True, outline=False)
 
 
+# noinspection PyPep8Naming
 def ProgressBar(i, o, *args, **kwargs):
     """Instantiates and returns the appropriate kind of progress bar
     for the output device - either graphical or text-based."""
+    if not hasattr(o, "type"):  # In case we're on an emulator...
+        return GraphicalProgressBar(i, o, *args, **kwargs)
     if "b&w-pixel" in o.type:
         return GraphicalProgressBar(i, o, *args, **kwargs)
     elif "char" in o.type:
         return TextProgressBar(i, o, *args, **kwargs)
     else:
-        raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
+        raise ValueError("Unsupported display type: {}".format(repr(o.type)))

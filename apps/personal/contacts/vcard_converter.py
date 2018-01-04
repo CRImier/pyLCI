@@ -1,15 +1,10 @@
 from helpers import setup_logger
 logger = setup_logger(__name__, "warning")
 
-from helpers import install_from_pip
-
-try:
-    import vobject
-except ImportError:
-    vobject = None
-    install_from_pip("vobject")
+import vobject
 
 from address_book import Contact
+
 
 class VCardContactConverter(object):
     vcard_mapping = {
