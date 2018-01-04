@@ -9,9 +9,8 @@ from PIL import ImageFont
 from luma.core.render import canvas as luma_canvas
 
 from helpers import setup_logger
+from ui.utils import invert_rect_colors
 from utils import to_be_foreground, clamp_list_index
-
-
 
 logger = setup_logger(__name__, "warning")
 
@@ -86,7 +85,7 @@ class BaseListUIElement(object):
                     view = self.views[view_config]
             elif isinstance(view_config, dict):
                 raise NotImplementedError
-                #This is the part where fine-tuning views will be possible, 
+                # This is the part where fine-tuning views will be possible,
                 #once passing args&kwargs is implemented, that is
             else:
                 logger.error("Custom view description can only be a string or a dictionary; is {}!".format(type(view_config)))
@@ -95,7 +94,7 @@ class BaseListUIElement(object):
             if isinstance(view_config, basestring):
                 if view_config not in self.views:
                     logger.warning('Unknown view "{}" given for UI element "{}"!'.format(view_config, self.name))
-                else: 
+                else:
                     view = self.views[view_config]
             elif isinstance(view_config, dict):
                 raise NotImplementedError #Again, this is for fine-tuning
@@ -104,7 +103,7 @@ class BaseListUIElement(object):
         self.view = view(self.o, self.entry_height, self)
 
     def get_default_view(self):
-        """Decides on the view to use for UI element when config file has 
+        """Decides on the view to use for UI element when config file has
         no information on it."""
         if "b&w-pixel" in self.o.type:
             return self.views["SixteenPtView"]
@@ -118,8 +117,8 @@ class BaseListUIElement(object):
         pass
 
     def before_activate(self):
-        """Hook for child UI elements, is called each time activate() is called. 
-        Is the perfect place to clear any flags that you don't want to persist 
+        """Hook for child UI elements, is called each time activate() is called.
+        Is the perfect place to clear any flags that you don't want to persist
         between multiple activations of a single instance of an UI element."""
         pass
 
@@ -283,7 +282,7 @@ class BaseListUIElement(object):
     def set_contents(self, contents):
         """Sets the UI element contents and triggers pointer recalculation in the view."""
         self.validate_contents(contents)
-        #Copy-ing the contents list is necessary because it can be modified 
+        #Copy-ing the contents list is necessary because it can be modified
         #by UI elements that are based on this class
         self.contents = copy(contents)
         self.process_contents()
@@ -307,7 +306,7 @@ class BaseListUIElement(object):
     def process_contents(self):
         """Processes contents for custom callbacks. Currently, only 'exit' calbacks are supported.
 
-        If ``self.append_exit`` is set, it goes through the menu and removes every callback which either is ``self.deactivate`` or is just a string 'exit'. 
+        If ``self.append_exit`` is set, it goes through the menu and removes every callback which either is ``self.deactivate`` or is just a string 'exit'.
         |Then, it appends a single "Exit" entry at the end of menu contents. It makes dynamically appending entries to menu easier and makes sure there's only one "Exit" callback, at the bottom of the menu."""
         if self.append_exit:
             #filtering possible duplicate exit entries
@@ -385,7 +384,7 @@ class TextView():
         self.o = o
         self.entry_height = entry_height
         self.el = ui_element
-    
+
     @property
     def in_foreground(self):
         #Is necessary so that @to_be_foreground works
@@ -404,7 +403,7 @@ class TextView():
     def fix_pointers_on_contents_update(self):
         """Boundary-checks ``pointer``, re-sets ``last`` & ``first_displayed_entry`` pointers
            and calculates the value for ``last_displayed_entry`` pointer."""
-        self.el.pointer = clamp_list_index(self.el.pointer, self.el.contents) # Makes sure the pointer isn't > 
+        self.el.pointer = clamp_list_index(self.el.pointer, self.el.contents)  # Makes sure the pointer isn't >
         full_entries_shown = self.get_entry_count_per_screen()
         entry_count = len(self.el.contents)
         self.first_displayed_entry = 0
@@ -431,10 +430,10 @@ class TextView():
 
     def entry_is_active(self, entry_num):
         return entry_num == self.el.pointer
-        
+
     def get_displayed_text(self):
         """Generates the displayed data for a character-based output device. The output of this function can be fed to the o.display_data function.
-        |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed entries' numbers, renders each one 
+        |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed entries' numbers, renders each one
         of them and concatenates them into one big list which it returns.
         |Doesn't support partly-rendering entries yet."""
         displayed_data = []
@@ -548,17 +547,23 @@ class EightPtView(TextView):
             left_offset = self.x_scrollbar_offset
             y1, y2 = scrollbar_coordinates
             d.rectangle((1, y1, 2, y2), outline="white")
-        #Drawing cursor, if enabled
-        if cursor_y is not None:
-            c_x = cursor_x * self.charwidth
-            c_y = cursor_y * self.charheight
-            cursor_dims = (c_x-1+left_offset, c_y-1, c_x+self.charwidth+left_offset, c_y+self.charheight+1)
-            d.rectangle(cursor_dims, outline="white")
         #Drawing the text itself
         for i, line in enumerate(menu_text):
             y = (i*self.charheight - 1) if i != 0 else 0
             d.text((left_offset, y), line, fill="white")
+
+        #Drawing cursor, if enabled
         image = draw.image
+        if cursor_y is not None:
+            c_x = cursor_x * self.charwidth
+            c_y = cursor_y * self.charheight
+            cursor_dims = (
+                c_x - 1 + left_offset,
+                c_y - 1,
+                c_x + self.charwidth * len(menu_text[cursor_y]) + left_offset,
+                c_y + self.charheight
+            )
+            invert_rect_colors(cursor_dims, d, image)
         del d;del draw
         return image
 
@@ -583,12 +588,6 @@ class SixteenPtView(EightPtView):
             left_offset = self.x_scrollbar_offset
             y1, y2 = scrollbar_coordinates
             d.rectangle((1, y1, 2, y2), outline="white")
-        #Drawing cursor, if enabled
-        if cursor_y is not None:
-            c_x = cursor_x * self.charwidth
-            c_y = cursor_y * self.charheight
-            cursor_dims = (c_x-1+left_offset, c_y-1, c_x+self.charwidth+left_offset, c_y+self.charheight)
-            d.rectangle(cursor_dims, outline="white")
         #Drawing the text itself
         #http://pillow.readthedocs.io/en/3.1.x/reference/ImageFont.html
         font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 16)
@@ -596,8 +595,22 @@ class SixteenPtView(EightPtView):
             y = (i*self.charheight - 1) if i != 0 else 0
             d.text((left_offset, y), line, fill="white", font=font)
         image = draw.image
+        # Drawing cursor, if enabled
+        if cursor_y is not None:
+            c_x = cursor_x * self.charwidth
+            c_y = cursor_y * self.charheight
+            cursor_dims = (
+                c_x - 1 + left_offset,
+                c_y - 1,
+                c_x + self.charwidth * len(menu_text[cursor_y]) + left_offset,
+                c_y + self.charheight
+            )
+            invert_rect_colors(cursor_dims, d, image)
+
+
         del d;del draw
         return image
+
 
 class MainMenuTripletView(SixteenPtView):
 
@@ -605,7 +618,7 @@ class MainMenuTripletView(SixteenPtView):
 
     charwidth = 8
     charheight = 16
-    
+
     def __init__(self, *args, **kwargs):
         SixteenPtView.__init__(self, *args, **kwargs)
         self.charheight = self.o.height / 3
