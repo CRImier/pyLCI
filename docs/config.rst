@@ -36,7 +36,7 @@ ZPUI config format
 
 Here's the default ZPUI config right now:
 
-.. include:: ../config.json.example
+.. include:: ../default_config.json
     :code: json
 
 Here's the config file format: 
