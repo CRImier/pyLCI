@@ -171,7 +171,9 @@ class HD44780():
         self.write_byte(self.LCD_CLEARDISPLAY)  # command to clear display
         delayMicroseconds(3000)  # 3000 microsecond sleep, clearing the display takes a long time
 
-    def setCursor(self, row, col):
+    def setCursor(self, coords):
+        col = coords.left
+        row = coords.top
         """ Set current input cursor to ``row`` and ``column`` specified """
         self.write_byte(self.LCD_SETDDRAMADDR | (col + self.row_offsets[row]))
 

@@ -3,12 +3,13 @@
 from multiprocessing import Process, Pipe
 from time import sleep
 
-from time import sleep
 import luma.emulator.device
 import pygame
 from luma.core.render import canvas
 
 from helpers import setup_logger
+from ui.utils import invert_rect_colors, Rect
+
 logger = setup_logger(__name__, "warning")
 
 __EMULATOR_PROXY = None
@@ -112,11 +113,14 @@ class Emulator(object):
             self._poll_input()
             sleep(0.001)
 
-    def setCursor(self, row, col):
-        self.cursor_pos = [
-            col * self.char_width,
-            row * self.char_height,
-        ]
+    def setCursor(self, coords):
+        # type: (Rect) -> None
+        self.cursor_pos = Rect(
+            coords.left * self.char_width,
+            coords.top * self.char_height,
+            coords.right * self.char_width,
+            coords.bottom * self.char_height
+        )
 
     def quit(self):
         self._quit = True
@@ -128,18 +132,8 @@ class Emulator(object):
         self.cursor_enabled = True
 
     def display_data(self, *args):
-        with canvas(self.device) as draw:
-            dims = (
-                self.cursor_pos[0] - 1 + 2,
-                self.cursor_pos[1] - 1,
-                self.cursor_pos[0] + self.char_width + 2,
-                self.cursor_pos[1] + self.char_height + 1,
-            )
-
-            if self.cursor_enabled:
-                logger.debug('Drawing cursor with dims: %s', dims)
-                draw.rectangle(dims, outline='white')
-
+        c = canvas(self.device)
+        with c as draw:
             args = args[:self.rows]
             logger.debug("type(args)=%s", type(args))
 
@@ -150,10 +144,14 @@ class Emulator(object):
                 # PIL to throw an exception.  Warn 'em here via the log.
                 if not isinstance(arg, basestring):
                     logger.warning('emulator only likes strings fed to '
-                        'draw.text, prepare for exception')
+                                   'draw.text, prepare for exception')
                 y = (line * self.char_height - 1) if line != 0 else 0
                 draw.text((2, y), arg, fill='white')
                 logger.debug('after draw.text(2, %d), %s', y, arg)
+
+            if self.cursor_enabled:
+                logger.debug('Drawing cursor with cursor_coords: %s', self.cursor_pos)
+                invert_rect_colors(self.cursor_pos, draw, c.image)
 
     def display_image(self, image):
         self.device.display(image)

@@ -1,7 +1,7 @@
 from time import sleep
 
-
 from helpers import setup_logger
+from ui.utils import Rect
 
 logger = setup_logger(__name__, "info")
 
@@ -116,12 +116,13 @@ class DialogBox(object):
         self.right_offset = (self.o.cols - len(label_string))/2
         self.displayed_label = " "*self.right_offset+label_string
         #Need to go through the string to mark the first places because we need to remember where to put the cursors
-        current_position = self.right_offset
         self.positions = []
+        x_offset = self.right_offset
         for label in self.labels:
-            self.positions.append(current_position)
-            current_position += len(label) + 1
+            coords_in_characters = Rect(x_offset, 1, x_offset + len(label), 2)
+            self.positions.append(coords_in_characters)
+            x_offset += len(label) + 1
 
     def refresh(self):
-        self.o.setCursor(1, self.positions[self.pointer])
+        self.o.setCursor(self.positions[self.pointer])
         self.o.display_data(self.message, self.displayed_label)

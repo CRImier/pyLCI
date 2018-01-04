@@ -1,12 +1,10 @@
-from time import sleep
 from copy import copy
-
 from functools import wraps
 from threading import Lock
+from time import sleep
 
 from helpers import setup_logger
 from ui.utils import to_be_foreground, check_value_lock
-
 
 logger = setup_logger(__name__, "warning")
 
@@ -302,7 +300,7 @@ class NumpadCharInput():
         """Function that is called each time data has to be output on display"""
         cursor_y, cursor_x = divmod(self.position, self.o.cols)
         cursor_y += 1
-        self.o.setCursor(cursor_y, cursor_x)
+        self.o.setCursor((cursor_x, 0, cursor_y, 1))
         self.o.display_data(*self.get_displayed_data())
         logger.debug("{}: refreshed data on display".format(self.name))
 
