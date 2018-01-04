@@ -21,7 +21,7 @@ is_emulator = emulator_flag_filename in os.listdir(".")
 
 logging_path = local_path('zpui.log')
 logging_format = (
-    '[%(levelname)s] %(asctime)s %(filename)s [%(process)d]: %(message)s',
+    '[%(levelname)s] %(asctime)s %(name)s: %(message)s',
     '%Y-%m-%d %H:%M:%S'
 )
 
