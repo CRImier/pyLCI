@@ -565,8 +565,8 @@ class EightPtView(TextView):
         #Drawing cursor, if enabled
         image = draw.image
         if cursor_y is not None:
-            c_x = cursor_x * self.charwidth
-            c_y = cursor_y * self.charheight
+            c_x = cursor_x * self.charwidth + 1
+            c_y = cursor_y * self.charheight + 1
             cursor_dims = (
                 c_x - 1 + left_offset,
                 c_y - 1,
