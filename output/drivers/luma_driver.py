@@ -7,9 +7,9 @@ try:
 except ImportError:
     from luma.core.serial import spi, i2c #Compatilibity with older luma.oled version
 from luma.core.render import canvas
-from time import sleep
-from threading import Event
+
 from backlight import *
+
 
 def delayMicroseconds(microseconds):
     seconds = microseconds / float(1000000)  # divide microseconds by 1 million for seconds
@@ -49,10 +49,10 @@ class LumaScreen(BacklightManager):
         self.busy_flag = Event()
         self.width = 128
         self.height = 64
-        self.charwidth = 6
-        self.charheight = 8
-        self.cols = self.width/self.charwidth
-        self.rows = self.height/self.charheight
+        self.char_width = 6
+        self.char_height = 8
+        self.cols = self.width / self.char_width
+        self.rows = self.height / self.char_height
         self.debug = debug
         self.init_display(**kwargs)
         BacklightManager.init_backlight(self, **kwargs)
@@ -90,10 +90,11 @@ class LumaScreen(BacklightManager):
         draw = canvas(self.device)
         d = draw.__enter__()
         if self.cursor_enabled:
-            dims = (self.cursor_pos[0]-1+2, self.cursor_pos[1]-1, self.cursor_pos[0]+self.charwidth+2, self.cursor_pos[1]+self.charheight+1)
+            dims = (self.cursor_pos[0] - 1 + 2, self.cursor_pos[1] - 1, self.cursor_pos[0] + self.char_width + 2,
+                    self.cursor_pos[1] + self.char_height + 1)
             d.rectangle(dims, outline="white")
         for line, arg in enumerate(args):
-            y = (line*self.charheight - 1) if line != 0 else 0
+            y = (line * self.char_height - 1) if line != 0 else 0
             d.text((2, y), arg, fill="white")
         self.busy_flag.clear()
         self.display_image(draw.image)
@@ -109,7 +110,7 @@ class LumaScreen(BacklightManager):
 
     def setCursor(self, row, col):
         """ Set current input cursor to ``row`` and ``column`` specified """
-        self.cursor_pos = (col*self.charwidth, row*self.charheight)
+        self.cursor_pos = (col * self.char_width, row * self.char_height)
 
     def createChar(self, char_num, char_contents):
         """Stores a character in the LCD memory so that it can be used later.
