@@ -9,7 +9,7 @@ class DialogBox(object):
     """Implements a dialog box with given values (or some default ones if chosen)."""
 
     value_selected = False
-    pointer = 0
+    selected_option = 0
     default_options = {"y":["Yes", True], 'n':["No", False], 'c':["Cancel", None]}
 
     def __init__(self, values, i, o, message="Are you sure?", name="DialogBox"):
@@ -63,13 +63,13 @@ class DialogBox(object):
         self.o.cursor()
         self.to_foreground() 
         self.value_selected = False
-        self.pointer = 0
+        self.selected_option = 0
         while self.in_foreground: #All the work is done in input callbacks
             sleep(0.1)
         self.o.noCursor()
         logger.debug(self.name+" exited")
         if self.value_selected:
-            return self.values[self.pointer][1]
+            return self.values[self.selected_option][1]
         else:
             return None
 
@@ -92,16 +92,16 @@ class DialogBox(object):
         self.i.listen()
 
     def move_left(self):
-        if self.pointer == 0:
+        if self.selected_option == 0:
             self.deactivate()
             return
-        self.pointer -= 1
+        self.selected_option -= 1
         self.refresh()
 
     def move_right(self):
-        if self.pointer == len(self.values)-1:
+        if self.selected_option == len(self.values)-1:
             return
-        self.pointer += 1
+        self.selected_option += 1
         self.refresh()
 
     def accept_value(self):
@@ -123,5 +123,5 @@ class DialogBox(object):
             current_position += len(label) + 1
 
     def refresh(self):
-        self.o.setCursor(1, self.positions[self.pointer])
+        self.o.setCursor(1, self.positions[self.selected_option])
         self.o.display_data(self.message, self.displayed_label)
