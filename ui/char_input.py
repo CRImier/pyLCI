@@ -4,23 +4,13 @@ logger = setup_logger(__name__, "warning")
 
 import string
 
-from ui.utils import to_be_foreground
+from utils import to_be_foreground, invert_rect_colors
+from luma.core.render import canvas as luma_canvas
 
 
-class CharArrowKeysInput():
-    """Implements a character input dialog which allows to input a character string using arrow keys to scroll through characters
-
-    Attributes:
-
-    * ``value``: A list of characters of the currently displayed value
-    * ``position``: Position of the currently edited character.
-    * ``cancel_flag``: A flag that is set when editing is cancelled.
-    * ``in_foreground``: A flag which indicates if UI element is currently displayed. If it's not active, inhibits any of element's actions which can interfere with other UI element being displayed.
-    * ``charmap``: Internal string that contains all of the possible character values
-    * ``char_indices``: A list containing char's index in ``charmap`` for every char in ``value`` list
-    * ``first_displayed_char``: An integer pointer to the first character currently displayed (for the occasions where part of value is off-screen)
-    * ``last_displayed_char``: An integer pointer to the last character currently displayed
-
+class CharArrowKeysInput(object):
+    """
+    Implements a character input dialog which allows to input a character string using arrow keys to scroll through characters
     """
     
     chars = string.ascii_lowercase
@@ -45,10 +35,8 @@ class CharArrowKeysInput():
     position = 0
     cancel_flag = False
     charmap = ""
-    last_displayed_char = 0
-    first_displayed_char = 0
 
-    def __init__(self, i, o, initial_value = "", message="Value:", allowed_chars=["][S", "][c", "][C", "][s", "][n"], name="CharArrowKeysInput"):
+    def __init__(self, i, o, initial_value = "", message="Value:", allowed_chars=['][S', '][c', '][C', '][s', '][n'], name="CharArrowKeysInput"):
         """Initialises the CharArrowKeysInput object.
         
         Args:
@@ -59,21 +47,22 @@ class CharArrowKeysInput():
 
             * ``initial_value``: Value to be edited. If not set, will start with an empty string.
             * ``allowed_chars``: Characters to be used during input. Is a list of strings designating ranges which can be the following:
+
               * '][c' for lowercase ASCII characters
               * '][C' for uppercase ASCII characters
-              * '][s' for special characters from those supported by HD44780 character maps
+              * '][s' for special characters
               * '][S' for space
               * '][n' for numbers
               * '][h' for hexadecimal characters (0-F)
+
               If a string does not designate a range of characters, it'll be added to character map as-is.
+
             * ``message``: Message to be shown in the first row of the display
             * ``name``: UI element name which can be used internally and for debugging.
 
         """
         self.i = i
         self.o = o
-        self.screen_cols = self.o.cols
-        self.last_displayed_char = self.screen_cols
         self.message = message
         self.name = name
         self.generate_keymap()
@@ -86,6 +75,7 @@ class CharArrowKeysInput():
         self.char_indices = [] #Fixes a bug with char_indixes remaining from previous input ( 0_0 )
         for char in self.value:
             self.char_indices.append(self.charmap.index(char))
+        self.set_view()
 
     def to_foreground(self):
         """ Is called when ``activate()`` method is used, sets flags and performs all the actions so that UI element can display its contents and receive keypresses. Also, refreshes the screen."""
@@ -94,16 +84,23 @@ class CharArrowKeysInput():
         self.refresh()
         self.set_keymap()
 
+    def set_view(self):
+        if "b&w-pixel" in self.o.type:
+            view_class = GraphicalView
+        elif "char" in self.o.type:
+            view_class = TextView
+        else:
+            raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
+        self.view = view_class(self.o, self)
+
     def activate(self):
         """ A method which is called when input element needs to start operating. Is blocking, sets up input&output devices, renders the element and waits until self.in_background is False, while menu callbacks are executed from the input device thread.
         This method returns the selected value if KEY_ENTER was pressed, thus accepting the selection.
         This method returns None when the UI element was exited by KEY_LEFT and thus the value was not accepted. """
         logger.info("{0} activated".format(self.name))    
-        self.o.cursor()
         self.to_foreground() 
         while self.in_foreground: #All the work is done in input callbacks
             sleep(0.1)
-        self.o.noCursor()
         logger.debug(self.name+" exited")
         if self.cancel_flag:
             return None
@@ -159,9 +156,9 @@ class CharArrowKeysInput():
         """Moves cursor to the next element. """
         self.check_for_backspace()
         self.position += 1
-        if self.last_displayed_char < self.position: #Went too far to the part of the value that isn't currently displayed
-            self.last_displayed_char = self.position
-            self.first_displayed_char = self.position - self.screen_cols
+        if self.view.last_displayed_char < self.position: #Went too far to the part of the value that isn't currently displayed
+            self.view.last_displayed_char = self.position
+            self.view.first_displayed_char = self.position - self.o.cols
         self.refresh()
 
     @to_be_foreground
@@ -172,9 +169,9 @@ class CharArrowKeysInput():
             self.exit()
             return
         self.position -= 1
-        if self.first_displayed_char > self.position: #Went too far back to the part that's not currently displayed
-            self.first_displayed_char = self.position
-            self.last_displayed_char = self.position + self.screen_cols
+        if self.view.first_displayed_char > self.position: #Went too far back to the part that's not currently displayed
+            self.view.first_displayed_char = self.position
+            self.view.last_displayed_char = self.position + self.o.cols
         self.refresh()
 
     @to_be_foreground
@@ -221,18 +218,72 @@ class CharArrowKeysInput():
                 self.value.pop(i)
                 self.char_indices.pop(i)
 
-    def get_displayed_data(self):
-        """Formats the value and the message to show it on the screen, then returns a list that can be directly used by o.display_data"""
-        if self.first_displayed_char >= len(self.value): #Value is off-screen
-            value = ""
-        else:
-            value = ''.join(self.value)[self.first_displayed_char:][:self.screen_cols]
-            value = value.replace(self.backspace, chr(0x7f))
-            value = value.replace(' ', chr(255)) #Displaying all spaces as black boxes
-        return [self.message, value]
-
     @to_be_foreground
     def refresh(self):
-        self.o.setCursor(1, self.position-self.first_displayed_char)
-        self.o.display_data(*self.get_displayed_data())
+        self.view.refresh()
         logger.debug("{}: refreshed data on display".format(self.name))
+
+
+class TextView():
+
+    last_displayed_char = 0
+    first_displayed_char = 0
+
+    def __init__(self, o, el):
+        self.o = o
+        self.el = el
+        self.last_displayed_char = self.o.cols
+
+    def get_displayed_data(self):
+        """
+        Formats the value and the message to show it on the screen,
+        then returns a list that can be directly used by o.display_data.
+        Uses HD44780-specific characters.
+        """
+        if self.first_displayed_char >= len(self.el.value): #Value is off-screen
+            value = ""
+        else:
+            value = ''.join(self.el.value)[self.first_displayed_char:][:self.o.cols]
+        return [self.el.message, value]
+
+    def convert_chars_to_hd44780_charset(self, message, value):
+        value = value.replace(self.el.backspace, chr(0x7f))
+        value = value.replace(' ', chr(255)) #Displaying all spaces as black boxes
+        return message, value
+
+    def refresh(self):
+        self.o.noCursor()
+        #self.o.cursor()# Only needed for testing TextView on luma.oled
+        self.o.setCursor(1, self.el.position-self.first_displayed_char)
+        displayed_data = self.convert_chars_to_hd44780_charset( self.get_displayed_data() )
+        self.o.display_data(*displayed_data)
+        self.o.cursor()
+
+
+class GraphicalView(TextView):
+
+    def get_image(self):
+        draw = luma_canvas(self.o.device)
+        d = draw.__enter__()
+
+        #Getting displayed data, drawing it
+        lines = self.get_displayed_data()
+        for i, line in enumerate(lines):
+            y = (i*self.o.char_height - 1) if i != 0 else 0
+            d.text((2, y), line, fill="white")
+
+        #Calculating the cursor dimensions
+        c_x1 = (self.el.position-self.first_displayed_char) * self.o.char_width
+        c_x2 = c_x1 + self.o.char_width
+        c_y1 = self.o.char_height * 1 #second line
+        c_y2 = c_y1 + self.o.char_height
+        #Some readability adjustments
+        cursor_dims = ( c_x1, c_y1, c_x2 + 2, c_y2 + 1 )
+
+        #Drawing the cursor
+        invert_rect_colors(cursor_dims, d, draw.image)
+
+        return draw.image
+
+    def refresh(self):
+        self.o.display_image(self.get_image())
