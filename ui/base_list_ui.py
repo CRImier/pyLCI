@@ -10,8 +10,10 @@ from PIL import ImageFont
 from luma.core.render import canvas as luma_canvas
 
 from helpers import setup_logger
-from ui.utils import invert_rect_colors, Rect
+from ui.utils import invert_rect_colors
 from utils import to_be_foreground, clamp_list_index
+
+
 
 logger = setup_logger(__name__, "warning")
 
@@ -499,8 +501,6 @@ class TextView():
         displayed_data = self.get_displayed_text()
         self.o.noCursor()
         self.o.display_data(*displayed_data)
-        active_line = displayed_data[self.get_active_line_num()]
-        coords = Rect(0, self.get_active_line_num(), len(active_line), 1)
         self.o.setCursor(self.get_active_line_num(), 0)
         self.o.cursor()
 

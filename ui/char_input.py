@@ -1,12 +1,10 @@
 from time import sleep
-
 from helpers import setup_logger
-
 logger = setup_logger(__name__, "warning")
 
 import string
 
-from ui.utils import to_be_foreground, Rect
+from ui.utils import to_be_foreground
 
 
 class CharArrowKeysInput():
@@ -235,7 +233,6 @@ class CharArrowKeysInput():
 
     @to_be_foreground
     def refresh(self):
-        coords = Rect(self.position - self.first_displayed_char, 0, 1, 1)
-        self.o.setCursor(coords)
+        self.o.setCursor(1, self.position-self.first_displayed_char)
         self.o.display_data(*self.get_displayed_data())
         logger.debug("{}: refreshed data on display".format(self.name))

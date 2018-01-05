@@ -1,13 +1,14 @@
 #!/usr/bin/python
 
 #luma.oled library used: https://github.com/rm-hull/luma.oled
-from ui.utils import Rect, invert_rect_colors
 
 try:
     from luma.core.interface.serial import spi, i2c
 except ImportError:
     from luma.core.serial import spi, i2c #Compatilibity with older luma.oled version
 from luma.core.render import canvas
+from time import sleep
+from threading import Event
 from backlight import *
 
 def delayMicroseconds(microseconds):
@@ -88,13 +89,12 @@ class LumaScreen(BacklightManager):
         args = args[:self.rows]
         draw = canvas(self.device)
         d = draw.__enter__()
+        if self.cursor_enabled:
+            dims = (self.cursor_pos[0]-1+2, self.cursor_pos[1]-1, self.cursor_pos[0]+self.charwidth+2, self.cursor_pos[1]+self.charheight+1)
+            d.rectangle(dims, outline="white")
         for line, arg in enumerate(args):
             y = (line*self.charheight - 1) if line != 0 else 0
             d.text((2, y), arg, fill="white")
-
-        if self.cursor_enabled:
-            invert_rect_colors(self.cursor_pos, d, draw.image)
-
         self.busy_flag.clear()
         self.display_image(draw.image)
         del d;del draw;
@@ -107,15 +107,9 @@ class LumaScreen(BacklightManager):
         """Clears the display."""
         pass
 
-    def setCursor(self, coords):
-        # type: (Rect) -> None
-        """ Set current input cursor to coords """
-        self.cursor_pos = Rect(
-            coords.left * self.charwidth,
-            coords.top * self.charheight,
-            coords.right * self.charwidth,
-            coords.bottom * self.charheight
-        )
+    def setCursor(self, row, col):
+        """ Set current input cursor to ``row`` and ``column`` specified """
+        self.cursor_pos = (col*self.charwidth, row*self.charheight)
 
     def createChar(self, char_num, char_contents):
         """Stores a character in the LCD memory so that it can be used later.
