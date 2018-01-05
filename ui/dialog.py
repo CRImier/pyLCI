@@ -1,7 +1,8 @@
 from time import sleep
-
-
 from helpers import setup_logger
+
+from luma.core.render import canvas as luma_canvas
+from utils import invert_rect_colors
 
 logger = setup_logger(__name__, "info")
 
@@ -50,23 +51,30 @@ class DialogBox(object):
                     values[i] = self.default_options[value]
             self.values = values
         self.message = message
-        self.process_values()
         self.generate_keymap()
+        self.set_view()
 
     def to_foreground(self):
         self.in_foreground = True
         self.refresh()
         self.set_keymap()
 
+    def set_view(self):
+        if "b&w-pixel" in self.o.type:
+            view_class = GraphicalView
+        elif "char" in self.o.type:
+            view_class = TextView
+        else:
+            raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
+        self.view = view_class(self.o, self)
+
     def activate(self):
         logger.debug("{0} activated".format(self.name))
-        self.o.cursor()
         self.to_foreground() 
         self.value_selected = False
         self.selected_option = 0
         while self.in_foreground: #All the work is done in input callbacks
             sleep(0.1)
-        self.o.noCursor()
         logger.debug(self.name+" exited")
         if self.value_selected:
             return self.values[self.selected_option][1]
@@ -108,9 +116,20 @@ class DialogBox(object):
         self.value_selected = True
         self.deactivate()
 
+    def refresh(self):
+        self.view.refresh()
+
+
+class TextView():
+
+    def __init__(self, o, el):
+        self.o = o
+        self.el = el
+        self.process_values()
+
     def process_values(self):
-        self.labels = [label for label, value in self.values]
-        label_string = " ".join(self.labels)
+        labels = [label for label, value in self.el.values]
+        label_string = " ".join(labels)
         if len(label_string) > self.o.cols:
             raise ValueError("DialogBox {}: all values combined are longer than screen's width".format(self.name))
         self.right_offset = (self.o.cols - len(label_string))/2
@@ -118,10 +137,43 @@ class DialogBox(object):
         #Need to go through the string to mark the first places because we need to remember where to put the cursors
         current_position = self.right_offset
         self.positions = []
-        for label in self.labels:
+        for label in labels:
             self.positions.append(current_position)
             current_position += len(label) + 1
 
     def refresh(self):
-        self.o.setCursor(1, self.positions[self.selected_option])
-        self.o.display_data(self.message, self.displayed_label)
+        self.o.noCursor()
+        self.o.setCursor(1, self.positions[self.el.selected_option])
+        self.o.display_data(self.el.message, self.displayed_label)
+        self.o.cursor()
+
+
+class GraphicalView(TextView):
+
+    def get_image(self):
+        draw = luma_canvas(self.o.device)
+        d = draw.__enter__()
+
+        #Drawing text
+        lines = [self.el.message, self.displayed_label]
+        for i, line in enumerate(lines):
+            y = (i*self.o.char_height - 1) if i != 0 else 0
+            d.text((2, y), line, fill="white")
+
+        #Calculating the cursor dimensions
+        first_char_position = self.positions[self.el.selected_option]
+        option_length = len( self.el.values[self.el.selected_option][0] )
+        c_x1 = first_char_position * self.o.char_width
+        c_x2 = c_x1 + option_length * self.o.char_width
+        c_y1 = self.o.char_height * 1 #second line
+        c_y2 = c_y1 + self.o.char_height
+        #Some readability adjustments
+        cursor_dims = ( c_x1, c_y1, c_x2 + 2, c_y2 + 1 )
+
+        #Drawing the cursor
+        invert_rect_colors(cursor_dims, d, draw.image)
+
+        return draw.image
+
+    def refresh(self):
+        self.o.display_image(self.get_image())
