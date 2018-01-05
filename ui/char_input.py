@@ -250,11 +250,10 @@ class TextView():
         value = value.replace(self.el.backspace, chr(0x7f))
         value = value.replace(' ', chr(255)) #Displaying all spaces as black boxes
         return message, value
-
+        
     def refresh(self):
         self.o.noCursor()
         #self.o.cursor()# Only needed for testing TextView on luma.oled
-        self.o.setCursor(1, self.el.position-self.first_displayed_char)
         displayed_data = self.convert_chars_to_hd44780_charset( self.get_displayed_data() )
         self.o.display_data(*displayed_data)
         self.o.cursor()
@@ -277,6 +276,7 @@ class GraphicalView(TextView):
         c_x2 = c_x1 + self.o.char_width
         c_y1 = self.o.char_height * 1 #second line
         c_y2 = c_y1 + self.o.char_height
+
         #Some readability adjustments
         cursor_dims = ( c_x1, c_y1, c_x2 + 2, c_y2 + 1 )
 
