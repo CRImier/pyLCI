@@ -23,6 +23,7 @@ if __name__ == '__main__':
 
     write_config(config, CONFIG_PATH)
 
+    create_file("emulator")
     # Phone app will try to connect to a modem.
     # The emulator environment is unlikely to have one
     # In the future, the modem could be emulated.

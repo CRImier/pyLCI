@@ -109,9 +109,22 @@ Assuming Python 2 is the default Python version:
     sudo pip install luma.emulator
     git clone https://github.com/ZeroPhone/ZPUI
     cd ZPUI
-    ./setup_emulator.sh
+    ./setup_emulator
     #Run the emulator
     python main.py
+
+Arch Linux installation
+-----------------------
+.. code-block:: bash
+
+    sudo pacman -Si python2-pip git python2-pygame
+    sudo pip2 install luma.emulator
+
+    git clone https://github.com/ZeroPhone/ZPUI
+    cd ZPUI
+    ./setup_emulator
+    #Run the emulator
+    python2 main.py
 
 OpenSUSE installation
 ---------------------
@@ -122,14 +135,17 @@ OpenSUSE installation
     sudo pip2 install luma.emulator
     git clone https://github.com/ZeroPhone/ZPUI
     cd ZPUI
-    ./setup_emulator.sh
+    ./setup_emulator
     #Run the emulator
     python2 main.py
 
 Emulator credits
 ----------------
+
 Most of the emulator research and work was done by Doug, and later 
 refactored by Brian Dunlay. The input driver was done by Arsenijs. 
 OpenSUSE instructions were compiled with help of `piajesse`_.
+Arch Linux instructions were compiled by `monsieurh`_.
 
+.. _monsieurh: https://github.com/monsieurh
 .. _piajesse: https://hackaday.io/piajesse
