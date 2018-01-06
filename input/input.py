@@ -19,7 +19,9 @@ class CallbackException(Exception):
         self.message = message
 
 class InputListener():
-    """A class which listens for input device events and calls corresponding callbacks if set"""
+    """
+    A class which listens for input device events and calls corresponding callbacks if set
+    """
     stop_flag = None
     thread_index = 0
     keymap = {}
@@ -33,9 +35,11 @@ class InputListener():
         """Init function for creating KeyListener object. Checks all the arguments and sets keymap if supplied."""
         self.drivers = drivers
         self.queue = Queue.Queue()
-        if keymap is None: keymap = {} 
-        for driver, _ in self.drivers:
+        if keymap is None: keymap = {}
+        self.available_keys = {}
+        for driver, driver_name in self.drivers:
             driver.send_key = self.receive_key #Overriding the send_key method so that keycodes get sent to InputListener
+            self.available_keys[driver_name] = driver.available_keys
         self.set_keymap(keymap)
 
     def receive_key(self, key):

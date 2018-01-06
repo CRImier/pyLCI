@@ -36,7 +36,7 @@ class CharArrowKeysInput(object):
     cancel_flag = False
     charmap = ""
 
-    def __init__(self, i, o, initial_value = "", message="Value:", allowed_chars=['][S', '][c', '][C', '][s', '][n'], name="CharArrowKeysInput"):
+    def __init__(self, i, o, message="Value:", value="",  allowed_chars=['][S', '][c', '][C', '][s', '][n'], name="CharArrowKeysInput", initial_value=""):
         """Initialises the CharArrowKeysInput object.
         
         Args:
@@ -45,7 +45,7 @@ class CharArrowKeysInput(object):
 
         Kwargs:
 
-            * ``initial_value``: Value to be edited. If not set, will start with an empty string.
+            * ``value``: Value to be edited. If not set, will start with an empty string.
             * ``allowed_chars``: Characters to be used during input. Is a list of strings designating ranges which can be the following:
 
               * '][c' for lowercase ASCII characters
@@ -67,12 +67,15 @@ class CharArrowKeysInput(object):
         self.name = name
         self.generate_keymap()
         self.allowed_chars = allowed_chars
-        self.allowed_chars.append("][b")
+        self.allowed_chars.append("][b") #Adding backspace by default
         self.generate_charmap()
-        if type(initial_value) != str:
+        #Support for obsolete attribute
+        if not value and initial_value:
+            value = initial_value
+        if type(value) != str:
             raise ValueError("CharArrowKeysInput needs a string!")
-        self.value = list(initial_value)
-        self.char_indices = [] #Fixes a bug with char_indixes remaining from previous input ( 0_0 )
+        self.value = list(value)
+        self.char_indices = [] #Fixes a bug with char_indices remaining from previous input ( 0_0 )
         for char in self.value:
             self.char_indices.append(self.charmap.index(char))
         self.set_view()
@@ -100,12 +103,15 @@ class CharArrowKeysInput(object):
         logger.info("{0} activated".format(self.name))    
         self.to_foreground() 
         while self.in_foreground: #All the work is done in input callbacks
-            sleep(0.1)
+            self.idle_loop()
         logger.debug(self.name+" exited")
         if self.cancel_flag:
             return None
         else:
             return ''.join(self.value) #Making string from the list we have
+
+    def idle_loop(self):
+        sleep(0.1)
 
     def deactivate(self):
         """ Deactivates the UI element, exiting it and thus making activate() return."""
