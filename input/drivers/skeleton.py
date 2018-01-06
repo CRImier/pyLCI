@@ -25,10 +25,7 @@ class InputSkeleton():
             self.init_hw()
         except AttributeError:
             logger.error("{}: init_hw function not found!".format(self.__class__))
-        try:
-            self.set_available_keys()
-        except AttributeError:
-            logger.error("{}: set_available_keys not available!".format(self.__class__))
+        self.set_available_keys()
         if threaded:
             self.start_thread()
 
