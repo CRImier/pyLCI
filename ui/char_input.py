@@ -260,7 +260,7 @@ class TextView():
     def refresh(self):
         self.o.noCursor()
         #self.o.cursor()# Only needed for testing TextView on luma.oled
-        displayed_data = self.convert_chars_to_hd44780_charset( self.get_displayed_data() )
+        displayed_data = self.convert_chars_to_hd44780_charset( *self.get_displayed_data() )
         self.o.display_data(*displayed_data)
         self.o.cursor()
 
