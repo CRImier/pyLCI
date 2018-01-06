@@ -105,13 +105,16 @@ class CharArrowKeysInput():
         self.o.cursor()
         self.to_foreground() 
         while self.in_foreground: #All the work is done in input callbacks
-            sleep(0.1)
+            self.idle_loop()
         self.o.noCursor()
         logger.debug(self.name+" exited")
         if self.cancel_flag:
             return None
         else:
             return ''.join(self.value) #Making string from the list we have
+
+    def idle_loop(self):
+        sleep(0.1)
 
     def deactivate(self):
         """ Deactivates the UI element, exiting it and thus making activate() return."""
