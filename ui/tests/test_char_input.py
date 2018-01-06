@@ -166,6 +166,8 @@ class TestCharArrowKeysInput(unittest.TestCase):
 
         assert o.display_data.called
         assert o.display_data.call_count == len(test_keys) #Magically, it's the same
+        #There's one refresh right after the activate() that isn't because of a keypress,
+        #And ENTER keypress at the end doesn't trigger a refresh, so it evens out
         assert o.display_data.call_args[0] == ('Test:', 'hello')
 
 if __name__ == '__main__':
