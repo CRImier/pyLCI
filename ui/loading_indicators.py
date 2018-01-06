@@ -1,7 +1,6 @@
 from __future__ import division
 
 import math
-from collections import namedtuple
 from math import cos
 from threading import Thread
 from time import time
@@ -10,7 +9,7 @@ from PIL import ImageDraw
 from luma.core.render import canvas
 
 from ui import Refresher
-from ui.utils import clamp, Chronometer, to_be_foreground
+from ui.utils import clamp, Chronometer, to_be_foreground, Rect
 
 """These UI elements are used to show the user that something is happening in the background.
 
@@ -22,8 +21,6 @@ There are two types of loading indicator elements:
 These classes are based on `Refresher`."""
 
 # ========================= helpers =========================
-
-Rect = namedtuple('Rect', ['left', 'top', 'right', 'bottom'])
 
 
 class CenteredTextRenderer(object):

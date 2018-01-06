@@ -10,7 +10,10 @@ from PIL import ImageFont
 from luma.core.render import canvas as luma_canvas
 
 from helpers import setup_logger
+from ui.utils import invert_rect_colors
 from utils import to_be_foreground, clamp_list_index
+
+
 
 logger = setup_logger(__name__, "warning")
 
@@ -310,7 +313,7 @@ class BaseListUIElement(object):
     def process_contents(self):
         """Processes contents for custom callbacks. Currently, only 'exit' calbacks are supported.
 
-        If ``self.append_exit`` is set, it goes through the menu and removes every callback which either is ``self.deactivate`` or is just a string 'exit'. 
+        If ``self.append_exit`` is set, it goes through the menu and removes every callback which either is ``self.deactivate`` or is just a string 'exit'.
         |Then, it appends a single "Exit" entry at the end of menu contents. It makes dynamically appending entries to menu easier and makes sure there's only one "Exit" callback, at the bottom of the menu."""
         if self.append_exit:
             # filtering possible duplicate exit entries
@@ -554,18 +557,23 @@ class EightPtView(TextView):
             left_offset = self.x_scrollbar_offset
             y1, y2 = scrollbar_coordinates
             d.rectangle((1, y1, 2, y2), outline="white")
-        # Drawing cursor, if enabled
-        if cursor_y is not None:
-            c_x = cursor_x * self.charwidth
-            c_y = cursor_y * self.charheight
-            cursor_dims = (
-                c_x - 1 + left_offset, c_y - 1, c_x + self.charwidth + left_offset, c_y + self.charheight + 1)
-            d.rectangle(cursor_dims, outline="white")
         # Drawing the text itself
         for i, line in enumerate(menu_text):
             y = (i * self.charheight - 1) if i != 0 else 0
             d.text((left_offset, y), line, fill="white")
+
+        #Drawing cursor, if enabled
         image = draw.image
+        if cursor_y is not None:
+            c_x = cursor_x * self.charwidth + 1
+            c_y = cursor_y * self.charheight + 1
+            cursor_dims = (
+                c_x - 1 + left_offset,
+                c_y - 1,
+                c_x + self.charwidth * len(menu_text[cursor_y]) + left_offset,
+                c_y + self.charheight
+            )
+            invert_rect_colors(cursor_dims, d, image)
         del d
         del draw
         return image
@@ -591,19 +599,26 @@ class SixteenPtView(EightPtView):
             left_offset = self.x_scrollbar_offset
             y1, y2 = scrollbar_coordinates
             d.rectangle((1, y1, 2, y2), outline="white")
-        # Drawing cursor, if enabled
-        if cursor_y is not None:
-            c_x = cursor_x * self.charwidth
-            c_y = cursor_y * self.charheight
-            cursor_dims = (c_x - 1 + left_offset, c_y - 1, c_x + self.charwidth + left_offset, c_y + self.charheight)
-            d.rectangle(cursor_dims, outline="white")
-        # Drawing the text itself
-        # http://pillow.readthedocs.io/en/3.1.x/reference/ImageFont.html
+        #Drawing the text itself
+        #http://pillow.readthedocs.io/en/3.1.x/reference/ImageFont.html
         font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 16)
         for i, line in enumerate(menu_text):
             y = (i * self.charheight - 1) if i != 0 else 0
             d.text((left_offset, y), line, fill="white", font=font)
         image = draw.image
+        # Drawing cursor, if enabled
+        if cursor_y is not None:
+            c_x = cursor_x * self.charwidth
+            c_y = cursor_y * self.charheight
+            cursor_dims = (
+                c_x - 1 + left_offset,
+                c_y - 1,
+                c_x + self.charwidth * len(menu_text[cursor_y]) + left_offset,
+                c_y + self.charheight
+            )
+            invert_rect_colors(cursor_dims, d, image)
+
+
         del d
         del draw
         return image
