@@ -82,7 +82,7 @@ class CharArrowKeysInput():
         self.generate_charmap()
         #Support for obsolete attribute
         if not value and initial_value:
-            valuye = initial_value
+            value = initial_value
         if type(value) != str:
             raise ValueError("CharArrowKeysInput needs a string!")
         self.value = list(value)
