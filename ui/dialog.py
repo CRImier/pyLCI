@@ -74,12 +74,15 @@ class DialogBox(object):
         self.value_selected = False
         self.selected_option = 0
         while self.in_foreground: #All the work is done in input callbacks
-            sleep(0.1)
+            self.idle_loop()
         logger.debug(self.name+" exited")
         if self.value_selected:
             return self.values[self.selected_option][1]
         else:
             return None
+
+    def idle_loop(self):
+        sleep(0.1)
 
     def deactivate(self):
         self.in_foreground = False
