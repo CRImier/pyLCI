@@ -78,7 +78,7 @@ class CharArrowKeysInput():
         self.name = name
         self.generate_keymap()
         self.allowed_chars = allowed_chars
-        self.allowed_chars.append("][b")
+        self.allowed_chars.append("][b") #Adding backspace by default
         self.generate_charmap()
         #Support for obsolete attribute
         if not value and initial_value:
