@@ -30,7 +30,7 @@ class InputDevice(InputSkeleton):
         return True
 
     def set_available_keys(self):
-        self.available_keys = self.KEY_MAP.values()
+        self.available_keys = KEY_MAP.values()
 
     def runner(self):
         """
