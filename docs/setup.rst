@@ -85,6 +85,8 @@ In that case, just run ZPUI with ``sudo python main.py`` from your local (or sys
 Installing the ZPUI emulator
 ============================
 
+.. image:: _static/ZPUI_Emulator.png
+
 If you want to develop ZPUI apps, but don't yet have the ZeroPhone hardware, 
 there's an option to use the emulator with a Linux PC - the emulator can use your 
 screen and keyboard instead of ZeroPhone hardware. The emulator works very well for 
