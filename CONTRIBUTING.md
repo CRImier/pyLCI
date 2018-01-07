@@ -7,31 +7,25 @@ If you already have some kind of idea in mind, but it's not listed among the iss
 You can contact us about ZPUI in one of those ways:
 
 1. Open an issue here, on GitHub (if you're interested in working on it yourself, let us know!)
-2. Get on our IRC channel to talk - we're #ZeroPhone on freenode [(webchat)](kiwiirc.com/client/irc.freenode.net/#ZeroPhone) [(archives)](mozzwald.com/irclog/zerophone/).
-If you don't get a response in time (because of timezones and other reasons people might not be online) and have to leave - please, leave your email address (or other form of communication) before leaving IRC,
-so that we can get back to you (you can PM your contact details to CRImier on IRC).
-3. For one-on-one communication, you can email the main developer: arsenijs at zerophone dot org.
+2. [Get in touch with us](CONTACT.md)
 
 ### Making a pull request
 
-We love pull requests! Here are some steps (not obligatory, but suggested) to ensure that your improvements don't break ZPUI or its documentation, and to make sure we can merge them quickly.
+We love pull requests! Here are some suggested steps to ensure that your improvements don't break ZPUI or its documentation, and to make sure we can merge them quickly.
 
 * Fork our repository
-* Make sure you can run tests and they pass:
-```
-./test.sh
-```
+* Make sure you can run tests and they pass: (`./test.sh`)
 * We highly suggest you commit your changes in a separate branch - that'll save you from problems when sending pull requests in the future
 * Make your changes, test them using [the emulator](http://zpui.readthedocs.io/en/latest/setup.html#emulator) or a real ZeroPhone
 * Run the tests again to make sure they still pass
-* If your changes concern the documentation, it'd be great if you could check that the documentation [still builds correctly and looks right.](http://zpui.readthedocs.io/en/latest/docs_development.html#testing-your-changes-locally)
+* If your changes concern the documentation, it'd be great if you could check that the documentation [still builds correctly and looks right](http://zpui.readthedocs.io/en/latest/docs_development.html#testing-your-changes-locally)
 * Send in your PR, we'll review and comment on it as soon as possible!
-
+* Take some time to explain what your PR is about, and how you implemented your feature, it'll help us review it faster
 If your PR won't have any issues, we'll merge it right away. If we find some problems, we might fix them ourselves, but we'll likely ask you to fix them yourself in the meantime before we can get to them.
 
 -----
 
-**After your PR is reviewed, doesn't break anything and complies to our guidelines, it'll be merged!** Once your PR will be merged, it'll likely go in the "devel" branch - unless it's a bugfix, in which case it'll go in all branches affected. If you need your changes in the master branch ASAP, let us know - we can speed up the merge.
+**After your PR is reviewed, does'nt break anything and complies to our guidelines, it'll be merged!** Once your PR is merged, it'll likely go in the `devel` branch - unless it's a bugfix, in which case it'll go in all branches affected. If you need your changes in the master branch ASAP, let us know - we can speed up the merge.
 
 #### Possible issues with your PR that you should watch out for:
 * it's not documented enough. If you're adding features, they need to be documented. If you're changing an existing feature, keep the comments up-to-date. If you find some area lacking documentation that you want to see documented, let us know! 
