@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 INSTALL_DIR="/opt/zpui"
 SUDO=''
 if (( $EUID != 0 )); then

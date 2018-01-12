@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -euo pipefail
+
 USERNAME="username"
 PASSWORD="password"
 WEBPAGE="rbt2.wifi.cs.rtu.lv/rtu_web.html"

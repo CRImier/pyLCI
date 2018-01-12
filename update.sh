@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 TMP_DIR="/tmp/zpui_update"
 INSTALL_DIR="/opt/zpui"
 IGNORE_TEST=false
