@@ -1,3 +1,17 @@
+## You've spotted a bug in ZPUI?
+
+Thank you for coming here to report it! It would be great if you could include this information (if it's not implied in your bug report):
+
+* when you noticed the bug
+* whether you're using ZPUI on a ZeroPhone, some other hardware, or in the emulator
+* whether you can reproduce the bug in a repeatable way
+
+In case we won't be able to reproduce the bug, we might ask you to send us your ZPUI logs (or other information which might help us, such as your `config.json` contents in certain cases).
+
+## You have a suggestion for ZPUI?
+
+Go ahead and let us know about it! Just in case, check the ["closed issues" list](https://github.com/ZeroPhone/ZPUI/issues?q=is%3Aissue+is%3Aclosed) - maybe we've already addressed your idea.
+
 ## You want to start contributing? Here's some advice for a quicker start!
 
 If you just want to help our cause and don't know where to start, take a look [at the GitHub issues](https://github.com/ZeroPhone/ZPUI/issues). If you want to know which issue is more important and would help us the most, contact us and we'll let you know!
