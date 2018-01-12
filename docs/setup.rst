@@ -17,8 +17,8 @@ Installation
 
     git clone https://github.com/ZeroPhone/ZPUI
     cd ZPUI/
-    #Install main dependencies and create a system-wide ZPUI copy
-    sudo ./setup.sh 
+    #Install main dependencies (apt and pip packages), configure systemd, and create a system-wide ZPUI copy
+    sudo ./setup.sh
     #Start the system to test your configuration - do screen and buttons work OK?
     sudo python main.py 
     #Once tested:
