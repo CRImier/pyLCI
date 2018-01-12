@@ -21,11 +21,12 @@ We love pull requests! Here are some suggested steps to ensure that your improve
 * If your changes concern the documentation, it'd be great if you could check that the documentation [still builds correctly and looks right](http://zpui.readthedocs.io/en/latest/docs_development.html#testing-your-changes-locally)
 * Send in your PR, we'll review and comment on it as soon as possible!
 * Take some time to explain what your PR is about, and how you implemented your feature, it'll help us review it faster
+
 If your PR won't have any issues, we'll merge it right away. If we find some problems, we might fix them ourselves, but we'll likely ask you to fix them yourself in the meantime before we can get to them.
 
 -----
 
-**After your PR is reviewed, does'nt break anything and complies to our guidelines, it'll be merged!** Once your PR is merged, it'll likely go in the `devel` branch - unless it's a bugfix, in which case it'll go in all branches affected. If you need your changes in the master branch ASAP, let us know - we can speed up the merge.
+**After your PR is reviewed, doesn't break anything and complies to our guidelines, it'll be merged!** Once your PR is merged, it'll likely go in the `devel` branch - unless it's a bugfix, in which case it'll go in all branches affected. If you need your changes in the master branch ASAP, let us know - we can speed up the merge.
 
 #### Possible issues with your PR that you should watch out for:
 * it's not documented enough. If you're adding features, they need to be documented. If you're changing an existing feature, keep the comments up-to-date. If you find some area lacking documentation that you want to see documented, let us know! 
