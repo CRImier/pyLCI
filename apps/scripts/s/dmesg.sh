@@ -2,4 +2,4 @@
 
 set -euo pipefail
 
-dmesg|tail -n100
+dmesg | tail -n 100
