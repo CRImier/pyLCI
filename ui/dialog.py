@@ -74,12 +74,15 @@ class DialogBox(object):
         self.value_selected = False
         self.selected_option = 0
         while self.in_foreground: #All the work is done in input callbacks
-            sleep(0.1)
+            self.idle_loop()
         logger.debug(self.name+" exited")
         if self.value_selected:
             return self.values[self.selected_option][1]
         else:
             return None
+
+    def idle_loop(self):
+        sleep(0.1)
 
     def deactivate(self):
         self.in_foreground = False
@@ -155,20 +158,19 @@ class GraphicalView(TextView):
         d = draw.__enter__()
 
         #Drawing text
-        lines = [self.el.message, self.displayed_label]
-        for i, line in enumerate(lines):
-            y = (i*self.o.char_height - 1) if i != 0 else 0
-            d.text((2, y), line, fill="white")
+        second_line_position = 10
+        d.text((2, 0), self.el.message, fill="white")
+        d.text((2, second_line_position), self.displayed_label, fill="white")
 
         #Calculating the cursor dimensions
         first_char_position = self.positions[self.el.selected_option]
         option_length = len( self.el.values[self.el.selected_option][0] )
         c_x1 = first_char_position * self.o.char_width
         c_x2 = c_x1 + option_length * self.o.char_width
-        c_y1 = self.o.char_height * 1 #second line
+        c_y1 = second_line_position #second line
         c_y2 = c_y1 + self.o.char_height
         #Some readability adjustments
-        cursor_dims = ( c_x1, c_y1, c_x2 + 2, c_y2 + 1 )
+        cursor_dims = ( c_x1, c_y1, c_x2 + 2, c_y2 + 2 )
 
         #Drawing the cursor
         invert_rect_colors(cursor_dims, d, draw.image)
