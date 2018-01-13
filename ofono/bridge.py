@@ -8,8 +8,6 @@ from gi.repository import GLib
 
 from helpers import Singleton, setup_logger
 
-DBusGMainLoop(set_as_default=True)  # has to be called first
-
 logger = setup_logger(__name__, 'debug')
 logging.basicConfig(level=logging.DEBUG)
 
@@ -120,14 +118,17 @@ class ConversationManager(Singleton):
 
 
 def main():
+    DBusGMainLoop(set_as_default=True)  # has to be called first
     ofono = OfonoBridge()
-    ofono.start()
-    mainloop = GLib.MainLoop()  # todo : own thread
     try:
+        ofono.start()
+        mainloop = GLib.MainLoop()  # todo : own thread
         mainloop.run()
     except KeyboardInterrupt:
-        # ofono.power_off()  # todo: can't be powered back up after we power it off once
-        logger.info("Exiting...")
+        logger.info("Caught CTRL-C:exiting without powering off...")
+    except AttributeError:
+        logger.error("Error while starting ofono bridge ! Powering off...")
+        ofono.power_off()
 
 
 if __name__ == '__main__':
