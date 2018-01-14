@@ -1,29 +1,41 @@
-
-import subprocess
-
 from helpers import setup_logger
+from pydbus import SystemBus
 
 logger = setup_logger(__name__, "warning")
 
-def list_units():
+# See D-Bus documentation here:
+#     https://www.freedesktop.org/wiki/Software/systemd/dbus/
+
+bus = SystemBus()
+systemd = bus.get(".systemd1")
+
+def list_units(unit_filter_field = None, unit_filter_values = []):
     units = []
-    output = subprocess.check_output(["systemctl", "list-units", "-a"])
-    lines = output.split('\n')[1:][:-8]
-    for line in lines:
-        line = ' '.join(line.split()).strip(' ') #Removing all redundant whitespace
-        if line.startswith('\xe2\x97\x8f'): #Special character that is used by systemctl output to mark units that failed to load
-            elements = line.split(' ', 5)[1:] #Omitting that first element since it doesn't convey any meaning
-        else:
-            elements = line.split(' ', 4)
-        if len(elements) == 5:
-            name, loaded, active, details, description = elements
-            basename, type = name.rsplit('.', 1)
-            name = name.replace('\\x2d', '-') #Replacing unicode dashes with normal ones
-            units.append({"name":name, "load":loaded, "active":active, "sub":details, "description":description, "type":type, "basename":basename})
-        else:
-            logger.error("Systemctl: couldn't parse line: {}".format(repr(line)))
-    return units         
-                     
+
+    for unit in systemd.ListUnits():
+        name, description, load, active, sub, follower, unit_object_path, job_queued, job_type, job_object_path = unit
+
+        basename, unit_type = name.rsplit('.', 1)
+
+        if unit_filter_field is None or locals()[unit_filter_field] in unit_filter_values:
+            units.append({
+                "name": name,
+                "basename": basename,
+                "type": unit_type,
+                "description": description,
+                "load": load,
+                "active": active,
+                "sub": sub,
+                "follower": follower,
+                "unit_object_path": unit_object_path,
+                "job_queued": job_queued,
+                "job_type": job_type,
+                "job_object_path": job_object_path
+            })
+
+    return units
+
+
 def action_unit(action, unit):
     try:
         output = subprocess.check_output(["systemctl", action, unit])
@@ -33,26 +45,15 @@ def action_unit(action, unit):
 
 
 if __name__ == "__main__":
-    units = list_units()
-    
-    loadeds = []
-    actives = []
-    subs = []
-    for unit in units:
-        loadeds.append(unit["load"])
-        actives.append(unit["active"])
-        subs.append(unit["sub"])
-    print(set(loadeds))
-    print(set(actives))
-    print(set(subs))
-    #for unit in units:
-    #    if unit["type"] == 'service' and unit['sub'] =='running' :
-    #        print(unit["basename"])
-    #print([unit for unit in units if unit["type"] == 'service'])
-    #print([unit for unit in units if unit["name"].endswith('.service')])
-    #endings = []
-    #for unit in units:
-    #    name =  unit["name"]
-    #    ending = name.rsplit('.')[-1:][0]
-    #    endings.append(ending)
-    #print(set(endings))
+    units_loaded = list_units('load', ['loaded'])
+    units_active = list_units('active', ['active'])
+    units_sub    = list_units('sub', ['sub'])
+
+    for unit in units_loaded:
+        print(unit["name"])
+
+    for unit in units_active:
+        print(unit["name"])
+
+    for unit in units_sub:
+        print(unit["name"])
