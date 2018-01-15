@@ -41,13 +41,13 @@ def change_filters():
         checkbox_contents.append([type[0], type[1], type[1] in config["allowed_types"]])
     states = Checkbox(checkbox_contents, i, o, final_button_name="Save").activate()
     if states is None: return None
-    config["allowed_types"] = [state for state in states if states[state]] 
+    config["allowed_types"] = [state for state in states if states[state]]
     write_config(config, config_path)
-    
+
 def all_units():
     menu_contents = []
     units = systemctl.list_units()
-    for unit in units: 
+    for unit in units:
         menu_contents.append([unit["basename"], lambda x=unit: unit_menu(x)])
     Menu(menu_contents, i, o, "Systemctl: all unit list menu").activate()
 
