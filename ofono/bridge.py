@@ -56,8 +56,9 @@ class OfonoBridge(object):
             try:
                 self._bus.SetProperty("Powered", pydbus.Variant('b', True))
                 sleep(2)  # Let the modem some time to initialize
-            except Exception:
+            except Exception as e:
                 logger.error("Couldn't power up the modem !")
+                logger.exception(e)
 
     def power_off(self):
         self._bus.SetProperty("Powered", pydbus.Variant('b', False))
@@ -124,9 +125,10 @@ def main():
         mainloop = GLib.MainLoop()  # todo : own thread
         mainloop.run()
     except KeyboardInterrupt:
-        logger.info("Caught CTRL-C:exiting without powering off...")
-    except AttributeError:
+        logger.info("Caught CTRL-C : exiting without powering off...")
+    except Exception as e:
         logger.error("Error while starting ofono bridge ! Powering off...")
+        logger.exception(e)
         ofono.power_off()
 
 
