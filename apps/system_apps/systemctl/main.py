@@ -55,7 +55,7 @@ def pinned_units():
     menu_contents = []
     units = systemctl.list_units("name", config["pinned_units"])
     for unit in units:
-        menu_contents.append([unit["name"], lambda x=unit: unit_menu(x)])
+        menu_contents.append([unit["name"], lambda x=unit["name"]: unit_menu({"name":x}, in_pinned=True)])
     Menu(menu_contents, i, o, "Pinned unit list menu").activate()
 
 def filtered_units():
