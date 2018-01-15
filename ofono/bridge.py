@@ -44,7 +44,6 @@ class OfonoBridge(object):
         return self._get_dbus_interface('MessageManager')
 
     def _get_dbus_interface(self, name):
-        ''.startswith('org.ofono')
         full_name = name if name.startswith('org.ofono') else 'org.ofono.{}'.format(name)
         if full_name in self._bus.GetProperties()['Interfaces']:
             return self._bus[full_name]
