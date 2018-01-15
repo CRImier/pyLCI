@@ -21,8 +21,6 @@ class OfonoBridge(object):
         self.modem_path = '/sim900_0'
         self._check_default_modem()
 
-        # self.start()  #todo: check if it's the suitable place to do it
-
     def _check_default_modem(self):
         bus = pydbus.SystemBus()
         manager = bus.get('org.ofono', '/')
@@ -37,7 +35,8 @@ class OfonoBridge(object):
 
     @property
     def _bus(self):
-        # lil hack so we always have an up-to-date bus
+        """SystemBus().get() returns a snapshot of the current exposed methods. Having it as a property ensures we always
+        have the latest snapshot (as opposed to storing it on start/after-init)"""
         return pydbus.SystemBus().get('org.ofono', self.modem_path)
 
     @property
