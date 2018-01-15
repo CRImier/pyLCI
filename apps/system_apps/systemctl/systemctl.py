@@ -56,7 +56,7 @@ def action_unit(action, unit):
         elif action is "reload-or-restart":
             job = systemd.ReloadOrRestartUnit(unit, "fail")
         else:
-            logger.warning("Unknown action '{}' attempted on unit '{}'".format(action, unit))
+            logger.error("Unknown action '{}' attempted on unit '{}'".format(action, unit))
     except Exception as e:
         logger.error("Exception while trying to run '{}' on unit '{}'".format(action, unit))
         logger.exception(e)
