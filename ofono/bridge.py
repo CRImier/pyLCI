@@ -19,14 +19,16 @@ class OfonoBridge(object):
 
     def __init__(self):
         self.modem_path = '/sim900_0'
+        self._check_default_modem()
+
+        # self.start()  #todo: check if it's the suitable place to do it
+
+    def _check_default_modem(self):
         bus = pydbus.SystemBus()
         manager = bus.get('org.ofono', '/')
         modem_path = manager.GetModems()[0][0]
-
         if modem_path != self.modem_path:
             raise ValueError("Default modem should be '{}', was '{}'".format(self.modem_path, modem_path))
-
-        # self.start()  #todo: check if it's the suitable place to do it
 
     def start(self):
         self.power_on()
