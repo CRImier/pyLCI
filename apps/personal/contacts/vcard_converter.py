@@ -1,8 +1,9 @@
-import logging
-
 import vobject
 
 from address_book import Contact
+from helpers import setup_logger
+
+logger = setup_logger(__name__)
 
 
 class VCardContactConverter(object):
@@ -49,7 +50,7 @@ class VCardContactConverter(object):
         contacts = []
         for file_path in contact_card_files:
             contacts += VCardContactConverter.parse_vcard_file(file_path)
-        logging.info("finished : {} contacts loaded", len(contacts))
+        logger.info("finished : {} contacts loaded", len(contacts))
         return [VCardContactConverter.to_zpui_contact(c) for c in contacts]
 
     @classmethod
