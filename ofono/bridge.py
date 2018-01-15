@@ -65,7 +65,7 @@ class OfonoBridge(object):
 
     def send_sms(self, to, content):  # todo : untested
         self.message_manager.SendMessage(to, content)
-        print("Sending", to, content)
+        logger.info("Sending message to '{}'".format(to))
         ConversationManager().on_new_message_sent(to, content)
 
     @staticmethod
