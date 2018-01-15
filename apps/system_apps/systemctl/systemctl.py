@@ -37,12 +37,27 @@ def list_units(unit_filter_field = None, unit_filter_values = []):
 
 
 def action_unit(action, unit):
-    try:
-        output = subprocess.check_output(["systemctl", action, unit])
-        return True
-    except subprocess.CalledProcessError:
-        return False
+    # See D-Bus documentation (linked above) for argument explanation
+    job = False
 
+    try:
+        if action is "start":
+            job = systemd.StartUnit(unit, "fail")
+        elif action is "stop":
+            job = systemd.StopUnit(unit, "fail")
+        elif action is "restart":
+            job = systemd.RestartUnit(unit, "fail")
+        elif action is "reload":
+            job = systemd.ReloadUnit(unit, "fail")
+        elif action is "reload-or-restart":
+            job = systemd.ReloadOrRestartUnit(unit, "fail")
+        else:
+            logger.warning("Unknown action '{}' attempted on unit '{}'".format(action, unit))
+    except Exception as e:
+        logger.error("Exception while trying to run '{}' on unit '{}'".format(action, unit))
+        logger.exception(e)
+
+    return job
 
 if __name__ == "__main__":
     units_loaded = list_units('load', ['loaded'])
