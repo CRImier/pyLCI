@@ -14,6 +14,25 @@ systemd = bus.get(".systemd1")
 def list_units(unit_filter_field = None, unit_filter_values = []):
     units = []
 
+    available_unit_filter_fields = [
+        "active",
+        "basename",
+        "description",
+        "follower",
+        "job_object_path"
+        "job_queued",
+        "job_type",
+        "load",
+        "name",
+        "sub",
+        "unit_object_path",
+        "unit_type",
+    ]
+
+    if unit_filter_field and unit_filter_field not in available_unit_filter_fields:
+        logger.error("Set unit_filter_field '{}' not one of '{}'".format(unit_filter_field, available_unit_filter_fields))
+        return False
+
     for unit in systemd.ListUnits():
         name, description, load, active, sub, follower, unit_object_path, job_queued, job_type, job_object_path = unit
 
