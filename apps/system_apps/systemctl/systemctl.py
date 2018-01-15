@@ -1,6 +1,8 @@
 from helpers import setup_logger
 from pydbus import SystemBus
 
+from operator import itemgetter
+
 logger = setup_logger(__name__, "warning")
 
 # See D-Bus documentation here:
@@ -32,6 +34,8 @@ def list_units(unit_filter_field = None, unit_filter_values = []):
                 "job_type": job_type,
                 "job_object_path": job_object_path
             })
+
+    units = sorted(units, key=itemgetter('name'))
 
     return units
 
