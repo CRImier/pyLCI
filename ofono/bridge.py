@@ -18,14 +18,13 @@ class OfonoBridge(object):
     """
 
     def __init__(self):
-        super(OfonoBridge, self).__init__()
-
+        self.modem_path = '/sim900_0'
         bus = pydbus.SystemBus()
         manager = bus.get('org.ofono', '/')
         modem_path = manager.GetModems()[0][0]
 
-        if modem_path != '/sim900_0':
-            raise ValueError("Default modem should be '/sim900_0', was '{}'".format(modem_path))
+        if modem_path != self.modem_path:
+            raise ValueError("Default modem should be '{}', was '{}'".format(self.modem_path, modem_path))
 
         # self.start()  #todo: check if it's the suitable place to do it
 
@@ -37,7 +36,7 @@ class OfonoBridge(object):
     @property
     def _bus(self):
         # lil hack so we always have an up-to-date bus
-        return pydbus.SystemBus().get('org.ofono', '/sim900_0')
+        return pydbus.SystemBus().get('org.ofono', self.modem_path)
 
     @property
     def message_manager(self):
