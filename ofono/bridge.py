@@ -47,6 +47,7 @@ class OfonoBridge(object):
         full_name = name if name.startswith('org.ofono') else 'org.ofono.{}'.format(name)
         if full_name in self._bus.GetProperties()['Interfaces']:
             return self._bus[full_name]
+        raise Exception("Interface '{}' wasn't found on ofono D-Bus".format(full_name))
 
     def power_on(self):
         if self._bus.GetProperties()["Powered"]:
