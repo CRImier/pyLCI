@@ -1,3 +1,4 @@
+import errno
 import logging
 import os
 from time import sleep
@@ -92,8 +93,17 @@ class ConversationManager(Singleton):
     def __init__(self):
         super(ConversationManager, self).__init__()
         self.folder = os.path.expanduser("~/.phone/sms/")  # todo: store as a constant somewhere
+        self._create_folder()
+
+    def _create_folder(self):
         if not os.path.exists(self.folder):
-            os.mkdir(self.folder)
+            try:
+                os.makedirs(self.folder)
+            except OSError as exc:  # os.makedirs(exist_ok=True) does not exist for python <= 3.2
+                if exc.errno == errno.EEXIST and os.path.isdir(self.folder):
+                    pass
+                else:
+                    raise
 
     def on_new_message_sent(self, to, content):
         logger.info("Sent message to '{}'".format(to))
