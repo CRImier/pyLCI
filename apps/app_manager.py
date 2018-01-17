@@ -1,13 +1,12 @@
 import importlib
-import logging
 import os
 import traceback
 
 from apps import zero_app
+from helpers import setup_logger
 from ui import Printer, Menu
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger = setup_logger(__name__, "info")
 
 
 class ListWithMetadata(list):
@@ -30,10 +29,11 @@ class AppManager(object):
      """
     ordering_cache = {}
 
-    def __init__(self, app_directory, context_manager):
+    def __init__(self, app_directory, context_manager, config=None):
         self.app_directory = app_directory
         self.cm = context_manager
         self.i, self.o = self.cm.get_io_for_context("main")
+        self.config = config if config else {}
 
     def load_all_apps(self):
         base_menu = Menu([], self.i, self.o, "Main app menu",
@@ -41,6 +41,7 @@ class AppManager(object):
         base_menu.exit_entry = ["Exit", "exit"]
         base_menu.process_contents()
         self.subdir_menus[self.app_directory] = base_menu
+        apps_blocked_in_config = self.config.get("do_not_load", {})
         for path, subdirs, modules in app_walk(self.app_directory):
             for subdir in subdirs:
                 # First, we create subdir menus (not yet linking because they're not created in correct order) and put them in subdir_menus.
@@ -50,6 +51,9 @@ class AppManager(object):
                 # Then, we load modules and store them along with their paths
                 try:
                     module_path = os.path.join(path, _module)
+                    if module_path in apps_blocked_in_config:
+                        logger.warning("App {} blocked from config; not loading".format(module_path))
+                        continue
                     app = self.load_app(module_path)
                     logger.info("Loaded app {}".format(module_path))
                     self.app_list[module_path] = app
@@ -209,10 +213,10 @@ def get_zeroapp_class_in_module(module_):
     for item in module_content:
         class_ = getattr(module_, item)
         try:
-            if issubclass(class_, zero_app.ZeroApp):
+            if issubclass(class_, zero_app.ZeroApp) and item != 'ZeroApp':
                 return class_
         except Exception as e:
-            pass  # todo : check why isinstance(class_, ClassType)==False in python2
+            pass  # not a class : ignore
     return None
 
 

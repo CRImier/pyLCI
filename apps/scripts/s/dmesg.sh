@@ -1,2 +1,5 @@
 #!/bin/bash
-dmesg|tail -n100
+
+set -euo pipefail
+
+dmesg | tail -n 100

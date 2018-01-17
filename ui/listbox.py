@@ -1,4 +1,5 @@
-import logging
+from helpers import setup_logger
+logger = setup_logger(__name__, "warning")
 
 from base_list_ui import BaseListUIElement, to_be_foreground
 
@@ -11,7 +12,7 @@ class Listbox(BaseListUIElement):
 
       Listbox entry is a list, where:
          * ``entry[0]`` (entry's label) is usually a string which will be displayed in the UI, such as "Option 1". If ``entry_height`` > 1, can be a list of strings, each of those strings will be shown on a separate display row.
-         * ``entry[1]`` (entry's value) is the value to be returned when entry is selected.
+         * ``entry[1]`` (entry's value) is the value to be returned when entry is selected. If it's not supplied, entry's label is returned instead.
 
       *If you want to set contents after the initalisation, please, use set_contents() method.*
     * ``pointer``: currently selected entry's number in ``self.contents``.
@@ -43,12 +44,15 @@ class Listbox(BaseListUIElement):
     def get_return_value(self):
         if self.selected_entry is None:
             return None
-        return self.contents[self.selected_entry][1]
+        if len(self.contents[self.selected_entry]) == 1:
+            return self.contents[self.selected_entry][0]
+        else:
+            return self.contents[self.selected_entry][1]
 
     @to_be_foreground
     def select_entry(self):
         """ Gets the currently specified entry's index and sets it as selected_entry attribute.
         |Is typically used as a callback from input event processing thread."""
-        logging.debug("entry selected")
+        logger.debug("entry selected")
         self.selected_entry = self.pointer
         self.deactivate()

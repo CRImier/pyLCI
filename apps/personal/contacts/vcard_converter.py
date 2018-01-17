@@ -1,14 +1,10 @@
-import logging
+from helpers import setup_logger
+logger = setup_logger(__name__, "warning")
 
-from helpers import install_from_pip
-
-try:
-    import vobject
-except ImportError:
-    vobject = None
-    install_from_pip("vobject")
+import vobject
 
 from address_book import Contact
+
 
 class VCardContactConverter(object):
     vcard_mapping = {
@@ -39,7 +35,7 @@ class VCardContactConverter(object):
         # type: (str) -> list
         file_content = VCardContactConverter.read_file_content(file_path)
         contacts = [c for c in vobject.readComponents(file_content, ignoreUnreadable=True)]
-        logging.info("Found {} contact in file {}", len(contacts), file_path)
+        logger.info("Found {} contact in file {}", len(contacts), file_path)
         return contacts
 
     @staticmethod
@@ -54,5 +50,5 @@ class VCardContactConverter(object):
         contacts = []
         for file_path in contact_card_files:
             contacts += VCardContactConverter.parse_vcard_file(file_path)
-        logging.info("finished : {} contacts loaded", len(contacts))
+        logger.info("finished : {} contacts loaded", len(contacts))
         return [VCardContactConverter.to_zpui_contact(c) for c in contacts]

@@ -1,7 +1,9 @@
 import smbus
 from time import sleep
 
+from helpers import setup_logger
 from skeleton import InputSkeleton
+logger = setup_logger(__name__, "warning")
 
 class InputDevice(InputSkeleton):
     default_mapping = [
@@ -81,12 +83,12 @@ class InputDevice(InputSkeleton):
                 try:
                     data = self.bus.read_byte(self.addr)
                 except IOError:
-                    print("Can't get data from keypad!")
+                    logger.error("Can't get data from keypad!")
                 else:
                     if data != 0:
                         self.send_key(self.mapping[data-1])
                     else:
-                        print("Received 0 from keypad though the interrupt has been triggered!")
+                        logger.warning("Received 0 from keypad though the interrupt has been triggered!")
                         sleep(0.1)
             sleep(0.1)
 

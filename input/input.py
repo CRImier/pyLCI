@@ -1,16 +1,17 @@
-from traceback import print_exc, format_exc
+from traceback import format_exc
 from threading import Thread, Event
 from time import sleep
 import importlib
-import logging
+
 import atexit
 import Queue
-import sys
+from helpers import setup_logger
 
 import inspect
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
+listener = None
+
+logger = setup_logger(__name__, "warning")
 
 class CallbackException(Exception):
     def __init__(self, errno=0, message=""):
@@ -33,10 +34,19 @@ class InputProcessor():
         self.drivers = drivers
         self.cm = context_manager
         self.queue = Queue.Queue()
-        for driver in self.drivers.values():
-            driver.send_key = self.receive_key #Overriding the send_key method so that keycodes get sent to InputProcessor
+        self.available_keys = {}
+        for driver_name, driver in self.drivers.items():
+            driver.send_key = self.receive_key #Overriding the send_key method so that keycodes get sent to InputListener
+            self.available_keys[driver_name] = driver.available_keys
             driver.start()
         atexit.register(self.atexit)
+
+    def receive_key(self, key):
+        """ This is the method that receives keypresses from drivers and puts them into ``self.queue`` for ``self.event_loop`` to receive """
+        try:
+            self.queue.put(key)
+        except:
+            raise #Just collecting possible exceptions for now
 
     def attach_proxy(self, proxy):
         """
@@ -67,7 +77,7 @@ class InputProcessor():
         Sets a global callback for a key. That global callback will be processed
         before the backlight callback or any proxy callbacks.
         """
-        logging.info("Setting a global callback for key {}".format(key))
+        logger.info("Setting a global callback for key {}".format(key))
         if key in self.global_keymap.keys():
             #Key is already used in the global keymap
             raise CallbackException(4, "Global callback for {} can't be set because it's already in the keymap!".format(key_name))
@@ -149,8 +159,7 @@ class InputProcessor():
                 # backlight_cb turns on the backligth as a side effect
                 backlight_was_off = self.backlight_cb()
             except:
-                logger.warning("Exception while calling the backlight check callback!")
-                logger.warning(format_exc())
+                logger.exception("Exception while calling the backlight check callback!")
             else:
                 # If backlight was off, ignore the keypress
                 if backlight_was_off is True:
@@ -265,9 +274,10 @@ class InputProxy():
         """
         Sets a single callback.
 
-        >>> self.clear_keymap()
-        >>> self.set_callback("KEY_ENTER", lambda: None)
-        >>> "KEY_ENTER" in self.keymap
+        >>> i = InputProxy("test")
+        >>> i.clear_keymap()
+        >>> i.set_callback("KEY_ENTER", lambda: None)
+        >>> "KEY_ENTER" in i.keymap
         True
         """
         self.keymap[key_name] = callback
@@ -327,17 +337,18 @@ class InputProxy():
         Will add/replace callbacks for keys in the new keymap,
         but will leave the existing keys that are not in new keymap intact
 
-        >>> self.set_keymap({"KEY_LEFT":lambda:1, "KEY_DOWN":lambda:2})
-        >>> self.keymap["KEY_LEFT"]()
+        >>> i = InputProxy("test")
+        >>> i.set_keymap({"KEY_LEFT":lambda:1, "KEY_DOWN":lambda:2})
+        >>> i.keymap["KEY_LEFT"]()
         1
-        >>> self.keymap["KEY_DOWN"]()
+        >>> i.keymap["KEY_DOWN"]()
         2
-        >>> self.update_keymap({"KEY_LEFT":lambda:3, "KEY_1":lambda:4})
-        >>> self.keymap["KEY_LEFT"]()
+        >>> i.update_keymap({"KEY_LEFT":lambda:3, "KEY_1":lambda:4})
+        >>> i.keymap["KEY_LEFT"]()
         3
-        >>> self.keymap["KEY_DOWN"]()
+        >>> i.keymap["KEY_DOWN"]()
         2
-        >>> self.keymap["KEY_1"]()
+        >>> i.keymap["KEY_1"]()
         4
         """
         self.keymap.update(new_keymap)
@@ -363,4 +374,4 @@ def init(driver_configs, context_manager):
 
 if __name__ == "__main__":
     import doctest
-    doctest.testmod(extraglobs={'self': InputProxy("test")})
+    doctest.testmod()

@@ -1,4 +1,8 @@
 #Code taken from here: https://habrahabr.ru/post/332812/ and, consequently, from here: https://www.electricmonk.nl/log/2016/07/05/exploring-upnp-with-python/
+
+
+from helpers import setup_logger
+
 menu_name = "UPnP/SSDP scan"
 
 from ui import Menu, Printer, IntegerAdjustInput, format_for_screen as ffs
@@ -10,6 +14,9 @@ from time import sleep
 import socket
 import sys
 import os
+
+
+logger = setup_logger(__name__, "warning")
 
 #Some globals for us
 i = None
@@ -41,8 +48,9 @@ def run_scan():
             data, addr = s.recvfrom(32*1024)
         except socket.timeout:
             break
-        except:
-            print(format_exc())
+        except Exception as e:
+            logger.error(format_exc())
+            logger.exception(e)
         else:
             ip_str = "{}:{}".format(*addr)
             found_devices[ip_str] = data

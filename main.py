@@ -22,36 +22,45 @@ is_emulator = emulator_flag_filename in os.listdir(".")
 
 logging_path = local_path('zpui.log')
 logging_format = (
-    '[%(levelname)s] %(asctime)s %(filename)s: %(message)s',
+    '[%(levelname)s] %(asctime)s %(name)s: %(message)s',
     '%Y-%m-%d %H:%M:%S'
 )
 
-config_paths = ['/boot/zpui_config.json'] if not is_emulator else []
+config_paths = ['/boot/zpui_config.json', '/boot/pylci_config.json'] if not is_emulator else []
 config_paths.append(local_path('config.json'))
+#Using the .example config as a last resort
+config_paths.append(local_path('default_config.json'))
 
 input_processor = None
 screen = None
 cm = None
+config = None
+config_path = None
 
 def init():
     """Initialize input and output objects"""
 
-    global input_processor, screen, cm
+    global input_processor, screen, cm, config, config_path
     config = None
 
     # Load config
-    for path in config_paths:
-        try:
-            logging.debug('Loading config from {}'.format(path))
-            config = read_config(path)
-        except:
-            logging.exception('Failed to load config from {}'.format(path))
-        else:
-            logging.info('Successfully loaded config from {}'.format(path))
-            break
+    for config_path in config_paths:
+        #Only try to load the config file if it's present
+        #(unclutters the logs)
+        if os.path.exists(config_path):
+            try:
+                logging.debug('Loading config from {}'.format(config_path))
+                config = read_config(config_path)
+            except:
+                logging.exception('Failed to load config from {}'.format(config_path))
+            else:
+                logging.info('Successfully loaded config from {}'.format(config_path))
+                break
+    # After this loop, the config_path global should contain
+    # path for config that successfully loaded
 
     if config is None:
-        sys.exit('Failed to load any config file')
+        sys.exit('Failed to load any config files!')
 
     # Initialize output
     try:
@@ -91,7 +100,8 @@ def launch(name=None, **kwargs):
     """
 
     i, o = init()
-    app_man = AppManager('apps', cm)
+    appman_config = config.get("app_manager", {})
+    app_man = AppManager('apps', cm, config=appman_config)
 
     if name is None:
         try:
@@ -156,7 +166,7 @@ def dump_threads(*args):
     Helpful signal handler for debugging threads
     """
 
-    logger.critical('\nSIGUSR received, dumping threads\n')
+    logger.critical('\nSIGUSR received, dumping threads!\n')
     for th in threading.enumerate():
         logger.critical(th)
         log = traceback.format_stack(sys._current_frames()[th.ident])

@@ -1,7 +1,8 @@
 from time import sleep
 
 from apps import ZeroApp
-from ui import ProgressBar, TextProgressBar, CircularProgressBar, GraphicalProgressBar, IdleDottedMessage, Throbber, Listbox
+from ui import ProgressBar, TextProgressBar, CircularProgressBar, GraphicalProgressBar, IdleDottedMessage, Throbber, \
+    Listbox
 
 
 class LoadingBarExampleApp(ZeroApp):
@@ -11,10 +12,10 @@ class LoadingBarExampleApp(ZeroApp):
 
         self.default_progress_bar = ProgressBar(self.i, self.o)
         self.text_progress_bar = TextProgressBar(self.i, self.o, refresh_interval=.1, show_percentage=True,
-                                             percentage_offset=0)
+                                                 percentage_offset=0)
         self.circular_progress = CircularProgressBar(self.i, self.o, show_percentage=True)
         self.dotted_progress_bar = IdleDottedMessage(self.i, self.o)
-        self.throbber = Throbber(self.i, self.o)
+        self.throbber = Throbber(self.i, self.o, message="Test message")
         self.graphical_progress_bar = GraphicalProgressBar(self.i, self.o)
         self.default_progress_bar = ProgressBar(self.i, self.o)
         lb_contents = [
@@ -29,16 +30,14 @@ class LoadingBarExampleApp(ZeroApp):
 
     def on_start(self):
         super(LoadingBarExampleApp, self).on_start()
-        chosen_loading_bar = self.bar_choice_listbox.activate()
-        chosen_loading_bar.run_in_background()
-        if hasattr(chosen_loading_bar, "progress"):
-            for i in range(101):
-                chosen_loading_bar.progress = float(i) / 100
-                sleep(0.01)
-            sleep(1)
-            for i in range(101)[::-1]:
-                chosen_loading_bar.progress = float(i) / 100
-                sleep(0.1)
-        else:
-            sleep(3)
-            chosen_loading_bar.deactivate()
+        with self.bar_choice_listbox.activate() as chosen_loading_bar:
+            if hasattr(chosen_loading_bar, "progress"):
+                for i in range(101):
+                    chosen_loading_bar.progress = float(i) / 100
+                    sleep(0.01)
+                sleep(1)
+                for i in range(101)[::-1]:
+                    chosen_loading_bar.progress = float(i) / 100
+                    sleep(0.1)
+            else:
+                sleep(3)

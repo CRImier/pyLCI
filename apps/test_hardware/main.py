@@ -1,3 +1,7 @@
+
+
+from helpers import setup_logger
+
 menu_name = "Hardware test"
 
 from threading import Event, Thread
@@ -9,6 +13,8 @@ import os
 
 from ui import Menu, Printer, PrettyPrinter, GraphicsPrinter
 from helpers import ExitHelper, local_path_gen
+
+logger = setup_logger(__name__, "warning")
 
 i = None
 o = None
@@ -27,7 +33,7 @@ def init_app(input, output):
     if music_filename not in os.listdir(local_path('.')):
         def download():
             downloaded.clear()
-            print("Downloading music for hardware test app!")
+            logger.debug("Downloading music for hardware test app!")
             call(["wget", url, "-O", music_path])
             downloaded.set()
         t = Thread(target=download)

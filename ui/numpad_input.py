@@ -1,11 +1,12 @@
-from time import sleep
 from copy import copy
-import logging
-from functools import wraps
+from time import sleep
 from threading import Lock
+from functools import wraps
 
+from helpers import setup_logger
 from ui.utils import to_be_foreground, check_value_lock
 
+logger = setup_logger(__name__, "warning")
 
 def check_position_overflow(condition):
     """Returns a decorator which can check for different ways of "self.position" counter overflow """
@@ -53,7 +54,15 @@ class NumpadCharInput():
                "9":"wxyz9WXYZ",
                "0":" 0+@_:-;=%",
                "*":"*.,'\"^",
-               "#":"#/()[]<>"
+               "#":"#/()[]<>",
+              }
+
+    action_keys = {
+               "ENTER":"accept_value",
+               "F1":"deactivate",
+               "LEFT":"deactivate_if_first",
+               "RIGHT":"skip",
+               "F2":"backspace",
               }
 
     bottom_row_buttons = ["Cancel", "OK", "Erase"]
@@ -69,7 +78,7 @@ class NumpadCharInput():
     current_letter_num = 0
     __locked_name__ = None
 
-    def __init__(self, i, o, message="", value="", name="NumpadCharInput", mapping=None, debug=False):
+    def __init__(self, i, o, message="Value:", value="", name="NumpadCharInput", mapping=None):
         """Initialises the NumpadCharInput object.
         
         Args:
@@ -81,15 +90,13 @@ class NumpadCharInput():
         self.o = o
         self.message = message
         self.name = name
-        self.debug = debug
         self.value = value
         self.position = len(self.value)
+        self.action_keys = copy(self.action_keys)
         if mapping is not None:
             self.mapping = copy(mapping)
         else:
             self.mapping = copy(self.default_mapping)
-        self.keymap = {}
-        self.generate_keymap()
         self.value_lock = Lock()
         self.value_accepted = False
 
@@ -97,7 +104,7 @@ class NumpadCharInput():
 
     def to_foreground(self):
         """ Is called when ``activate()`` method is used, sets flags and performs all the actions so that UI element can display its contents and receive keypresses. Also, refreshes the screen."""
-        logging.info("{0} enabled".format(self.name))
+        logger.info("{0} enabled".format(self.name))
         self.value_accepted = False
         self.in_foreground = True
         self.refresh()
@@ -107,27 +114,35 @@ class NumpadCharInput():
         """ A method which is called when input element needs to start operating. Is blocking, sets up input&output devices, renders the element and waits until self.in_background is False, while menu callbacks are executed from the input device thread.
         This method returns the selected value if KEY_ENTER was pressed, thus accepting the selection.
         This method returns None when the UI element was exited by KEY_LEFT and thus the value was not accepted. """
-        logging.info("{0} activated".format(self.name))
+        logger.info("{0} activated".format(self.name))
         self.o.cursor()
         self.to_foreground()
         while self.in_foreground: #Most of the work is done in input callbacks
-            sleep(0.1)
-            self.check_character_state()
+            self.idle_loop()
         self.o.noCursor()
         self.i.remove_streaming()
-        logging.debug(self.name+" exited")
+        logger.debug(self.name+" exited")
         if self.value_accepted:
             return self.value
         else:
             return None
 
+    def idle_loop(self):
+        sleep(0.1)
+        self.check_character_state()
+
     def deactivate(self):
         """ Deactivates the UI element, exiting it and thus making activate() return."""
         self.in_foreground = False
-        logging.info("{0} deactivated".format(self.name))
+        logger.info("{0} deactivated".format(self.name))
+
+    def deactivate_if_first(self):
+        """ Deactivates the UI element if it hasn't yet had a character entered """
+        if self.position == 0:
+            self.deactivate()
 
     def accept_value(self):
-        logging.info("{0}: accepted value".format(self.name))
+        logger.info("{0}: accepted value".format(self.name))
         self.value_accepted = True
         self.deactivate()
 
@@ -135,11 +150,15 @@ class NumpadCharInput():
 
     @check_value_lock
     def process_streaming_keycode(self, key_name, *args):
-        #This function processes all keycodes that are not in the keymap - such as number keycodes
+        #This function processes all keycodes - both number keycodes and action keycodes
         header = "KEY_"
         key = key_name[len(header):]
-        if self.debug: print("Received "+key_name)
-        if key in self.mapping.keys():
+        logger.debug("Received "+key_name)
+        if key in self.action_keys:
+            #Is one of the action keys
+            getattr(self, self.action_keys[key])()
+            return
+        if key in self.mapping:
             #It's one of the keys we can process
             #NO INSERT IN MIDDLE/START SUPPORT
             if self.pending_character is None: #Currently no key pending
@@ -195,7 +214,6 @@ class NumpadCharInput():
             #Finally, output all changes to display
             self.refresh()
 
-    @check_value_lock
     def backspace(self):
         self.remove_letter_in_value()
         self.refresh()
@@ -249,26 +267,21 @@ class NumpadCharInput():
             #Character still pending
             self.pending_counter -= 1
             if self.pending_counter == 0:
-                #Counter reset
-                self.pending_character = None
-                #Advancing position so that next letter takes the next space
-                self.position += 1
-                self.refresh()
+                self.skip() # advancing to the next character
+
+    def skip(self):
+        #Counter reset
+        self.pending_character = None
+        #Advancing position so that cursor takes the next space
+        self.position += 1
+        self.refresh()
 
     #Functions that set up the input listener
-
-    def generate_keymap(self):
-        self.keymap.update({
-        "KEY_ENTER":lambda: self.accept_value(),
-        "KEY_F1":lambda: self.deactivate(),
-        "KEY_F2":lambda: self.backspace()
-        })
 
     @to_be_foreground
     def set_keymap(self):
         self.i.stop_listen()
         self.i.clear_keymap()
-        self.i.keymap = self.keymap
         self.i.set_streaming(self.process_streaming_keycode)
         self.i.listen()
 
@@ -301,17 +314,17 @@ class NumpadCharInput():
         cursor_y += 1
         self.o.setCursor(cursor_y, cursor_x)
         self.o.display_data(*self.get_displayed_data())
-        logging.debug("{}: refreshed data on display".format(self.name))
+        logger.debug("{}: refreshed data on display".format(self.name))
 
     #Debug-related functions.
 
     def print_value(self):
         """ A debug method. Useful for hooking up to an input event so that you can see current value. """
-        logging.info(self.value)
+        logger.info(self.value)
 
     def print_name(self):
         """ A debug method. Useful for hooking up to an input event so that you can see which UI element is currently processing input events. """
-        logging.info("{0} active".format(self.name))
+        logger.info("{0} active".format(self.name))
 
 
 

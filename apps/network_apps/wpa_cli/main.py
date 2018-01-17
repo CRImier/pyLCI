@@ -1,3 +1,5 @@
+from helpers import setup_logger
+
 menu_name = "Wireless"
 
 i = None
@@ -7,10 +9,11 @@ from time import sleep
 from threading import Thread
 from traceback import format_exc
 
-from ui import Menu, Printer, MenuExitException, NumpadCharInput, Refresher, DialogBox, ellipsize
+from ui import Menu, Printer, MenuExitException, UniversalInput, Refresher, DialogBox, ellipsize
 
 import wpa_cli
 
+logger = setup_logger(__name__, "warning")
 def show_scan_results():
     network_menu_contents = []
     networks = wpa_cli.get_scan_results()
@@ -54,7 +57,7 @@ def connect_to_network(network_info):
         raise MenuExitException
     #Offering to enter a password
     else:
-        input = NumpadCharInput(i, o, message="Password:", name="WiFi password enter UI element")
+        input = UniversalInput(i, o, message="Password:", name="WiFi password enter UI element")
         password = input.activate()
         if password is None:
             return False
@@ -83,11 +86,12 @@ def etdn_runner():
     saved_networks = wpa_cli.list_configured_networks()
     for network in saved_networks:
         if network["flags"] == "[TEMP-DISABLED]":
-            print("Network {} is temporarily disabled, re-enabling".format(network["ssid"]))
+            logger.warning("Network {} is temporarily disabled, re-enabling".format(network["ssid"]))
             try:
                 enable_network(network["network_id"])
-            except:
-                print(format_exc())
+            except Exception as e:
+                logger.error(format_exc())
+                logger.exception(e)
     etdn_thread = None
 
 def scan(delay = True):
@@ -268,7 +272,7 @@ def remove_network(id):
         raise MenuExitException
 
 def set_password(id):    
-    input = NumpadCharInput(i, o, message="Password:", name="WiFi password enter UI element")
+    input = UniversalInput(i, o, message="Password:", name="WiFi password enter UI element")
     password = input.activate()
     if password is None:
         return False

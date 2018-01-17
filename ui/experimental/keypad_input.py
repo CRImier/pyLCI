@@ -1,6 +1,7 @@
 from time import sleep
 from math import ceil
-import logging
+from helpers import setup_logger
+logger = setup_logger(__name__, "warning")
 
 from ui.utils import to_be_foreground
 
@@ -38,7 +39,7 @@ class NumberKeypadInputLayer():
 
     def to_foreground(self):
         """ Is called when ``activate()`` method is used, sets flags and performs all the actions so that UI element can display its contents and receive keypresses. Also, refreshes the screen."""
-        logging.info("{0} enabled".format(self.name))    
+        logger.info("{0} enabled".format(self.name))    
         self.in_foreground = True
         self.refresh()
         self.set_keymap()
@@ -47,18 +48,18 @@ class NumberKeypadInputLayer():
         """ A method which is called when input element needs to start operating. Is blocking, sets up input&output devices, renders the element and waits until self.in_background is False, while menu callbacks are executed from the input device thread.
         This method returns the selected value if KEY_ENTER was pressed, thus accepting the selection.
         This method returns None when the UI element was exited by KEY_LEFT and thus the value was not accepted. """
-        logging.info("{0} activated".format(self.name))    
+        logger.info("{0} activated".format(self.name))    
         self.to_foreground() 
         while self.in_foreground: #All the work is done in input callbacks
             sleep(0.1)
         self.i.remove_streaming()
-        logging.debug(self.name+" exited")
+        logger.debug(self.name+" exited")
         return self.value
 
     def deactivate(self):
         """ Deactivates the UI element, exiting it and thus making activate() return."""
         self.in_foreground = False
-        logging.info("{0} deactivated".format(self.name))    
+        logger.info("{0} deactivated".format(self.name))    
 
     def process_keycode(self, key_name, *args):
         header = "KEY_"
@@ -73,11 +74,11 @@ class NumberKeypadInputLayer():
 
     def print_value(self):
         """ A debug method. Useful for hooking up to an input event so that you can see current value. """
-        logging.info(self.value)
+        logger.info(self.value)
 
     def print_name(self):
         """ A debug method. Useful for hooking up to an input event so that you can see which UI element is currently processing input events. """
-        logging.info("{0} active".format(self.name))    
+        logger.info("{0} active".format(self.name))    
 
     def generate_keymap(self):
         for key in self.keymap:
@@ -127,4 +128,4 @@ class NumberKeypadInputLayer():
     @to_be_foreground
     def refresh(self):
         self.o.display_data(*self.get_displayed_data())
-        logging.debug("{}: refreshed data on display".format(self.name))
+        logger.debug("{}: refreshed data on display".format(self.name))

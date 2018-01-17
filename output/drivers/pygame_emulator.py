@@ -4,7 +4,6 @@ Allows development of sofware without ZeroPhone hardware,
 e.g. on a laptop with a USB keyboard.
 """
 
-import logging
 from threading import Event
 from time import sleep
 
@@ -12,7 +11,8 @@ from luma.core.render import canvas
 
 import emulator
 from output.output import OutputDevice
-
+from helpers import setup_logger
+logger = setup_logger(__name__, "info")
 
 class Screen(OutputDevice):
     """
@@ -42,7 +42,7 @@ class Screen(OutputDevice):
         Creates subprocess of a of pygame emulator device
         """
 
-        logging.debug('Creating emulator instance')
+        logger.debug('Creating emulator instance')
         self.emulator = emulator.get_emulator()
 
     def __getattr__(self, name):

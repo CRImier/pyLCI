@@ -9,6 +9,7 @@ from char_input import CharArrowKeysInput
 from checkbox import Checkbox
 from dialog import DialogBox
 from funcs import ellipsize, format_for_screen, ffs
+from input import UniversalInput
 from listbox import Listbox
 from menu import Menu, MenuExitException
 from number_input import IntegerAdjustInput

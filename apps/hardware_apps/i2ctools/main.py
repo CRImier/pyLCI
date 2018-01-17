@@ -1,3 +1,7 @@
+
+
+from helpers import setup_logger
+
 menu_name = "I2C tools"
 
 from subprocess import call
@@ -7,6 +11,7 @@ from time import sleep
 
 import smbus
 
+logger = setup_logger(__name__, "warning")
 current_bus = None
 
 def i2c_detect():
@@ -23,7 +28,7 @@ def i2c_detect():
          elif e.errno == 121:
              pass
          else:
-             print("Errno {} unknown - can be used? {}".format(e.errno, repr(e)))
+             logger.error("Errno {} unknown - can be used? {}".format(e.errno, repr(e)))
       else:
          found_devices[device] = "ok"
     if not found_devices:
