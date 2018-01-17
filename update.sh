@@ -9,7 +9,7 @@ IGNORE_TEST=false
 cd "$(dirname "$0")"  # Make sure we are in the script's directory when running
 set -e  # Strict mode : script stops if any command fails
 
-case "$1" in
+case ${1:-''} in
     -i|--ignore-tests) IGNORE_TEST=true; shift 1 ;;
     --) shift; break ;;
 esac
