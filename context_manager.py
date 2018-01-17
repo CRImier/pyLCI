@@ -1,13 +1,12 @@
 from input.input import InputProxy
 from output.output import OutputProxy
 
-import logging
 from functools import wraps
 from threading import Thread
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+from helpers import setup_logger
 
+logger = setup_logger(__name__, "debug")
 
 def context_target_wrapper(func, cm, context_alias, previous_context):
     @wraps(func)
