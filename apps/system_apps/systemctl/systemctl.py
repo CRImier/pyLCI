@@ -12,6 +12,29 @@ bus = SystemBus()
 systemd = bus.get(".systemd1")
 
 def list_units(unit_filter_field = None, unit_filter_values = []):
+    """
+    This function lists units, optionally filtering them by a certain parameter.
+    It returns a list of dictionaries, with following fields:
+
+    * ``"name"``: Full unit name, in the "name.type" format - i.e. "zpui.service"
+    * ``"basename"``: Unit name without unit type - i.e. "zpui"
+    * ``"unit_type"``: Unit type - i.e. "service", "socket" or "target"
+    * ``"description"``: Unit's human-readable description
+    * ``"active"``: Whether the unit is now active - i.e. "active", "failed", "inactive"
+    * ``"load"``: Whether the unit is now loaded - i.e. "loaded", "masked", "not found"
+    * ``"sub"``: Type-specific unit state - i.e.  "running", "listening", "mounted"
+    * ``"follower"``: A unit that is being followed in its state by this unit, if there is any, otherwise an empty string.
+    * ``"unit_object_path"``: The unit object path
+    * ``"job_queued"``: If there is a job queued for the job unit - the numeric job id, 0 otherwise
+    * ``"job_object_path"``: The job object path
+    * ``"job_type"``: The job type as string
+
+    Arguments:
+
+      * ``unit_filter_field``: a field which to filter the units by.
+      * ``unit_filter_values``: a list of values for the given field that are acceptable
+    """
+
     units = []
 
     unit_params = ["name", "description", "load", "active", "sub", "follower", "unit_object_path", "job_queued", "job_type", "job_object_path"]
