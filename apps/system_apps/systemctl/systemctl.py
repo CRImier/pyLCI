@@ -77,8 +77,7 @@ def action_unit(action, unit):
         else:
             logger.error("Unknown action '{}' attempted on unit '{}'".format(action, unit))
     except Exception as e:
-        logger.error("Exception while trying to run '{}' on unit '{}'".format(action, unit))
-        logger.exception(e)
+        logger.exception("Exception while trying to run '{}' on unit '{}'".format(action, unit))
 
     return job
 
