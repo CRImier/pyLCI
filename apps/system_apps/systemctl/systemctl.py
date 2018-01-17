@@ -14,45 +14,23 @@ systemd = bus.get(".systemd1")
 def list_units(unit_filter_field = None, unit_filter_values = []):
     units = []
 
-    available_unit_filter_fields = [
-        "active",
-        "basename",
-        "description",
-        "follower",
-        "job_object_path"
-        "job_queued",
-        "job_type",
-        "load",
-        "name",
-        "sub",
-        "unit_object_path",
-        "unit_type",
-    ]
+    unit_params = ["name", "description", "load", "active", "sub", "follower", "unit_object_path", "job_queued", "job_type", "job_object_path"]
+    additional_params = ["basename", "unit_type"]
 
-    if unit_filter_field and unit_filter_field not in available_unit_filter_fields:
+    if unit_filter_field and unit_filter_field not in unit_params+additional_params:
         logger.error("Set unit_filter_field '{}' not one of '{}'".format(unit_filter_field, available_unit_filter_fields))
         return False
 
     for unit in systemd.ListUnits():
-        name, description, load, active, sub, follower, unit_object_path, job_queued, job_type, job_object_path = unit
+        unit_dict = {}
+        assert (len(unit) == len(unit_params)), "Can't unpack the unit list - wrong number of arguments!"
+        for i, param in enumerate(unit_params):
+            unit_dict[param] = unit[i]
 
-        basename, unit_type = name.rsplit('.', 1)
+        unit_dict["basename"], unit_dict["unit_type"] = unit_dict["name"].rsplit('.', 1)
 
-        if unit_filter_field is None or locals()[unit_filter_field] in unit_filter_values:
-            units.append({
-                "name": name,
-                "basename": basename,
-                "type": unit_type,
-                "description": description,
-                "load": load,
-                "active": active,
-                "sub": sub,
-                "follower": follower,
-                "unit_object_path": unit_object_path,
-                "job_queued": job_queued,
-                "job_type": job_type,
-                "job_object_path": job_object_path
-            })
+        if unit_filter_field is None or unit_dict[unit_filter_field] in unit_filter_values:
+            units.append(unit_dict)
 
     units = sorted(units, key=itemgetter('name'))
 
