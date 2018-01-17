@@ -48,7 +48,7 @@ def all_units():
     menu_contents = []
     units = systemctl.list_units()
     for unit in units:
-        menu_contents.append([unit["basename"], lambda x=unit: unit_menu(x)])
+        menu_contents.append([unit["name"], lambda x=unit: unit_menu(x)])
     Menu(menu_contents, i, o, "Systemctl: all unit list menu").activate()
 
 def pinned_units():
@@ -62,7 +62,7 @@ def filtered_units():
     menu_contents = []
     units = systemctl.list_units("unit_type", config["allowed_types"])
     for unit in units:
-        menu_contents.append([unit["basename"], lambda x=unit: unit_menu(x)])
+        menu_contents.append([unit["name"], lambda x=unit: unit_menu(x)])
     Menu(menu_contents, i, o, "Systemctl: filtered unit list menu").activate()
 
 def unit_menu(unit, in_pinned=False):
