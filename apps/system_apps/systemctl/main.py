@@ -11,7 +11,15 @@ from time import sleep
 
 from ui import Menu, Printer, PrettyPrinter, Checkbox, MenuExitException
 
-import systemctl
+try:
+    import systemctl
+except ImportError as e:
+    try: # Are we missing gi.repository?
+        import gi.repository
+    except ImportError: # Yep, that's the case - let's disable the library so we can notify the user
+        systemctl = None
+    else: # Nope, it's something else - re-raising
+        raise e
 
 from helpers import read_or_create_config, write_config, local_path_gen
 local_path = local_path_gen(__name__)
@@ -148,6 +156,9 @@ def disable_unit(name):
 
 
 def callback():
+    if systemctl is None:
+       PrettyPrinter("python-gi not found! Please install it using 'apt-get install python-gi' ", i, o, 5)
+       return
     try:
        systemctl.list_units()
     except OSError as e:
