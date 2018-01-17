@@ -1,7 +1,7 @@
 from time import sleep
 from helpers import setup_logger
 
-from luma.core.render import canvas as luma_canvas
+from canvas import Canvas
 from utils import invert_rect_colors
 
 logger = setup_logger(__name__, "info")
@@ -154,13 +154,12 @@ class TextView():
 class GraphicalView(TextView):
 
     def get_image(self):
-        draw = luma_canvas(self.o.device)
-        d = draw.__enter__()
+        c = Canvas(self.o)
 
         #Drawing text
         second_line_position = 10
-        d.text((2, 0), self.el.message, fill="white")
-        d.text((2, second_line_position), self.displayed_label, fill="white")
+        c.text((2, 0), self.el.message, fill="white")
+        c.text((2, second_line_position), self.displayed_label, fill="white")
 
         #Calculating the cursor dimensions
         first_char_position = self.positions[self.el.selected_option]
@@ -173,9 +172,9 @@ class GraphicalView(TextView):
         cursor_dims = ( c_x1, c_y1, c_x2 + 2, c_y2 + 2 )
 
         #Drawing the cursor
-        invert_rect_colors(cursor_dims, d, draw.image)
+        invert_rect_colors(cursor_dims, c)
 
-        return draw.image
+        return c.get_image()
 
     def refresh(self):
         self.o.display_image(self.get_image())

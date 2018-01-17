@@ -5,7 +5,7 @@ logger = setup_logger(__name__, "warning")
 import string
 
 from utils import to_be_foreground, invert_rect_colors
-from luma.core.render import canvas as luma_canvas
+from canvas import Canvas
 
 
 class CharArrowKeysInput(object):
@@ -268,14 +268,13 @@ class TextView():
 class GraphicalView(TextView):
 
     def get_image(self):
-        draw = luma_canvas(self.o.device)
-        d = draw.__enter__()
+        c = Canvas(self.o)
 
         #Getting displayed data, drawing it
         lines = self.get_displayed_data()
         for i, line in enumerate(lines):
             y = (i*self.o.char_height - 1) if i != 0 else 0
-            d.text((2, y), line, fill="white")
+            c.text((2, y), line, fill="white")
 
         #Calculating the cursor dimensions
         c_x1 = (self.el.position-self.first_displayed_char) * self.o.char_width
@@ -287,9 +286,9 @@ class GraphicalView(TextView):
         cursor_dims = ( c_x1, c_y1, c_x2 + 2, c_y2 + 1 )
 
         #Drawing the cursor
-        invert_rect_colors(cursor_dims, d, draw.image)
+        invert_rect_colors(cursor_dims, c)
 
-        return draw.image
+        return c.get_image()
 
     def refresh(self):
         self.o.display_image(self.get_image())

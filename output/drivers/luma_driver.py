@@ -10,6 +10,7 @@ from luma.core.render import canvas
 
 from backlight import *
 
+from ..output import GraphicalOutputDevice, CharacterOutputDevice
 
 def delayMicroseconds(microseconds):
     seconds = microseconds / float(1000000)  # divide microseconds by 1 million for seconds
@@ -20,12 +21,14 @@ def delay(milliseconds):
     sleep(seconds)
 
 
-class LumaScreen(BacklightManager):
+class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager):
     """An object that provides high-level functions for interaction with display. It contains all the high-level logic and exposes an interface for system and applications to use."""
 
     #buffer = " "
     #redraw_coefficient = 0.5
     current_image = None
+
+    __base_classes__ = (GraphicalOutputDevice, CharacterOutputDevice)
 
     type = ["char", "b&w-pixel"] 
     cursor_enabled = False

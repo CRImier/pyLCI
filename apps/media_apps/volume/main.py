@@ -98,11 +98,15 @@ def change_adjust_amount():
     config["adjust_amount"] = value
     write_config(config, config_path)
 
+def set_global_callbacks():
+    import __main__ #HHHHHAAAAAAAAAAAXXXX
+    __main__.input_processor.set_global_callback("KEY_VOLUMEUP", plus_volume)
+    __main__.input_processor.set_global_callback("KEY_VOLUMEDOWN", minus_volume)
+
 def init_app(input, output):
     global i, o, callback
     i = input; o = output
-    i.set_nonmaskable_callback("KEY_VOLUMEUP", plus_volume)
-    i.set_nonmaskable_callback("KEY_VOLUMEDOWN", minus_volume)
+    set_global_callbacks()
     main_menu_contents = [ 
     ["Increase volume", plus_volume],
     ["Decrease volume", minus_volume],
