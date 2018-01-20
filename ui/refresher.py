@@ -40,11 +40,8 @@ class Refresher(object):
         self.i = i
         self.o = o
         self.name = name
-        self.refresh_interval = refresh_interval
+        self.set_refresh_interval(refresh_interval)
         self.refresh_function = refresh_function
-        #interval for checking the in_background property in the activate()
-        #when refresh_interval is small enough, is the same as refresh_interval
-        self.sleep_time = 0.1 if refresh_interval > 0.1 else refresh_interval
         self.calculate_intervals()
         self.set_keymap(keymap if keymap else {})
         self.in_foreground = False
@@ -88,6 +85,14 @@ class Refresher(object):
         self.activate_keymap()
         self.refresh()
 
+    def set_refresh_interval(self, new_interval):
+        """Allows setting Refresher's refresh intervals after it's been initialized"""
+        #interval for checking the in_background property in the activate()
+        #when refresh_interval is small enough, is the same as refresh_interval
+        self.refresh_interval = new_interval
+        self.sleep_time = 0.1 if new_interval > 0.1 else new_interval
+        self.calculate_intervals()
+
     def calculate_intervals(self):
         """Calculates the sleep intervals of the refresher, so that no matter the
         ``refresh_interval``, the refresher is responsive. Also, sets the counter to zero."""
@@ -128,7 +133,7 @@ class Refresher(object):
         def wrapper(*args, **kwargs):
             self.to_background()
             func(*args, **kwargs)
-            logger.debug("Executed wrapped function: {}".format(func.__name__))
+            logger.debug("{}: executed wrapped function: {}".format(self.name, func.__name__))
             if self.in_background.isSet():
                 self.to_foreground()
         wrapper.__name__ == func.__name__
