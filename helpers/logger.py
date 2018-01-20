@@ -1,11 +1,24 @@
 import logging
 
-def setup_logger(logger_name, log_level="warning"):
+
+def setup_logger(logger_name, log_level):
     # type: (str, str) -> logging.Logger
-    possible_loglevels = ["notset", "debug", "info", "warning", "error", "critical"]
-    if log_level.lower() not in possible_loglevels:
-        raise ValueError("Wrong loglevel passed while creating '{}' logger: {}".format(logger_name, log_level))
-    logger_level_attr = getattr(logging, log_level.upper())
+    level = get_log_level(log_level, logging.WARNING)
     logger = logging.getLogger(logger_name)
-    logger.setLevel(logger_level_attr)
+    logger.setLevel(level)
     return logger
+
+
+def get_log_level(log_level_name, default_value):
+    # type: (str, int) -> int
+    """
+    Returns the log level based on a string name
+    >>> get_log_level("warning", logging.ERROR) == logging.WARNING
+    True
+    >>> get_log_level("warning???", logging.ERROR) == logging.ERROR
+    True
+    """
+    try:
+        return logging._checkLevel(log_level_name.upper())
+    except ValueError:
+        return default_value
