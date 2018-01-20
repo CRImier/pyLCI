@@ -139,19 +139,29 @@ class Refresher(object):
         wrapper.__name__ == func.__name__
         return wrapper
 
-    def process_keymap(self, keymap):
-        """Processes the keymap. In future, will allow per-system keycode-to-callback tweaking using a config file. """
+    def process_keymap(self, keymap, override_left=True):
+        """
+        Processes the keymap, wrapping all callbacks using the ``process_callback`` method.
+        Also, sets KEY_LEFT unless ``override_left`` keyword argument is False
+        (use with caution, there aren't many good reasons to do this).
+        """
         logger.debug("{}: processing keymap - {}".format(self.name, keymap))
         for key in keymap:
             callback = self.process_callback(keymap[key])
             keymap[key] = callback
-        if not "KEY_LEFT" in keymap:
-            keymap["KEY_LEFT"] = self.deactivate
+        if override_left:
+            if not "KEY_LEFT" in keymap:
+                keymap["KEY_LEFT"] = self.deactivate
         return keymap
 
     def set_keymap(self, keymap):
         """Sets the refresher's keymap (filtered using ``process_keymap`` before setting)."""
         self.keymap = self.process_keymap(keymap)
+
+    def update_keymap(self, new_keymap):
+        """Sets the refresher's keymap (filtered using ``process_keymap`` before setting)."""
+        processed_keymap = self.process_keymap(new_keymap, override_left=False)
+        self.keymap.update(processed_keymap)
 
     @to_be_foreground
     def activate_keymap(self):

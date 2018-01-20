@@ -143,6 +143,7 @@ class TestRefresher(unittest.TestCase):
         assert i.set_keymap.called
         assert i.set_keymap.call_count == 1
         assert i.set_keymap.call_args[0][0] == r.keymap
+        assert "KEY_LEFT" in r.keymap
         r.pause()
         assert i.set_keymap.call_count == 1 #paused, so count shouldn't change
         i.set_keymap(None)
@@ -178,6 +179,25 @@ class TestRefresher(unittest.TestCase):
         assert(r.refresh_interval == 10)
         assert(r.sleep_time == 0.1) # Back to normal
         assert(r.iterations_before_refresh == 100)
+
+    def test_update_keymap(self):
+        """Tests whether the Refresher updates the keymap correctly."""
+        i = get_mock_input()
+        o = get_mock_output()
+        r = Refresher(lambda: "Hello", i, o, name=r_name, refresh_interval=0.1)
+        r.refresh = lambda *args, **kwargs: None
+
+        # We need to patch "process_callback" because otherwise the keymap callbacks
+        # are wrapped and we can't test equivalence
+        with patch.object(r, 'process_callback', side_effect=lambda keymap:keymap) as p:
+            keymap1 = {"KEY_LEFT": lambda:1}
+            r.update_keymap(keymap1)
+            assert(r.keymap == keymap1)
+            keymap2 = {"KEY_RIGHT": lambda:2}
+            r.update_keymap(keymap2)
+            keymap2.update(keymap1)
+            assert(r.keymap == keymap2)
+
 
 if __name__ == '__main__':
     unittest.main()
