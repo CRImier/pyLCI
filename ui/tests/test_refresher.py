@@ -151,6 +151,33 @@ class TestRefresher(unittest.TestCase):
         assert i.set_keymap.call_count == 3 #one explicitly done in the test right beforehand
         assert i.set_keymap.call_args[0][0] == r.keymap
 
+    def test_set_interval(self):
+        """
+        Tests whether the refresh_interval of Refresher is set correctly
+        when using set_refresh_interval.
+        """
+        i = get_mock_input()
+        o = get_mock_output()
+        r = Refresher(lambda: "Hello", i, o, name=r_name, refresh_interval=1)
+
+        assert(r.refresh_interval == 1)
+        assert(r.sleep_time == 0.1)
+        assert(r.iterations_before_refresh == 10)
+        # Refresh intervals up until 0.1 don't change the sleep time
+        r.set_refresh_interval(0.1)
+        assert(r.refresh_interval == 0.1)
+        assert(r.sleep_time == 0.1)
+        assert(r.iterations_before_refresh == 1)
+        # Refresh intervals less than 0.1 change sleep_time to match refresh interval
+        r.set_refresh_interval(0.01)
+        assert(r.refresh_interval == 0.01)
+        assert(r.sleep_time == 0.01)
+        assert(r.iterations_before_refresh == 1)
+        # Now setting refresh_interval to a high value
+        r.set_refresh_interval(10)
+        assert(r.refresh_interval == 10)
+        assert(r.sleep_time == 0.1) # Back to normal
+        assert(r.iterations_before_refresh == 100)
 
 if __name__ == '__main__':
     unittest.main()
