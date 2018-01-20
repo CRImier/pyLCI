@@ -13,7 +13,7 @@ from input import UniversalInput
 from listbox import Listbox
 from menu import Menu, MenuExitException
 from number_input import IntegerAdjustInput
-from numpad_input import NumpadCharInput, NumpadNumberInput
+from numpad_input import NumpadCharInput, NumpadNumberInput, NumpadHexInput
 from path_picker import PathPicker
 from printer import Printer, PrettyPrinter, GraphicsPrinter
 from refresher import Refresher
