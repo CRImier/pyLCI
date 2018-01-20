@@ -18,7 +18,7 @@ from path_picker import PathPicker
 from printer import Printer, PrettyPrinter, GraphicsPrinter
 from refresher import Refresher
 from scrollable_element import TextReader
-from ui.loading_indicators import ProgressBar, TextProgressBar, GraphicalProgressBar, CircularProgressBar, IdleDottedMessage, Throbber
+from ui.loading_indicators import ProgressBar, LoadingIndicator, TextProgressBar, GraphicalProgressBar, CircularProgressBar, IdleDottedMessage, Throbber
 from ui.numbered_menu import NumberedMenu
 from canvas import Canvas
 IntegerInDecrementInput = IntegerAdjustInput  # Compatibility with old ugly name

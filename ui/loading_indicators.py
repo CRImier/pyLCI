@@ -300,3 +300,14 @@ def ProgressBar(i, o, *args, **kwargs):
         return TextProgressBar(i, o, *args, **kwargs)
     else:
         raise ValueError("Unsupported display type: {}".format(repr(o.type)))
+
+# noinspection PyPep8Naming
+def LoadingIndicator(i, o, *args, **kwargs):
+    """Instantiates and returns the appropriate kind of loading indicator
+    for the output device - either graphical or text-based."""
+    if "b&w-pixel" in o.type:
+        return Throbber(i, o, *args, **kwargs)
+    elif "char" in o.type:
+        return IdleDottedMessage(i, o, *args, **kwargs)
+    else:
+        raise ValueError("Unsupported display type: {}".format(repr(o.type)))
