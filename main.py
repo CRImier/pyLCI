@@ -9,9 +9,10 @@ import threading
 import traceback
 from logging.handlers import RotatingFileHandler
 
-from context_manager import ContextManager
 from apps.app_manager import AppManager
+from context_manager import ContextManager
 from helpers import read_config, local_path_gen
+from helpers.logger import LoggingConfig
 from input import input
 from output import output
 from ui import Printer
@@ -181,6 +182,7 @@ if __name__ == '__main__':
 
     # Signal handler for debugging
     signal.signal(signal.SIGUSR1, dump_threads)
+    signal.signal(signal.SIGHUP, LoggingConfig().reload_config())
 
     # Setup argument parsing
     parser = argparse.ArgumentParser(description='ZPUI runner')
