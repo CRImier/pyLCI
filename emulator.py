@@ -3,12 +3,13 @@
 from multiprocessing import Process, Pipe
 from time import sleep
 
-from time import sleep
 import luma.emulator.device
 import pygame
 from luma.core.render import canvas
 
 from helpers import setup_logger
+from output.output import GraphicalOutputDevice, CharacterOutputDevice
+
 logger = setup_logger(__name__, "warning")
 
 __EMULATOR_PROXY = None
@@ -34,6 +35,8 @@ class EmulatorProxy(object):
         self.device = type("MockDevice", (), {"mode":"1", "size":(128, 64)})
         self.parent_conn, self.child_conn = Pipe()
         self.proc = Process(target=Emulator, args=(self.child_conn,))
+        self.__base_classes__ = (GraphicalOutputDevice, CharacterOutputDevice)
+        self.current_image = None
         self.proc.start()
 
     def poll_input(self, timeout=1):

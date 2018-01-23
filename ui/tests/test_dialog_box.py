@@ -91,6 +91,19 @@ class TestDialogBox(unittest.TestCase):
             return_value = db.activate()
         assert return_value is None
 
+    def test_start_option(self):
+        db = DialogBox("ync", get_mock_input(), get_mock_output(), name=db_name)
+        db.refresh = lambda *args, **kwargs: None
+        db.set_start_option(1) #So, "No" option would be selected
+
+        def scenario():
+            db.accept_value()  # KEY_ENTER
+            assert not db.in_foreground  # Should exit
+
+        with patch.object(db, 'idle_loop', side_effect=scenario) as p:
+            return_value = db.activate()
+        assert return_value is False #Second element - No, means False
+
     def test_returns_right_values(self):
         """Checking that going to different options returns the right values"""
         # Checking first option - Yes
