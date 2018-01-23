@@ -5,6 +5,7 @@ import PIL
 
 from helpers import setup_logger
 from ui.utils import to_be_foreground
+from number_input import IntegerAdjustInput
 
 logger = setup_logger(__name__, "info")
 
@@ -33,7 +34,9 @@ class Refresher(object):
         Kwargs:
 
             * ``refresh_interval``: Time between display refreshes (and, accordingly, ``refresh_function`` calls).
-            * ``keymap``: Keymap entries you want to set while Refresher is active. By default, KEY_LEFT deactivates the Refresher, if you wan tto override it, do it carefully.
+            * ``keymap``: Keymap entries you want to set while Refresher is active.
+              * If set to a string
+              * By default, KEY_LEFT deactivates the Refresher, if you want to override it, make sure that user can still exit the Refresher.
             * ``name``: Refresher name which can be used internally and for debugging.
 
         """
@@ -126,6 +129,14 @@ class Refresher(object):
         """ A debug method. Useful for hooking up to an input event so that you can see which refresher is currently active. """
         logger.debug("Active refresher is {}".format(self.name))
 
+    def change_interval(self):
+        """
+        A helper function to adjust the Refresher's refresh interval while it's running
+        """
+        new_interval = IntegerAdjustInput(self.refresh_interval, i, o, message="Refresh interval:").activate()
+        if new_interval is not None:
+            self.set_refresh_interval(new_interval)
+
     def process_callback(self, func):
         """ Decorates a function to be used by Refresher element.
         |Is typically used as a wrapper for a callback from input event processing thread.
@@ -139,28 +150,51 @@ class Refresher(object):
         wrapper.__name__ == func.__name__
         return wrapper
 
-    def process_keymap(self, keymap, override_left=True):
+    def process_keymap(self, keymap):
         """
-        Processes the keymap, wrapping all callbacks using the ``process_callback`` method.
-        Also, sets KEY_LEFT unless ``override_left`` keyword argument is False
-        (use with caution, there aren't many good reasons to do this).
+        Processes the keymap, wrapping all callbacks with ``process_callback`` method.
+        If a string is passed as callback, replaces it with the corresponding internal method.
+        Raises ValueError if callback is not a callable or a name of a callable attribute.
+        Raises AttributeError if method name is not found.
         """
         logger.debug("{}: processing keymap - {}".format(self.name, keymap))
-        for key in keymap:
-            callback = self.process_callback(keymap[key])
-            keymap[key] = callback
-        if override_left:
-            if not "KEY_LEFT" in keymap:
-                keymap["KEY_LEFT"] = self.deactivate
+        for key, value in keymap.items():
+            if isinstance(value, basestring):
+                # Using a string means an internal function needs to be used
+                # Not wrapping it at the moment
+                attribute = getattr(self, value)
+                if not callable(attribute): #Wait, is it really a function?
+                     raise ValueError("Unknown method string supplied for {}: method {} not found in {}!".format(key, value, self.name or type(self)))
+                else:
+                    keymap[key] = attribute
+            elif callable(value):
+                # Callback is an external function
+                # Wrapping that in to_background-to_foreground calls
+                keymap[key] = self.process_callback(value)
+            else:
+                raise ValueError("Unknown callback supplied for {}: {}".format(key, type(value)))
         return keymap
+
+    def validate_keymap(self):
+        """
+        Checks if ``Refresher``'s keymap has all the critical callbacks set. For now,
+        the only truly critical callback is ``deactivate`` on "KEY_LEFT".
+        If the key already has a callback set, ``validate_keymap`` doesn't replace
+        the callback - relying on the developer to do the right decision and
+        provide the user with a way to exit the ``Refresher``.
+        """
+        if not "KEY_LEFT" in self.keymap:
+            self.keymap["KEY_LEFT"] = self.deactivate
 
     def set_keymap(self, keymap):
         """Sets the refresher's keymap (filtered using ``process_keymap`` before setting)."""
         self.keymap = self.process_keymap(keymap)
+        self.validate_keymap()
 
     def update_keymap(self, new_keymap):
-        """Sets the refresher's keymap (filtered using ``process_keymap`` before setting)."""
-        processed_keymap = self.process_keymap(new_keymap, override_left=False)
+        """Updates the refresher's keymap with a replacement keymap (which is also
+        filtered using ``process_keymap`` before setting)."""
+        processed_keymap = self.process_keymap(new_keymap)
         self.keymap.update(processed_keymap)
 
     @to_be_foreground
