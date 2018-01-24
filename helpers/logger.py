@@ -65,15 +65,18 @@ class LoggingConfig(Singleton):
         self._app_overrides = {}
         self._load_config()
 
-    def get_level(self, app_name, value_if_not_found=None):
-        if not value_if_not_found:
-            value_if_not_found = self.default_log_level
-        return_value = value_if_not_found
+    def get_level(self, app_name, default_value=None):
+        """
+        Gets the recommended log level for an app, based on
+        whether it's overridden from the config file, the default level and
+        the global default level.
+        """
+        if not default_value:
+            default_value = self.default_log_level
 
-        if app_name in self._app_overrides:
-            return_value = self._app_overrides[app_name]
-
-        return return_value
+        logging_level = self._app_overrides.get(app_name, default_value)
+        logger.debug("The recommended log level for {} is {}".format(app_name, get_log_level_name(logging_level)))
+        return logging_level
 
     def set_level(self, app_name, level):
         """
