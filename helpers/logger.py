@@ -43,7 +43,7 @@ def get_log_level_name(level):
     return logging.NOTSET
 
 
-def on_signal():
+def on_reload(*args):
     LoggingConfig().reload_config()
 
 
@@ -83,7 +83,11 @@ class LoggingConfig(Singleton):
             for override in ini_parser.items("app_override"):
                 self._app_overrides[override[0]] = get_log_level(override[1], logging.NOTSET)
 
-    def reload_config(self, signal_number=0, stack_frame=None):
+    def reload_config(self):
+        """
+        Loads the config file once again, reading and applying all config level
+        overrides found in it.
+        """
         self._load_config()
         self._dispatch_log_levels()
 

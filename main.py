@@ -12,10 +12,10 @@ from logging.handlers import RotatingFileHandler
 from apps.app_manager import AppManager
 from context_manager import ContextManager
 from helpers import read_config, local_path_gen
-from helpers.logger import LoggingConfig
 from input import input
 from output import output
 from ui import Printer
+import helpers.logger
 
 emulator_flag_filename = "emulator"
 local_path = local_path_gen(__name__)
@@ -182,7 +182,7 @@ if __name__ == '__main__':
 
     # Signal handler for debugging
     signal.signal(signal.SIGUSR1, dump_threads)
-    signal.signal(signal.SIGHUP, LoggingConfig().reload_config)
+    signal.signal(signal.SIGHUP, helpers.logger.on_reload)
 
     # Setup argument parsing
     parser = argparse.ArgumentParser(description='ZPUI runner')
