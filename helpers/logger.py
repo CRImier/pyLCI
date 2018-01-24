@@ -83,7 +83,7 @@ class LoggingConfig(Singleton):
             for override in ini_parser.items("app_override"):
                 self._app_overrides[override[0]] = get_log_level(override[1], logging.NOTSET)
 
-    def reload_config(self):
+    def reload_config(self, signal_number=0, stack_frame=None):
         self._load_config()
         self._dispatch_log_levels()
 
@@ -99,12 +99,15 @@ class LoggingConfig(Singleton):
     def _dispatch_log_levels(self):
         for app_name, level in self._app_overrides.items():
             logging.getLogger(app_name).setLevel(level)
+            for h in logging.getLogger(app_name).handlers:
+                h.setLevel(level)
+
 
     def save_to_config(self):
         ini_parser = configparser.ConfigParser()
         ini_parser.add_section("app_override")
         ini_parser.add_section("global")
-        ini_parser.set("global", "default_level", self.default_log_level)
+        ini_parser.set("global", "default_level", get_log_level_name(self.default_log_level))
         for app_name, level in self._app_overrides.items():
             ini_parser.set("app_override", app_name, get_log_level_name(level))
         with open(self._config_file_path, 'w+') as config_file:
@@ -116,7 +119,7 @@ if __name__ == '__main__':
     subparsers = parser.add_subparsers(dest='cmd', help="Command")
     subparsers.add_parser('show', help="Shows the current configuration")
     set_parser = subparsers.add_parser('set', help="Changes the log level of a given app")
-    set_parser.add_argument('--app_name', dest='app_name', type=str, required=True)
+    set_parser.add_argument('--name', dest='app_name', type=str, required=True)
     set_parser.add_argument('--level', dest='level', type=str, required=True)
 
     args = parser.parse_args()
