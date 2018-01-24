@@ -2,7 +2,7 @@ from threading import Lock, Thread, Event
 import traceback
 import sys
 
-class BooleanEvent():
+class BooleanEvent(object):
     def __init__(self):
        self._e = Event()
 
@@ -17,7 +17,7 @@ class BooleanEvent():
         else:
             self._e.clear()
 
-class Oneshot():
+class Oneshot(object):
     """Oneshot runner for callables. Each instance of Oneshot will only run once, unless reset.
     You can query on whether the runner has finished, and whether it's still running.
     
@@ -73,7 +73,7 @@ class Oneshot():
             value = self._finished
         return value
 
-class BackgroundRunner():
+class BackgroundRunner(object):
     """Background runner for callables. Once launched, it'll run in background until it's done..
     You can query on whether the runner has finished, and whether it's still running.
     
