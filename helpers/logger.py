@@ -50,7 +50,7 @@ def on_reload(*args):
 class LoggingConfig(Singleton):
     def __init__(self):
         self.default_log_level = logging.WARNING
-        self._config_file_path = "/opt/zpui/log_conf.ini"
+        self._config_file_path = "log_conf.ini"
         self._app_overrides = {}
         self._load_config()
 
