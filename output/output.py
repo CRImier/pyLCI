@@ -1,7 +1,6 @@
-import importlib
-from copy import deepcopy
 from functools import wraps
-
+from copy import deepcopy
+import importlib
 
 # These base classes document functions that
 # different output devices are expected to have.
@@ -50,8 +49,7 @@ class OutputDevice(object):
 
     def get_proxied_method(o, proxy, method_name, sideeffect):
         method = getattr(o, method_name)
-
-        @wraps(method, ['__module__', '__doc__'])
+        @wraps(method)
         def wrapper(*args, **kwargs):
             #print("Method: "+method_name)
             sideeffect(*args, **kwargs)
