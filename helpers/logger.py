@@ -12,13 +12,17 @@ except:
     import configparser  # python3
 
 
-def setup_logger(logger_name, log_level):
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+def setup_logger(logger_name, requested_level):
     # type: (str, str) -> logging.Logger
     level = check_log_level(requested_level, logging.WARNING)
     level = LoggingConfig().get_level(logger_name, level)
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(level)
-    return logger
+    logger.info("Logger {} will be set to {} level".format(logger_name, get_log_level_name(level)))
+    l = logging.getLogger(logger_name)
+    l.setLevel(level)
+    return l
 
 
 def check_log_level(log_level_name, default_value):
@@ -70,11 +74,19 @@ class LoggingConfig(Singleton):
         return return_value
 
     def set_level(self, app_name, level):
+        """
+        Used when calling this file with "python logger.py" and using "--set"
+        to set a specific logging level in the config file.
+        """
         self._app_overrides[app_name] = check_log_level(level, logging.WARNING)
         self._dispatch_log_levels()
         self.save_to_config()
 
     def _load_config(self):
+        """
+        Loads the config file and reads all log level overrides found in it.
+        Creates the file if it's not found.
+        """
         if not os.path.exists(self._config_file_path):
             open(self._config_file_path, 'a+').close()
             return
@@ -97,12 +109,15 @@ class LoggingConfig(Singleton):
         self._dispatch_log_levels()
 
     def __str__(self):
+        """
+        A nice and helpful string representation, for debugging purposes.
+        """
         config_str = "default log level: {}".format(logging.getLevelName(self.default_log_level))
         if not len(self._app_overrides):
             config_str += "\n\tConfig file absent or empty"
         else:
             for app_name, level in self._app_overrides.items():
-                config_str += "\n\t{} : {}".format(app_name, get_log_level_name(level))
+               config_str += "\n\t{} : {}".format(app_name, get_log_level_name(level))
         return config_str
 
     def _dispatch_log_levels(self):
