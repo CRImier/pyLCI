@@ -129,11 +129,18 @@ class LoggingConfig(Singleton):
         return config_str
 
     def _dispatch_log_levels(self):
-        for app_name, level in self._app_overrides.items():
-            logging.getLogger(app_name).setLevel(level)
-            for h in logging.getLogger(app_name).handlers:
-                h.setLevel(level)
-
+        """
+        Actually applies the new logging levels from _app_overrides
+        to the individual loggers.
+        """
+        for app_name, new_level in self._app_overrides.items():
+            l = logging.getLogger(app_name)
+            current_level = l.getEffectiveLevel()
+            if current_level != new_level:
+                cl_name = get_log_level_name(current_level)
+                nl_name = get_log_level_name(new_level)
+                logger.info("Logger {}: current level is {}, new level is {}".format(app_name, cl_name, nl_name))
+                logging.getLogger(app_name).setLevel(new_level)
 
     def save_to_config(self):
         """
