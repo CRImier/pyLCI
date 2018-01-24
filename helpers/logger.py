@@ -4,7 +4,7 @@ import argparse
 import logging
 import os
 
-from helpers.general import Singleton
+from general import Singleton
 
 try:
     import ConfigParser as configparser
