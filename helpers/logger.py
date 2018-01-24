@@ -57,6 +57,8 @@ class LoggingConfig(Singleton):
     as well as to change them while ZPUI is running.
     """
 
+    default_config_sections = ["global"]
+
     def __init__(self, conf_path="log_conf.ini"):
         self.default_log_level = logging.WARNING
         self._config_file_path = conf_path
@@ -90,15 +92,18 @@ class LoggingConfig(Singleton):
         if not os.path.exists(self._config_file_path):
             open(self._config_file_path, 'a+').close()
             return
-        ini_parser = configparser.ConfigParser()
-        ini_parser.read(self._config_file_path)
+        config = configparser.ConfigParser()
+        config.read(self._config_file_path)
 
-        if ini_parser.has_section("global"):
-            level_name = ini_parser.get("global", "default_level")
-            self.default_log_level = get_log_level(level_name, logging.WARNING)
-        if ini_parser.has_section("app_override"):
-            for override in ini_parser.items("app_override"):
-                self._app_overrides[override[0]] = get_log_level(override[1], logging.NOTSET)
+        if config.has_section("global"):
+            level_name = config.get("global", "default_level")
+            self.default_log_level = check_log_level(level_name, logging.WARNING)
+
+        for app_name in config.sections():
+            if app_name not in self.default_config_sections:
+                for key, value in config.items(app_name):
+                     if key == "level":
+                         self._app_overrides[app_name] = check_log_level(value, logging.NOTSET)
 
     def reload_config(self):
         """
@@ -128,14 +133,18 @@ class LoggingConfig(Singleton):
 
 
     def save_to_config(self):
-        ini_parser = configparser.ConfigParser()
-        ini_parser.add_section("app_override")
-        ini_parser.add_section("global")
-        ini_parser.set("global", "default_level", get_log_level_name(self.default_log_level))
+        """
+        Used when calling this file with "python logger.py" and using "--set",
+        to save the config file after set_level() runs.
+        """
+        config = configparser.ConfigParser()
+        config.add_section("global")
+        config.set("global", "default_level", get_log_level_name(self.default_log_level))
         for app_name, level in self._app_overrides.items():
-            ini_parser.set("app_override", app_name, get_log_level_name(level))
+            config.add_section(app_name)
+            config.set(app_name, "level", get_log_level_name(level))
         with open(self._config_file_path, 'w+') as config_file:
-            ini_parser.write(config_file)
+            config.write(config_file)
 
 
 if __name__ == '__main__':
