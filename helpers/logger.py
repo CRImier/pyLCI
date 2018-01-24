@@ -14,20 +14,22 @@ except:
 
 def setup_logger(logger_name, log_level):
     # type: (str, str) -> logging.Logger
-    level = get_log_level(log_level, logging.WARNING)
+    level = check_log_level(requested_level, logging.WARNING)
     level = LoggingConfig().get_level(logger_name, level)
     logger = logging.getLogger(logger_name)
     logger.setLevel(level)
     return logger
 
 
-def get_log_level(log_level_name, default_value):
+def check_log_level(log_level_name, default_value):
     # type: (str, int) -> int
     """
-    Returns the log level based on a string name
-    >>> get_log_level("warning", logging.ERROR) == logging.WARNING
+    Verifies a logging level string - returns the requested log level
+    if the supplied log level name is valid, default_value otherwise.
+
+    >>> check_log_level("warning", logging.ERROR) == logging.WARNING
     True
-    >>> get_log_level("warning???", logging.ERROR) == logging.ERROR
+    >>> check_log_level("warning???", logging.ERROR) == logging.ERROR
     True
     """
     try:
@@ -65,7 +67,7 @@ class LoggingConfig(Singleton):
         return return_value
 
     def set_level(self, app_name, level):
-        self._app_overrides[app_name] = get_log_level(level, logging.WARNING)
+        self._app_overrides[app_name] = check_log_level(level, logging.WARNING)
         self._dispatch_log_levels()
         self.save_to_config()
 
