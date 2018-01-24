@@ -58,11 +58,11 @@ class EmulatorProxy(object):
 class DummyCallableRPCObject(object):
     def __init__(self, parent_conn, name):
         self.parent_conn = parent_conn
-        self.name = name
+        self.__name__ = name
 
     def __call__(self, *args, **kwargs):
         self.parent_conn.send({
-            'func_name': self.name,
+            'func_name': self.__name__,
             'args': args,
             'kwargs': kwargs
         })
