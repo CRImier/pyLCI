@@ -13,7 +13,7 @@ except:
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 
 def setup_logger(logger_name, requested_level):
     # type: (str, str) -> logging.Logger
