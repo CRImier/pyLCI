@@ -19,7 +19,7 @@ def setup_logger(logger_name, requested_level):
     # type: (str, str) -> logging.Logger
     level = check_log_level(requested_level, logging.WARNING)
     level = LoggingConfig().get_level(logger_name, level)
-    logger.info("Logger {} will be set to {} level".format(logger_name, get_log_level_name(level)))
+    logger.debug("Logger {} will be set to {} level".format(logger_name, get_log_level_name(level)))
     l = logging.getLogger(logger_name)
     l.setLevel(level)
     return l
