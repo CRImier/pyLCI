@@ -135,15 +135,15 @@ class Emulator(object):
 
     def display_data(self, *args):
         with canvas(self.device) as draw:
-            dims = (
-                self.cursor_pos[0] - 1 + 2,
-                self.cursor_pos[1] - 1,
-                self.cursor_pos[0] + self.char_width + 2,
-                self.cursor_pos[1] + self.char_height + 1,
-            )
 
             if self.cursor_enabled:
                 logger.debug('Drawing cursor with dims: %s', dims)
+                dims = (
+                    self.cursor_pos[0] - 1 + 2,
+                    self.cursor_pos[1] - 1,
+                    self.cursor_pos[0] + self.char_width + 2,
+                    self.cursor_pos[1] + self.char_height + 1,
+                )
                 draw.rectangle(dims, outline='white')
 
             args = args[:self.rows]
@@ -155,8 +155,7 @@ class Emulator(object):
                 # Passing anything except a string to draw.text will cause
                 # PIL to throw an exception.  Warn 'em here via the log.
                 if not isinstance(arg, basestring):
-                    logger.warning('emulator only likes strings fed to '
-                        'draw.text, prepare for exception')
+                    raise ValueError("*args[{}] is not a string, but a {} - unacceptable!".format(line, type(arg)))
                 y = (line * self.char_height - 1) if line != 0 else 0
                 draw.text((2, y), arg, fill='white')
                 logger.debug('after draw.text(2, %d), %s', y, arg)
