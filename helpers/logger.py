@@ -48,9 +48,14 @@ def on_reload(*args):
 
 
 class LoggingConfig(Singleton):
-    def __init__(self):
+    """
+    Keeps track of the config file, allowing us to override logging levels,
+    as well as to change them while ZPUI is running.
+    """
+
+    def __init__(self, conf_path="log_conf.ini"):
         self.default_log_level = logging.WARNING
-        self._config_file_path = "log_conf.ini"
+        self._config_file_path = conf_path
         self._app_overrides = {}
         self._load_config()
 
@@ -121,13 +126,17 @@ class LoggingConfig(Singleton):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="ZPUI logger configurator")
     subparsers = parser.add_subparsers(dest='cmd', help="Command")
-    subparsers.add_parser('show', help="Shows the current configuration")
+    show_parser = subparsers.add_parser('show', help="Shows the current configuration")
+    show_parser.add_argument('--path', dest='path', type=str, required=False)
     set_parser = subparsers.add_parser('set', help="Changes the log level of a given app")
     set_parser.add_argument('--name', dest='app_name', type=str, required=True)
     set_parser.add_argument('--level', dest='level', type=str, required=True)
 
     args = parser.parse_args()
-    config = LoggingConfig()
+    # Using a relative path because, when name is __main__, log_conf.ini
+    # is located one directory up the tree
+    conf_path = getattr(args, "path", "../log_conf.ini")
+    config = LoggingConfig(conf_path = conf_path)
     if args.cmd == 'show':
         print(config)
 
