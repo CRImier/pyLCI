@@ -33,7 +33,7 @@ def check_log_level(log_level_name, default_value):
 
     >>> check_log_level("warning", logging.ERROR) == logging.WARNING
     True
-    >>> check_log_level("warning???", logging.ERROR) == logging.ERROR
+    >>> check_log_level("invalid_level", logging.ERROR) == logging.ERROR
     True
     """
     try:
