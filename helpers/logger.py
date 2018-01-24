@@ -39,10 +39,8 @@ def check_log_level(log_level_name, default_value):
 
 
 def get_log_level_name(level):
-    assert type(level) == int
-    if level in logging._levelNames:
-        return logging._levelNames[level]
-    return logging.NOTSET
+    assert(level in logging._levelNames)
+    return logging._levelNames[level]
 
 
 def on_reload(*args):
