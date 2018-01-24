@@ -182,7 +182,7 @@ if __name__ == '__main__':
 
     # Signal handler for debugging
     signal.signal(signal.SIGUSR1, dump_threads)
-    signal.signal(signal.SIGHUP, LoggingConfig().reload_config())
+    signal.signal(signal.SIGHUP, LoggingConfig().reload_config)
 
     # Setup argument parsing
     parser = argparse.ArgumentParser(description='ZPUI runner')
