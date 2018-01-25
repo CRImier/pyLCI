@@ -15,15 +15,21 @@ except:
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
+logger_names = set()
+
 def setup_logger(logger_name, requested_level):
     # type: (str, str) -> logging.Logger
+    global logger_names
     level = check_log_level(requested_level, logging.WARNING)
     level = LoggingConfig().get_level(logger_name, level)
     logger.debug("Logger {} will be set to {} level".format(logger_name, get_log_level_name(level)))
     l = logging.getLogger(logger_name)
     l.setLevel(level)
+    logger_names.add(logger_name)
     return l
 
+def get_logger_names():
+    return list(logger_names)
 
 def check_log_level(log_level_name, default_value):
     # type: (str, int) -> int
@@ -41,11 +47,12 @@ def check_log_level(log_level_name, default_value):
     except ValueError:
         return default_value
 
+def get_log_level_for_logger(logger_name):
+    return get_log_level_name(logging.getLogger(logger_name).level)
 
 def get_log_level_name(level):
     assert(level in logging._levelNames)
     return logging._levelNames[level]
-
 
 def on_reload(*args):
     LoggingConfig().reload_config()
