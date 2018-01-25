@@ -174,9 +174,6 @@ class Emulator(object):
             args = args[:self.rows]
 
             for line, arg in enumerate(args):
-                # Emulator only:
-                # Passing anything except a string to draw.text will cause
-                # PIL to throw an exception.  Warn 'em here via the log.
                 if not isinstance(arg, basestring):
                     raise ValueError("*args[{}] is not a string, but a {} - unacceptable!".format(line, type(arg)))
                 y = (line * self.char_height - 1) if line != 0 else 0
