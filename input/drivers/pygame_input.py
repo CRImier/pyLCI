@@ -8,14 +8,14 @@ from skeleton import InputSkeleton
 
 logger = setup_logger(__name__, "warning")
 
+KP_KEYS = [
+    'KP0', 'KP1', 'KP2', 'KP3', 'KP4', 'KP5', 'KP6', 'KP7', 'KP8', 'KP9'
+]
 USED_KEYS = [
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+    'KP0', 'KP1', 'KP2', 'KP3', 'KP4', 'KP5', 'KP6', 'KP7', 'KP8', 'KP9',
     'UP', 'DOWN', 'LEFT', 'RIGHT', 'RETURN', 'PAGEUP', 'PAGEDOWN'
 ]
-
-KEY_MAP = dict([
-    (getattr(pygame, 'K_' + key_name), key_name)
-    for key_name in USED_KEYS
 ])
 
 
