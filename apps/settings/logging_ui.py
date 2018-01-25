@@ -51,7 +51,7 @@ def select_loglevel(current):
     available_levels = get_available_levels()
     lb_contents = [[level.capitalize(), level] for level in available_levels]
     lb = Listbox(lb_contents, i, o, "Loglevel selection listbox")
-    lb.start_value = available_levels.index(current.lower())
+    lb.start_pointer = available_levels.index(current.lower())
     return lb.activate()
 
 def change_loglevel(logger_name, current_level):
