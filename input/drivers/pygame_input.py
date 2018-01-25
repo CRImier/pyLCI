@@ -53,6 +53,9 @@ class InputDevice(InputSkeleton):
             key_name = 'KEY_' + KEY_MAP[key]
             if key_name == 'KEY_RETURN':
                 key_name = 'KEY_ENTER'
+
+            if key_name == 'KEY_' + KP_MAP[key]:
+                key_name = 'KEY_' + KP_MAP[key].replace('KP', '')
             logger.debug('Mapped key %s' % key_name)
 
             self.send_key(key_name)
