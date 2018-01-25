@@ -15,7 +15,7 @@ logger_alias_map = (("root","Main launcher"),
 
 logger_alias_map = OrderedDict(logger_alias_map)
 
-from ui import Menu, Printer, Listbox
+from ui import Menu, Listbox
 
 def get_logger_names():
     return log_system.get_logger_names()
@@ -49,8 +49,6 @@ def get_available_levels():
 
 def select_loglevel(current):
     available_levels = get_available_levels()
-    print(current)
-    print(available_levels)
     lb_contents = [[level.capitalize(), level] for level in available_levels]
     lb = Listbox(lb_contents, i, o, "Loglevel selection listbox")
     lb.start_value = available_levels.index(current.lower())
@@ -62,7 +60,6 @@ def change_loglevel(logger_name, current_level):
         assert (new_level in get_available_levels())
         log_system.LoggingConfig().set_level(logger_name, new_level)
         log_system.LoggingConfig().reload_config()
-        print("Loglevel set!")
 
 def get_menu_contents():
     logger_names = get_logger_names()
@@ -70,7 +67,6 @@ def get_menu_contents():
     sorted_names = sorted(pretty_logger_names.items(), key=lambda x: x[1])
     for i, (name, pname) in enumerate(sorted_names):
         l = log_system.get_log_level_for_logger(name)
-        #print("{} - {}".format(pname, l))
         sorted_names[i] = (name, pname, l)
     return [["{}:{}".format(l[:1], pname), lambda x=name, y=l:change_loglevel(x, y)] for name, pname, l in sorted_names]
 
