@@ -37,6 +37,7 @@ screen = None
 cm = None
 config = None
 config_path = None
+app_man = None
 
 def init():
     """Initialize input and output objects"""
@@ -99,6 +100,8 @@ def launch(name=None, **kwargs):
     Launches ZPUI, either in full mode or in
     single-app mode (if ``name`` kwarg is passed).
     """
+
+    global app_man
 
     i, o = init()
     appman_config = config.get("app_manager", {})
