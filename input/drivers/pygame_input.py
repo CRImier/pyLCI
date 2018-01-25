@@ -18,6 +18,16 @@ USED_KEYS = [
 ]
 ])
 
+KEY_MAP = dict([
+    (getattr(pygame, 'K_' + key_name), key_name)
+    for key_name in USED_KEYS
+])
+
+KP_MAP = dict([
+    (getattr(pygame, 'K_' + key_name), key_name)
+    for key_name in KP_KEYS
+])
+
 
 class InputDevice(InputSkeleton):
     """ A driver for pygame-based keyboard key detection."""
