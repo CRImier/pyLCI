@@ -6,7 +6,7 @@ import emulator
 from helpers import setup_logger
 from skeleton import InputSkeleton
 
-logger = setup_logger(__name__, "debug")
+logger = setup_logger(__name__, "warning")
 
 USED_KEYS = [
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
