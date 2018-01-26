@@ -6,7 +6,8 @@ import emulator
 from helpers import setup_logger
 from skeleton import InputSkeleton
 
-logger = setup_logger(__name__, "debug")
+logger = setup_logger(__name__, "warning")
+
 
 mapping = {'KEY_RETURN':'KEY_ENTER',
            'KEY_KP_ENTER':'KEY_ENTER',
