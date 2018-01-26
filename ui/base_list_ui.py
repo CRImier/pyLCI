@@ -278,7 +278,6 @@ class BaseListUIElement(object):
             "KEY_DOWN": lambda: self.move_down(),
             "KEY_PAGEUP": lambda: self.page_up(),
             "KEY_PAGEDOWN": lambda: self.page_down(),
-            "KEY_KPENTER": lambda: self.select_entry(),
             "KEY_ENTER": lambda: self.select_entry()
         })
         if self.exitable:

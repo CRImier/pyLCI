@@ -245,7 +245,7 @@ class InputProcessor():
 
 
 class InputProxy():
-    reserved_keys = ["KEY_LEFT", "KEY_RIGHT", "KEY_UP", "KEY_DOWN", "KEY_ENTER", "KEY_KPENTER"]
+    reserved_keys = ["KEY_LEFT", "KEY_RIGHT", "KEY_UP", "KEY_DOWN", "KEY_ENTER"]
 
     def __init__(self, context_alias):
         self.keymap = {}

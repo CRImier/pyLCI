@@ -99,7 +99,6 @@ class DialogBox(object):
         self.keymap = {
         "KEY_RIGHT":lambda: self.move_right(),
         "KEY_LEFT":lambda: self.move_left(),
-        "KEY_KPENTER":lambda: self.accept_value(),
         "KEY_ENTER":lambda: self.accept_value()
         }
 

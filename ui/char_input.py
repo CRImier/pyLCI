@@ -200,7 +200,6 @@ class CharArrowKeysInput(object):
         "KEY_UP":lambda: self.move_up(),
         "KEY_DOWN":lambda: self.move_down(),
         "KEY_LEFT":lambda: self.move_left(),
-        "KEY_KPENTER":lambda: self.accept_value(),
         "KEY_ENTER":lambda: self.accept_value()
         }
 
