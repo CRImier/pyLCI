@@ -73,8 +73,8 @@ submit a bugreport to you!
 Config (and other) files
 ========================
 
-How to get path to a file in the app directory?
------------------------------------------------
+Get path to a file in the app directory
+---------------------------------------
 
 Say, you have a ``my_song.mp3`` file shipped with your app. However, in order to use
 that file from your code, you have to refer to that file using a path relative to the
@@ -98,8 +98,8 @@ In case of your app having nested folders, you can also give multiple arguments 
 
 ------------
 
-How to read JSON from a ``config.json`` file located in the app directory?
---------------------------------------------------------------------------
+Read JSON from a ``config.json`` file located in the app directory
+------------------------------------------------------------------
 
 .. code-block:: python
 
@@ -111,8 +111,8 @@ How to read JSON from a ``config.json`` file located in the app directory?
 
 ------------
 
-How to read a ``config.json`` file, and restore it to defaults if it can't be read?
------------------------------------------------------------------------------------
+Read a ``config.json`` file, and restore it to defaults if it can't be read
+---------------------------------------------------------------------------
 
 .. code-block:: python
 
