@@ -27,7 +27,7 @@ class InputListener():
     nonmaskable_keymap = {}
     backlight_cb = None
     streaming = None
-    reserved_keys = ["KEY_LEFT", "KEY_RIGHT", "KEY_UP", "KEY_DOWN", "KEY_ENTER", "KEY_KPENTER"]
+    reserved_keys = ["KEY_LEFT", "KEY_RIGHT", "KEY_UP", "KEY_DOWN", "KEY_ENTER"]
 
     def __init__(self, drivers, keymap=None):
         """Init function for creating KeyListener object. Checks all the arguments and sets keymap if supplied."""

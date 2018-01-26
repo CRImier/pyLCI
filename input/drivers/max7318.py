@@ -10,11 +10,11 @@ class InputDevice(InputSkeleton):
     It supports both interrupt-driven mode (as for now, RPi-only due to RPi.GPIO library used) and polling mode."""
 
     default_mapping = [
+    "KEY_ENTER",
     "KEY_LEFT",
     "KEY_UP",
     "KEY_DOWN",
     "KEY_RIGHT",
-    "KEY_KPENTER",
     "KEY_0",
     "KEY_1",
     "KEY_2",

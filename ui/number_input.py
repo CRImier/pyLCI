@@ -120,7 +120,6 @@ class IntegerAdjustInput(object):
         "KEY_RIGHT":lambda: self.reset(),
         "KEY_UP":lambda: self.increment(),
         "KEY_DOWN":lambda: self.decrement(),
-        "KEY_KPENTER":lambda: self.select_number(),
         "KEY_ENTER":lambda: self.select_number(),
         "KEY_LEFT":lambda: self.exit()
         }

@@ -145,7 +145,7 @@ def status_refresher_data():
     return data
 
 def status_monitor():
-    keymap = {"KEY_ENTER":wireless_status, "KEY_KPENTER":wireless_status, "KEY_RIGHT":lambda: scan(False)}
+    keymap = {"KEY_ENTER":wireless_status, "KEY_RIGHT":lambda: scan(False)}
     refresher = Refresher(status_refresher_data, i, o, 0.5, keymap, "Wireless monitor")
     refresher.activate()
 

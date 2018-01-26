@@ -34,7 +34,6 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
         i.stop_listen()
         i.clear_keymap()
         if skippable:
-            i.set_callback("KEY_KPENTER", skip_screen)
             i.set_callback("KEY_ENTER", skip_screen)
         i.set_callback("KEY_LEFT", exit_printer)
         i.listen()
