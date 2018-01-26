@@ -41,6 +41,35 @@ In ``app/main.py``:
      
 ------------
 
+Add logging to your app
+-----------------------
+
+In case your application does something more complicated than printing a sentence
+on the display and exiting, you might need to add logging - so that users can then
+look through the ZPUI history, figure out what was it that went wrong, and maybe
+submit a bugreport to you!
+
+.. code-block:: python
+
+    from helpers import setup_logger # Importing the needed function
+    logger = setup_logger(__name__, "warning") # Getting a logger for your app, 
+    # default level is "warning" - this level controls logging statements that
+    # will be displayed (and saved in the logfile) by default.
+    
+    ...
+    
+    try:
+        command = "my_awesome_script"
+        logger.info("Calling the '{}' command".format(command))
+        output = call(command)
+        logger.debug("Finished executing the command")
+        for value in output.split():
+            if value not in expected_values:
+                logger.warning("Unexpected value {} found when parsing command output; proceeding".format(value))
+    except:
+        logger.exception("Exception while calling the command!")
+        # .exception will also log the details of the exception after your message
+
 Config (and other) files
 ========================
 
