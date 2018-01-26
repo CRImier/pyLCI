@@ -29,10 +29,10 @@ class AppManager(object):
      """
     ordering_cache = {}
 
-    def __init__(self, app_directory, i, o, config=None):
+    def __init__(self, app_directory, context_manager, config=None):
         self.app_directory = app_directory
-        self.i = i
-        self.o = o
+        self.cm = context_manager
+        self.i, self.o = self.cm.get_io_for_context("main")
         self.config = config if config else {}
 
     def load_all_apps(self):
@@ -86,23 +86,31 @@ class AppManager(object):
 
     def bind_callback(self, app, app_path, menu_name, ordering, subdir_path):
         if hasattr(app, "callback") and callable(app.callback):  # for function based apps
-            subdir_menu = self.subdir_menus[subdir_path]
-            subdir_menu_contents = self.insert_by_ordering([menu_name, app.callback], os.path.split(app_path)[1],
-                                                           subdir_menu.contents, ordering)
-            subdir_menu.set_contents(subdir_menu_contents)
-            return True
-        if hasattr(app, "on_start") and callable(app.on_start):  # for class based apps
-            subdir_menu = self.subdir_menus[subdir_path]
-            subdir_menu_contents = self.insert_by_ordering([menu_name, app.on_start], os.path.split(app_path)[1],
-                                                           subdir_menu.contents, ordering)
-            subdir_menu.set_contents(subdir_menu_contents)
+            app_callback = app.callback
+        elif hasattr(app, "on_start") and callable(app.on_start):  # for class based apps
+            app_callback = app.on_start
         else:
             logger.debug("App \"{}\" has no callback; loading silently".format(menu_name))
+            return
+        self.cm.register_thread_target(app_callback, app_path)
+        menu_callback = lambda: self.cm.switch_to_context(app_path)
+        #App callback is available and wrapped, inserting
+        subdir_menu = self.subdir_menus[subdir_path]
+        subdir_menu_contents = self.insert_by_ordering([menu_name, menu_callback], os.path.split(app_path)[1],
+                                                       subdir_menu.contents, ordering)
+        subdir_menu.set_contents(subdir_menu_contents)
+
+    def get_app_path_for_cmdline(self, cmdline_app_path):
+        main_py_string = "/main.py"
+        if cmdline_app_path.endswith(main_py_string):
+            app_path = cmdline_app_path[:-len(main_py_string)]
+        elif cmdline_app_path.endswith("/"):
+            app_path = cmdline_app_path[:-1]
+        else:
+            app_path = cmdline_app_path
+        return app_path
 
     def load_app(self, app_path):
-        main_py_string = "/main.py"
-        if app_path.endswith(main_py_string):
-            app_path = app_path[:-len(main_py_string)]
         if "__init__.py" not in os.listdir(app_path):
             raise ImportError("Trying to import an app with no __init__.py in its folder!")
         app_import_path = app_path.replace('/', '.')
@@ -111,9 +119,9 @@ class AppManager(object):
         app = importlib.import_module(app_import_path + '.main', package='apps')
         if is_class_based_module(app):
             zero_app_subclass = get_zeroapp_class_in_module(app)
-            app = zero_app_subclass(self.i, self.o)
+            app = zero_app_subclass(*self.cm.get_io_for_context(app_path))
         else:
-            app.init_app(self.i, self.o)
+            app.init_app(*self.cm.get_io_for_context(app_path))
         return app
 
     def get_subdir_menu_name(self, subdir_path):

@@ -6,3 +6,4 @@ gpio
 vobject
 pytest
 mock
+pydbus

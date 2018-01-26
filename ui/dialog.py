@@ -1,7 +1,8 @@
 from time import sleep
-
-
 from helpers import setup_logger
+
+from canvas import Canvas
+from utils import invert_rect_colors
 
 logger = setup_logger(__name__, "info")
 
@@ -9,8 +10,9 @@ class DialogBox(object):
     """Implements a dialog box with given values (or some default ones if chosen)."""
 
     value_selected = False
-    pointer = 0
+    selected_option = 0
     default_options = {"y":["Yes", True], 'n':["No", False], 'c':["Cancel", None]}
+    start_option = 0
 
     def __init__(self, values, i, o, message="Are you sure?", name="DialogBox"):
         """Initialises the DialogBox object.
@@ -50,28 +52,44 @@ class DialogBox(object):
                     values[i] = self.default_options[value]
             self.values = values
         self.message = message
-        self.process_values()
         self.generate_keymap()
+        self.set_view()
 
     def to_foreground(self):
         self.in_foreground = True
         self.refresh()
         self.set_keymap()
 
+    def set_view(self):
+        if "b&w-pixel" in self.o.type:
+            view_class = GraphicalView
+        elif "char" in self.o.type:
+            view_class = TextView
+        else:
+            raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
+        self.view = view_class(self.o, self)
+
+    def set_start_option(self, option_number):
+        """
+        Allows you to set position of the option that'll be selected upon DialogBox activation.
+        """
+        self.start_option = option_number
+
     def activate(self):
         logger.debug("{0} activated".format(self.name))
-        self.o.cursor()
-        self.to_foreground() 
         self.value_selected = False
-        self.pointer = 0
+        self.selected_option = self.start_option
+        self.to_foreground()
         while self.in_foreground: #All the work is done in input callbacks
-            sleep(0.1)
-        self.o.noCursor()
+            self.idle_loop()
         logger.debug(self.name+" exited")
         if self.value_selected:
-            return self.values[self.pointer][1]
+            return self.values[self.selected_option][1]
         else:
             return None
+
+    def idle_loop(self):
+        sleep(0.1)
 
     def deactivate(self):
         self.in_foreground = False
@@ -91,25 +109,36 @@ class DialogBox(object):
         self.i.listen()
 
     def move_left(self):
-        if self.pointer == 0:
+        if self.selected_option == 0:
             self.deactivate()
             return
-        self.pointer -= 1
+        self.selected_option -= 1
         self.refresh()
 
     def move_right(self):
-        if self.pointer == len(self.values)-1:
+        if self.selected_option == len(self.values)-1:
             return
-        self.pointer += 1
+        self.selected_option += 1
         self.refresh()
 
     def accept_value(self):
         self.value_selected = True
         self.deactivate()
 
+    def refresh(self):
+        self.view.refresh()
+
+
+class TextView():
+
+    def __init__(self, o, el):
+        self.o = o
+        self.el = el
+        self.process_values()
+
     def process_values(self):
-        self.labels = [label for label, value in self.values]
-        label_string = " ".join(self.labels)
+        labels = [label for label, value in self.el.values]
+        label_string = " ".join(labels)
         if len(label_string) > self.o.cols:
             raise ValueError("DialogBox {}: all values combined are longer than screen's width".format(self.name))
         self.right_offset = (self.o.cols - len(label_string))/2
@@ -117,10 +146,41 @@ class DialogBox(object):
         #Need to go through the string to mark the first places because we need to remember where to put the cursors
         current_position = self.right_offset
         self.positions = []
-        for label in self.labels:
+        for label in labels:
             self.positions.append(current_position)
             current_position += len(label) + 1
 
     def refresh(self):
-        self.o.setCursor(1, self.positions[self.pointer])
-        self.o.display_data(self.message, self.displayed_label)
+        self.o.noCursor()
+        self.o.setCursor(1, self.positions[self.el.selected_option])
+        self.o.display_data(self.el.message, self.displayed_label)
+        self.o.cursor()
+
+
+class GraphicalView(TextView):
+
+    def get_image(self):
+        c = Canvas(self.o)
+
+        #Drawing text
+        second_line_position = 10
+        c.text((2, 0), self.el.message, fill="white")
+        c.text((2, second_line_position), self.displayed_label, fill="white")
+
+        #Calculating the cursor dimensions
+        first_char_position = self.positions[self.el.selected_option]
+        option_length = len( self.el.values[self.el.selected_option][0] )
+        c_x1 = first_char_position * self.o.char_width
+        c_x2 = c_x1 + option_length * self.o.char_width
+        c_y1 = second_line_position #second line
+        c_y2 = c_y1 + self.o.char_height
+        #Some readability adjustments
+        cursor_dims = ( c_x1, c_y1, c_x2 + 2, c_y2 + 2 )
+
+        #Drawing the cursor
+        invert_rect_colors(cursor_dims, c)
+
+        return c.get_image()
+
+    def refresh(self):
+        self.o.display_image(self.get_image())

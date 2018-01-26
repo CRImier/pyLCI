@@ -43,6 +43,9 @@ class InputDevice(InputSkeleton):
         self.emulator = emulator.get_emulator()
         return True
 
+    def set_available_keys(self):
+        self.available_keys = KEY_MAP.values()
+
     def runner(self):
         """
         Blocking event loop which just calls supplied callbacks in the keymap.

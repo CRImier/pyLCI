@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 TMP_DIR="/tmp/zpui_update"
 INSTALL_DIR="/opt/zpui"
 IGNORE_TEST=false
@@ -7,15 +9,15 @@ IGNORE_TEST=false
 cd "$(dirname "$0")"  # Make sure we are in the script's directory when running
 set -e  # Strict mode : script stops if any command fails
 
-case "$1" in
+case ${1:-''} in
     -i|--ignore-tests) IGNORE_TEST=true; shift 1 ;;
     --) shift; break ;;
 esac
 
-
-SUDO=''
-if (( $EUID != 0 )); then
-    SUDO='sudo'
+if test "$EUID" -ne 0
+then
+   echo "This script must be run as root, exiting..."
+   exit 1
 fi
 
 # cleanup update dir
@@ -45,15 +47,15 @@ BASE=$(git merge-base @ "$UPSTREAM")
 #WORKAROUND only pulling the current branch
 git pull
 
-${SUDO} pip install -r requirements.txt  # Make sure we have the latest dependencies installed
+pip install -r requirements.txt  # Make sure we have the latest dependencies installed
 
 # Run tests
 if [ -n ${IGNORE_TEST} ]; then
     python -B -m pytest --doctest-modules -v --doctest-ignore-import-errors --ignore=output/drivers --ignore=input/drivers --ignore=apps/hardware_apps/status/ --ignore=apps/example_apps/fire_detector --ignore=apps/test_hardware
 fi
 
-${SUDO} mkdir -p ${INSTALL_DIR}
-${SUDO} rsync -av --delete ./ --exclude='*.pyc'  ${INSTALL_DIR}
-${SUDO} systemctl restart zpui.service
+mkdir -p "${INSTALL_DIR}"
+rsync -av --delete ./ --exclude='*.pyc' "${INSTALL_DIR}"
+systemctl restart zpui.service
 #rm -rf ${TMP_DIR}
 exit 0
