@@ -67,6 +67,7 @@ class Checkbox(BaseListUIElement):
 
     def before_activate(self):
         # Clearing flags
+        BaseListUIElement.before_activate(self)
         self.accepted = False
 
     @to_be_foreground

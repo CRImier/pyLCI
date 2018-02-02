@@ -9,12 +9,13 @@ import threading
 import traceback
 from logging.handlers import RotatingFileHandler
 
-from context_manager import ContextManager
 from apps.app_manager import AppManager
+from context_manager import ContextManager
 from helpers import read_config, local_path_gen
 from input import input
 from output import output
 from ui import Printer
+import helpers.logger
 
 emulator_flag_filename = "emulator"
 local_path = local_path_gen(__name__)
@@ -36,6 +37,7 @@ screen = None
 cm = None
 config = None
 config_path = None
+app_man = None
 
 def init():
     """Initialize input and output objects"""
@@ -98,6 +100,8 @@ def launch(name=None, **kwargs):
     Launches ZPUI, either in full mode or in
     single-app mode (if ``name`` kwarg is passed).
     """
+
+    global app_man
 
     i, o = init()
     appman_config = config.get("app_manager", {})
@@ -181,6 +185,7 @@ if __name__ == '__main__':
 
     # Signal handler for debugging
     signal.signal(signal.SIGUSR1, dump_threads)
+    signal.signal(signal.SIGHUP, helpers.logger.on_reload)
 
     # Setup argument parsing
     parser = argparse.ArgumentParser(description='ZPUI runner')

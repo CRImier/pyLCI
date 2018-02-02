@@ -41,11 +41,40 @@ In ``app/main.py``:
      
 ------------
 
+Add logging to your app
+-----------------------
+
+In case your application does something more complicated than printing a sentence
+on the display and exiting, you might need to add logging - so that users can then
+look through the ZPUI history, figure out what was it that went wrong, and maybe
+submit a bugreport to you!
+
+.. code-block:: python
+
+    from helpers import setup_logger # Importing the needed function
+    logger = setup_logger(__name__, "warning") # Getting a logger for your app, 
+    # default level is "warning" - this level controls logging statements that
+    # will be displayed (and saved in the logfile) by default.
+    
+    ...
+    
+    try:
+        command = "my_awesome_script"
+        logger.info("Calling the '{}' command".format(command))
+        output = call(command)
+        logger.debug("Finished executing the command")
+        for value in output.split():
+            if value not in expected_values:
+                logger.warning("Unexpected value {} found when parsing command output; proceeding".format(value))
+    except:
+        logger.exception("Exception while calling the command!")
+        # .exception will also log the details of the exception after your message
+
 Config (and other) files
 ========================
 
-How to get path to a file in the app directory?
------------------------------------------------
+Get path to a file in the app directory
+---------------------------------------
 
 Say, you have a ``my_song.mp3`` file shipped with your app. However, in order to use
 that file from your code, you have to refer to that file using a path relative to the
@@ -69,8 +98,8 @@ In case of your app having nested folders, you can also give multiple arguments 
 
 ------------
 
-How to read JSON from a ``config.json`` file located in the app directory?
---------------------------------------------------------------------------
+Read JSON from a ``config.json`` file located in the app directory
+------------------------------------------------------------------
 
 .. code-block:: python
 
@@ -82,8 +111,8 @@ How to read JSON from a ``config.json`` file located in the app directory?
 
 ------------
 
-How to read a ``config.json`` file, and restore it to defaults if it can't be read?
------------------------------------------------------------------------------------
+Read a ``config.json`` file, and restore it to defaults if it can't be read
+---------------------------------------------------------------------------
 
 .. code-block:: python
 

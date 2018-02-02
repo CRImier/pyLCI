@@ -41,6 +41,7 @@ class BaseListUIElement(object):
 
     contents = []
     pointer = 0
+    start_pointer = 0
     in_foreground = False
     name = ""
     exit_entry = ["Back", "exit"]
@@ -125,8 +126,10 @@ class BaseListUIElement(object):
     def before_activate(self):
         """Hook for child UI elements, is called each time activate() is called. 
         Is the perfect place to clear any flags that you don't want to persist 
-        between multiple activations of a single instance of an UI element."""
-        pass
+        between multiple activations of a single instance of an UI element.
+
+        For a start, resets the ``pointer`` to the ``start_pointer``."""
+        self.pointer = self.start_pointer
 
     def to_foreground(self):
         """ Is called when UI element's ``activate()`` method is used, sets flags

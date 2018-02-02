@@ -16,6 +16,7 @@ Guides:
 * :doc:`App development - how to ... ? <howto>`
 * :doc:`ZPUI configuration files <config>`
 * :doc:`Hacking on UI <hacking_ui>`
+* :doc:`Logging configuration <logging_config>`
 
 References:
 ===========
@@ -43,6 +44,7 @@ References:
    ui.rst
    helpers.rst
    hacking_ui.rst
+   logging.rst
    app_mgmt.rst
    docs_development.rst
    contact.rst

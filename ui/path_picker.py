@@ -39,6 +39,7 @@ class PathPicker(BaseListBackgroundableUIElement):
 
     def before_activate(self):
         #Clearing flags
+        BaseListUIElement.before_activate(self)
         path_chosen = None
 
     def get_return_value(self):
