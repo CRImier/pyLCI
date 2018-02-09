@@ -1,6 +1,8 @@
 import os
 from datetime import datetime
 from threading import Event
+from cProfile import Profile
+#from cProfile import runcall as profile
 
 from mock import Mock
 from apps import ZeroApp
@@ -21,8 +23,9 @@ class App(ZeroApp):
     #    cm.switch_to_context("apps/main_screen")
 
     def on_start(self, *args, **kwargs):
-        MainScreen([], self.i, self.o, "Main screen").activate()
-
+        screen = MainScreen([], self.i, self.o, "Main screen")
+        screen.activate()
+        screen.p.print_stats(2)
 
 class MainScreen(Menu):
     is_numbered = False
@@ -46,6 +49,7 @@ class MainScreen(Menu):
     #    self.keymap.update(keymap)
 
     def validate_contents(self, contents):
+        self.p = Profile()
         pass
 
     def process_contents(self):
@@ -82,6 +86,7 @@ class MainScreen(Menu):
         c.text((10, 39), "0 notifications", fill="white")
         self.draw_battery_icon(c)
         self.draw_network_icon(c)
-        self.o.display_image(c.get_image())
+        image = c.get_image()
+        self.p.runcall( self.o.display_image, image )
         
         
