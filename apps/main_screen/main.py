@@ -15,6 +15,8 @@ from __main__ import input_processor, cm # TODO: dirty hack, to be removed
 
 class App(ZeroApp):
 
+    menu_name = "Main screen"
+
     def __init__(self, *args, **kwargs):
         ZeroApp.__init__(self, *args, **kwargs)
         #input_processor.set_global_callback("KEY_HANGUP", self.switch_to_self)
