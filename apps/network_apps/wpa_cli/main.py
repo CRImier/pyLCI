@@ -1,5 +1,3 @@
-
-
 from helpers import setup_logger
 
 menu_name = "Wireless"
@@ -11,7 +9,7 @@ from time import sleep
 from threading import Thread
 from traceback import format_exc
 
-from ui import Menu, Printer, MenuExitException, NumpadCharInput, Refresher, DialogBox, ellipsize
+from ui import Menu, Printer, MenuExitException, UniversalInput, Refresher, DialogBox, ellipsize
 
 import wpa_cli
 
@@ -59,7 +57,7 @@ def connect_to_network(network_info):
         raise MenuExitException
     #Offering to enter a password
     else:
-        input = NumpadCharInput(i, o, message="Password:", name="WiFi password enter UI element")
+        input = UniversalInput(i, o, message="Password:", name="WiFi password enter UI element")
         password = input.activate()
         if password is None:
             return False
@@ -145,7 +143,7 @@ def status_refresher_data():
     return data
 
 def status_monitor():
-    keymap = {"KEY_ENTER":wireless_status, "KEY_KPENTER":wireless_status, "KEY_RIGHT":lambda: scan(False)}
+    keymap = {"KEY_ENTER":wireless_status, "KEY_RIGHT":lambda: scan(False)}
     refresher = Refresher(status_refresher_data, i, o, 0.5, keymap, "Wireless monitor")
     refresher.activate()
 
@@ -274,7 +272,7 @@ def remove_network(id):
         raise MenuExitException
 
 def set_password(id):    
-    input = NumpadCharInput(i, o, message="Password:", name="WiFi password enter UI element")
+    input = UniversalInput(i, o, message="Password:", name="WiFi password enter UI element")
     password = input.activate()
     if password is None:
         return False

@@ -26,7 +26,7 @@ class PathPicker(BaseListBackgroundableUIElement):
             * ``display_hidden``: if True, PathPicker will display hidden files.
 
         """
-        BaseListBackgroundableUIElement.__init__(self, [], i, o, entry_height=1, scrolling=True, append_exit=False)
+        BaseListBackgroundableUIElement.__init__(self, [], i, o, entry_height=1, scrolling=True, append_exit=False, **kwargs)
         if not os.path.isdir(path):
              raise ValueError("PathPicker path has to be a directory!")
         self.display_hidden = display_hidden
@@ -39,6 +39,7 @@ class PathPicker(BaseListBackgroundableUIElement):
 
     def before_activate(self):
         #Clearing flags
+        BaseListBackgroundableUIElement.before_activate(self)
         path_chosen = None
 
     def get_return_value(self):

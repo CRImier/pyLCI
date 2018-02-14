@@ -25,7 +25,7 @@ class IntegerAdjustInput(object):
     number = 0
     selected_number = None
 
-    def __init__(self, number, i, o, message="Pick a number:", interval=1, name="IntegerAdjustInput"):
+    def __init__(self, number, i, o, message="Pick a number:", interval=1, name="IntegerAdjustInput", mode="normal"):
         """Initialises the IntegerAdjustInput object.
         
         Args:
@@ -38,6 +38,7 @@ class IntegerAdjustInput(object):
             * ``message``: Message to be shown on the first line of the screen when UI element is active.
             * ``interval``: Value by which the number is incremented and decremented.
             * ``name``: UI element name which can be used internally and for debugging.
+            * ``mode``: Number display mode, either "normal" (default) or "hex" ("float" will be supported eventually)
 
         """
         self.i = i
@@ -48,6 +49,7 @@ class IntegerAdjustInput(object):
         self.number = number
         self.message = message
         self.name = name
+        self.mode = mode
         self.interval = interval
         self.set_display_callback(o.display_data)
         self.generate_keymap()
@@ -120,7 +122,6 @@ class IntegerAdjustInput(object):
         "KEY_RIGHT":lambda: self.reset(),
         "KEY_UP":lambda: self.increment(),
         "KEY_DOWN":lambda: self.decrement(),
-        "KEY_KPENTER":lambda: self.select_number(),
         "KEY_ENTER":lambda: self.select_number(),
         "KEY_LEFT":lambda: self.exit()
         }
@@ -134,7 +135,12 @@ class IntegerAdjustInput(object):
         self.i.listen()
 
     def get_displayed_data(self):
-        return [self.message, str(self.number).rjust(self.o.cols)]
+        if self.mode == "hex":
+            number_str = hex(self.number)
+        else:
+            number_str = str(self.number)
+        number_str = number_str.rjust(self.o.cols)
+        return [self.message, number_str]
 
     @to_be_foreground
     def refresh(self):

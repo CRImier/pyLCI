@@ -10,10 +10,12 @@ import traceback
 from logging.handlers import RotatingFileHandler
 
 from apps.app_manager import AppManager
+from context_manager import ContextManager
 from helpers import read_config, local_path_gen
 from input import input
 from output import output
 from ui import Printer
+import helpers.logger
 
 emulator_flag_filename = "emulator"
 local_path = local_path_gen(__name__)
@@ -21,55 +23,74 @@ is_emulator = emulator_flag_filename in os.listdir(".")
 
 logging_path = local_path('zpui.log')
 logging_format = (
-    '[%(levelname)s] %(asctime)s %(filename)s [%(process)d]: %(message)s',
+    '[%(levelname)s] %(asctime)s %(name)s: %(message)s',
     '%Y-%m-%d %H:%M:%S'
 )
 
-config_paths = ['/boot/zpui_config.json'] if not is_emulator else []
+config_paths = ['/boot/zpui_config.json', '/boot/pylci_config.json'] if not is_emulator else []
 config_paths.append(local_path('config.json'))
+#Using the .example config as a last resort
+config_paths.append(local_path('default_config.json'))
 
+input_processor = None
+screen = None
+cm = None
+config = None
+config_path = None
+app_man = None
 
 def init():
     """Initialize input and output objects"""
 
+    global input_processor, screen, cm, config, config_path
     config = None
 
     # Load config
-    for path in config_paths:
-        try:
-            logging.debug('Loading config from {}'.format(path))
-            config = read_config(path)
-        except:
-            logging.exception('Failed to load config from {}'.format(path))
-        else:
-            logging.info('Successfully loaded config from {}'.format(path))
-            break
+    for config_path in config_paths:
+        #Only try to load the config file if it's present
+        #(unclutters the logs)
+        if os.path.exists(config_path):
+            try:
+                logging.debug('Loading config from {}'.format(config_path))
+                config = read_config(config_path)
+            except:
+                logging.exception('Failed to load config from {}'.format(config_path))
+            else:
+                logging.info('Successfully loaded config from {}'.format(config_path))
+                break
+    # After this loop, the config_path global should contain
+    # path for config that successfully loaded
 
     if config is None:
-        sys.exit('Failed to load any config file')
+        sys.exit('Failed to load any config files!')
 
     # Initialize output
     try:
-        output.init(config['output'])
-        o = output.screen
+        screen = output.init(config['output'])
     except:
         logging.exception('Failed to initialize the output object')
         logging.exception(traceback.format_exc())
         sys.exit(2)
 
+    # Initialize the context manager
+    cm = ContextManager()
+
     # Initialize input
     try:
         # Now we can show errors on the display
-        input.init(config['input'])
-        i = input.listener
+        input_processor = input.init(config["input"], cm)
     except:
         logging.exception('Failed to initialize the input object')
         logging.exception(traceback.format_exc())
-        Printer(['Oops. :(', 'y u make mistake'], None, o, 0)
+        Printer(['Oops. :(', 'y u make mistake'], None, screen, 0)
         sys.exit(3)
 
-    if hasattr(o, "set_backlight_callback"):
-        o.set_backlight_callback(i)
+    # Tying objects together
+    if hasattr(screen, "set_backlight_callback"):
+        screen.set_backlight_callback(input_processor)
+    cm.init_io(input_processor, screen)
+    cm.switch_to_context("main", launch_thread=False)
+    i, o = cm.get_io_for_context("main")
 
     return i, o
 
@@ -80,8 +101,11 @@ def launch(name=None, **kwargs):
     single-app mode (if ``name`` kwarg is passed).
     """
 
+    global app_man
+
     i, o = init()
-    app_man = AppManager('apps', i, o)
+    appman_config = config.get("app_manager", {})
+    app_man = AppManager('apps', cm, config=appman_config)
 
     if name is None:
         try:
@@ -102,17 +126,19 @@ def launch(name=None, **kwargs):
 
         # Load only single app
         try:
-            app = app_man.load_app(name)
+            app_path = app_man.get_app_path_for_cmdline(name)
+            app = app_man.load_app(app_path)
         except:
             logging.exception('Failed to load the app: {0}'.format(name))
-            i.atexit()
+            input_processor.atexit()
             raise
+        cm.switch_to_context(app_path, launch_thread=False)
         runner = app.on_start if hasattr(app, "on_start") else app.callback
 
-    exception_wrapper(runner, i, o)
+    exception_wrapper(runner)
 
 
-def exception_wrapper(callback, i, o):
+def exception_wrapper(callback):
     """
     This is a wrapper for all applications and menus.
     It catches exceptions and stops the system the right
@@ -124,18 +150,18 @@ def exception_wrapper(callback, i, o):
         callback()
     except KeyboardInterrupt:
         logging.info('Caught KeyboardInterrupt')
-        Printer(["Does Ctrl+C", "hurt scripts?"], None, o, 0)
+        Printer(["Does Ctrl+C", "hurt scripts?"], None, screen, 0)
         status = 1
     except:
         logging.exception('A wild exception appears!')
         logging.exception(traceback.format_exc())
-        Printer(["A wild exception", "appears!"], None, o, 0)
+        Printer(["A wild exception", "appears!"], None, screen, 0)
         status = 1
     else:
         logging.info('Exiting ZPUI')
-        Printer("Exiting ZPUI", None, o, 0)
+        Printer("Exiting ZPUI", None, screen, 0)
     finally:
-        i.atexit()
+        input_processor.atexit()
         sys.exit(status)
 
 
@@ -159,6 +185,7 @@ if __name__ == '__main__':
 
     # Signal handler for debugging
     signal.signal(signal.SIGUSR1, dump_threads)
+    signal.signal(signal.SIGHUP, helpers.logger.on_reload)
 
     # Setup argument parsing
     parser = argparse.ArgumentParser(description='ZPUI runner')

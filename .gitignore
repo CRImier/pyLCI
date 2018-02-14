@@ -61,4 +61,7 @@ target/
 # Instead, they're supposed to create them on first launch
 config.json
 /zpui.log*
+# We ship do_not_load files in some directories, but do not track user-created files
+# (only user-removed ones)
 do_not_load
+log_conf.ini

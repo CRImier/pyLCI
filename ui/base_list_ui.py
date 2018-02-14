@@ -7,10 +7,12 @@ from threading import Event
 from time import sleep
 
 from PIL import ImageFont
-from luma.core.render import canvas as luma_canvas
 
+from canvas import Canvas
 from helpers import setup_logger
+from ui.utils import invert_rect_colors
 from utils import to_be_foreground, clamp_list_index
+
 
 logger = setup_logger(__name__, "warning")
 
@@ -39,6 +41,7 @@ class BaseListUIElement(object):
 
     contents = []
     pointer = 0
+    start_pointer = 0
     in_foreground = False
     name = ""
     exit_entry = ["Back", "exit"]
@@ -124,8 +127,10 @@ class BaseListUIElement(object):
     def before_activate(self):
         """Hook for child UI elements, is called each time activate() is called. 
         Is the perfect place to clear any flags that you don't want to persist 
-        between multiple activations of a single instance of an UI element."""
-        pass
+        between multiple activations of a single instance of an UI element.
+
+        For a start, resets the ``pointer`` to the ``start_pointer``."""
+        self.pointer = self.start_pointer
 
     def to_foreground(self):
         """ Is called when UI element's ``activate()`` method is used, sets flags
@@ -135,7 +140,6 @@ class BaseListUIElement(object):
         self.before_foreground()
         self.reset_scrolling()
         self.in_foreground = True
-        self.o.cursor()
         self.view.refresh()
         self.set_keymap()
 
@@ -278,7 +282,6 @@ class BaseListUIElement(object):
             "KEY_DOWN": lambda: self.move_down(),
             "KEY_PAGEUP": lambda: self.page_up(),
             "KEY_PAGEDOWN": lambda: self.page_down(),
-            "KEY_KPENTER": lambda: self.select_entry(),
             "KEY_ENTER": lambda: self.select_entry()
         })
         if self.exitable:
@@ -311,7 +314,7 @@ class BaseListUIElement(object):
     def process_contents(self):
         """Processes contents for custom callbacks. Currently, only 'exit' calbacks are supported.
 
-        If ``self.append_exit`` is set, it goes through the menu and removes every callback which either is ``self.deactivate`` or is just a string 'exit'. 
+        If ``self.append_exit`` is set, it goes through the menu and removes every callback which either is ``self.deactivate`` or is just a string 'exit'.
         |Then, it appends a single "Exit" entry at the end of menu contents. It makes dynamically appending entries to menu easier and makes sure there's only one "Exit" callback, at the bottom of the menu."""
         if self.append_exit:
             # filtering possible duplicate exit entries
@@ -553,8 +556,7 @@ class EightPtView(TextView):
         |Doesn't support partly-rendering entries yet."""
         contents = self.el.get_displayed_contents()
         menu_text = self.get_displayed_text(contents)
-        draw = luma_canvas(self.o.device)
-        d = draw.__enter__()
+        c = Canvas(self.o)
         scrollbar_coordinates = self.get_scrollbar_top_bottom(contents)
         # Drawing scrollbar, if applicable
         if scrollbar_coordinates == (0, 0):
@@ -563,22 +565,22 @@ class EightPtView(TextView):
         else:
             left_offset = self.x_scrollbar_offset
             y1, y2 = scrollbar_coordinates
-            d.rectangle((1, y1, 2, y2), outline="white")
-        # Drawing cursor, if enabled
-        if cursor_y is not None:
-            c_x = cursor_x * self.charwidth
-            c_y = cursor_y * self.charheight
-            cursor_dims = (
-                c_x - 1 + left_offset, c_y - 1, c_x + self.charwidth + left_offset, c_y + self.charheight + 1)
-            d.rectangle(cursor_dims, outline="white")
-        # Drawing the text itself
+            c.rectangle((1, y1, 2, y2), outline="white")
+        #Drawing the text itself
         for i, line in enumerate(menu_text):
             y = (i * self.charheight - 1) if i != 0 else 0
-            d.text((left_offset, y), line, fill="white")
-        image = draw.image
-        del d
-        del draw
-        return image
+            c.text((left_offset, y), line, fill="white")
+        if cursor_y is not None:
+            c_x = cursor_x * self.charwidth + 1
+            c_y = cursor_y * self.charheight + 1
+            cursor_dims = (
+                c_x - 1 + left_offset,
+                c_y - 1,
+                c_x + self.charwidth * len(menu_text[cursor_y]) + left_offset,
+                c_y + self.charheight
+            )
+            invert_rect_colors(cursor_dims, c)
+        return c.get_image()
 
 
 class SixteenPtView(EightPtView):
@@ -591,8 +593,7 @@ class SixteenPtView(EightPtView):
         |Doesn't support partly-rendering entries yet."""
         contents = self.el.get_displayed_contents()
         menu_text = self.get_displayed_text(contents)
-        draw = luma_canvas(self.o.device)
-        d = draw.__enter__()
+        c = Canvas(self.o)
         scrollbar_coordinates = self.get_scrollbar_top_bottom(contents)
         # Drawing scrollbar, if applicable
         if scrollbar_coordinates == (0, 0):
@@ -601,23 +602,25 @@ class SixteenPtView(EightPtView):
         else:
             left_offset = self.x_scrollbar_offset
             y1, y2 = scrollbar_coordinates
-            d.rectangle((1, y1, 2, y2), outline="white")
+            c.rectangle((1, y1, 2, y2), outline="white")
+        #Drawing the text itself
+        #http://pillow.readthedocs.io/en/3.1.x/reference/ImageFont.html
+        font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 16)
+        for i, line in enumerate(menu_text):
+            y = (i * self.charheight - 1) if i != 0 else 0
+            c.text((left_offset, y), line, fill="white", font=font)
         # Drawing cursor, if enabled
         if cursor_y is not None:
             c_x = cursor_x * self.charwidth
             c_y = cursor_y * self.charheight
-            cursor_dims = (c_x - 1 + left_offset, c_y - 1, c_x + self.charwidth + left_offset, c_y + self.charheight)
-            d.rectangle(cursor_dims, outline="white")
-        # Drawing the text itself
-        # http://pillow.readthedocs.io/en/3.1.x/reference/ImageFont.html
-        font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 16)
-        for i, line in enumerate(menu_text):
-            y = (i * self.charheight - 1) if i != 0 else 0
-            d.text((left_offset, y), line, fill="white", font=font)
-        image = draw.image
-        del d
-        del draw
-        return image
+            cursor_dims = (
+                c_x - 1 + left_offset,
+                c_y - 1,
+                c_x + self.charwidth * len(menu_text[cursor_y]) + left_offset,
+                c_y + self.charheight
+            )
+            invert_rect_colors(cursor_dims, c)
+        return c.get_image()
 
 
 class MainMenuTripletView(SixteenPtView):
@@ -635,20 +638,16 @@ class MainMenuTripletView(SixteenPtView):
         # This view doesn't have a cursor, instead, the entry that's currently active is in the display center
         contents = self.el.get_displayed_contents()
         pointer = self.el.pointer # A shorthand
-        draw = luma_canvas(self.o.device)
-        d = draw.__enter__()
+        c = Canvas(self.o)
         central_position = (10, 16)
         font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 32)
         current_entry = contents[pointer]
-        d.text(central_position, current_entry[0], fill="white", font=font)
+        c.text(central_position, current_entry[0], fill="white", font=font)
         font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 16)
         if pointer != 0:
             line = contents[pointer - 1][0]
-            d.text((2, 0), line, fill="white", font=font)
+            c.text((2, 0), line, fill="white", font=font)
         if pointer < len(contents) - 1:
             line = contents[pointer + 1][0]
-            d.text((2, 48), line, fill="white", font=font)
-        image = draw.image
-        del d
-        del draw
-        return image
+            c.text((2, 48), line, fill="white", font=font)
+        return c.get_image()

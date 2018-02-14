@@ -16,7 +16,7 @@ class InputDevice():
     "KEY_HOME",
     "KEY_END",
     "KEY_DELETE",
-    "KEY_KPENTER",
+    "KEY_ENTER",
     "KEY_UP",
     "KEY_DOWN"]
     stop_flag = False

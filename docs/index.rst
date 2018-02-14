@@ -13,7 +13,10 @@ Guides:
 
 * :doc:`Installing and updating ZPUI <setup>`
 * :ref:`Installing ZPUI emulator <emulator>`
+* :doc:`App development - how to ... ? <howto>`
+* :doc:`ZPUI configuration files <config>`
 * :doc:`Hacking on UI <hacking_ui>`
+* :doc:`Logging configuration <logging_config>`
 
 References:
 ===========
@@ -36,15 +39,12 @@ References:
    :hidden:
 
    setup.rst
+   config.rst
+   howto.rst
    ui.rst
    helpers.rst
    hacking_ui.rst
-   hardware.rst
-   debugging.rst
-   input.rst
-   output.rst
-   apps.rst
+   logging.rst
    app_mgmt.rst
-   plans.rst
    docs_development.rst
    contact.rst

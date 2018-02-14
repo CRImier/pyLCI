@@ -9,5 +9,5 @@ branches:
 notifications:
   irc:
     channels: "chat.freenode.net#ZeroPhone"
-    on_success: change
+    on_success: never
     on_failure: always
