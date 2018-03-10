@@ -86,15 +86,15 @@ class IntegerAdjustInput(object):
         logger.info("{0} active".format(self.name))    
 
     @to_be_foreground
-    def decrement(self):
+    def decrement(self, multiplier=1):
         """Decrements the number by selected ``interval``"""
-        self.number -= self.interval
+        self.number -= self.interval*multiplier
         self.refresh()    
 
     @to_be_foreground
-    def increment(self):
+    def increment(self, multiplier=1):
         """Increments the number by selected ``interval``"""
-        self.number += self.interval
+        self.number += self.interval*multiplier
         self.refresh()    
 
     @to_be_foreground
@@ -122,6 +122,8 @@ class IntegerAdjustInput(object):
         "KEY_RIGHT":lambda: self.reset(),
         "KEY_UP":lambda: self.increment(),
         "KEY_DOWN":lambda: self.decrement(),
+        "KEY_PAGEUP":lambda: self.increment(multiplier=10),
+        "KEY_PAGEDOWN":lambda: self.decrement(multiplier=10),
         "KEY_ENTER":lambda: self.select_number(),
         "KEY_LEFT":lambda: self.exit()
         }
