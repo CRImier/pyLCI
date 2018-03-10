@@ -14,18 +14,20 @@ class Canvas(object):
     background_color = "black" #: default background color to use for drawing
     default_color = "white" #: default color to use for drawing
 
-    def __init__(self, o, base_image=None):
+    def __init__(self, o, base_image=None, name=""):
         """
         Args:
 
             * ``o``: output device
             * ``base_image``: an image to use as a base
+            * ``name``: a name, for internal usage
         """
         self.o = o
         if "b&w-pixel" not in o.type:
             raise ValueError("The output device supplied doesn't support pixel graphics!")
         self.width = o.width
         self.height = o.height
+        self.name = name
         self.size = (self.width, self.height)
         if base_image:
             assert(base_image.size == self.size)
@@ -96,17 +98,38 @@ class Canvas(object):
     def check_coordinates(self, coords):
         # type: tuple -> tuple
         """
-        A helper function to check (later, also reformat) coordinates supplied to
-        functions. Currently, only accepts integer coordinates.
+        A helper function to check and reformat coordinates supplied to
+        functions. Currently, accepts integer coordinates, as well as strings
+        - denoting offsets from opposite sides of the screen.
         """
-        for i in coords:
-            assert isinstance(i, int), "{} not an integer!".format(i)
+        # Checking for string offset coordinates
+        # First, we need to make coords into a mutable sequence - thus, a list
+        coords = list(coords)
+        for i, c in enumerate(coords):
+            sign = "+"
+            if isinstance(c, basestring):
+                if c.startswith("-"):
+                    sign = "-"
+                    c = c[1:]
+                assert c.isdigit(), "A numeric string expected, received: {}".format(coords[i])
+                offset = int(c)
+                dim = self.size[i % 2]
+                if sign == "+":
+                    coords[i] = dim + offset
+                elif sign == "-":
+                    coords[i] = dim - offset
+        # Restoring the status-quo
+        coords = tuple(coords)
+        # Now checking whether the coords are right
+        for c in coords:
+            assert isinstance(c, int), "{} not an integer or 'x' string!".format(c)
         if len(coords) == 2:
             return coords
         elif len(coords) == 4:
             x1, y1, x2, y2 = coords
-            assert (x2 >= x1), "x2 ({}) is smaller than x1 ({}), rearrange?".format(x2, x1)
-            assert (y2 >= y1), "y2 ({}) is smaller than y1 ({}), rearrange?".format(y2, y1)
+            # Not sure those checks make sense
+            #assert (x2 >= x1), "x2 ({}) is smaller than x1 ({}), rearrange?".format(x2, x1)
+            #assert (y2 >= y1), "y2 ({}) is smaller than y1 ({}), rearrange?".format(y2, y1)
             return coords
         else:
             raise ValueError("Invalid number of coordinates!")
