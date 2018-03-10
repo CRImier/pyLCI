@@ -119,10 +119,10 @@ class ClockApp(ZeroApp, Refresher, CenteredTextRenderer):
         hour_angle = math.pi * 2 * progress + math.pi
         c.line(
             (
-                x,
-                y,
-                x + radius * math.sin(hour_angle),
-                y + radius * math.cos(hour_angle)
+                int(x),
+                int(y),
+                int(x + radius * math.sin(hour_angle)),
+                int(y + radius * math.cos(hour_angle))
             ),
             width=width,
             fill=True
