@@ -1,5 +1,7 @@
 from PIL import Image, ImageDraw, ImageOps, ImageFont
 
+from ui.utils import is_sequence_not_string as issequence
+
 default_font = ImageFont.load_default()
 
 class Canvas(object):
@@ -48,6 +50,30 @@ class Canvas(object):
         else:
             return ValueError("Font type not yet supported: {}".format(type))
 
+    def point(self, coord_pairs, **kwargs):
+        """
+        Draw a point, or multiple points on the canvas. Coordinates are expected in
+        ``((x1, y1), (x2, y2), ...)`` format, where ``x*``&``y*`` are coordinates
+        of each point you want to draw.
+        """
+        fill = kwargs.pop("fill", self.default_color)
+        assert all([issequence(c) for c in coord_pairs]), "Expecting a tuple of tuples!"
+        coord_pairs = list(coord_pairs)
+        for i, coord_pair in enumerate(coord_pairs):
+            coord_pairs[i] = self.check_coordinates(coord_pair)
+        coord_pairs = tuple(coord_pairs)
+        self.draw.point(coord_pairs, fill=fill, **kwargs)
+
+    def line(self, coords, **kwargs):
+        """
+        Draw a line on the canvas. Coordinates are expected in
+        ``(x1, y1, x2, y2)`` format, where ``x1``&``y1`` are coordinates
+        of the start, and ``x2``&``y2`` are coordinates of the end.
+        """
+        fill = kwargs.pop("fill", self.default_color)
+        coords = self.check_coordinates(coords)
+        self.draw.line(coords, fill=fill, **kwargs)
+
     def text(self, text, coords, **kwargs):
         """
         Draw text on the canvas. Coordinates are expected in (x, y)
@@ -71,7 +97,8 @@ class Canvas(object):
         """
         coords = self.check_coordinates(coords)
         outline = kwargs.pop("outline", self.default_color)
-        self.draw.rectangle(coords, outline=outline, **kwargs)
+        fill = kwargs.pop("fill", None)
+        self.draw.rectangle(coords, outline=outline, fill=fill, **kwargs)
 
     def get_image(self):
         """
@@ -155,7 +182,7 @@ class Canvas(object):
         """
 
         coords = self.check_coordinates(coords)
-        #self.rectangle(coords)
+        self.rectangle(coords)
         image_subset = self.image.crop(coords)
 
         if image_subset.mode != "L": # PIL can only invert "L" and "RGBA" images

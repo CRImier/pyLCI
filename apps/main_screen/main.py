@@ -59,20 +59,19 @@ class MainScreen(Menu):
         pass
 
     def draw_battery_icon(self, c):
-        c.rectangle(("-20", 0, "-2", 7), fill=None)
+        c.rectangle(("-20", 0, "-2", 7))
         c.rectangle(("-16", 0, "-2", 7), fill="white")
         c.rectangle(("-22", 1, "-20", 6), fill="white")
         if is_charging():
             c.text("Ch", ("-15", -2))
 
     def draw_network_icon(self, c):
-        c.line((3, 1, 3, 6), fill="white")
-        c.line((1, 1, 5, 1), fill="white")
-        c.point(((1, 2), (5, 2)), fill="white")
+        c.line((3, 1, 3, 6))
+        c.line((1, 1, 5, 1))
+        c.point(((1, 2), (5, 2)))
         offset = 7
         for x in reversed(range(6)):
-            c.line((x*2+offset, 6-x, x*2+offset, 6), fill="white")
-        
+            c.line((x*2+offset, 6-x, x*2+offset, 6))
 
     def refresh(self):
         now = datetime.now()
