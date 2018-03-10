@@ -33,13 +33,13 @@ class ClockApp(ZeroApp, Refresher, CenteredTextRenderer):
         self.draw_needle(c, 24 - time.hour / 24, eval(h_len), clock_x, clock_y, 1)
 
     def draw_text(self, c, time, text_x="10", text_y="center_y-5", time_format = "%H:%M:%S", **kwargs):
-        """Draws the digital clock, with parameters configurable through config.txt."""
+        """Draws the digital clock, with parameters configurable through config.json."""
         time_str = time.strftime(time_format)
         center_x, center_y = c.get_center()
         bounds = self.get_centered_text_bounds(c, time_str)
         x = eval(text_x)
         y = eval(text_y)
-        c.text((x, y), time_str, fill="white")
+        c.text(time_str, (x, y))
 
     def on_refresh(self):
         current_time = datetime.now()
