@@ -202,19 +202,4 @@ class Ticker(object):
         return elapsed
 
 
-def invert_rect_colors(coordinates, canvas):
-    # type: (tuple, ui.Canvas) -> None
-    # inverts colors of the image in the given rectangle
-    canvas.rectangle(coordinates, outline="white")
-    image_subset = canvas.image.crop(coordinates)
-
-    if image_subset.mode == "1":  # PIL doesn't support invert on mode "1"
-        image_subset = image_subset.convert("L")
-    image_subset = ImageOps.invert(image_subset)
-    image_subset = image_subset.convert("1")
-
-    canvas.rectangle(coordinates, fill="black")  # paint the background black first
-    canvas.bitmap((coordinates[0], coordinates[1]), image_subset, fill="white")
-
-
 Rect = namedtuple('Rect', ['left', 'top', 'right', 'bottom'])

@@ -2,7 +2,6 @@ from time import sleep
 from helpers import setup_logger
 
 from canvas import Canvas
-from utils import invert_rect_colors
 
 logger = setup_logger(__name__, "info")
 
@@ -178,7 +177,7 @@ class GraphicalView(TextView):
         cursor_dims = ( c_x1, c_y1, c_x2 + 2, c_y2 + 2 )
 
         #Drawing the cursor
-        invert_rect_colors(cursor_dims, c)
+        c.invert_rect_colors(cursor_dims)
 
         return c.get_image()
 

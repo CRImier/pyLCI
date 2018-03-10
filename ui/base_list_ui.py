@@ -10,7 +10,6 @@ from PIL import ImageFont
 
 from canvas import Canvas
 from helpers import setup_logger
-from ui.utils import invert_rect_colors
 from utils import to_be_foreground, clamp_list_index
 
 
@@ -522,8 +521,8 @@ class EightPtView(TextView):
     def refresh(self):
         logger.debug("{}: refreshed data on display".format(self.el.name))
         self.fix_pointers_on_refresh()
-        canvas = self.get_displayed_canvas(cursor_y=self.get_active_line_num())
-        self.o.display_image(canvas)
+        image = self.get_displayed_image(cursor_y=self.get_active_line_num())
+        self.o.display_image(image)
 
     def get_scrollbar_top_bottom(self):
         scrollbar_max_length = self.o.height - (self.scrollbar_y_offset * 2)
@@ -542,7 +541,7 @@ class EightPtView(TextView):
         return top, bottom
 
     @to_be_foreground
-    def get_displayed_canvas(self, cursor_x=0, cursor_y=None):
+    def get_displayed_image(self, cursor_x=0, cursor_y=None):
         """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.display_image function.
         |Doesn't support partly-rendering entries yet."""
         menu_text = self.get_displayed_text()
@@ -555,11 +554,11 @@ class EightPtView(TextView):
         else:
             left_offset = self.x_scrollbar_offset
             y1, y2 = scrollbar_coordinates
-            c.rectangle((1, y1, 2, y2), outline="white")
+            c.rectangle((1, y1, 2, y2))
         #Drawing the text itself
         for i, line in enumerate(menu_text):
             y = (i * self.charheight - 1) if i != 0 else 0
-            c.text((left_offset, y), line, fill="white")
+            c.text(line, (left_offset, y))
         if cursor_y is not None:
             c_x = cursor_x * self.charwidth + 1
             c_y = cursor_y * self.charheight + 1
@@ -569,7 +568,7 @@ class EightPtView(TextView):
                 c_x + self.charwidth * len(menu_text[cursor_y]) + left_offset,
                 c_y + self.charheight
             )
-            invert_rect_colors(cursor_dims, c)
+            c.invert_rect_colors(cursor_dims)
         return c.get_image()
 
 
@@ -578,7 +577,7 @@ class SixteenPtView(EightPtView):
     charheight = 16
 
     @to_be_foreground
-    def get_displayed_canvas(self, cursor_x=0, cursor_y=None):
+    def get_displayed_image(self, cursor_x=0, cursor_y=None):
         """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.display_image function.
         |Doesn't support partly-rendering entries yet."""
         menu_text = self.get_displayed_text()
@@ -591,13 +590,13 @@ class SixteenPtView(EightPtView):
         else:
             left_offset = self.x_scrollbar_offset
             y1, y2 = scrollbar_coordinates
-            c.rectangle((1, y1, 2, y2), outline="white")
+            c.rectangle((1, y1, 2, y2))
         #Drawing the text itself
         #http://pillow.readthedocs.io/en/3.1.x/reference/ImageFont.html
         font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 16)
         for i, line in enumerate(menu_text):
             y = (i * self.charheight - 1) if i != 0 else 0
-            c.text((left_offset, y), line, fill="white", font=font)
+            c.text(line, (left_offset, y), font=font)
         # Drawing cursor, if enabled
         if cursor_y is not None:
             c_x = cursor_x * self.charwidth
@@ -608,7 +607,7 @@ class SixteenPtView(EightPtView):
                 c_x + self.charwidth * len(menu_text[cursor_y]) + left_offset,
                 c_y + self.charheight
             )
-            invert_rect_colors(cursor_dims, c)
+            c.invert_rect_colors(cursor_dims)
         return c.get_image()
 
 
@@ -629,12 +628,12 @@ class MainMenuTripletView(SixteenPtView):
         central_position = (10, 16)
         font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 32)
         current_entry = self.el.contents[self.el.pointer]
-        c.text(central_position, current_entry[0], fill="white", font=font)
+        c.text(current_entry[0], central_position, font=font)
         font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 16)
         if self.el.pointer != 0:
             line = self.el.contents[self.el.pointer - 1][0]
-            c.text((2, 0), line, fill="white", font=font)
+            c.text(line, (2, 0), font=font)
         if self.el.pointer < len(self.el.contents) - 1:
             line = self.el.contents[self.el.pointer + 1][0]
-            c.text((2, 48), line, fill="white", font=font)
+            c.text(line, (2, 48), font=font)
         return c.get_image()
