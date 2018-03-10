@@ -4,7 +4,7 @@ logger = setup_logger(__name__, "warning")
 
 import string
 
-from utils import to_be_foreground, invert_rect_colors
+from utils import to_be_foreground
 from canvas import Canvas
 
 
@@ -200,7 +200,6 @@ class CharArrowKeysInput(object):
         "KEY_UP":lambda: self.move_up(),
         "KEY_DOWN":lambda: self.move_down(),
         "KEY_LEFT":lambda: self.move_left(),
-        "KEY_KPENTER":lambda: self.accept_value(),
         "KEY_ENTER":lambda: self.accept_value()
         }
 
@@ -286,7 +285,7 @@ class GraphicalView(TextView):
         cursor_dims = ( c_x1, c_y1, c_x2 + 2, c_y2 + 1 )
 
         #Drawing the cursor
-        invert_rect_colors(cursor_dims, c)
+        c.invert_rect_colors(cursor_dims)
 
         return c.get_image()
 

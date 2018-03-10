@@ -2,7 +2,6 @@ from time import sleep
 from helpers import setup_logger
 
 from canvas import Canvas
-from utils import invert_rect_colors
 
 logger = setup_logger(__name__, "info")
 
@@ -12,6 +11,7 @@ class DialogBox(object):
     value_selected = False
     selected_option = 0
     default_options = {"y":["Yes", True], 'n':["No", False], 'c':["Cancel", None]}
+    start_option = 0
 
     def __init__(self, values, i, o, message="Are you sure?", name="DialogBox"):
         """Initialises the DialogBox object.
@@ -68,11 +68,17 @@ class DialogBox(object):
             raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
         self.view = view_class(self.o, self)
 
+    def set_start_option(self, option_number):
+        """
+        Allows you to set position of the option that'll be selected upon DialogBox activation.
+        """
+        self.start_option = option_number
+
     def activate(self):
         logger.debug("{0} activated".format(self.name))
-        self.to_foreground() 
         self.value_selected = False
-        self.selected_option = 0
+        self.selected_option = self.start_option
+        self.to_foreground()
         while self.in_foreground: #All the work is done in input callbacks
             self.idle_loop()
         logger.debug(self.name+" exited")
@@ -92,7 +98,6 @@ class DialogBox(object):
         self.keymap = {
         "KEY_RIGHT":lambda: self.move_right(),
         "KEY_LEFT":lambda: self.move_left(),
-        "KEY_KPENTER":lambda: self.accept_value(),
         "KEY_ENTER":lambda: self.accept_value()
         }
 
@@ -172,7 +177,7 @@ class GraphicalView(TextView):
         cursor_dims = ( c_x1, c_y1, c_x2 + 2, c_y2 + 2 )
 
         #Drawing the cursor
-        invert_rect_colors(cursor_dims, c)
+        c.invert_rect_colors(cursor_dims)
 
         return c.get_image()
 

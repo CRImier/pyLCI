@@ -1,4 +1,3 @@
-
 import os
 import signal
 from subprocess import check_output
@@ -12,6 +11,8 @@ except:
 # Using a TextProgressBar because only it shows a message on the screen for now
 from ui import Menu, PrettyPrinter, DialogBox, TextProgressBar, Listbox
 from helpers.logger import setup_logger
+
+import logging_ui
 
 menu_name = "Settings"
 logger = setup_logger(__name__, "info")
@@ -218,19 +219,20 @@ class GitUpdater(GenericUpdater):
                 #TODO: run tests?
 
 
-def settings():
-    git_updater = GitUpdater()
-    c = [["Update ZPUI", git_updater.update],
-         ["Select branch", git_updater.pick_branch]]
-    Menu(c, i, o, "ZPUI settings menu").activate()
-
-
-callback = settings
 i = None  # Input device
 o = None  # Output device
-
 
 def init_app(input, output):
     global i, o
     i = input
     o = output
+    logging_ui.i = i
+    logging_ui.o = o
+
+def callback():
+    git_updater = GitUpdater()
+    c = [["Update ZPUI", git_updater.update],
+         ["Select branch", git_updater.pick_branch],
+         #["Submit logs", logging_ui.submit_logs],
+         ["Logging settings", logging_ui.config_logging]]
+    Menu(c, i, o, "ZPUI settings menu").activate()

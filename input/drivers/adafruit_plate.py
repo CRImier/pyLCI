@@ -9,7 +9,7 @@ class InputDevice(InputSkeleton):
        Tested on hardware compatible with Adafruit schematic and working with Adafruit libraries, but not on genuine Adafruit hardware. 
     """
     default_mapping = [
-    "KEY_KPENTER",
+    "KEY_ENTER",
     "KEY_RIGHT",
     "KEY_DOWN",
     "KEY_UP",

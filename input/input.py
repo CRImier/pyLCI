@@ -1,6 +1,7 @@
 from traceback import format_exc
 from threading import Thread, Event
 from time import sleep
+from copy import copy
 import importlib
 
 import atexit
@@ -28,6 +29,7 @@ class InputProcessor():
 
     current_proxy = None
     proxy_methods = ["listen", "stop_listen"]
+    proxy_attrs = ["available_keys"]
 
     def __init__(self, drivers, context_manager):
         self.global_keymap = {}
@@ -238,10 +240,12 @@ class InputProcessor():
         context_alias = proxy.context_alias
         for method_name in self.proxy_methods:
             setattr(proxy, method_name, lambda x=method_name, y=context_alias, *a, **k: self.proxy_method(x, y, *a, **k))
+        for attr_name in self.proxy_attrs:
+            setattr(proxy, attr_name, copy(getattr(self, attr_name)))
 
 
 class InputProxy():
-    reserved_keys = ["KEY_LEFT", "KEY_RIGHT", "KEY_UP", "KEY_DOWN", "KEY_ENTER", "KEY_KPENTER"]
+    reserved_keys = ["KEY_LEFT", "KEY_RIGHT", "KEY_UP", "KEY_DOWN", "KEY_ENTER"]
 
     def __init__(self, context_alias):
         self.keymap = {}
