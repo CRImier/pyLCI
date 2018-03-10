@@ -163,8 +163,8 @@ class GraphicalView(TextView):
 
         #Drawing text
         second_line_position = 10
-        c.text((2, 0), self.el.message, fill="white")
-        c.text((2, second_line_position), self.displayed_label, fill="white")
+        c.text(self.el.message, (2, 0))
+        c.text(self.displayed_label, (2, second_line_position))
 
         #Calculating the cursor dimensions
         first_char_position = self.positions[self.el.selected_option]

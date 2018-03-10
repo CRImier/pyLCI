@@ -176,7 +176,7 @@ class TextReader(object):
     def draw_text(self, text, c, x_offset):
         for line, arg in enumerate(text):
             y = (line * self.o.char_height)
-            c.text((x_offset, y), arg, fill='white')
+            c.text(arg, (x_offset, y))
 
     def get_displayed_text(self):
         start = self.h_scroll_index

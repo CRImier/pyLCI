@@ -273,7 +273,7 @@ class GraphicalView(TextView):
         lines = self.get_displayed_data()
         for i, line in enumerate(lines):
             y = (i*self.o.char_height - 1) if i != 0 else 0
-            c.text((2, y), line, fill="white")
+            c.text(line, (2, y))
 
         #Calculating the cursor dimensions
         c_x1 = (self.el.position-self.first_displayed_char) * self.o.char_width
