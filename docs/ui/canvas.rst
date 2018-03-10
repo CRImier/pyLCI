@@ -16,4 +16,4 @@ Canvas
  
 .. autoclass:: Canvas
     :show-inheritance:
-    :members: __init__,get_image,get_center,invert,width,height,size,image
+    :members: __init__,get_image,get_center,invert,width,height,size,image,background_color,default_color,text,rectangle,invert_rect_colors,check_coordinates,clear
