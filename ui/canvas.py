@@ -1,4 +1,11 @@
-from PIL import Image, ImageDraw, ImageOps
+from PIL import Image, ImageDraw, ImageOps, ImageFont
+
+from ui.utils import is_sequence_not_string as issequence
+
+default_font = ImageFont.load_default()
+
+from helpers import setup_logger
+logger = setup_logger(__name__, "warning")
 
 class Canvas(object):
     """
@@ -13,6 +20,7 @@ class Canvas(object):
     size = (0, 0) #: a tuple of (width, height).
     background_color = "black" #: default background color to use for drawing
     default_color = "white" #: default color to use for drawing
+    default_font = default_font #: default font, referenced here to avoid loading it every time
 
     def __init__(self, o, base_image=None, name=""):
         """
@@ -36,6 +44,39 @@ class Canvas(object):
             self.image = Image.new(o.device_mode, self.size)
         self.draw = ImageDraw.Draw(self.image)
 
+    def load_font(self, path, size, type="truetype"):
+        """
+        Loads a font by its path for the given size, then returns it.
+        """
+        if type == "truetype":
+            return ImageFont.truetype(path, size)
+        else:
+            return ValueError("Font type not yet supported: {}".format(type))
+
+    def point(self, coord_pairs, **kwargs):
+        """
+        Draw a point, or multiple points on the canvas. Coordinates are expected in
+        ``((x1, y1), (x2, y2), ...)`` format, where ``x*``&``y*`` are coordinates
+        of each point you want to draw.
+        """
+        fill = kwargs.pop("fill", self.default_color)
+        assert all([issequence(c) for c in coord_pairs]), "Expecting a tuple of tuples!"
+        coord_pairs = list(coord_pairs)
+        for i, coord_pair in enumerate(coord_pairs):
+            coord_pairs[i] = self.check_coordinates(coord_pair)
+        coord_pairs = tuple(coord_pairs)
+        self.draw.point(coord_pairs, fill=fill, **kwargs)
+
+    def line(self, coords, **kwargs):
+        """
+        Draw a line on the canvas. Coordinates are expected in
+        ``(x1, y1, x2, y2)`` format, where ``x1``&``y1`` are coordinates
+        of the start, and ``x2``&``y2`` are coordinates of the end.
+        """
+        fill = kwargs.pop("fill", self.default_color)
+        coords = self.check_coordinates(coords)
+        self.draw.line(coords, fill=fill, **kwargs)
+
     def text(self, text, coords, **kwargs):
         """
         Draw text on the canvas. Coordinates are expected in (x, y)
@@ -46,8 +87,9 @@ class Canvas(object):
         """
         assert(isinstance(text, basestring))
         fill = kwargs.pop("fill", self.default_color)
+        font = kwargs.pop("font", self.default_font)
         coords = self.check_coordinates(coords)
-        self.draw.text(coords, text, fill=fill, **kwargs)
+        self.draw.text(coords, text, fill=fill, font=font, **kwargs)
 
     def rectangle(self, coords, **kwargs):
         """
@@ -58,7 +100,8 @@ class Canvas(object):
         """
         coords = self.check_coordinates(coords)
         outline = kwargs.pop("outline", self.default_color)
-        self.draw.rectangle(coords, outline=outline, **kwargs)
+        fill = kwargs.pop("fill", None)
+        self.draw.rectangle(coords, outline=outline, fill=fill, **kwargs)
 
     def get_image(self):
         """
@@ -118,6 +161,9 @@ class Canvas(object):
                     coords[i] = dim + offset
                 elif sign == "-":
                     coords[i] = dim - offset
+            elif isinstance(c, float):
+                logger.warning("Received {} as a coordinate - pixel offsets can't be float, converting to int")
+                coords[i] = int(c)
         # Restoring the status-quo
         coords = tuple(coords)
         # Now checking whether the coords are right
@@ -142,7 +188,7 @@ class Canvas(object):
         """
 
         coords = self.check_coordinates(coords)
-        #self.rectangle(coords)
+        self.rectangle(coords)
         image_subset = self.image.crop(coords)
 
         if image_subset.mode != "L": # PIL can only invert "L" and "RGBA" images
