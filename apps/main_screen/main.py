@@ -52,7 +52,6 @@ class MainScreen(Menu):
 
     def validate_contents(self, contents):
         self.p = Profile()
-        self.default_font = ImageFont.load_default()
         self.clock_font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 32)
         pass
 
@@ -64,7 +63,7 @@ class MainScreen(Menu):
         c.rectangle(("-16", 0, "-2", 7), fill="white")
         c.rectangle(("-22", 1, "-20", 6), fill="white")
         if is_charging():
-            c.text("Ch", ("-15", -2), font=self.default_font)
+            c.text("Ch", ("-15", -2))
 
     def draw_network_icon(self, c):
         c.line((3, 1, 3, 6), fill="white")
@@ -83,9 +82,9 @@ class MainScreen(Menu):
         c = Canvas(self.o)
         #c.line((0, 8, c.width, 8), fill="white")
         c.text(hhmm, (5, 8), font=self.clock_font)
-        c.text(ss, (87, 23), font=self.default_font)
-        c.text(ddmmyy, (90, 12), font=self.default_font)
-        c.text("0 notifications", (10, 39), font=self.default_font)
+        c.text(ss, (87, 23))
+        c.text(ddmmyy, (90, 12))
+        c.text("0 notifications", (10, 39))
         self.draw_battery_icon(c)
         self.draw_network_icon(c)
         image = c.get_image()

@@ -1,4 +1,6 @@
-from PIL import Image, ImageDraw, ImageOps
+from PIL import Image, ImageDraw, ImageOps, ImageFont
+
+default_font = ImageFont.load_default()
 
 class Canvas(object):
     """
@@ -13,6 +15,7 @@ class Canvas(object):
     size = (0, 0) #: a tuple of (width, height).
     background_color = "black" #: default background color to use for drawing
     default_color = "white" #: default color to use for drawing
+    default_font = default_font #: default font, referenced here to avoid loading it every time
 
     def __init__(self, o, base_image=None, name=""):
         """
@@ -36,6 +39,15 @@ class Canvas(object):
             self.image = Image.new(o.device_mode, self.size)
         self.draw = ImageDraw.Draw(self.image)
 
+    def load_font(self, path, size, type="truetype"):
+        """
+        Loads a font by its path for the given size, then returns it.
+        """
+        if type == "truetype":
+            return ImageFont.truetype(path, size)
+        else:
+            return ValueError("Font type not yet supported: {}".format(type))
+
     def text(self, text, coords, **kwargs):
         """
         Draw text on the canvas. Coordinates are expected in (x, y)
@@ -46,8 +58,9 @@ class Canvas(object):
         """
         assert(isinstance(text, basestring))
         fill = kwargs.pop("fill", self.default_color)
+        font = kwargs.pop("font", self.default_font)
         coords = self.check_coordinates(coords)
-        self.draw.text(coords, text, fill=fill, **kwargs)
+        self.draw.text(coords, text, fill=fill, font=font, **kwargs)
 
     def rectangle(self, coords, **kwargs):
         """
