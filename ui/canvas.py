@@ -4,6 +4,9 @@ from ui.utils import is_sequence_not_string as issequence
 
 default_font = ImageFont.load_default()
 
+from helpers import setup_logger
+logger = setup_logger(__name__, "warning")
+
 class Canvas(object):
     """
     This object allows you to work with graphics on the display quicker and easier.
@@ -158,6 +161,9 @@ class Canvas(object):
                     coords[i] = dim + offset
                 elif sign == "-":
                     coords[i] = dim - offset
+            elif isinstance(c, float):
+                logger.warning("Received {} as a coordinate - pixel offsets can't be float, converting to int")
+                coords[i] = int(c)
         # Restoring the status-quo
         coords = tuple(coords)
         # Now checking whether the coords are right

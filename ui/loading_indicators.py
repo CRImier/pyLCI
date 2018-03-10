@@ -1,5 +1,3 @@
-from __future__ import division
-
 import math
 from math import cos
 from threading import Thread
@@ -30,7 +28,7 @@ class CenteredTextRenderer(object):
         """Draws a centered text on the canvas and returns a 4-tuple of the coordinates taken by the text"""
         # type: (Canvas, str) -> None
         coords = self.get_centered_text_bounds(c, content)
-        c.text((coords.left, coords.top), content, fill=True)
+        c.text(content, (coords.left, coords.top), fill=True)
 
     @staticmethod
     def get_centered_text_bounds(c, content):
@@ -125,7 +123,7 @@ class Throbber(BaseLoadingIndicator, CenteredTextRenderer):
         # type: (Canvas) -> None
         bounds = self.get_centered_text_bounds(c, self.message)
         # Drawn top-centered
-        c.text((bounds.left, 0), self.message, fill=True)
+        c.text(self.message, (bounds.left, 0), fill=True)
 
     def draw_throbber(self, c):
         x, y = c.size
@@ -249,8 +247,8 @@ class GraphicalProgressBar(ProgressIndicator, CenteredTextRenderer):
 
     def __init__(self, i, o, *args, **kwargs):
         self.show_percentage = kwargs.pop("show_percentage", True)
-        self.margin = kwargs.pop("margin", 15)
-        self.padding = kwargs.pop("padding", 2)
+        self.margin = int(kwargs.pop("margin", 15))
+        self.padding = int(kwargs.pop("padding", 2))
         self.bar_height = kwargs.pop("bar_height", 15)
         BaseLoadingIndicator.__init__(self, i, o, *args, **kwargs)
 
@@ -260,7 +258,7 @@ class GraphicalProgressBar(ProgressIndicator, CenteredTextRenderer):
         if self.show_percentage:
             percentage_text = "{:.0%}".format(self.progress)
             coords = self.get_centered_text_bounds(c, percentage_text)
-            c.text((coords.left, self.margin), percentage_text, fill=True)  # Drawn top-centered (with margin)
+            c.text(percentage_text, (coords.left, self.margin), fill=True)  # Drawn top-centered (with margin)
             bar_top = self.margin + (coords.bottom - coords.top)
 
         self.draw_bar(c, bar_top)
@@ -282,7 +280,7 @@ class GraphicalProgressBar(ProgressIndicator, CenteredTextRenderer):
         bar_coords = Rect(
             outline_coords.left + self.padding,
             outline_coords.top + self.padding,
-            outline_coords.left + self.padding + bar_width,
+            outline_coords.left + self.padding + int(bar_width),
             outline_coords.bottom - self.padding
         )
 
