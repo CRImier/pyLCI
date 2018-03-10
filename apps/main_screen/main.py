@@ -60,11 +60,11 @@ class MainScreen(Menu):
         pass
 
     def draw_battery_icon(self, c):
-        c.rectangle((c.width-20, 0, c.width-2, 7), fill=None, outline="white")
-        c.rectangle((c.width-16, 0, c.width-2, 7), fill="white")
-        c.rectangle((c.width-22, 1, c.width-20, 6), fill="white", outline="white")
+        c.rectangle(("-20", 0, "-2", 7), fill=None)
+        c.rectangle(("-16", 0, "-2", 7), fill="white")
+        c.rectangle(("-22", 1, "-20", 6), fill="white")
         if is_charging():
-            c.text((c.width-15, -2), "Ch", font=self.default_font, fill="black")
+            c.text("Ch", ("-15", -2), font=self.default_font)
 
     def draw_network_icon(self, c):
         c.line((3, 1, 3, 6), fill="white")
@@ -82,10 +82,10 @@ class MainScreen(Menu):
         ddmmyy = now.strftime("%d%m%y")
         c = Canvas(self.o)
         #c.line((0, 8, c.width, 8), fill="white")
-        c.text((5, 8), hhmm, font=self.clock_font, fill="white")
-        c.text((87, 23), ss, font=self.default_font, fill="white")
-        c.text((90, 12), ddmmyy, font=self.default_font, fill="white")
-        c.text((10, 39), "0 notifications", font=self.default_font, fill="white")
+        c.text(hhmm, (5, 8), font=self.clock_font)
+        c.text(ss, (87, 23), font=self.default_font)
+        c.text(ddmmyy, (90, 12), font=self.default_font)
+        c.text("0 notifications", (10, 39), font=self.default_font)
         self.draw_battery_icon(c)
         self.draw_network_icon(c)
         image = c.get_image()
