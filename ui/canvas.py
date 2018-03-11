@@ -176,13 +176,19 @@ class Canvas(object):
         """
         self.o.display_image(self.image)
 
-    def clear(self, coords):
+    def clear(self, coords=None, fill=None):
         # type: tuple -> None
         """
-        Fill an area of the image with default background color.
+        Fill an area of the image with default background color. If coordinates are
+        not supplied, fills the whole canvas, effectively clearing it. Uses the
+        background color by default.
         """
+        if coords is None:
+            coords = (0, 0, self.width, self.height)
+        if fill is None:
+            fill = self.background_color
         coords = self.check_coordinates(coords)
-        self.rectangle(coords, fill=self.background_color)  # paint the background black first
+        self.rectangle(coords, fill=fill)  # paint the background black first
 
     def check_coordinates(self, coords):
         # type: tuple -> tuple
