@@ -86,7 +86,7 @@ class Canvas(object):
     def point(self, coord_pairs, **kwargs):
         """
         Draw a point, or multiple points on the canvas. Coordinates are expected in
-        ``((x1, y1), (x2, y2), ...)`` format, where ``x*``&``y*`` are coordinates
+        ``((x1, y1), (x2, y2), ...)`` format, where ``x*`` & ``y*`` are coordinates
         of each point you want to draw.
         """
         if not all([issequence(c) for c in coord_pairs]):
@@ -105,8 +105,8 @@ class Canvas(object):
     def line(self, coords, **kwargs):
         """
         Draw a line on the canvas. Coordinates are expected in
-        ``(x1, y1, x2, y2)`` format, where ``x1``&``y1`` are coordinates
-        of the start, and ``x2``&``y2`` are coordinates of the end.
+        ``(x1, y1, x2, y2)`` format, where ``x1`` & ``y1`` are coordinates
+        of the start, and ``x2`` & ``y2`` are coordinates of the end.
         """
         fill = kwargs.pop("fill", self.default_color)
         coords = self.check_coordinates(coords)
@@ -115,7 +115,7 @@ class Canvas(object):
     def text(self, text, coords, **kwargs):
         """
         Draw text on the canvas. Coordinates are expected in (x, y)
-        format, where ``x``&``y`` are coordinates of the top left corner.
+        format, where ``x`` & ``y`` are coordinates of the top left corner.
 
         You can pass a ``font`` keyword argument to it - it accepts either a
         ``PIL.ImageFont`` object or a tuple of ``(path, size)``, which are
@@ -139,8 +139,8 @@ class Canvas(object):
     def rectangle(self, coords, **kwargs):
         """
         Draw a rectangle on the canvas. Coordinates are expected in
-        ``(x1, y1, x2, y2)`` format, where ``x1``&``y1`` are coordinates
-        of the top left corner, and ``x2``&``y2`` are coordinates
+        ``(x1, y1, x2, y2)`` format, where ``x1`` & ``y1`` are coordinates
+        of the top left corner, and ``x2`` & ``y2`` are coordinates
         of the bottom right corner.
         """
         coords = self.check_coordinates(coords)
