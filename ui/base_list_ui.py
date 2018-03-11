@@ -6,8 +6,6 @@ from copy import copy
 from threading import Event
 from time import sleep
 
-from PIL import ImageFont
-
 from canvas import Canvas
 from helpers import setup_logger
 from utils import to_be_foreground, clamp_list_index
@@ -593,7 +591,7 @@ class SixteenPtView(EightPtView):
             c.rectangle((1, y1, 2, y2))
         #Drawing the text itself
         #http://pillow.readthedocs.io/en/3.1.x/reference/ImageFont.html
-        font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 16)
+        font = c.load_font("Fixedsys62.ttf", 16)
         for i, line in enumerate(menu_text):
             y = (i * self.charheight - 1) if i != 0 else 0
             c.text(line, (left_offset, y), font=font)
@@ -626,10 +624,10 @@ class MainMenuTripletView(SixteenPtView):
         # This view doesn't have a cursor, instead, the entry that's currently active is in the display center
         c = Canvas(self.o)
         central_position = (10, 16)
-        font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 32)
+        font = c.load_font("Fixedsys62.ttf", 32)
         current_entry = self.el.contents[self.el.pointer]
         c.text(current_entry[0], central_position, font=font)
-        font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 16)
+        font = c.load_font("Fixedsys62.ttf", 16)
         if self.el.pointer != 0:
             line = self.el.contents[self.el.pointer - 1][0]
             c.text(line, (2, 0), font=font)

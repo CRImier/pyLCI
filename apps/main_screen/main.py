@@ -52,8 +52,6 @@ class MainScreen(Menu):
 
     def validate_contents(self, contents):
         self.p = Profile()
-        self.clock_font = ImageFont.truetype("ui/fonts/Fixedsys62.ttf", 32)
-        pass
 
     def process_contents(self):
         pass
@@ -80,7 +78,7 @@ class MainScreen(Menu):
         ddmmyy = now.strftime("%d%m%y")
         c = Canvas(self.o)
         #c.line((0, 8, c.width, 8), fill="white")
-        c.text(hhmm, (5, 8), font=self.clock_font)
+        c.text(hhmm, (5, 8), font=("Fixedsys62.ttf", 32))
         c.text(ss, (87, 23))
         c.text(ddmmyy, (90, 12))
         c.text("0 notifications", (10, 39))
@@ -88,5 +86,3 @@ class MainScreen(Menu):
         self.draw_network_icon(c)
         image = c.get_image()
         self.p.runcall( self.o.display_image, image )
-        
-        

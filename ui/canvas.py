@@ -1,8 +1,12 @@
+import os
+
 from PIL import Image, ImageDraw, ImageOps, ImageFont
 
 from ui.utils import is_sequence_not_string as issequence
 
+fonts_dir = "ui/fonts/"
 default_font = ImageFont.load_default()
+font_cache = {}
 
 from helpers import setup_logger
 logger = setup_logger(__name__, "warning")
@@ -44,14 +48,41 @@ class Canvas(object):
             self.image = Image.new(o.device_mode, self.size)
         self.draw = ImageDraw.Draw(self.image)
 
-    def load_font(self, path, size, type="truetype"):
+    def load_font(self, path, size, alias=None, type="truetype"):
         """
         Loads a font by its path for the given size, then returns it.
+        Also, stores the font in the ``canvas.py`` ``font_cache``
+        dictionary, so that it doesn't have to be re-loaded later on.
+
+        Supports both absolute paths, paths relative to root ZPUI
+        directory and paths to fonts in the ZPUI font directory
+        (``ui/fonts`` by default).
         """
-        if type == "truetype":
-            return ImageFont.truetype(path, size)
+        # For fonts in the font directory, can use the filename as a shorthand
+        if path in os.listdir(fonts_dir):
+            logger.debug("Loading font from the font storage directory")
+            path = os.path.join(fonts_dir, path)
+        # If an alias was not specified, using font filename as the alias (for caching)
+        if alias is None:
+            alias = os.path.basename(path)
+        # Adding size to the alias and using it for caching
+        font_name = "{}:{}".format(alias, size)
+        logger.debug("Font alias: {}".format(font_name))
+        # Font already loaded, returning the instance we have
+        if font_name in font_cache:
+            logger.debug("Font {} already loaded, returning".format(font_name))
+            return font_cache[font_name]
+        # We don't have it cached - let's see the type requested
+        # We only support loading TrueType fonts, though
+        elif type == "truetype":
+            logger.debug("Loading a TT font from {}".format(font_name))
+            font = ImageFont.truetype(path, size)
         else:
-            return ValueError("Font type not yet supported: {}".format(type))
+            raise ValueError("Font type not yet supported: {}".format(type))
+        # We loaded a font, now let's cache it and return
+        logger.debug("Caching and returning")
+        font_cache[font_name] = font
+        return font
 
     def point(self, coord_pairs, **kwargs):
         """
@@ -82,12 +113,22 @@ class Canvas(object):
         Draw text on the canvas. Coordinates are expected in (x, y)
         format, where ``x``&``y`` are coordinates of the top left corner.
 
+        You can pass a ``font`` keyword argument to it - it accepts either a
+        ``PIL.ImageFont`` object or a tuple of ``(path, size)``, which are
+        then supplied to ``Canvas.load_font()``.
+
         Do notice that order of first two arguments is reversed compared
         to the corresponding ``PIL.ImageDraw`` method.
         """
         assert(isinstance(text, basestring))
         fill = kwargs.pop("fill", self.default_color)
         font = kwargs.pop("font", self.default_font)
+        if font in font_cache:
+            # Got a font alias
+            font = font_cache[font]
+        elif isinstance(font, tuple):
+            # Got a font path with the size parameter
+            font = self.load_font(*font)
         coords = self.check_coordinates(coords)
         self.draw.text(coords, text, fill=fill, font=font, **kwargs)
 

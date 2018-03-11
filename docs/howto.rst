@@ -41,6 +41,68 @@ In ``app/main.py``:
      
 ------------
 
+Draw on the screen
+==================
+
+Display an image
+----------------
+
+You can easily draw an image on the screen with ZPUI. The easiest way is
+by using the ``GraphicsPrinter`` UI element, which accepts either a path
+to an image you want to display, or a ``PIL.Image`` instance:
+
+.. code-block:: python
+
+    from ui import GraphicsPrinter
+    ...
+    # Will display the ZPUI splash image for 1 second
+    # By default, it's inverted
+    GraphicsPrinter("splash.png", i, o, 1)
+    # Same, but the image is not inverted
+    GraphicsPrinter("splash.png", i, o, 1, invert=False)
+    # Display an image from the app folder - using the local_path helper
+    GraphicsPrinter(local_path("image.png"), i, o, 1)
+    # Display an image you drew on a Canvas
+    GraphicsPrinter(c.get_image(), i, o, 1)
+
+Draw things on the screen - basics
+----------------------------------
+
+Uou can use the Canvas objects to draw on the screen.
+
+.. code-block:: python
+
+    from ui import Canvas
+    ...
+    c = Canvas(o) # Create a canvas
+    c.point((1, 2)) # Draw a point at x=1, y=2
+    c.point( ( (2, 1), (2, 3), (3, 4) ) ) # Draw some more points
+    ... # Draw other stuff here
+    c.display() # Display the canvas on the screen
+
+Draw text on the screen
+-----------------------
+
+You can draw text on the screen, and you can use different fonts. By default, a 8pt font
+is used:
+
+.. code-block:: python
+
+    c = Canvas(o)
+    c.text("Hello world", (0, 0)) # Draws "Hello world", starting from the top left corner
+    c.display()
+
+You can also use a non-default font - for example, the Fixedsys62 font in
+the ZPUI font storage:
+
+.. code-block:: python
+
+    c.text("Hello world", (0, 0), font=("Fixedsys62.ttf", 16)) # Same, but in a 16pt Fixedsys62 font
+    c.text("Hello world", (0, 0), font=(local_path("my_font.ttf"), 16) ) # Using a custom font from your app directory
+
+Make your app easier to support
+===============================
+
 Add logging to your app
 -----------------------
 
