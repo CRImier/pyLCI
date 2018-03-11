@@ -90,12 +90,17 @@ class Canvas(object):
         ``((x1, y1), (x2, y2), ...)`` format, where ``x*``&``y*`` are coordinates
         of each point you want to draw.
         """
-        fill = kwargs.pop("fill", self.default_color)
-        assert all([issequence(c) for c in coord_pairs]), "Expecting a tuple of tuples!"
+        if not all([issequence(c) for c in coord_pairs]):
+            # Didn't get pairs of coordinates - converting into pairs
+            # But first, sanity checks
+            assert (len(coord_pairs) % 2 == 0), "Odd number of coordinates supplied! ({})".format(coord_pairs)
+            assert all([isinstance(c, int) or isinstance(c, basestring) for i in coord_pairs]), "Coordinates are non-uniform! ({})".format(coord_pairs)
+            coord_pairs = convert_flat_list_into_pairs(coord_pairs)
         coord_pairs = list(coord_pairs)
         for i, coord_pair in enumerate(coord_pairs):
             coord_pairs[i] = self.check_coordinates(coord_pair)
         coord_pairs = tuple(coord_pairs)
+        fill = kwargs.pop("fill", self.default_color)
         self.draw.point(coord_pairs, fill=fill, **kwargs)
 
     def line(self, coords, **kwargs):
@@ -245,3 +250,10 @@ class Canvas(object):
         if hasattr(self.draw, name):
             return getattr(self.draw, name)
         raise AttributeError
+
+
+def convert_flat_list_into_pairs(l):
+    pl = []
+    for i in range(len(l)/2):
+        pl.append((l[i*2], l[i*2+1]))
+    return l
