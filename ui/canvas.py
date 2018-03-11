@@ -16,6 +16,12 @@ class Canvas(object):
     This object allows you to work with graphics on the display quicker and easier.
     You can draw text, graphical primitives, insert bitmaps and do other things
     that the ``PIL`` library allows, with a bunch of useful helper functions.
+
+    Args:
+
+        * ``o``: output device
+        * ``base_image``: a `PIL.Image` to use as a base, if needed
+        * ``name``: a name, for internal usage
     """
 
     height = 0 #: height of canvas in pixels.
@@ -27,13 +33,6 @@ class Canvas(object):
     default_font = default_font #: default font, referenced here to avoid loading it every time
 
     def __init__(self, o, base_image=None, name=""):
-        """
-        Args:
-
-            * ``o``: output device
-            * ``base_image``: an image to use as a base
-            * ``name``: a name, for internal usage
-        """
         self.o = o
         if "b&w-pixel" not in o.type:
             raise ValueError("The output device supplied doesn't support pixel graphics!")
