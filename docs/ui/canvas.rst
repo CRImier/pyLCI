@@ -9,7 +9,7 @@ Canvas
     from ui import Canvas
     ...
     c = Canvas(o)
-    c.text((0, 0), "Text you want to draw", fill="white")
+    c.text("Hello world", (10, 20))
     c.display()
 
 .. automodule:: ui.canvas
