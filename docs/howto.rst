@@ -260,12 +260,13 @@ to use ZPUI until your app has finished loading (pretty egoistic, if you think a
 Control flow and user-friendliness
 ==================================
 
-Allow exiting a loop using KEY_LEFT
+Allow exiting a loop on a keypress
 -----------------------------------
 
 Say, you have a loop that doesn't have an UI element in it - you're just doing something
-repeatedly. You'll want to allow the user to exit that loop, and the reasonable way is to
-interrupt the loop when the user presses KEY_LEFT. Here's how to allow that:
+repeatedly. You'll want to let the user exit that loop, and the reasonable way is to
+interrupt the loop when the user presses a key (by default, ``KEY_LEFT``).
+Here's how to allow that:
 
 .. code-block:: python
 
