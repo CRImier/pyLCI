@@ -11,24 +11,35 @@ class ExitHelper():
     Arguments:
 
         * ``i``: input device
-        * ``keys``: all the keys that should trigger an exit"""
+        * ``keys``: all the keys that should trigger an exit
+        * ``cb``: the callback that should be executed once one of the keys is pressed. By default, sets an internal flag that you can check with ``do_exit`` and ``do_run``."""
 
     started = False
+    callback = None
 
-    def __init__(self, i, keys=["KEY_LEFT"]):
+    def __init__(self, i, keys=["KEY_LEFT"], cb=None):
         self.i = i
         self.keys = keys
         self._do_exit = Event()
+        self.set_callback(cb)
 
     def start(self):
         """Clears input device keymap, registers callbacks and enables input listener."""
         self.i.stop_listen()
         self.i.clear_keymap()
-        keymap = {key:self.signal_exit for key in self.keys}
+        keymap = {key:self.callback for key in self.keys}
         self.i.set_keymap(keymap)
         self.i.listen()
         self.started = True
         return self #Allows shortened usage, like eh = ExitHelper(i).start()
+
+    def set_callback(self, callback=None):
+        if callback is None:
+            self.callback = self.signal_exit
+        elif not callable(callback):
+            raise ArgumentError("set_callback expected a callable, received {}!".format(type(callback)))
+        else:
+            self.callback = callback
 
     def do_exit(self):
         """Returns ``True`` once exit flag has been set, ``False`` otherwise."""
