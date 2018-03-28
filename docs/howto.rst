@@ -274,3 +274,20 @@ interrupt the loop when the user presses KEY_LEFT. Here's how to allow that:
     eh = ExitHelper(i).start()
     while eh.do_run():
         ... #do something repeatedly until the user presses KEY_LEFT
+
+Stopping a foreground task on a keypress
+----------------------------------------
+
+If you have some kind of task that's running in foreground (say, a HTTP server), you will
+want to let the user exit the UI, at least - maybe even stop the task. If a task can be
+stopped from another thread, you can use ``ExitHelper``, too - it can call a custom function
+that would signal the task to stop.
+
+.. code-block:: python
+
+    from helpers import ExitHelper
+    ...
+    task = ... # Can be run in foreground with ``task.run()``
+    # Can also be stopped from another thread with ``task.stop()``
+    eh = ExitHelper(i, cb=task.stop).start()
+    task.run() # Will run until the task is not stopped
