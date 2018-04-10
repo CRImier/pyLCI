@@ -65,3 +65,5 @@ config.json
 # (only user-removed ones)
 do_not_load
 log_conf.ini
+# Ignoring the default screenshot folder
+screenshots/
