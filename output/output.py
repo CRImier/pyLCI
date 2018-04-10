@@ -10,6 +10,10 @@ class OutputDevice(object):
 
     current_proxy = None
 
+    def attach_new_proxy(self, proxy):
+        self.detach_current_proxy()
+        self.attach_proxy(proxy)
+
     def detach_current_proxy(self):
         self.current_proxy = None
 
