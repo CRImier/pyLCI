@@ -11,6 +11,8 @@ i = None; o = None
 context = None
 zeromenu = None
 
+screenshot_folder = "screenshots"
+
 dcdc = USB_DCDC()
 
 def take_screenshot():
@@ -18,7 +20,7 @@ def take_screenshot():
     if image != None:
         timestamp = datetime.now().strftime("%y%m%d-%H%M%S")
         filename = "screenshot_{}.png".format(timestamp)
-        path = os.path.join("screenshots/", filename)
+        path = os.path.join(screenshot_folder, filename)
         image.save(path, "PNG")
         PrettyPrinter("Screenshot saved to {}".format(path), i, o)
 
@@ -44,5 +46,7 @@ def init_app(input, output):
                      ["USB on", usb_on],
                      ["USB off", usb_off],
                      ["Take screenshot", take_screenshot] ]
+    if screenshot_folder not in os.listdir("."):
+        os.mkdir(screenshot_folder)
     zeromenu = Menu(menu_contents, i, o, name="ZeroMenu main menu")
 
