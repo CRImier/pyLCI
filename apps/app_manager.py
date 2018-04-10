@@ -92,7 +92,7 @@ class AppManager(object):
         else:
             logger.debug("App \"{}\" has no callback; loading silently".format(menu_name))
             return
-        self.cm.register_thread_target(app_callback, app_path)
+        self.cm.register_context_target(app_path, app_callback)
         menu_callback = lambda: self.cm.switch_to_context(app_path)
         #App callback is available and wrapped, inserting
         subdir_menu = self.subdir_menus[subdir_path]
@@ -117,16 +117,37 @@ class AppManager(object):
         # If user runs in single-app mode and by accident
         # autocompletes the app name too far, it shouldn't fail
         app = importlib.import_module(app_import_path + '.main', package='apps')
+        context = self.cm.create_context(app_path)
+        i, o = self.cm.get_io_for_context(app_path)
         if is_class_based_module(app):
-            zero_app_subclass = get_zeroapp_class_in_module(app)
-            app = zero_app_subclass(*self.cm.get_io_for_context(app_path))
+            app_class = get_zeroapp_class_in_module(app)
+            app = app_class(i, o)
         else:
-            app.init_app(*self.cm.get_io_for_context(app_path))
+            app.init_app(i, o)
+        self.pass_context_to_app(app, app_path, context)
         return app
 
+    def pass_context_to_app(self, app, app_path, context):
+        """
+        This is a function to pass context objects to apps. For now, it works
+        with both class-based and module-based apps. It only passes the context
+        if it detects that the app has the appropriate function to do that.
+        """
+        if hasattr(app, "set_context") and callable(app.set_context):
+            try:
+                app.set_context(context)
+            except Exception as e:
+                logger.exception("App {}: app class has 'set_context' but raised exception when passed a context".format(app_path))
+            else:
+                logger.info("Passed context to app {}".format(app_path))
+
     def get_subdir_menu_name(self, subdir_path):
-        """This function gets a subdirectory path and imports __init__.py from it. It then gets _menu_name attribute from __init__.py and returns it. 
-        If failed to either import __init__.py or get the _menu_name attribute, it returns the subdirectory name."""
+        """
+        This function gets a subdirectory path and imports __init__.py from it.
+        It then gets _menu_name attribute from __init__.py and returns it.
+        If failed to either import __init__.py or get the _menu_name attribute,
+        it returns the subdirectory name.
+        """
         subdir_import_path = subdir_path.replace('/', '.')
         try:
             subdir_object = importlib.import_module(subdir_import_path + '.__init__')

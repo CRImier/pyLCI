@@ -89,7 +89,7 @@ def init():
     if hasattr(screen, "set_backlight_callback"):
         screen.set_backlight_callback(input_processor)
     cm.init_io(input_processor, screen)
-    cm.switch_to_context("main", launch_thread=False)
+    cm.switch_to_context("main")
     i, o = cm.get_io_for_context("main")
 
     return i, o
@@ -127,12 +127,12 @@ def launch(name=None, **kwargs):
         # Load only single app
         try:
             app_path = app_man.get_app_path_for_cmdline(name)
-            app = app_man.load_app(app_path)
+            app = app_man.load_app(app_path, threaded=False)
         except:
             logging.exception('Failed to load the app: {0}'.format(name))
             input_processor.atexit()
             raise
-        cm.switch_to_context(app_path, launch_thread=False)
+        cm.switch_to_context(app_path)
         runner = app.on_start if hasattr(app, "on_start") else app.callback
 
     exception_wrapper(runner)
