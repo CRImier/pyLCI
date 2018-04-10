@@ -50,6 +50,13 @@ class InputProcessor():
         except:
             raise #Just collecting possible exceptions for now
 
+    def attach_new_proxy(self, proxy):
+        """
+        Calls ``detach_proxy``, then ``attach_proxy`` - just a convenience wrapper.
+        """
+        self.detach_current_proxy()
+        self.attach_proxy(proxy)
+
     def attach_proxy(self, proxy):
         """
         This method is to be called from the ContextManager. Saves a proxy
