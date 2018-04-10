@@ -150,6 +150,9 @@ class OutputProxy(CharacterOutputDevice, GraphicalOutputDevice):
     def _cursor(self):
         self.__cursor_enabled = True
 
+    def get_current_image(self):
+        return self.current_image
+
     def on_attach(self):
         if self.current_image:
             self.display_image(self.current_image)
