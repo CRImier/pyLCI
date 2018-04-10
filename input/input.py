@@ -151,6 +151,7 @@ class InputProcessor():
         #
         # First, querying global callbacks - they're more important than
         # even the current proxy nonmaskable callbacks
+        logger.debug("Received key: {}".format(key))
         if key in self.global_keymap:
             callback = self.global_keymap[key]
             self.handle_callback(callback, key, type="global")
@@ -186,6 +187,7 @@ class InputProcessor():
         elif callable(current_proxy.streaming):
             self.handle_callback(current_proxy.streaming, key, pass_key=True, type="streaming", context_name=current_proxy.context_alias)
         else:
+            logger.debug("Key {} has no handlers - ignored!".format(key))
             pass #No handler for the key
         
     def handle_callback(self, callback, key, pass_key=False, type="simple", context_name=None):
