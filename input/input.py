@@ -264,23 +264,27 @@ class InputProxy():
         self.context_alias = context_alias
 
     def set_streaming(self, callback):
-        """Sets a callback for streaming key events. This callback will be called
+        """
+        Sets a callback for streaming key events. This callback will be called
         each time a key is pressed that doesn't belong to one of the three keymaps.
 
         The callback will be called  with key_name as first argument but should
         support arbitrary number of keyword arguments if compatibility with
-        future versions is desired. (basically, add **kwargs to it).
+        future versions is desired. (basically, add ``**kwargs`` to it).
 
         If a callback was set before, replaces it. The callbacks set will not be
         restored after being replaced by other callbacks. Care must be taken to
         make sure that the callback is only executed when the app or UI element
-        that set it is active."""
+        that set it is active.
+        """
         self.streaming = callback
 
     def remove_streaming(self):
-        """Removes a callback for streaming key events, if previously set by any
+        """
+        Removes a callback for streaming key events, if previously set by any
         app/UI element. This is more of a convenience function, to avoid your
-        callback being called when your app or UI element is not active."""
+        callback being called when your app or UI element is not active.
+        """
         self.streaming = None
 
     def set_callback(self, key_name, callback):
