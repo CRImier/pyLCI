@@ -295,3 +295,72 @@ that would signal the task to stop.
     # Can also be stopped from another thread with ``task.stop()``
     eh = ExitHelper(i, cb=task.stop).start()
     task.run() # Will run until the task is not stopped
+
+Context management
+==================
+
+Contexts are the core of ZPUI multitasking. They allow you to switch between apps
+dynamically, have notifications, global hotkeys and menus that appear on a button press.
+
+Get the context object
+----------------------
+
+In order to interact with your app's context object, you first need to get it. If your
+app is a simple one (function-based), you need to add a ``set_context()`` method that
+needs to accept a context object as its first argument. This function will be called
+after ``init_app`` is called. In case of a class-based app, you need to have a
+``set_context()`` method in the app's class. Once you get the context object, you
+can do whatever you want with it and, optionally, save it internally. Here's an example
+for the function-based apps:
+
+.. code-block:: python
+
+    def set_context(received_context):
+        global context
+        context = received_context
+        # Do things with the context
+
+Here's an example for the class-based apps:
+
+.. code-block:: python
+
+    def set_context(self, received_context):
+        self.context = received_context
+        # Do things with the context
+
+Check and request focus for your app
+------------------------------------
+
+User can switch from your app at any time, leaving it in the background. You won't receive
+any key input in the meantime - the screen interactions will work as intended regardless 
+of whether your app is the one active, but the actual screen won't be updated with your 
+images until the user switches back to your app. Here's how to check whether your app
+is the one active, and request the context manager to switch to your app:
+
+.. code-block:: python
+
+    if not context.is_active():
+        has_switched = context.request.switch()
+        if has_switched:
+            ... # Request to switch has been granted, your app is now the one active
+
+.. warning:: Don't overuse this capability - only use it when it's absolutely necessary.
+             The user will be annoyed. Also, keep in mind that your request might be denied.
+
+Set a global key callback for your app
+--------------------------------------
+
+You can define a hotkey for your app to request focus - or do something else. This way,
+you can have a function from your app be called when a certain key is pressed from any
+place in the interface.
+
+.. code-block:: python
+
+    # Call a function from your app without switching to it
+    context.request_global_keymap({"KEY_F6":function_you_want_to_call})
+    # Request switch to your app
+    context.request_global_keymap({"KEY_F6":self.context.request_switch})
+
+The ``request_global_keymap`` call returns a dictionary with a keyname as a key for each
+requested callback, with ``True`` as the value if the key was set or, if an exception was
+raised while setting the , an exception object.
