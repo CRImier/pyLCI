@@ -204,7 +204,7 @@ with other apps.
         init_hardware() #Your task - short enough to run while app is being loaded
 
 .. warning:: If there's a chance that the task will take a long time, use one
-             of the following methods instead
+             of the following methods instead.
 
 ------------
 
