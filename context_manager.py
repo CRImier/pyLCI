@@ -64,9 +64,12 @@ class Context(object):
         an exception if it detects that a supposedly non-threaded context has the ``threaded``
         flag set.
         """
-        if self.is_threaded() and not self.thread_is_active():
-            self.verify_target()
-            self.start_thread()
+        if self.is_threaded():
+            if not self.thread_is_active():
+                self.verify_target()
+                self.start_thread()
+            else:
+                logger.debug("A thread for the {} context seems to already be active, not doing anything".format(self.name))
         else:
             if self.name == "main":
                 logger.debug("Main context does not have thread target, that is to be expected")
