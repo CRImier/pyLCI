@@ -2,7 +2,7 @@ import os
 
 from PIL import Image, ImageDraw, ImageOps, ImageFont
 
-from ui.utils import is_sequence_not_string as issequence
+from ui.utils import is_sequence_not_string as issequence, Rect
 
 fonts_dir = "ui/fonts/"
 default_font = ImageFont.load_default()
@@ -230,6 +230,27 @@ class Canvas(object):
             return coords
         else:
             raise ValueError("Invalid number of coordinates!")
+
+    def draw_centered_text(self, content):
+        # type: str -> None
+        """
+        Draws centered text on the canvas. This is mostly a convenience function,
+        used in some UI elements.
+        """
+        coords = self.get_centered_text_bounds(text)
+        self.text(text, (coords.left, coords.top))
+
+    def get_centered_text_bounds(self, content):
+        # type: str -> Rect
+        """
+        Returns the coordinates for the text to be centered on the screen.
+        The coordinates come wrapped in a ``Rect`` object.
+        """
+        w, h = self.draw.textsize(content)
+        tcw = w / 2
+        tch = h / 2
+        cw, ch = self.get_center()
+        return Rect(cw - tcw, ch - tch, cw + tcw, ch + tch)
 
     def invert_rect_colors(self, coords):
         # type: tuple -> tuple

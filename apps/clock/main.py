@@ -5,13 +5,12 @@ from datetime import datetime, timedelta
 
 from apps import ZeroApp
 from ui import Menu, Refresher, Canvas, IntegerAdjustInput
-from ui.loading_indicators import CenteredTextRenderer
 
 from helpers import read_or_create_config, local_path_gen
 
 local_path = local_path_gen(__name__)
 
-class ClockApp(ZeroApp, Refresher, CenteredTextRenderer):
+class ClockApp(ZeroApp, Refresher):
 
     def __init__(self, i, o, *args, **kwargs):
         super(ClockApp, self).__init__(i, o)
@@ -87,7 +86,7 @@ class ClockApp(ZeroApp, Refresher, CenteredTextRenderer):
         if h: string = hz+":"+string
         if sign: string = sign+string
         center_x, center_y = c.get_center()
-        centered_coords = self.get_centered_text_bounds(c, string)
+        centered_coords = c.get_centered_text_bounds(string)
         x = eval(countdown_x)
         y = eval(countdown_y)
         c.text((x, y), string, fill="white")
@@ -96,7 +95,7 @@ class ClockApp(ZeroApp, Refresher, CenteredTextRenderer):
         """Draws the digital clock, with parameters configurable through config.json."""
         time_str = time.strftime(time_format)
         center_x, center_y = c.get_center()
-        centered_coords = self.get_centered_text_bounds(c, time_str)
+        centered_coords = c.get_centered_text_bounds(time_str)
         x = eval(text_x)
         y = eval(text_y)
         c.text(time_str, (x, y))

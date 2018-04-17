@@ -19,28 +19,6 @@ There are two types of loading indicator elements:
 These classes are based on `Refresher`.
 """
 
-# ========================= helpers =========================
-
-
-class CenteredTextRenderer(object):
-    # TODO: refactor into ui.Canvas methods
-    def draw_centered_text(self, c, content):
-        """Draws a centered text on the canvas and returns a 4-tuple of the coordinates taken by the text"""
-        # type: (Canvas, str) -> None
-        coords = self.get_centered_text_bounds(c, content)
-        c.text(content, (coords.left, coords.top), fill=True)
-
-    @staticmethod
-    def get_centered_text_bounds(c, content):
-        """Returns the coordinates of the centered text (min_x, min_y, max_x, max_y)"""
-        # type: (Canvas, str) -> Rect
-        w, h = c.textsize(content)
-        tcw = w / 2
-        tch = h / 2
-        cw, ch = c.get_center()
-        return Rect(cw - tcw, ch - tch, cw + tcw, ch + tch)
-
-
 # ========================= abstract classes =========================
 
 
@@ -91,7 +69,7 @@ class ProgressIndicator(BaseLoadingIndicator):
 
 # ========================= concrete classes =========================
 
-class Throbber(BaseLoadingIndicator, CenteredTextRenderer):
+class Throbber(BaseLoadingIndicator):
     """A throbber is a circular BaseLoadingIndicator, similar to those used on websites
     or in smartphones. Suitable for graphical displays and looks great on them!"""
 
@@ -121,7 +99,7 @@ class Throbber(BaseLoadingIndicator, CenteredTextRenderer):
 
     def draw_message(self, c):
         # type: (Canvas) -> None
-        bounds = self.get_centered_text_bounds(c, self.message)
+        bounds = c.get_centered_text_bounds(self.message)
         # Drawn top-centered
         c.text(self.message, (bounds.left, 0), fill=True)
 
@@ -163,7 +141,7 @@ class IdleDottedMessage(BaseLoadingIndicator):
         return self.message + '.' * self.dot_count
 
 
-class CircularProgressBar(ProgressIndicator, CenteredTextRenderer):
+class CircularProgressBar(ProgressIndicator):
     """CircularProgressBar is half Throbber, half ProgressBar.
     Makes your app look all sci-fi!
 
@@ -181,7 +159,7 @@ class CircularProgressBar(ProgressIndicator, CenteredTextRenderer):
         center_coordinates = (x / 2 - radius, y / 2 - radius, x / 2 + radius, y / 2 + radius)
         c.arc(center_coordinates, start=0, end=360 * self.progress, fill=True)
         if self.show_percentage:
-            self.draw_centered_text(c, "{:.0%}".format(self.progress))
+            c.draw_centered_text("{:.0%}".format(self.progress))
 
         self.o.display_image(c.get_image())
 
@@ -240,7 +218,7 @@ class TextProgressBar(ProgressIndicator):
         return [self.message.center(self.o.cols), bar]
 
 
-class GraphicalProgressBar(ProgressIndicator, CenteredTextRenderer):
+class GraphicalProgressBar(ProgressIndicator):
     """ A horizontal progress bar for graphical displays, showing a message to the user.
     Allows to adjust padding and margin for a little bit of customization,
     as well as to show or hide the progress percentage."""
@@ -257,7 +235,7 @@ class GraphicalProgressBar(ProgressIndicator, CenteredTextRenderer):
         bar_top = self.o.width / 2
         if self.show_percentage:
             percentage_text = "{:.0%}".format(self.progress)
-            coords = self.get_centered_text_bounds(c, percentage_text)
+            coords = c.get_centered_text_bounds(percentage_text)
             c.text(percentage_text, (coords.left, self.margin), fill=True)  # Drawn top-centered (with margin)
             bar_top = self.margin + (coords.bottom - coords.top)
 
