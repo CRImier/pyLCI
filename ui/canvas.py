@@ -112,7 +112,7 @@ class Canvas(object):
             # Didn't get pairs of coordinates - converting into pairs
             # But first, sanity checks
             assert (len(coord_pairs) % 2 == 0), "Odd number of coordinates supplied! ({})".format(coord_pairs)
-            assert all([isinstance(c, int) or isinstance(c, basestring) for i in coord_pairs]), "Coordinates are non-uniform! ({})".format(coord_pairs)
+            assert all([isinstance(c, (int, basestring)) for i in coord_pairs]), "Coordinates are non-uniform! ({})".format(coord_pairs)
             coord_pairs = convert_flat_list_into_pairs(coord_pairs)
         coord_pairs = list(coord_pairs)
         for i, coord_pair in enumerate(coord_pairs):
