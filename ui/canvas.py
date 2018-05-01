@@ -83,6 +83,25 @@ class Canvas(object):
         font_cache[font_name] = font
         return font
 
+    def decypher_font_reference(self, reference):
+        """
+        Is designed to detect the various ways that a ``font`` argument
+        can be passed into a function, then return an ``ImageFont`` instance.
+        """
+        if reference is None:
+            return self.default_font
+        if reference in font_cache:
+            # Got a font alias
+            font = font_cache[reference]
+        elif isinstance(reference, (tuple, list)):
+            # Got a font path with the size parameter
+            font = self.load_font(*reference)
+        elif isinstance(reference, (ImageFont.ImageFont, ImageFont.FreeTypeFont)):
+            font = reference
+        else:
+            return ValueError("Unknown font reference/object, type: {}".format(type(reference)))
+        return font
+
     def point(self, coord_pairs, **kwargs):
         """
         Draw a point, or multiple points on the canvas. Coordinates are expected in
@@ -127,12 +146,7 @@ class Canvas(object):
         assert(isinstance(text, basestring))
         fill = kwargs.pop("fill", self.default_color)
         font = kwargs.pop("font", self.default_font)
-        if font in font_cache:
-            # Got a font alias
-            font = font_cache[font]
-        elif isinstance(font, tuple):
-            # Got a font path with the size parameter
-            font = self.load_font(*font)
+        font = self.decypher_font_reference(font)
         coords = self.check_coordinates(coords)
         self.draw.text(coords, text, fill=fill, font=font, **kwargs)
 
@@ -231,22 +245,25 @@ class Canvas(object):
         else:
             raise ValueError("Invalid number of coordinates!")
 
-    def draw_centered_text(self, content):
+    def draw_centered_text(self, text, font=None):
         # type: str -> None
         """
         Draws centered text on the canvas. This is mostly a convenience function,
         used in some UI elements.
         """
-        coords = self.get_centered_text_bounds(text)
-        self.text(text, (coords.left, coords.top))
+        font = self.decypher_font_reference(font)
+        coords = self.get_centered_text_bounds(text, font=font)
+        self.text(text, (coords.left, coords.top), font=font)
 
-    def get_centered_text_bounds(self, content):
+    def get_centered_text_bounds(self, text, font=None):
         # type: str -> Rect
         """
         Returns the coordinates for the text to be centered on the screen.
-        The coordinates come wrapped in a ``Rect`` object.
+        The coordinates come wrapped in a ``Rect`` object. If you use a
+        non-default font, pass it as ``font``.
         """
-        w, h = self.draw.textsize(content)
+        font = self.decypher_font_reference(font)
+        w, h = self.draw.textsize(text, font=font)
         tcw = w / 2
         tch = h / 2
         cw, ch = self.get_center()
