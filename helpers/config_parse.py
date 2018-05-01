@@ -14,11 +14,9 @@ def read_config(config_path):
         data = json.load(f)
     return data
 
-
 def write_config(config_dict, config_path):
     with open(config_path, 'w') as f:
         json.dump(config_dict, f)
-
 
 def read_or_create_config(config_path, default_config, app_name):
     # type: (str, str, str) -> dict
@@ -60,6 +58,14 @@ def read_or_create_config(config_path, default_config, app_name):
         config_dict = read_config(config_path)
     return config_dict
 
+def save_config_gen(path):
+    """
+    A helper function, generates a "save config" function with the
+    config path already set (to decrease verbosity)
+    """
+    def save_config(config):
+        write_config(config, path)
+    return save_config
 
 if __name__ == "__main__":
     config = read_config("../config.json")
