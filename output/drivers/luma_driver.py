@@ -12,14 +12,6 @@ from backlight import *
 
 from ..output import GraphicalOutputDevice, CharacterOutputDevice
 
-def delayMicroseconds(microseconds):
-    seconds = microseconds / float(1000000)  # divide microseconds by 1 million for seconds
-    sleep(seconds)
-
-def delay(milliseconds):
-    seconds = milliseconds / float(1000)  # divide microseconds by 1 million for seconds
-    sleep(seconds)
-
 
 class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager):
     """An object that provides high-level functions for interaction with display. It contains all the high-level logic and exposes an interface for system and applications to use."""
@@ -34,7 +26,7 @@ class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager)
     cursor_enabled = False
     cursor_pos = (0, 0) #x, y
 
-    def __init__(self, hw = "spi", port=None, address = 0, debug = False, buffering = True, **kwargs):
+    def __init__(self, hw = "spi", port=None, address = 0, buffering = True, **kwargs):
         if hw == "spi":
             if port is None: port = 0
             try:
@@ -56,7 +48,6 @@ class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager)
         self.char_height = 8
         self.cols = self.width / self.char_width
         self.rows = self.height / self.char_height
-        self.debug = debug
         self.init_display(**kwargs)
         BacklightManager.init_backlight(self, **kwargs)
 
