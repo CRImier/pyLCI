@@ -39,7 +39,10 @@ class ExitHelper():
         elif not callable(callback):
             raise ArgumentError("set_callback expected a callable, received {}!".format(type(callback)))
         else:
-            self.callback = callback
+            def wrapper():
+                self._do_exit.set()
+                callback()
+            self.callback = wrapper
 
     def do_exit(self):
         """Returns ``True`` once exit flag has been set, ``False`` otherwise."""
