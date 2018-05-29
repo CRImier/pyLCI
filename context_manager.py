@@ -110,8 +110,11 @@ class Context(object):
 
     def signal_finished(self):
         """
-        Signals to the ContextManager that the application has finished running.
+        Signals to the ContextManager that the application has finished running,
+        as well as clears the display (to avoid a bug from happening, where last
+        contents of the display are shortly shown on the next reactivation).
         """
+        self.o._clear()
         return self.event_cb(self.name, "finished")
 
     def signal_background(self):

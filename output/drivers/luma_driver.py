@@ -108,7 +108,9 @@ class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager)
 
     def clear(self):
         """Clears the display."""
-        pass
+        draw = canvas(self.device)
+        self.display_image(draw.image)
+        del draw
 
     def setCursor(self, row, col):
         """ Set current input cursor to ``row`` and ``column`` specified """

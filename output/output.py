@@ -138,6 +138,11 @@ class GraphicalOutputDevice(OutputDevice):
         """
         raise NotImplementedError
 
+    def clear(self):
+        """
+        Clears the display, so that there's nothing shown on it.
+        """
+        raise NotImplementedError
 
 class OutputProxy(CharacterOutputDevice, GraphicalOutputDevice):
 
@@ -150,6 +155,10 @@ class OutputProxy(CharacterOutputDevice, GraphicalOutputDevice):
 
     def _display_image(self, image):
         self.current_image = image
+
+    def _clear(self):
+        print("Clearing screen proxy")
+        self.current_image = None
 
     def _display_data(self, *data):
         cursor_position = self.__cursor_position if self.__cursor_enabled else None
