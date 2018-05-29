@@ -137,7 +137,7 @@ class Context(object):
     def get_previous_context_image(self):
         """
         Useful for making screenshots (mainly, for ZeroMenu). Might get deprecated in
-        the future.
+        the future, once a better way to do this is found.
         """
         return self.event_cb(self.name, "get_previous_context_image")
 
@@ -147,6 +147,8 @@ class Context(object):
         Returns a dictionary with results for each set key (with keys as dict. keys):
         if a callback for the key was set successfully, the value is True;
         otherwise, the value will be an exception raised in the process.
+
+        Might get deprecated in the future, once a better way to do this is found.
         """
         return self.event_cb(self.name, "request_global_keymap", keymap)
 
