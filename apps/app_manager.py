@@ -110,7 +110,7 @@ class AppManager(object):
             app_path = cmdline_app_path
         return app_path
 
-    def load_app(self, app_path):
+    def load_app(self, app_path, threaded = True):
         if "__init__.py" not in os.listdir(app_path):
             raise ImportError("Trying to import an app with no __init__.py in its folder!")
         app_import_path = app_path.replace('/', '.')
@@ -118,6 +118,7 @@ class AppManager(object):
         # autocompletes the app name too far, it shouldn't fail
         app = importlib.import_module(app_import_path + '.main', package='apps')
         context = self.cm.create_context(app_path)
+        context.threaded = threaded
         i, o = self.cm.get_io_for_context(app_path)
         if is_class_based_module(app):
             app_class = get_zeroapp_class_in_module(app)
