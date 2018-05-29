@@ -63,11 +63,11 @@ class ProgressIndicator(BaseLoadingIndicator):
 
     @property
     def progress(self):
-        return float(self._progress)
+        return self._progress
 
     @progress.setter
     def progress(self, value):
-        self._progress = clamp(value, 0, 1)
+        self._progress = clamp(value, 0, 100)
         self.refresh()
 
 
@@ -161,9 +161,9 @@ class CircularProgressBar(ProgressIndicator):
         x, y = c.size
         radius = min(x, y) / 4
         center_coordinates = (x / 2 - radius, y / 2 - radius, x / 2 + radius, y / 2 + radius)
-        c.arc(center_coordinates, start=0, end=360 * self.progress, fill=True)
+        c.arc(center_coordinates, start=0, end=360 * (self.progress / 100.0), fill=True)
         if self.show_percentage:
-            c.draw_centered_text("{:.0%}".format(self.progress))
+            c.draw_centered_text(str(self.progress)+"%")
 
         self.o.display_image(c.get_image())
 
@@ -184,28 +184,25 @@ class TextProgressBar(ProgressIndicator):
         self.show_percentage = kwargs.pop("show_percentage", False)
         self.percentage_offset = kwargs.pop("percentage_offset", 4)
         BaseLoadingIndicator.__init__(self, i, o, *args, **kwargs)
-        self._progress = 0  # 0-1 range
+        self._progress = 0  # 0-100 range
 
     def set_message(self, new_message):
         self.message = new_message
         self.refresh()
 
     def get_progress_percentage(self):
-        return '{}%'.format(self.progress * 100)
-
-    def get_progress_percentage_string(self):
-        return '{}%'.format(int(self.progress * 100))
+        return '{}%'.format(self.progress)
 
     def get_bar_str(self, size):
         size -= len(self.border_chars)  # to let room for the border chars and/or percentage string
         bar_end = self.border_chars[1]
         if self.show_percentage:
-            percentage = self.get_progress_percentage_string()
+            percentage = self.get_progress_percentage()
             # Leaving room for the border chars and/or percentage string
             size -= self.percentage_offset if self.percentage_offset > 0 else len(percentage)
             bar_end += percentage.rjust(self.percentage_offset)
 
-        filled_col_count = int(size * self.progress)
+        filled_col_count = int(size * (self.progress / 100.0))
         unfilled_col_count = size - filled_col_count
         fill_str = self.fill_char * int(filled_col_count) + self.empty_char * int(unfilled_col_count)
 
@@ -240,7 +237,7 @@ class GraphicalProgressBar(ProgressIndicator):
     def refresh(self):
         c = Canvas(self.o)
         if self.show_percentage:
-            percentage_text = "{:.0%}".format(self.progress)
+            percentage_text = "{}%".format(self.progress)
             coords = c.get_centered_text_bounds(percentage_text)
             c.text(percentage_text, (coords.left, self.percentage_margin), fill=True)  # Drawn top-centered (with margin)
             bar_top_min = self.margin + (coords.bottom - coords.top)
@@ -268,7 +265,7 @@ class GraphicalProgressBar(ProgressIndicator):
         )
 
         bar_width = outline_coords.right - outline_coords.left - self.padding * 2
-        bar_width *= self.progress
+        bar_width *= (self.progress / 100.0)
 
         bar_coords = Rect(
             outline_coords.left + self.padding,
