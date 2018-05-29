@@ -73,6 +73,10 @@ class Refresher(object):
         logger.debug(self.name+" exited")
         return True
 
+    @property
+    def activated(self):
+        return self.in_background
+
     def pause(self):
         """
         Pauses the refresher, not allowing it to print anything on the screen
