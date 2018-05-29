@@ -89,9 +89,10 @@ class Refresher(object):
         Resumes the refresher after it's been paused, allowing it to continue
         printing things on the screen. Refreshes the screen when it's called.
         """
-        self.in_foreground = True
-        self.activate_keymap()
-        self.refresh()
+        if not self.in_foreground:
+            self.in_foreground = True
+            self.activate_keymap()
+            self.refresh()
 
     def set_refresh_interval(self, new_interval):
         """Allows setting Refresher's refresh intervals after it's been initialized"""
