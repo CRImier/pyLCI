@@ -33,6 +33,10 @@ class BaseLoadingIndicator(Refresher):
     def on_refresh(self):
         pass
 
+    def set_message(self, new_message):
+        self.message = new_message
+        self.refresh()
+
     def run_in_background(self):
         if self.t is not None or self.in_foreground:
             raise Exception("BaseLoadingIndicator already running!")
@@ -224,24 +228,35 @@ class GraphicalProgressBar(ProgressIndicator):
     as well as to show or hide the progress percentage."""
 
     def __init__(self, i, o, *args, **kwargs):
+        self.message = kwargs.pop("message", "Loading")
         self.show_percentage = kwargs.pop("show_percentage", True)
-        self.margin = int(kwargs.pop("margin", 15))
+        self.margin = int(kwargs.pop("margin", 7))
+        self.text_margin = int(kwargs.pop("text_margin", 0))
+        self.percentage_margin = int(kwargs.pop("percentage_margin", 40))
         self.padding = int(kwargs.pop("padding", 2))
         self.bar_height = kwargs.pop("bar_height", 15)
         BaseLoadingIndicator.__init__(self, i, o, *args, **kwargs)
 
     def refresh(self):
         c = Canvas(self.o)
-        bar_top = self.o.width / 2
         if self.show_percentage:
             percentage_text = "{:.0%}".format(self.progress)
             coords = c.get_centered_text_bounds(percentage_text)
-            c.text(percentage_text, (coords.left, self.margin), fill=True)  # Drawn top-centered (with margin)
-            bar_top = self.margin + (coords.bottom - coords.top)
+            c.text(percentage_text, (coords.left, self.percentage_margin), fill=True)  # Drawn top-centered (with margin)
+            bar_top_min = self.margin + (coords.bottom - coords.top)
+            bar_top = bar_top_min if self.margin < bar_top_min else self.margin
+        else:
+            bar_top = self.o.width / 2
 
+        self.draw_message(c)
         self.draw_bar(c, bar_top)
 
         self.o.display_image(c.get_image())
+
+    def draw_message(self, c):
+        # type: Canvas -> None
+        coords = c.get_centered_text_bounds(self.message)
+        c.text(self.message, (coords.left, self.text_margin))
 
     def draw_bar(self, c, top_y):
         # type: (Canvas, int) -> None
