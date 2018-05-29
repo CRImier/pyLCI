@@ -8,6 +8,8 @@ except ImportError:
     from luma.core.serial import spi, i2c #Compatilibity with older luma.oled version
 from luma.core.render import canvas
 
+from threading import Lock
+
 from backlight import *
 
 from ..output import GraphicalOutputDevice, CharacterOutputDevice
@@ -41,7 +43,7 @@ class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager)
         else:
             raise ValueError("Unknown interface type: {}".format(hw))
         self.address = address
-        self.busy_flag = Event()
+        self.busy_flag = Lock()
         self.width = 128
         self.height = 64
         self.char_width = 6
@@ -63,36 +65,42 @@ class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager)
     def display_image(self, image):
         """Displays a PIL Image object onto the display
         Also saves it for the case where display needs to be refreshed"""
-        while self.busy_flag.isSet():
-            sleep(0.01)
-        self.busy_flag.set()
-        if self.current_image:
-            del self.current_image #Freeing memory
-        self.current_image = image
-        self.device.display(image)
-        self.busy_flag.clear()
+        with self.busy_flag:
+            self.current_image = image
+            self._display_image(image)
 
-    @activate_backlight_wrapper
-    def display_data(self, *args):
-        """Displays data on display. This function does the actual work of printing things to display.
-        
-        ``*args`` is a list of strings, where each string corresponds to a row of the display, starting with 0."""
-        while self.busy_flag.isSet():
-            sleep(0.01)
-        self.busy_flag.set()
+    def _display_image(self, image):
+        self.device.display(image)
+
+    def display_data_onto_image(self, *args, **kwargs):
+        """
+        This method takes lines of text and draws them onto an image,
+        helping emulate a character display API.
+        """
+        cursor_position = kwargs.pop("cursor_position", None)
+        if not cursor_position:
+            cursor_position = self.cursor_pos if self.cursor_enabled else None
         args = args[:self.rows]
         draw = canvas(self.device)
         d = draw.__enter__()
-        if self.cursor_enabled:
+        if cursor_position:
             dims = (self.cursor_pos[0] - 1 + 2, self.cursor_pos[1] - 1, self.cursor_pos[0] + self.char_width + 2,
                     self.cursor_pos[1] + self.char_height + 1)
             d.rectangle(dims, outline="white")
         for line, arg in enumerate(args):
             y = (line * self.char_height - 1) if line != 0 else 0
             d.text((2, y), arg, fill="white")
-        self.busy_flag.clear()
-        self.display_image(draw.image)
-        del d;del draw;
+        return draw.image
+
+    @activate_backlight_wrapper
+    def display_data(self, *args):
+        """Displays data on display. This function does the actual work of printing things to display.
+
+        ``*args`` is a list of strings, where each string corresponds to a row of the display, starting with 0."""
+        image = self.display_data_onto_image(*args)
+        with self.busy_flag:
+            self.current_image = image
+            self._display_image(image)
 
     def home(self):
         """Returns cursor to home position. If the display is being scrolled, reverts scrolled data to initial position.."""
