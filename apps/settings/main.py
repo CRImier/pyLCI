@@ -200,7 +200,7 @@ class GitUpdater(GenericUpdater):
     def revert_pull(self):
         # do_check_revisions already ran, we now have the previous revision's
         # commit hash in self.previous_revision
-        GitInterface.command("reset --mixed {}".format(self.previous_revision))
+        GitInterface.command("reset --hard {}".format(self.previous_revision))
         # requirements.txt now contains old requirements, let's install them back
         self.do_install_requirements()
 
