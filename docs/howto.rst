@@ -478,8 +478,9 @@ that would signal the task to stop.
 Context management
 ==================
 
-Contexts are the core of ZPUI multitasking. They allow you to switch between apps
-dynamically, have notifications, global hotkeys and menus that appear on a button press.
+Contexts are the core concept of ZPUI multitasking. They allow you to switch between apps
+dynamically, use notifications, global hotkeys etc. One common usage of contexts would be
+creating menus that appear on a button press.
 
 Get the context object
 ----------------------
@@ -523,8 +524,8 @@ is the one active, and request the context manager to switch to your app:
         if has_switched:
             ... # Request to switch has been granted, your app is now the one active
 
-.. warning:: Don't overuse this capability - only use it when it's absolutely necessary.
-             The user will be annoyed. Also, keep in mind that your request might be denied.
+.. warning:: Don't overuse this capability - only use it when it's absolutely necessary, otherwise
+             the user will be annoyed. Also, keep in mind that your request might be denied.
 
 Set a global key callback for your app
 --------------------------------------
