@@ -22,6 +22,7 @@ class Canvas(object):
         * ``o``: output device
         * ``base_image``: a `PIL.Image` to use as a base, if needed
         * ``name``: a name, for internal usage
+        * ``interactive``: whether the canvas updates the display after each drawing
     """
 
     height = 0 #: height of canvas in pixels.
@@ -32,7 +33,7 @@ class Canvas(object):
     default_color = "white" #: default color to use for drawing
     default_font = default_font #: default font, referenced here to avoid loading it every time
 
-    def __init__(self, o, base_image=None, name=""):
+    def __init__(self, o, base_image=None, name="", interactive=False):
         self.o = o
         if "b&w-pixel" not in o.type:
             raise ValueError("The output device supplied doesn't support pixel graphics!")
@@ -46,6 +47,7 @@ class Canvas(object):
         else:
             self.image = Image.new(o.device_mode, self.size)
         self.draw = ImageDraw.Draw(self.image)
+        self.interactive = interactive
 
     def load_font(self, path, size, alias=None, type="truetype"):
         """
@@ -120,6 +122,7 @@ class Canvas(object):
         coord_pairs = tuple(coord_pairs)
         fill = kwargs.pop("fill", self.default_color)
         self.draw.point(coord_pairs, fill=fill, **kwargs)
+        if self.interactive: self.display()
 
     def line(self, coords, **kwargs):
         """
@@ -130,6 +133,7 @@ class Canvas(object):
         fill = kwargs.pop("fill", self.default_color)
         coords = self.check_coordinates(coords)
         self.draw.line(coords, fill=fill, **kwargs)
+        if self.interactive: self.display()
 
     def text(self, text, coords, **kwargs):
         """
@@ -149,6 +153,7 @@ class Canvas(object):
         font = self.decypher_font_reference(font)
         coords = self.check_coordinates(coords)
         self.draw.text(coords, text, fill=fill, font=font, **kwargs)
+        if self.interactive: self.display()
 
     def rectangle(self, coords, **kwargs):
         """
@@ -161,6 +166,7 @@ class Canvas(object):
         outline = kwargs.pop("outline", self.default_color)
         fill = kwargs.pop("fill", None)
         self.draw.rectangle(coords, outline=outline, fill=fill, **kwargs)
+        if self.interactive: self.display()
 
     def circle(self, coords, **kwargs):
         """
@@ -181,6 +187,7 @@ class Canvas(object):
         fill = kwargs.pop("fill", None)
         ellipse_coords = (coords[0]-radius, coords[1]-radius, coords[0]+radius, coords[1]+radius)
         self.draw.ellipse(ellipse_coords, outline=outline, fill=fill, **kwargs)
+        if self.interactive: self.display()
 
     def ellipse(self, coords, **kwargs):
         """
@@ -198,6 +205,7 @@ class Canvas(object):
         outline = kwargs.pop("outline", self.default_color)
         fill = kwargs.pop("fill", None)
         self.draw.ellipse(coords, outline=outline, fill=fill, **kwargs)
+        if self.interactive: self.display()
 
     def get_image(self):
         """
@@ -218,6 +226,7 @@ class Canvas(object):
         Inverts the image that ``Canvas`` is currently operating on.
         """
         self.image = ImageOps.invert(self.image).convert(o.device_mode)
+        if self.interactive: self.display()
 
     def display(self):
         """
@@ -239,6 +248,7 @@ class Canvas(object):
             fill = self.background_color
         coords = self.check_coordinates(coords)
         self.rectangle(coords, fill=fill)  # paint the background black first
+        if self.interactive: self.display()
 
     def check_coordinates(self, coords):
         # type: tuple -> tuple
@@ -334,6 +344,7 @@ class Canvas(object):
 
         self.clear(coords)
         self.draw.bitmap((coords[0], coords[1]), image_subset, fill=self.default_color)
+        if self.interactive: self.display()
 
     def __getattr__(self, name):
         if hasattr(self.draw, name):
