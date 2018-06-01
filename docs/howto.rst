@@ -80,8 +80,12 @@ Uou can use the Canvas objects to draw on the screen.
     ... # Draw other stuff here
     c.display() # Display the canvas on the screen
 
-Draw text on the screen
------------------------
+.. image:: _static/canvas_test_1.png
+
+------------
+
+Draw text
+---------
 
 You can draw text on the screen, and you can use different fonts. By default, a 8pt font
 is used:
@@ -92,6 +96,8 @@ is used:
     c.text("Hello world", (0, 0)) # Draws "Hello world", starting from the top left corner
     c.display()
 
+.. image:: _static/canvas_test_2.png
+
 You can also use a non-default font - for example, the Fixedsys62 font in
 the ZPUI font storage:
 
@@ -99,6 +105,98 @@ the ZPUI font storage:
 
     c.text("Hello world", (0, 0), font=("Fixedsys62.ttf", 16)) # Same, but in a 16pt Fixedsys62 font
     c.text("Hello world", (0, 0), font=(local_path("my_font.ttf"), 16) ) # Using a custom font from your app directory
+
+------------
+
+Draw centered text
+------------------
+
+You can draw centered text, too!
+
+.. code-block:: python
+
+    c = Canvas(o)
+    c.centered_text("Hello world") # Draws "Hello world" in the center of the screen
+    c.display()
+
+.. image:: _static/canvas_test_7.png
+
+You can also draw text that's centered on one of the dimensions:
+
+.. code-block:: python
+
+    c = Canvas(o)
+    ctc = c.get_centered_text_bounds("a") # Centered Text Coords
+    # ctc == Rect(left=61, top=27, right=67, bottom=37)
+    c.text("a", (ctc.left, 0)) 
+    c.text("b", (str(ctc.left-ctc.right), ctc.top)) # ('-6', 27)
+    c.text("c", (ctc.left, str(ctc.top-ctc.bottom))) # (61, '-10')
+    c.text("d", (0, ctc.top))
+    c.display()
+
+.. image:: _static/canvas_test_8.png
+
+------------
+
+Draw a line
+-----------
+
+.. code-block:: python
+
+    c = Canvas(o)
+    c.line((10, 4, "-8", "-4")) # Draws a line from top left to bottom right corner
+    c.display()
+
+.. image:: _static/canvas_test_3.png
+
+------------
+
+Draw a rectangle
+----------------
+
+.. code-block:: python
+
+    c = Canvas(o)
+    c.rectangle((10, 4, 20, "-10")) # Draws a rectangle in the left of the screen
+    c.display()
+
+.. image:: _static/canvas_test_4.png
+
+------------
+
+Draw a circle
+-------------
+
+.. code-block:: python
+
+    c = Canvas(o)
+    c.circle(("-8", 8, 4)) # Draws a circle in the top left corner - with radius 4
+    c.display()
+
+.. image:: _static/canvas_test_5.png
+
+.. note:: There's also a ``Canvas.ellipse()`` method, which takes four coordinates
+          instead of two + radius.
+
+------------
+
+Invert a region of the screen
+-----------------------------
+
+If you want to highlight a region of the screen, you might want to invert it:
+
+.. code-block:: python
+
+    c = Canvas(o)
+    c.text("Hello world", (5, 5))
+    c.invert_rect((35, 5, 80, 17)) # Inverts, roughly, the right half of the text
+    c.display()
+
+.. image:: _static/canvas_test_6.png
+
+.. note:: To invert the whole screen, you can use the ``invert`` method.
+
+------------
 
 Make your app easier to support
 ===============================

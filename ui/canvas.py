@@ -162,6 +162,43 @@ class Canvas(object):
         fill = kwargs.pop("fill", None)
         self.draw.rectangle(coords, outline=outline, fill=fill, **kwargs)
 
+    def circle(self, coords, **kwargs):
+        """
+        Draw a circle on the canvas. Coordinates are expected in
+        ``(xc, yx, r)`` format, where ``xc`` & ``yc`` are coordinates
+        of the circle center and ``r`` is the radius.
+
+        Keyword arguments:
+
+          * ``outline``: outline color (default: white, as default canvas color)
+          * ``fill``: fill color (default: None, as in, transparent)
+        """
+        assert(len(coords) == 3), "Expects three arguments - x center, y center and radius!"
+        radius = coords[2]
+        coords = coords[:2]
+        coords = self.check_coordinates(coords)
+        outline = kwargs.pop("outline", self.default_color)
+        fill = kwargs.pop("fill", None)
+        ellipse_coords = (coords[0]-radius, coords[1]-radius, coords[0]+radius, coords[1]+radius)
+        self.draw.ellipse(ellipse_coords, outline=outline, fill=fill, **kwargs)
+
+    def ellipse(self, coords, **kwargs):
+        """
+        Draw a ellipse on the canvas. Coordinates are expected in
+        ``(x1, y1, x2, y2)`` format, where ``x1`` & ``y1`` are coordinates
+        of the top left corner, and ``x2`` & ``y2`` are coordinates
+        of the bottom right corner.
+
+        Keyword arguments:
+
+          * ``outline``: outline color (default: white, as default canvas color)
+          * ``fill``: fill color (default: None, as in, transparent)
+        """
+        coords = self.check_coordinates(coords)
+        outline = kwargs.pop("outline", self.default_color)
+        fill = kwargs.pop("fill", None)
+        self.draw.ellipse(coords, outline=outline, fill=fill, **kwargs)
+
     def get_image(self):
         """
         Get the current ``PIL.Image`` object.
@@ -245,7 +282,7 @@ class Canvas(object):
         else:
             raise ValueError("Invalid number of coordinates!")
 
-    def draw_centered_text(self, text, font=None):
+    def centered_text(self, text, font=None):
         # type: str -> None
         """
         Draws centered text on the canvas. This is mostly a convenience function,
@@ -255,6 +292,16 @@ class Canvas(object):
         coords = self.get_centered_text_bounds(text, font=font)
         self.text(text, (coords.left, coords.top), font=font)
 
+    def get_text_bounds(self, text, font=None):
+        # type: str -> Rect
+        """
+        Returns the dimensions for a given text. If you use a
+        non-default font, pass it as ``font``.
+        """
+        font = self.decypher_font_reference(font)
+        w, h = self.draw.textsize(text, font=font)
+        return w, h
+
     def get_centered_text_bounds(self, text, font=None):
         # type: str -> Rect
         """
@@ -262,17 +309,16 @@ class Canvas(object):
         The coordinates come wrapped in a ``Rect`` object. If you use a
         non-default font, pass it as ``font``.
         """
-        font = self.decypher_font_reference(font)
-        w, h = self.draw.textsize(text, font=font)
+        w, h = self.get_text_bounds(text, font=font)
         tcw = w / 2
         tch = h / 2
         cw, ch = self.get_center()
         return Rect(cw - tcw, ch - tch, cw + tcw, ch + tch)
 
-    def invert_rect_colors(self, coords):
+    def invert_rect(self, coords):
         # type: tuple -> tuple
         """
-        Inverts colors of the image in the given rectangle. Is useful for
+        Inverts the image in the given rectangle region. Is useful for
         highlighting a part of the image, for example.
         """
 
