@@ -5,10 +5,10 @@ import unittest
 from mock import patch, Mock
 
 try:
-    from ui import BaseListUIElement, BaseListBackgroundableUIElement
-    from ui.base_list_ui import Canvas
+    from ui.base_list_ui import BaseListUIElement, BaseListBackgroundableUIElement, Canvas
     fonts_dir = "ui/fonts"
-except ImportError:
+except ImportError as e:
+    print(e)
     print("Absolute imports failed, trying relative imports")
     os.sys.path.append(os.path.dirname(os.path.abspath('.')))
     # Store original __import__
