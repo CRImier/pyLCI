@@ -1,6 +1,6 @@
 import os
 import signal
-from subprocess import check_output
+from subprocess import check_output, STDOUT, CalledProcessError
 from time import sleep
 
 try:
@@ -32,7 +32,7 @@ class GitInterface():
     def command(command):
         commandline = "git {}".format(command)
         logger.debug("Executing: {}".format(commandline))
-        return check_output(commandline, shell=True)
+        return check_output(commandline, shell=True, stderr=STDOUT)
 
     @classmethod
     def get_head_for_branch(cls, branch):
@@ -49,7 +49,24 @@ class GitInterface():
 
     @classmethod
     def pull(cls, source = "origin", branch = "master", opts="--no-edit"):
-        return cls.command("pull {2} {0} {1}".format(source, branch, opts))
+        try:
+            return cls.command("pull {2} {0} {1}".format(source, branch, opts))
+        except CalledProcessError as e:
+            lines = iter(e.output.split('\n'))
+            for line in lines:
+                marker = "following untracked working tree files would be overwritten by merge"
+                if marker in line:
+                    line = next(lines)
+                    while line.startswith('\t'):
+                        line = line.strip()
+                        if not line.endswith('/'):
+                            try:
+                                logger.info("Removing interfering file: {}".format(line))
+                                os.remove(line)
+                            except OSError:
+                                logger.warning("Couldn't remove an interfering file {} while pulling!".format(line))
+                        line = next(lines)
+            return cls.command("pull {2} {0} {1}".format(source, branch, opts))
 
 
 class UpdateUnnecessary(Exception):
