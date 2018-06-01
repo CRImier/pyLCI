@@ -177,7 +177,7 @@ class GraphicalView(TextView):
         cursor_dims = ( c_x1, c_y1, c_x2 + 2, c_y2 + 2 )
 
         #Drawing the cursor
-        c.invert_rect_colors(cursor_dims)
+        c.invert_rect(cursor_dims)
 
         return c.get_image()
 

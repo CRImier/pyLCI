@@ -566,7 +566,7 @@ class EightPtView(TextView):
                 c_x + self.charwidth * len(menu_text[cursor_y]) + left_offset,
                 c_y + self.charheight
             )
-            c.invert_rect_colors(cursor_dims)
+            c.invert_rect(cursor_dims)
         return c.get_image()
 
 
@@ -605,7 +605,7 @@ class SixteenPtView(EightPtView):
                 c_x + self.charwidth * len(menu_text[cursor_y]) + left_offset,
                 c_y + self.charheight
             )
-            c.invert_rect_colors(cursor_dims)
+            c.invert_rect(cursor_dims)
         return c.get_image()
 
 

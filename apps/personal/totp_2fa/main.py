@@ -35,7 +35,7 @@ def render_totp(name, secret):
     except TypeError:
         totp_font = ("Fixedsys62.ttf", 16)
         totp_value = "Incorrect\nsecret!"
-    c.draw_centered_text(totp_value, font=totp_font)
+    c.centered_text(totp_value, font=totp_font)
     left_coord = c.get_centered_text_bounds(name).left
     c.text(name, (left_coord, 5))
     return c.get_image()

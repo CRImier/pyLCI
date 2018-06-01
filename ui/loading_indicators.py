@@ -163,7 +163,7 @@ class CircularProgressBar(ProgressIndicator):
         center_coordinates = (x / 2 - radius, y / 2 - radius, x / 2 + radius, y / 2 + radius)
         c.arc(center_coordinates, start=0, end=360 * (self.progress / 100.0), fill=True)
         if self.show_percentage:
-            c.draw_centered_text(str(self.progress)+"%")
+            c.centered_text(str(self.progress)+"%")
 
         self.o.display_image(c.get_image())
 
