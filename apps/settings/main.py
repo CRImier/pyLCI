@@ -97,27 +97,27 @@ class GenericUpdater(object):
             failed_step = step
             logger.exception("Failed on step {}".format(failed_step))
             failed_message = self.failed_messages.get(failed_step, "Failed on step '{}'".format(failed_step))
-            pb.stop()
+            pb.pause()
             PrettyPrinter(failed_message, i, o, 2)
             pb.set_message("Reverting update")
-            pb.run_in_background()
+            pb.resume()
             try:
                 logger.info("Reverting the failed step: {}".format(failed_step))
                 self.revert_step(failed_step)
             except:
                 logger.exception("Can't revert failed step {}".format(failed_step))
-                pb.stop()
+                pb.pause()
                 PrettyPrinter("Can't revert failed step '{}'".format(step), i, o, 2)
-                pb.run_in_background()
+                pb.resume()
             logger.info("Reverting the previous steps")
             for step in completed_steps:
                 try:
                     self.revert_step(step)
                 except:
                     logger.exception("Failed to revert step {}".format(failed_step))
-                    pb.stop()
+                    pb.pause()
                     PrettyPrinter("Failed to revert step '{}'".format(step), i, o, 2)
-                    pb.run_in_background()
+                    pb.resume()
                 pb.progress -= progress_per_step
             sleep(1) # Needed here so that 1) the progressbar goes to 0 2) run_in_background launches the thread before the final stop() call
             #TODO: add a way to pause the Refresher
