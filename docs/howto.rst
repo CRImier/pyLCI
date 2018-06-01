@@ -271,6 +271,66 @@ submit a bugreport to you!
 Config (and other) files
 ========================
 
+Read JSON from a config file located in the app directory
+---------------------------------------------------------
+
+.. code-block:: python
+
+    from helpers import read_config, local_path_gen
+    config_filename = "config.json"
+    
+    local_path = local_path_gen(__name__)
+    config = read_config(local_path(config_filename))
+
+------------
+
+Read a config file with an easy "save" function and "restore to defaults on error" check
+----------------------------------------------------------------------------------------
+
+.. code-block:: python
+
+    from helpers import read_or_create_config, local_path_gen, save_config_gen
+    default_config = '{"your":"default", "config":"to_use"}' #has to be a string
+    config_filename = "config.json"
+    
+    local_path = local_path_gen(__name__)
+    config = read_or_create_config(local_path(config_filename), default_config, menu_name+" app")
+    save_config = save_config_gen(local_path(config_filename))
+
+To save the config, use ``save_config(config)`` from anywhere in your app.
+
+.. note:: The faulty ``config.json`` file will be copied into a ``config.json.faulty`` 
+          file before being overwritten
+
+.. warning:: If you're reassigning contents of the ``config`` variable from inside a
+             function, you will likely want to use Python ``global`` keyword in order
+             to make sure your reassignment will actually work.
+
+------------
+
+"Read", "save" and "restore" - in a class-based app
+---------------------------------------------------
+
+.. code-block:: python
+
+    from helpers import read_or_create_config, local_path_gen, save_config_method_gen
+    local_path = local_path_gen(__name__)
+
+    class YourApp(ZeroApp):
+
+        menu_name = "My greatest app"
+        default_config = '{"your":"default", "config":"to_use"}' #has to be a string
+        config_filename = "config.json"
+        
+        def __init__(self, *args, **kwargs):
+            ZeroApp.__init__(self, *args, **kwargs)
+            self.config = read_or_create_config(local_path(self.config_filename), self.default_config, self.menu_name+" app")
+            self.save_config = save_config_method_gen(local_path(self.config_filename))
+
+To save the config, use ``self.save_config()`` from anywhere in your app class.
+
+------------
+
 Get path to a file in the app directory
 ---------------------------------------
 
@@ -296,36 +356,19 @@ In case of your app having nested folders, you can also give multiple arguments 
 
 ------------
 
-Read JSON from a ``config.json`` file located in the app directory
-------------------------------------------------------------------
-
-.. code-block:: python
-
-    from helpers import read_config, local_path_gen
-    config_filename = "config.json"
-    
-    local_path = local_path_gen(__name__)
-    config = read_config(local_path(config_filename))
-
-------------
-
-Read a ``config.json`` file, and restore it to defaults if it can't be read
----------------------------------------------------------------------------
-
-.. code-block:: python
-
-    from helpers import read_or_create_config, local_path_gen
-    default_config = '{"your":"default", "config":"to_use"}' #has to be a string
-    config_filename = "config.json"
-    
-    local_path = local_path_gen(__name__)
-    config = read_or_create_config(local_path(config_filename), default_config, menu_name+" app")
-
-.. note:: The faulty ``config.json`` file will be copied into a ``config.json.faulty`` 
-          file before being overwritten
-
 Run tasks on app startup
 =====================================
+
+How to do things on app startup in a class-based app?
+-----------------------------------------------------
+
+.. code-block:: python
+
+    def __init__(self, *args, **kwargs):
+        ZeroApp.__init__(self, *args, **kwargs)
+        # do your thing
+     
+------------
 
 Run a short task only once when your app is called
 --------------------------------------------------
@@ -371,7 +414,7 @@ Run a task in background after the app was loaded
 
 This is suitable for tasks that take a long time. You wouldn't want to execute that task
 directly in ``init_app()``, since it'd stall loading of all ZPUI apps, not allowing the user
-to use ZPUI until your app has finished loading (pretty egoistic, if you think about it).
+to use ZPUI until your app has finished loading (which is pretty inconvenient for the user).
 
 .. code-block:: python
 
