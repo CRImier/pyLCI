@@ -33,7 +33,7 @@ def check_position_overflow(condition):
     return decorator
 
 
-class NumpadCharInput():
+class NumpadCharInput(object):
     """Implements a character input UI element for a numeric keypad, allowing to translate numbers into characters.
 
     Attributes:

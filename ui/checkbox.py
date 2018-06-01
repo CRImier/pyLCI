@@ -105,7 +105,7 @@ class Checkbox(BaseListUIElement):
         logger.debug("{}: menu contents processed".format(self.name))
 
 
-class CheckboxRenderingMixin():
+class CheckboxRenderingMixin(object):
     """A mixin to add checkbox-specific functions and overrides to views.
     If you're making your own view for BaseListUIElements and want it to 
     work with checkbox UI elements, you will probably want to use this mixin,

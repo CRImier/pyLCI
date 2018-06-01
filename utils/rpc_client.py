@@ -35,7 +35,7 @@ class RPCClient(Server):
                 raise error
         return self.wrapper(attr)
 
-class RPCFunction():
+class RPCFunction(object):
     def __init__(self, func):
         self.func = func
 

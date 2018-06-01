@@ -128,7 +128,7 @@ class DialogBox(object):
         self.view.refresh()
 
 
-class TextView():
+class TextView(object):
 
     def __init__(self, o, el):
         self.o = o

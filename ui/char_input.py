@@ -229,7 +229,7 @@ class CharArrowKeysInput(object):
         logger.debug("{}: refreshed data on display".format(self.name))
 
 
-class TextView():
+class TextView(object):
 
     last_displayed_char = 0
     first_displayed_char = 0

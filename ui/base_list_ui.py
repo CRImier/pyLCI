@@ -381,7 +381,7 @@ class BaseListBackgroundableUIElement(BaseListUIElement):
 
 # Views.
 
-class TextView():
+class TextView(object):
     first_displayed_entry = 0
     last_displayed_entry = None
 

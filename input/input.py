@@ -20,7 +20,7 @@ class CallbackException(Exception):
         self.message = message
 
 
-class InputProcessor():
+class InputProcessor(object):
     """A class which listens for input device events and processes the callbacks 
     set in the InputProxy instance for the currently active context."""
     stop_flag = None
@@ -253,7 +253,7 @@ class InputProcessor():
             setattr(proxy, attr_name, copy(getattr(self, attr_name)))
 
 
-class InputProxy():
+class InputProxy(object):
     reserved_keys = ["KEY_LEFT", "KEY_RIGHT", "KEY_UP", "KEY_DOWN", "KEY_ENTER"]
 
     def __init__(self, context_alias):

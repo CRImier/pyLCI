@@ -17,7 +17,7 @@ menu_name = "Settings"
 logger = setup_logger(__name__, "info")
 
 
-class GitInterface():
+class GitInterface(object):
 
     @classmethod
     def git_available(cls):
