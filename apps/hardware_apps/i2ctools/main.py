@@ -113,7 +113,7 @@ o = None
 def change_range():
     global config
     dialogbox_options = [["Safe", "conservative"], ["Full", "full"], "c"]
-    dialogbox = DialogBox(dialogbox_options, i, o, "I2C tools app range setting dialogbox")
+    dialogbox = DialogBox(dialogbox_options, i, o, message="Scan range", name="I2C tools app range setting dialogbox")
     if config.get("scan_range", "conservative") == "full":
         # setting dialogbox position to the "full" option as it's currently selected
         dialogbox.set_start_option(1)
