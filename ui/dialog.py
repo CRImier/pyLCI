@@ -163,7 +163,8 @@ class GraphicalView(TextView):
 
         #Drawing text
         second_line_position = 10
-        c.text(self.el.message, (2, 0))
+        ctc = c.get_centered_text_bounds(self.el.message)
+        c.text(self.el.message, (ctc.left, 0))
         c.text(self.displayed_label, (2, second_line_position))
 
         #Calculating the cursor dimensions
