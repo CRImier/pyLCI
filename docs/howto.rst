@@ -38,6 +38,26 @@ In ``app/main.py``:
 
 .. code-block:: python
 
+
+------------
+
+What's the minimal class-based app?
+-----------------------------------
+
+In ``app/main.py``:
+
+.. code-block:: python
+
+    from apps import ZeroApp
+
+    class YourGreatApp(ZeroApp):
+        menu_name = "Skeleton app"
+
+        def on_start():
+            #Gets called when app is selected from menu
+            pass
+
+``app/__init__.py`` has to be an empty file, as with the previous example.
      
 ------------
 
