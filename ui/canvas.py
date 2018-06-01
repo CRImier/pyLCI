@@ -109,6 +109,10 @@ class Canvas(object):
         Draw a point, or multiple points on the canvas. Coordinates are expected in
         ``((x1, y1), (x2, y2), ...)`` format, where ``x*`` & ``y*`` are coordinates
         of each point you want to draw.
+
+        Keyword arguments:
+
+          * ``fill``: point color (default: white, as default canvas color)
         """
         if not all([issequence(c) for c in coord_pairs]):
             # Didn't get pairs of coordinates - converting into pairs
@@ -129,6 +133,10 @@ class Canvas(object):
         Draw a line on the canvas. Coordinates are expected in
         ``(x1, y1, x2, y2)`` format, where ``x1`` & ``y1`` are coordinates
         of the start, and ``x2`` & ``y2`` are coordinates of the end.
+
+        Keyword arguments:
+
+          * ``fill``: line color (default: white, as default canvas color)
         """
         fill = kwargs.pop("fill", self.default_color)
         coords = self.check_coordinates(coords)
@@ -146,6 +154,10 @@ class Canvas(object):
 
         Do notice that order of first two arguments is reversed compared
         to the corresponding ``PIL.ImageDraw`` method.
+
+        Keyword arguments:
+
+          * ``fill``: text color (default: white, as default canvas color)
         """
         assert(isinstance(text, basestring))
         fill = kwargs.pop("fill", self.default_color)
@@ -161,6 +173,11 @@ class Canvas(object):
         ``(x1, y1, x2, y2)`` format, where ``x1`` & ``y1`` are coordinates
         of the top left corner, and ``x2`` & ``y2`` are coordinates
         of the bottom right corner.
+
+        Keyword arguments:
+
+          * ``outline``: outline color (default: white, as default canvas color)
+          * ``fill``: fill color (default: None, as in, transparent)
         """
         coords = self.check_coordinates(coords)
         outline = kwargs.pop("outline", self.default_color)
