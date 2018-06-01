@@ -5,8 +5,14 @@ from PIL import Image, ImageDraw, ImageOps, ImageFont
 from ui.utils import is_sequence_not_string as issequence, Rect
 
 fonts_dir = "ui/fonts/"
-default_font = ImageFont.load_default()
 font_cache = {}
+
+default_font = None
+def get_default_font():
+    global default_font
+    if not default_font:
+        default_font = ImageFont.load_default()
+    return default_font
 
 from helpers import setup_logger
 logger = setup_logger(__name__, "warning")
@@ -31,7 +37,8 @@ class Canvas(object):
     size = (0, 0) #: a tuple of (width, height).
     background_color = "black" #: default background color to use for drawing
     default_color = "white" #: default color to use for drawing
-    default_font = default_font #: default font, referenced here to avoid loading it every time
+    default_font = None #: default font, referenced here to avoid loading it every time
+    fonts_dir = fonts_dir
 
     def __init__(self, o, base_image=None, name="", interactive=False):
         self.o = o
@@ -47,6 +54,8 @@ class Canvas(object):
         else:
             self.image = Image.new(o.device_mode, self.size)
         self.draw = ImageDraw.Draw(self.image)
+        if not self.default_font:
+            self.default_font = get_default_font()
         self.interactive = interactive
 
     def load_font(self, path, size, alias=None, type="truetype"):
@@ -60,9 +69,9 @@ class Canvas(object):
         (``ui/fonts`` by default).
         """
         # For fonts in the font directory, can use the filename as a shorthand
-        if path in os.listdir(fonts_dir):
+        if path in os.listdir(self.fonts_dir):
             logger.debug("Loading font from the font storage directory")
-            path = os.path.join(fonts_dir, path)
+            path = os.path.join(self.fonts_dir, path)
         # If an alias was not specified, using font filename as the alias (for caching)
         if alias is None:
             alias = os.path.basename(path)
