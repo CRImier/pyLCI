@@ -299,4 +299,4 @@ def convert_flat_list_into_pairs(l):
     pl = []
     for i in range(len(l)/2):
         pl.append((l[i*2], l[i*2+1]))
-    return l
+    return pl
