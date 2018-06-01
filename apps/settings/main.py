@@ -8,8 +8,7 @@ try:
 except:
     import http.client as httplib
 
-# Using a TextProgressBar because only it shows a message on the screen for now
-from ui import Menu, PrettyPrinter, DialogBox, TextProgressBar, Listbox
+from ui import Menu, PrettyPrinter, DialogBox, ProgressBar, Listbox
 from helpers.logger import setup_logger
 
 import logging_ui
@@ -93,7 +92,7 @@ class GenericUpdater(object):
 
     def update(self):
         logger.info("Starting update process")
-        pb = TextProgressBar(i, o, message="Updating ZPUI")
+        pb = ProgressBar(i, o, message="Updating ZPUI")
         pb.run_in_background()
         progress_per_step = 100 / len(self.steps)
 
