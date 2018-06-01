@@ -78,7 +78,7 @@ class GenericUpdater(object):
         logger.info("Starting update process")
         pb = TextProgressBar(i, o, message="Updating ZPUI")
         pb.run_in_background()
-        progress_per_step = 1.0 / len(self.steps)
+        progress_per_step = 100 / len(self.steps)
 
         completed_steps = []
         try:
