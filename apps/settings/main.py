@@ -192,7 +192,7 @@ class GitUpdater(GenericUpdater):
         GitInterface.pull(branch = current_branch_name)
 
     def do_tests(self):
-        commandline = "python -B -m pytest --doctest-modules -v --doctest-ignore-import-errors --ignore=output/drivers --ignore=input/drivers --ignore=apps/hardware_apps/status/ --ignore=apps/test_hardware"
+        commandline = "python -B -m pytest --doctest-modules -v --doctest-ignore-import-errors --ignore=output/drivers --ignore=input/drivers --ignore=apps/hardware_apps/status/ --ignore=apps/test_hardware --ignore=apps/hardware_apps --ignore=docs/"
         output = check_output(commandline.split(" "))
         logger.debug("pytest output:")
         logger.debug(output)
