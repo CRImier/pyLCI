@@ -139,7 +139,7 @@ class TextView():
         labels = [label for label, value in self.el.values]
         label_string = " ".join(labels)
         if len(label_string) > self.o.cols:
-            raise ValueError("DialogBox {}: all values combined are longer than screen's width".format(self.name))
+            raise ValueError("DialogBox {}: all values combined are longer than screen's width".format(self.el.name))
         self.right_offset = (self.o.cols - len(label_string))/2
         self.displayed_label = " "*self.right_offset+label_string
         #Need to go through the string to mark the first places because we need to remember where to put the cursors
