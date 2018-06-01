@@ -68,8 +68,17 @@ Display an image
 ----------------
 
 You can easily draw an image on the screen with ZPUI. The easiest way is
-by using the ``GraphicsPrinter`` UI element, which accepts either a path
-to an image you want to display, or a ``PIL.Image`` instance:
+by using the ``display_image`` method of ``OutputProxy`` object:
+
+.. code-block:: python
+
+    o.display_image(image) #A PIL.Image object
+
+However, you might want a user-friendly wrapper around it that would allow
+you to easily load images by filename, invert, add a delay/exit-on-key etc.
+In this case, you'll want to use the ``GraphicsPrinter`` UI element, which
+accepts either a path to an image you want to display, or a ``PIL.Image``
+instance and supports some additional arguments:
 
 .. code-block:: python
 
@@ -84,6 +93,15 @@ to an image you want to display, or a ``PIL.Image`` instance:
     GraphicsPrinter(local_path("image.png"), i, o, 1)
     # Display an image you drew on a Canvas
     GraphicsPrinter(c.get_image(), i, o, 1)
+
+In case you have a Canvas object and you just want to display it, there's
+a shorthand:
+
+.. code-block:: python
+
+    c.display()
+
+------------
 
 Draw things on the screen - basics
 ----------------------------------
