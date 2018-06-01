@@ -4,7 +4,7 @@ from __future__ import print_function
 import json
 import os
 import shutil
-
+from types import MethodType
 
 from helpers.logger import setup_logger
 logger = setup_logger(__name__, "warning")
@@ -66,6 +66,17 @@ def save_config_gen(path):
     def save_config(config):
         write_config(config, path)
     return save_config
+
+def save_config_method_gen(obj, path):
+    """
+    A helper function, generates a "save config" method with the
+    config path already set (to decrease verbosity) and the config
+    attribute name hard-coded. This is the ``save_config_gen``
+    equivalent for class-based apps.
+    """
+    def save_config(self, config, config_attr_name='config'):
+        write_config(getattr(self, config_attr_name), path)
+    return MethodType(save_config, obj)
 
 if __name__ == "__main__":
     config = read_config("../config.json")
