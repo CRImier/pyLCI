@@ -3,7 +3,10 @@ import os
 import unittest
 
 from mock import patch, Mock
-from PIL import Image
+from PIL import Image, ImageFont, ImageChops
+
+# Is necessary here, otherwise running the test independently fails
+default_font = ImageFont.load_default()
 
 try:
     from ui import Canvas
