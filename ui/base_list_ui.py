@@ -595,9 +595,10 @@ class EightPtView(TextView):
 class SixteenPtView(EightPtView):
     charwidth = 8
     charheight = 16
+    font = "Fixedsys62.ttf"
 
     def draw_menu_text(self, c, menu_text, left_offset):
-        font = c.load_font("Fixedsys62.ttf", 16)
+        font = c.load_font(self.font, self.charheight)
         for i, line in enumerate(menu_text):
             y = (i * self.charheight - 1) if i != 0 else 0
             c.text(line, (left_offset, y), font=font)
