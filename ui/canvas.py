@@ -359,7 +359,6 @@ class Canvas(object):
         """
 
         coords = self.check_coordinates(coords)
-        self.rectangle(coords)
         image_subset = self.image.crop(coords)
 
         if image_subset.mode != "L": # PIL can only invert "L" and "RGBA" images
