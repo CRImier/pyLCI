@@ -123,16 +123,7 @@ class Canvas(object):
 
           * ``fill``: point color (default: white, as default canvas color)
         """
-        if not all([issequence(c) for c in coord_pairs]):
-            # Didn't get pairs of coordinates - converting into pairs
-            # But first, sanity checks
-            assert (len(coord_pairs) % 2 == 0), "Odd number of coordinates supplied! ({})".format(coord_pairs)
-            assert all([isinstance(c, (int, basestring)) for i in coord_pairs]), "Coordinates are non-uniform! ({})".format(coord_pairs)
-            coord_pairs = convert_flat_list_into_pairs(coord_pairs)
-        coord_pairs = list(coord_pairs)
-        for i, coord_pair in enumerate(coord_pairs):
-            coord_pairs[i] = self.check_coordinates(coord_pair)
-        coord_pairs = tuple(coord_pairs)
+        coord_pairs = self.check_coordinate_pairs(coord_pairs)
         fill = kwargs.pop("fill", self.default_color)
         self.draw.point(coord_pairs, fill=fill, **kwargs)
         if self.interactive: self.display()
@@ -317,6 +308,23 @@ class Canvas(object):
             return coords
         else:
             raise ValueError("Invalid number of coordinates!")
+
+    def check_coordinate_pairs(self, coord_pairs):
+        # type: tuple -> tuple
+        """
+        A helper function to check and reformat coordinate pairs supplied to
+        functions. Each pair is checked by ``check_coordinates``.
+        """
+        if not all([issequence(c) for c in coord_pairs]):
+            # Didn't get pairs of coordinates - converting into pairs
+            # But first, sanity checks
+            assert (len(coord_pairs) % 2 == 0), "Odd number of coordinates supplied! ({})".format(coord_pairs)
+            assert all([isinstance(c, (int, basestring)) for i in coord_pairs]), "Coordinates are non-uniform! ({})".format(coord_pairs)
+            coord_pairs = convert_flat_list_into_pairs(coord_pairs)
+        coord_pairs = list(coord_pairs)
+        for i, coord_pair in enumerate(coord_pairs):
+            coord_pairs[i] = self.check_coordinates(coord_pair)
+        return tuple(coord_pairs)
 
     def centered_text(self, text, font=None):
         # type: str -> None
