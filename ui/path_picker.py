@@ -1,16 +1,15 @@
 import os
 
-from base_list_ui import BaseListBackgroundableUIElement, to_be_foreground
-from menu import Menu, MenuExitException
+from menu import Menu, MenuExitException, to_be_foreground
 from printer import Printer
 from helpers import setup_logger
 logger = setup_logger(__name__, "warning")
 
-class PathPicker(BaseListBackgroundableUIElement):
+class PathPicker(Menu):
 
     path_chosen = None
 
-    def __init__(self, path, i, o, callback = None, display_hidden = False, current_dot = False, prev_dot = True, scrolling=True, **kwargs):
+    def __init__(self, path, i, o, callback = None, display_hidden = False, dirs_only = False, current_dot = False, prev_dot = True, scrolling=True, **kwargs):
         """Initialises the PathPicker object.
 
         Args:
@@ -21,16 +20,18 @@ class PathPicker(BaseListBackgroundableUIElement):
         Kwargs:
 
             * ``callback``: if set, PathPicker will call the callback with path as first argument upon selecting path, instead of exiting the activate().
+            * ``dirs_only``: if True, PathPicker will only show directories.
             * ``current_dot``: if True, PathPicker will show '.' path.
             * ``prev_dot``: if True, PathPicker will show '..' path.
             * ``display_hidden``: if True, PathPicker will display hidden files.
 
         """
-        BaseListBackgroundableUIElement.__init__(self, [], i, o, entry_height=1, scrolling=True, append_exit=False, **kwargs)
+        Menu.__init__(self, [], i, o, entry_height=1, scrolling=True, append_exit=False, catch_exit=False, contents_hook=None, **kwargs)
         if not os.path.isdir(path):
              raise ValueError("PathPicker path has to be a directory!")
         self.display_hidden = display_hidden
         self.callback = callback
+        self.dirs_only = dirs_only
         self.current_dot = current_dot
         self.prev_dot = prev_dot
         self.menu_pointers = {}
@@ -39,7 +40,7 @@ class PathPicker(BaseListBackgroundableUIElement):
 
     def before_activate(self):
         #Clearing flags
-        BaseListBackgroundableUIElement.before_activate(self)
+        Menu.before_activate(self)
         path_chosen = None
 
     def get_return_value(self):
@@ -96,12 +97,23 @@ class PathPicker(BaseListBackgroundableUIElement):
                     dirs.append(item)
             else:
                 if not self.display_hidden or not item.startswith('.'):
-                    files.append(item)
+                    if not self.dirs_only:
+                        files.append(item)
         dirs.sort()
         files.sort()
         for dir in dirs:
             full_path = os.path.join(self.path, dir)
-            contents.append([dir, lambda x=full_path: self.goto_dir(x)])
+            if self.dirs_only:
+                isdir = lambda x: os.path.isdir(os.path.join(full_path, x))
+                dirs_in_dir = [isdir(e) for e in os.listdir(full_path)]
+                if any(dirs_in_dir):
+                    #Directory has other directories inside
+                    contents.append([dir, lambda x=full_path: self.goto_dir(x), lambda: True])
+                else:
+                    #Directory has no other directories inside
+                    contents.append([dir, lambda x=full_path: self.select_path(x)])
+            else:
+                contents.append([dir, lambda x=full_path: self.goto_dir(x), lambda: True])
         for file in files:
             full_path = os.path.join(self.path, file)
             contents.append([file, lambda x=full_path: self.select_path(x)])
