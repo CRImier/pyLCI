@@ -185,6 +185,23 @@ class Canvas(object):
         self.draw.rectangle(coords, outline=outline, fill=fill, **kwargs)
         if self.interactive: self.display()
 
+    def polygon(self, coord_pairs, **kwargs):
+        """
+        Draw a polygon on the canvas. Coordinates are expected in
+        ``((x1, y1), (x2, y2), (x3, y3),  [...])`` format, where ``xX`` and ``yX``
+        are points that construct a polygon.
+
+        Keyword arguments:
+
+          * ``outline``: outline color (default: white, as default canvas color)
+          * ``fill``: fill color (default: None, as in, transparent)
+        """
+        coord_pairs = self.check_coordinate_pairs(coord_pairs)
+        outline = kwargs.pop("outline", self.default_color)
+        fill = kwargs.pop("fill", None)
+        self.draw.polygon(coord_pairs, outline=outline, fill=fill, **kwargs)
+        if self.interactive: self.display()
+
     def circle(self, coords, **kwargs):
         """
         Draw a circle on the canvas. Coordinates are expected in
