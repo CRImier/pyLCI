@@ -61,6 +61,47 @@ In ``app/main.py``:
      
 ------------
 
+Experiment with ZPUI code
+=========================
+
+You can use the sandbox app to try out ZPUI code. First, stop the system-wide ZPUI
+process if it's running (use ``sudo systemctl stop zpui``). Then, run this in the
+install folder:
+
+.. code-block:: bash
+
+    sudo python main.py -a apps/example_apps/sandbox
+
+.. code-block:: python
+
+    [...]
+    Python 2.7.13 (default, Nov 24 2017, 17:33:09)
+    [GCC 6.3.0 20170516] on linux2
+    Type "help", "copyright", "credits" or "license" for more information.
+    (InteractiveConsole)
+    >>>
+
+Available variables:
+
+.. code-block:: python
+
+    >>> dir()
+    ['__builtins__', '__code__', '__doc__', '__file__', '__name__', '__package__',
+    'callback', 'context', 'i', 'init_app', 'menu_name', 'o', 'set_context']
+
+In short, you get ``i``, ``o``, a ``context`` object, and you can import all the
+usual things you'd import in your app - like UI elements
+
+.. code-block:: python
+
+    >>> from ui import Canvas
+    >>> c = Canvas(o, interactive=True)
+    >>> c.centered_text("Hello world!")
+
+.. image:: _static/canvas_test_7.png
+
+------------
+
 Draw on the screen
 ==================
 
