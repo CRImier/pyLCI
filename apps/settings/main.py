@@ -53,10 +53,11 @@ class GitInterface(object):
         except CalledProcessError as e:
             lines = iter(e.output.split('\n'))
             logger.debug("Parsing output")
+            marker1 = "following untracked working tree files would be overwritten by merge"
+            marker2 = "local changes to the following files would be overwritten by merge"
             for line in lines:
-                marker = "following untracked working tree files would be overwritten by merge"
                 logger.debug(repr(line))
-                if marker in line:
+                if marker1 in line or marker2 in line:
                     logger.info("Found interfering files!")
                     line = next(lines)
                     while line.startswith('\t'):
