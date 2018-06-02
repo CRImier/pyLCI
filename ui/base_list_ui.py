@@ -259,7 +259,13 @@ class BaseListUIElement(object):
     def select_entry(self):
         """To be overridden by child UI elements. Is executed when ENTER is pressed
            in UI element."""
-        logger.debug(self.contents[self.pointer])
+        logger.debug("Enter key press detected on {}".format(self.contents[self.pointer]))
+
+    @to_be_foreground
+    def process_right_press(self):
+        """To be overridden by child UI elements. Is executed when RIGHT is pressed
+           in UI element."""
+        logger.debug("Right key press detected on {}".format(self.contents[self.pointer]))
 
     # Working with the keymap
 
@@ -278,7 +284,8 @@ class BaseListUIElement(object):
             "KEY_DOWN": lambda: self.move_down(),
             "KEY_PAGEUP": lambda: self.page_up(),
             "KEY_PAGEDOWN": lambda: self.page_down(),
-            "KEY_ENTER": lambda: self.select_entry()
+            "KEY_ENTER": lambda: self.select_entry(),
+            "KEY_RIGHT": lambda: self.process_right_press()
         })
         if self.exitable:
             self.keymap["KEY_LEFT"] = lambda: self.deactivate()
