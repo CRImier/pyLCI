@@ -1,4 +1,4 @@
-from base_list_ui import BaseListBackgroundableUIElement, to_be_foreground
+from base_list_ui import BaseListBackgroundableUIElement, to_be_foreground, TextView, EightPtView, SixteenPtView
 from helpers import setup_logger
 
 logger = setup_logger(__name__, "warning")
@@ -34,6 +34,8 @@ class Menu(BaseListBackgroundableUIElement):
                    * Can be omitted if you don't need to have any actions taken upon activation of the entry.
                    * You can supply 'exit' (a string, not a function) if you want a menu entry that exits the menu when the user presses Enter.
 
+                 * ``entry[2]`` (entry second callback) is a callback for the right key press.
+
               If you want to set contents after the initialisation, please, use set_contents() method.*
             * ``i``, ``o``: input&output device objects
 
@@ -51,6 +53,14 @@ class Menu(BaseListBackgroundableUIElement):
         self.contents_hook = kwargs.pop("contents_hook", None)
         BaseListBackgroundableUIElement.__init__(self, *args, **kwargs)
 
+    def set_views_dict(self):
+        self.views = {
+            "PrettyGraphicalView": MeSixteenPtView,  # Left for compatibility
+            "SimpleGraphicalView": MeEightPtView,  # Left for compatibility
+            "SixteenPtView": MeSixteenPtView,
+            "EightPtView": MeEightPtView,
+            "TextView": MeTextView}
+
     def before_activate(self):
         # Clearing flags before the menu is activated
         self.exit_exception = False
@@ -66,7 +76,7 @@ class Menu(BaseListBackgroundableUIElement):
         return True
 
     @to_be_foreground
-    def select_entry(self):
+    def select_entry(self, callback_number=1):
         """ Gets the currently specified entry's description from self.contents and executes the callback, if set.
         |Is typically used as a callback from input event processing thread.
         |After callback's execution is finished, sets the keymap again and refreshes the screen.
@@ -74,14 +84,14 @@ class Menu(BaseListBackgroundableUIElement):
         logger.debug("entry selected")
         self.to_background()
         entry = self.contents[self.pointer]
-        if len(entry) > 1:
+        if len(entry) > callback_number:
             # Current menu entry has a callback
             if entry == self.exit_entry:
                 # It's an exit entry, exiting
                 self.deactivate()
                 return
             try:
-                entry[1]()
+                entry[callback_number]()
             except MenuExitException:
                 self.exit_exception = True
             finally:
@@ -94,3 +104,58 @@ class Menu(BaseListBackgroundableUIElement):
         else:
             self.reset_scrolling()
             self.to_foreground()
+
+    def process_right_press(self):
+        """Calls the second callback on the right button press."""
+        self.select_entry(callback_number=2)
+
+
+class MenuRenderingMixin(object):
+    """A mixin to add Menu-specific rendering to views.
+    If you're making your own view for BaseListUIElements and want it to
+    work with menu UI elements, you will probably want to use this mixin,
+    like this:
+
+    .. code-block:: python
+
+        class MeEightPtView(MenuRenderingMixin, EightPtView):
+            pass
+
+    """
+
+    def draw_triangle(self, c, index):
+        contents_entry = self.el.contents[self.first_displayed_entry + index]
+        if len(contents_entry) > 2 and callable(contents_entry[2]):
+            tw, th = self.charwidth / 2, self.charheight / 2
+            right_offset = 1
+            top_offset = (self.charheight - th) / 2
+            coords = (
+                (str(-1*(right_offset+tw)), index * self.charheight + top_offset),
+                (str(-1*(right_offset+tw)), index * self.charheight + top_offset + th),
+                (str(-1*(right_offset)), index * self.charheight + th),
+            )
+            c.polygon(coords, fill=c.default_color)
+
+
+class MeEightPtView(MenuRenderingMixin, EightPtView):
+
+    def draw_menu_text(self, c, menu_text, left_offset):
+        for i, line in enumerate(menu_text):
+            y = (i * self.charheight - 1) if i != 0 else 0
+            c.text(line, (left_offset, y))
+            self.draw_triangle(c, i)
+
+
+class MeTextView(MenuRenderingMixin, TextView):
+    # Arrow rendering not yet done for text-based displays =(
+    pass
+
+
+class MeSixteenPtView(MenuRenderingMixin, SixteenPtView):
+
+    def draw_menu_text(self, c, menu_text, left_offset):
+        font = c.load_font(self.font, self.charheight)
+        for i, line in enumerate(menu_text):
+            y = (i * self.charheight - 1) if i != 0 else 0
+            c.text(line, (left_offset, y), font=font)
+            self.draw_triangle(c, i)
