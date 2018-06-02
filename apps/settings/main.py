@@ -52,9 +52,12 @@ class GitInterface(object):
             return cls.command("pull {2} {0} {1}".format(source, branch, opts))
         except CalledProcessError as e:
             lines = iter(e.output.split('\n'))
+            logger.debug("Parsing output")
             for line in lines:
                 marker = "following untracked working tree files would be overwritten by merge"
+                logger.debug(repr(line))
                 if marker in line:
+                    logger.info("Found interfering files!")
                     line = next(lines)
                     while line.startswith('\t'):
                         line = line.strip()
