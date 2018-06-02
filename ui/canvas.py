@@ -284,7 +284,7 @@ class Canvas(object):
         self.rectangle(coords, fill=fill)  # paint the background black first
         if self.interactive: self.display()
 
-    def check_coordinates(self, coords):
+    def check_coordinates(self, coords, check_count=True):
         # type: tuple -> tuple
         """
         A helper function to check and reformat coordinates supplied to
@@ -312,7 +312,8 @@ class Canvas(object):
                 coords[i] = int(c)
         # Restoring the status-quo
         coords = tuple(coords)
-        # Now checking whether the coords are right
+        # Now all the coordinates should be integers - if something slipped by the checks,
+        # it's of type we don't process and we should raise an exception now
         for c in coords:
             assert isinstance(c, int), "{} not an integer or 'x' string!".format(c)
         if len(coords) == 2:
@@ -324,7 +325,10 @@ class Canvas(object):
             #assert (y2 >= y1), "y2 ({}) is smaller than y1 ({}), rearrange?".format(y2, y1)
             return coords
         else:
-            raise ValueError("Invalid number of coordinates!")
+            if check_count:
+                raise ValueError("Invalid number of coordinates!")
+            else:
+                return coords
 
     def check_coordinate_pairs(self, coord_pairs):
         # type: tuple -> tuple
