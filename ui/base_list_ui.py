@@ -308,7 +308,7 @@ class BaseListUIElement(object):
         for entry in contents:
             entry_repr = entry[0]
             if not isinstance(entry_repr, basestring) and not isinstance(entry_repr, list):
-                raise Exception("Entries can be either strings or lists of strings - {} is neither!".format(entry))
+                raise Exception("Entry labels can be either strings or lists of strings - {} is neither!".format(entry))
             if isinstance(entry_repr, list):
                 for entry_str in entry_repr:
                     if not isinstance(entry_str, basestring):
