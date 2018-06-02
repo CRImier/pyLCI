@@ -444,12 +444,12 @@ class TextView(object):
         displayed_data = []
         disp_entry_positions = range(self.first_displayed_entry, self.last_displayed_entry + 1)
         for entry_num in disp_entry_positions:
-            displayed_entry = self.render_displayed_entry(entry_num)
+            displayed_entry = self.render_displayed_entry_text(entry_num)
             displayed_data += displayed_entry
         logger.debug("Displayed data: {}".format(displayed_data))
         return displayed_data
 
-    def render_displayed_entry(self, entry_num):
+    def render_displayed_entry_text(self, entry_num):
         """Renders an UI element entry by its position number in self.contents, determined also by display width, self.entry_height and entry's representation type.
         If entry representation is a string, splits it into parts as long as the display's width in characters.
            If active flag is set, appends a "*" as the first entry's character. Otherwise, appends " ".
