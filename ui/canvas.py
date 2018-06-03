@@ -281,7 +281,7 @@ class Canvas(object):
         if fill is None:
             fill = self.background_color
         coords = self.check_coordinates(coords)
-        self.rectangle(coords, fill=fill)  # paint the background black first
+        self.rectangle(coords, fill=fill, outline=fill)  # paint the background black first
         if self.interactive: self.display()
 
     def check_coordinates(self, coords, check_count=True):
