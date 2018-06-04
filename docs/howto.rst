@@ -102,6 +102,115 @@ usual things you'd import in your app - like UI elements
 
 ------------
 
+User-friendliness
+=================
+
+Whether your app involves a complex task, a task that could be done in multiple
+different ways or just something plain and simple, there are UI elements, functions
+and snippets that can help you make your app more accessible to the user.
+
+Confirm a choice
+----------------
+
+In case you're unsure the user will want to proceed with what you're doing,
+you might want them to confirm their actions. Here's how to ask them that:
+
+.. code-block:: python
+
+    from ui import DialogBox
+
+    message = "Are you sure?"
+    choice = DialogBox ('ync', i, o, message=message, name="HDD secure erase app erase confirmation").activate()
+    if choice:
+        erase_hdd(device_path)
+
+By default, Yes returns ``True``, No returns ``False`` and Cancel returns ``None``.
+
+Pick one thing out of many
+--------------------------
+
+If you have multiple things and you need your user to pick one, here's how to
+let them choose:
+
+.. code-block:: python
+
+    from ui import Listbox, PrettyPrinter
+    ...
+    # You pass lists of two elements - first one is the user-friendly label,
+    # second is something that your code can actually use
+    # (doesn't have to be a string)
+    lc = [["Kingston D4", "/dev/bus/usb/001/002"], ["Sandisk Ultra M3", "/dev/bus/usb/001/002"]]
+    # The user will want to know what is it you want them to choose;
+    # Showing a quick text message is a good way to do it
+    PrettyPrinter("More than one drive found, pick a flash drive", i, o, 5)
+    path = Listbox(lc, i, o, name="USB controller flashing app drive selection menu").activate()
+    if path: # if the user pressed left key to cancel the choice, None is returned
+        print(path)
+
+.. note:: If you autogenerate the listbox contents from an external source (for
+          example, your user needs to pick one flash drive from a list of all
+          connected flash drives), it's best if you check that the user really
+          has any choice in the matter - as in, maybe there's only one flash drive
+          connected?
+
+-----------
+
+Enable/disable options
+----------------------
+
+If you want user to be able to enable or disable settings or let them filter
+through a really long list of options to choose from, here's what you can do:
+
+.. code-block:: python
+
+    from ui import Checkbox
+    ...
+    # You pass lists of two/three elements - first one is the user-friendly label
+    # second is something that you'll receive as a response dictionary key,
+    # and you can optionally add the third element telling the default state
+    # (True/False)
+    # (doesn't have to be a string)
+    cc = [["Replace files that were changed", "replace_on_change", config["replace_on_change"]],
+          ["Delete files from destination", "delete_in_destination", config["delete_in_destination"]],
+          ["Save these settings", "save_settings"]]
+    choices = Checkbox(cc, i, o, name="Backup app options dialog").activate()
+    if choices: # if the user pressed left key to cancel the choice, None is returned
+        print(choices)
+    # {"replace_on_change":True, "delete_in_destination":False, "save_settings":False}
+
+Allow exiting a loop on a keypress
+-----------------------------------
+
+Say, you have a loop that doesn't have an UI element in it - you're just doing something
+repeatedly. You'll want to let the user exit that loop, and the reasonable way is to
+interrupt the loop when the user presses a key (by default, ``KEY_LEFT``).
+Here's how to allow that:
+
+.. code-block:: python
+
+    from helpers import ExitHelper
+    ...
+    eh = ExitHelper(i).start()
+    while eh.do_run():
+        ... #do something repeatedly until the user presses KEY_LEFT
+
+Stopping a foreground task on a keypress
+----------------------------------------
+
+If you have some kind of task that's running in foreground (say, a HTTP server), you will
+want to let the user exit the UI, at least - maybe even stop the task. If a task can be
+stopped from another thread, you can use ``ExitHelper``, too - it can call a custom function
+that would signal the task to stop.
+
+.. code-block:: python
+
+    from helpers import ExitHelper
+    ...
+    task = ... # Can be run in foreground with ``task.run()``
+    # Can also be stopped from another thread with ``task.stop()``
+    eh = ExitHelper(i, cb=task.stop).start()
+    task.run() # Will run until the task is not stopped
+
 Draw on the screen
 ==================
 
@@ -309,6 +418,31 @@ submit a bugreport to you!
         logger.exception("Exception while calling the command!")
         # .exception will also log the details of the exception after your message
 
+Add names to your UI elements
+=============================
+
+UI elements aren't perfect - sometimes, they themselves cause exceptions. In this case,
+we'll want to be able to debug them, to make sure we understand what was it that went
+wrong. Due to the nature of ZPUI and how multiple apps run in parallel, we need to be
+able to distinguish logs from different UI elements - so, each UI element has a ``name``
+attribute, and it's included in log messages for each UI element. By default, the
+attribute is set to something non-descriptive - we highly suggest you set it
+to tell:
+
+* which app the UI element belongs to
+* which part of the app the UI element is created
+
+For example:
+
+.. code-block:: python
+
+    from ui import Menu
+    ...
+    Menu(contents, i, o, name="Main menu of Frobulator app".activate()
+
+.. note:: The only UI elements that don't support the ``name`` attribute are Printers:
+          ``Printer``, ``GraphicsPrinter`` and ``PrettyPrinter``
+
 Config (and other) files
 ========================
 
@@ -479,42 +613,6 @@ to use ZPUI until your app has finished loading (which is pretty inconvenient fo
             PrettyPrinter("Hardware initialization failed!", i, o)
             return
         ... #everything initialized, can proceed safely
-
-Control flow and user-friendliness
-==================================
-
-Allow exiting a loop on a keypress
------------------------------------
-
-Say, you have a loop that doesn't have an UI element in it - you're just doing something
-repeatedly. You'll want to let the user exit that loop, and the reasonable way is to
-interrupt the loop when the user presses a key (by default, ``KEY_LEFT``).
-Here's how to allow that:
-
-.. code-block:: python
-
-    from helpers import ExitHelper
-    ...
-    eh = ExitHelper(i).start()
-    while eh.do_run():
-        ... #do something repeatedly until the user presses KEY_LEFT
-
-Stopping a foreground task on a keypress
-----------------------------------------
-
-If you have some kind of task that's running in foreground (say, a HTTP server), you will
-want to let the user exit the UI, at least - maybe even stop the task. If a task can be
-stopped from another thread, you can use ``ExitHelper``, too - it can call a custom function
-that would signal the task to stop.
-
-.. code-block:: python
-
-    from helpers import ExitHelper
-    ...
-    task = ... # Can be run in foreground with ``task.run()``
-    # Can also be stopped from another thread with ``task.stop()``
-    eh = ExitHelper(i, cb=task.stop).start()
-    task.run() # Will run until the task is not stopped
 
 Context management
 ==================
