@@ -124,7 +124,7 @@ class MenuRenderingMixin(object):
     """
 
     def draw_triangle(self, c, index):
-        contents_entry = self.el.contents[self.first_displayed_entry + index]
+        contents_entry = self.el.contents[self.first_displayed_entry + index/self.el.entry_height]
         if len(contents_entry) > 2 and callable(contents_entry[2]):
             tw, th = self.charwidth / 2, self.charheight / 2
             right_offset = 1
