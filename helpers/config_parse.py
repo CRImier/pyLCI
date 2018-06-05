@@ -87,7 +87,7 @@ def save_config_method_gen(obj, path):
     attribute name hard-coded. This is the ``save_config_gen``
     equivalent for class-based apps.
     """
-    def save_config(self, config, config_attr_name='config'):
+    def save_config(self, config_attr_name='config'):
         write_config(getattr(self, config_attr_name), path)
     return MethodType(save_config, obj)
 
