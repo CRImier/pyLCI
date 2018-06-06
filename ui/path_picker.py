@@ -81,6 +81,10 @@ class PathPicker(Menu):
     def set_path(self, path):
         self.path = path
         self.name = "{}-{}".format(self.base_name, self.path)
+        self.set_contents(self.regenerate_contents())
+
+    def regenerate_contents(self):
+        print("Regenerating contents")
         contents = []
         self.pointer = 0
         if self.path != '/':
@@ -94,10 +98,10 @@ class PathPicker(Menu):
         for item in path_contents:
             full_path = os.path.join(self.path, item)
             if os.path.isdir(full_path):
-                if not self.display_hidden or not item.startswith('.'):
+                if not (self.display_hidden and item.startswith('.')):
                     dirs.append(item)
             else:
-                if not self.display_hidden or not item.startswith('.'):
+                if not (self.display_hidden and item.startswith('.')):
                     if not self.dirs_only:
                         files.append(item)
         dirs.sort()
@@ -118,21 +122,28 @@ class PathPicker(Menu):
         for file in files:
             full_path = os.path.join(self.path, file)
             contents.append([file, lambda x=full_path: self.select_path(x)])
-        self.set_contents(contents)
+        return contents
 
     @to_be_foreground
     def options_menu(self):
         self.to_background()
         current_item = self.contents[self.pointer][0]
         full_path = os.path.join(self.path, current_item)
-        contents = [["Select path",lambda x=full_path: self.option_select(x)],
-                    ["See full name",lambda x=full_path: Printer(current_item, self.i, self.o)],
-                    ["See full path",lambda x=full_path: Printer(x, self.i, self.o)],
-                    ["Exit PathPicker", self.option_exit]]
-        Menu(contents, self.i, self.o, name="PathPicker context menu").activate()
-        self.o.cursor()
+        def get_contents():
+            dh_option_label = "Hide .-files" if self.display_hidden else "Show .-files"
+            contents = [["Select path",lambda x=full_path: self.option_select(x)],
+                        [dh_option_label, self.toggle_display_hidden],
+                        ["See full name",lambda x=full_path: Printer(current_item, self.i, self.o)],
+                        ["See full path",lambda x=full_path: Printer(x, self.i, self.o)],
+                        ["Exit PathPicker", self.option_exit]]
+            return contents
+        Menu([], self.i, self.o, contents_hook=get_contents, name="PathPicker context menu").activate()
         if self.in_background:
+            self.set_contents(self.regenerate_contents())
             self.to_foreground()
+
+    def toggle_display_hidden(self):
+        self.display_hidden = not self.display_hidden
 
     def option_exit(self):
         self.deactivate()
