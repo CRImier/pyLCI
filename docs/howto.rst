@@ -178,6 +178,28 @@ through a really long list of options to choose from, here's what you can do:
         print(choices)
     # {"replace_on_change":True, "delete_in_destination":False, "save_settings":False}
 
+Pick a file/directory
+---------------------
+
+In case your user needs to work with files, here's how you can make the file picking
+process easy for them:
+
+.. code-block:: python
+
+    from ui import PathPicker
+    ...
+    # You might already have some kind of path handy - maybe the one that your user
+    # picked last time?
+    path = os.path.split(last_path)[0] if last_path else '/'
+    new_path = PathPicker(path, self.i, self.o, name="Shred app file picker").activate()
+    if new_path: # As usual, the user can cancel the selection
+        self.last_path = new_path # Saving it for usability
+
+The ``PathPicker`` also supports a ``callback`` attribute which, instead of
+letting the user pick one file and returning it, lets the user just click on
+files and calls a function on each one of them as they're selected. An example
+of this working is the "File browser" app in "Utils" category of the main menu.
+
 Allow exiting a loop on a keypress
 -----------------------------------
 
