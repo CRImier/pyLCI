@@ -9,7 +9,7 @@ class PathPicker(Menu):
 
     path_chosen = None
 
-    def __init__(self, path, i, o, callback = None, display_hidden = False, dirs_only = False, current_dot = False, prev_dot = True, scrolling=True, **kwargs):
+    def __init__(self, path, i, o, callback = None, name = None, display_hidden = False, dirs_only = False, current_dot = False, prev_dot = True, scrolling=True, **kwargs):
         """Initialises the PathPicker object.
 
         Args:
@@ -29,6 +29,7 @@ class PathPicker(Menu):
         Menu.__init__(self, [], i, o, entry_height=1, scrolling=True, append_exit=False, catch_exit=False, contents_hook=None, **kwargs)
         if not os.path.isdir(path):
              raise ValueError("PathPicker path has to be a directory!")
+        self.base_name = name if name else "PathPicker"
         self.display_hidden = display_hidden
         self.callback = callback
         self.dirs_only = dirs_only
@@ -79,7 +80,7 @@ class PathPicker(Menu):
 
     def set_path(self, path):
         self.path = path
-        self.name = "PathPicker-{}".format(self.path)
+        self.name = "{}-{}".format(self.base_name, self.path)
         contents = []
         self.pointer = 0
         if self.path != '/':
