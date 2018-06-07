@@ -167,7 +167,8 @@ class GitUpdater(GenericUpdater):
         "check_revisions": "Comparing code",
         "pull": "Fetching code",
         "install_requirements": "Installing packages",
-        "tests": "Running tests",
+        "pretest_migrations": "Running migrations",
+        "tests": "Running tests"
     }
     failed_messages = {
         "check_connection": "No Internet connection!",
@@ -175,6 +176,7 @@ class GitUpdater(GenericUpdater):
         "check_revisions": "Exception while comparing revisions!",
         "pull": "Couldn't get new code!",
         "install_requirements": "Failed to install new packages!",
+        "pretest_migrations": "Failed to run migrations!",
         "tests": "Tests failed!"
     }
 
