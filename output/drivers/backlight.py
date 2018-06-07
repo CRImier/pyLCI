@@ -28,7 +28,7 @@ def disable_backlight_wrapper(func):
         return None
     return wrapper
 
-class BacklightManager():
+class BacklightManager(object):
     _last_active = datetime.now()
     _backlight_enabled = False
     _backlight_active = Event()

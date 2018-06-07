@@ -1,10 +1,8 @@
-from collections import namedtuple
+from collections import namedtuple, Sequence
 from functools import wraps
 from time import time, sleep
 
 from PIL import ImageOps
-from PIL.Image import Image
-from PIL.ImageDraw import ImageDraw
 
 from helpers import setup_logger
 
@@ -35,6 +33,13 @@ def clamp(value, _min, _max):
     100
     """
     return max(_min, min(value, _max))
+
+
+def is_sequence_not_string(value):
+    """
+    Checks if the value passed is a sequence, like a list or tuple - except strings.
+    """
+    return isinstance(value, Sequence) and not isinstance(value, basestring)
 
 
 def modulo_list_index(value, _list):
@@ -202,21 +207,6 @@ class Ticker(object):
         elapsed = now - self.__last_call
         self.__last_call = now
         return elapsed
-
-
-def invert_rect_colors(coordinates, draw, image):
-    # type: (tuple, ImageDraw, Image) -> None
-    # inverts colors of the image in the given rectangle
-    draw.rectangle(coordinates, outline="white")
-    image_subset = image.crop(coordinates)
-
-    if image_subset.mode == "1":  # PIL doesn't support invert on mode "1"
-        image_subset = image_subset.convert("L")
-    image_subset = ImageOps.invert(image_subset)
-    image_subset = image_subset.convert("1")
-
-    draw.rectangle(coordinates, fill="black")  # paint the background black first
-    draw.bitmap((coordinates[0], coordinates[1]), image_subset, fill="white")
 
 
 Rect = namedtuple('Rect', ['left', 'top', 'right', 'bottom'])

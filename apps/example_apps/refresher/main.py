@@ -26,6 +26,6 @@ def init_app(input, output):
     global callback, i, o
     i = input; o = output #Getting references to output and input device objects and saving them as globals
     time_refresher = Refresher(show_time, i, o, 1, name="Timer")
-    counter_refresher = Refresher(count, i, o, 1, keymap={"KEY_KPENTER":time_refresher.activate}, name="Counter")
+    counter_refresher = Refresher(count, i, o, 1, keymap={"KEY_ENTER":time_refresher.activate}, name="Counter")
     callback = counter_refresher.activate
 

@@ -23,7 +23,7 @@ SOFTWARE."""
 from random import randint, choice
 from helpers import flatten
 
-class GameOf2048():
+class GameOf2048(object):
 
     matrix = None
 

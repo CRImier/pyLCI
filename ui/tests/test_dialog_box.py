@@ -6,6 +6,8 @@ from mock import patch, Mock
 
 try:
     from ui import DialogBox
+    from ui.dialog import Canvas
+    fonts_dir = "ui/fonts"
 except ImportError:
     print("Absolute imports failed, trying relative imports")
     os.sys.path.append(os.path.dirname(os.path.abspath('.')))
@@ -21,17 +23,21 @@ except ImportError:
         return orig_import(name, *args)
 
     with patch('__builtin__.__import__', side_effect=import_mock):
-        from dialog import DialogBox
+        from dialog import DialogBox, Canvas
+        fonts_dir = "../fonts"
 
 def get_mock_input():
     return Mock()
-
 
 def get_mock_output(rows=8, cols=21):
     m = Mock()
     m.configure_mock(rows=rows, cols=cols, type=["char"])
     return m
 
+def get_mock_graphical_output(width=128, height=64, mode="1", cw=6, ch=8):
+    m = get_mock_output(cols=width/cw, rows=height/ch)
+    m.configure_mock(width=width, height=height, device_mode=mode, char_height=ch, char_width=cw, type=["b&w-pixel"])
+    return m
 
 db_name = "Test DialogBox"
 
@@ -90,6 +96,33 @@ class TestDialogBox(unittest.TestCase):
         with patch.object(db, 'idle_loop', side_effect=scenario) as p:
             return_value = db.activate()
         assert return_value is None
+
+    def test_graphical_display_redraw(self):
+        o = get_mock_graphical_output()
+        db = DialogBox("ync", get_mock_input(), o, name=db_name)
+        Canvas.fonts_dir = fonts_dir
+        # Exiting immediately, but we should get at least one redraw
+        def scenario():
+            db.deactivate()  # KEY_LEFT
+            assert not db.in_foreground
+
+        with patch.object(db, 'idle_loop', side_effect=scenario) as p:
+            return_value = db.activate()
+        assert o.display_image.called
+        assert o.display_image.call_count == 1 #One in to_foreground
+
+    def test_start_option(self):
+        db = DialogBox("ync", get_mock_input(), get_mock_output(), name=db_name)
+        db.refresh = lambda *args, **kwargs: None
+        db.set_start_option(1) #So, "No" option would be selected
+
+        def scenario():
+            db.accept_value()  # KEY_ENTER
+            assert not db.in_foreground  # Should exit
+
+        with patch.object(db, 'idle_loop', side_effect=scenario) as p:
+            return_value = db.activate()
+        assert return_value is False #Second element - No, means False
 
     def test_returns_right_values(self):
         """Checking that going to different options returns the right values"""

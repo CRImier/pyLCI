@@ -3,9 +3,7 @@ from __future__ import division
 from textwrap import wrap
 from time import sleep, time
 
-from PIL.ImageDraw import ImageDraw
-from luma.core.render import canvas
-
+from canvas import Canvas
 from helpers import setup_logger
 from ui.utils import to_be_foreground, clamp
 
@@ -14,7 +12,7 @@ logger = setup_logger(__name__, "warning")
 
 class VerticalScrollbar(object):
     def __init__(self, o, width=1, min_size=1, margin=1, color="white"):
-        self.screen = o
+        self.o = o
         self._width = width
         self.margin = margin
         self.min_size = min_size
@@ -22,15 +20,15 @@ class VerticalScrollbar(object):
         self._progress = 0  # 0-1 range, 0 is top, 1 is bottom
         self.size = 0  # 0-1 range, 0 is minimum size, 1 is whole screen
 
-    def draw(self, draw):
-        # type: (ImageDraw) -> None
-        rect = self.get_coords()
-        draw.rectangle(rect, fill=self.color)
+    def draw(self, c):
+        # type: (Canvas) -> None
+        rect = self.get_coords(c)
+        c.rectangle(rect, fill=self.color)
 
-    def get_coords(self):
-        height_px = self.screen.height * self.size
+    def get_coords(self, c):
+        height_px = c.height * self.size
         height_px = max(height_px, self.min_size)  # so we always have something to show
-        y_pos = self.progress * self.screen.height
+        y_pos = self.progress * c.height
         rect = (
             self.margin, y_pos,
             self.margin + self._width, y_pos + height_px
@@ -53,27 +51,27 @@ class VerticalScrollbar(object):
 
 class HorizontalScrollbar(VerticalScrollbar):
 
-    def get_coords(self):
-        width_px = self.screen.width * self.size
+    def get_coords(self, c):
+        width_px = c.width * self.size
         width_px = max(width_px, self.min_size)
-        x_pos = self.progress * self.screen.width
+        x_pos = self.progress * c.width
         rect = (
-            x_pos, self.screen.height - self._width - self.margin,
-            x_pos + width_px, self.screen.height - self.margin
+            x_pos, c.height - self._width - self.margin,
+            x_pos + width_px, c.height - self.margin
         )
         return rect
 
-    def draw(self, draw):
-        rect = self.get_coords()
-        draw.rectangle(
-            self.get_background_coords(),
+    def draw(self, c):
+        rect = self.get_coords(c)
+        c.rectangle(
+            self.get_background_coords(c),
             fill="black",
             outline="black",
         )
-        draw.rectangle(rect, fill=self.color)
+        c.rectangle(rect, fill=self.color)
 
-    def get_background_coords(self):
-        return 0, self.screen.height - self.width, self.screen.width, self.screen.height
+    def get_background_coords(self, c):
+        return 0, c.height - self.width, c.width, c.height
 
 
 class HideableVerticalScrollbar(VerticalScrollbar):
@@ -83,11 +81,11 @@ class HideableVerticalScrollbar(VerticalScrollbar):
         self.fade_time = fade_time
         self.last_activity = -fade_time
 
-    def draw(self, draw):
-        # type: (ImageDraw) -> None
-        rect = self.get_coords()
+    def draw(self, c):
+        # type: (Canvas) -> None
+        rect = self.get_coords(c)
         self.update_color()
-        draw.rectangle(rect, fill=self.color, outline=self.color)
+        c.rectangle(rect, fill=self.color, outline=self.color)
 
     def update_color(self):
         self.color = "white" if time() - self.last_activity < self.fade_time else False
@@ -107,12 +105,12 @@ class HideableHorizontalScrollbar(HorizontalScrollbar, HideableVerticalScrollbar
         HorizontalScrollbar.__init__(self, o, width, min_size, margin, color)
         HideableVerticalScrollbar.__init__(self, o, width, min_size, margin, color, fade_time)
 
-    def get_coords(self):
-        return HorizontalScrollbar.get_coords(self)
+    def get_coords(self, c):
+        return HorizontalScrollbar.get_coords(self, c)
 
-    def draw(self, draw):
+    def draw(self, c):
         self.update_color()
-        return HorizontalScrollbar.draw(self, draw)
+        return HorizontalScrollbar.draw(self, c)
 
     # noinspection PyMethodOverriding
     @VerticalScrollbar.progress.setter
@@ -143,7 +141,7 @@ class TextReader(object):
             self.v_scrollbar = VerticalScrollbar(self.o)
             self.h_scrollbar = HorizontalScrollbar(self.o)
 
-        char_width = self.o.charwidth if hasattr(self, "charwidth") else 8  # emulator
+        char_width = self.o.char_width
         text_width = self.o.cols - (self.v_scrollbar.width // char_width)
 
         self._content_width = max([len(line) for line in text.splitlines()])
@@ -169,22 +167,16 @@ class TextReader(object):
     @to_be_foreground
     def refresh(self):
         text = self.get_displayed_text()
-        tmp_canvas = canvas(self.o.device)
-        image_drawer = tmp_canvas.__enter__()
-        self.draw_text(text, image_drawer, self.v_scrollbar.width)
-        self.v_scrollbar.draw(image_drawer)
-        self.h_scrollbar.draw(image_drawer)
+        c = Canvas(self.o)
+        self.draw_text(text, c, self.v_scrollbar.width)
+        self.v_scrollbar.draw(c)
+        self.h_scrollbar.draw(c)
+        self.o.display_image(c.get_image())
 
-        self.o.display_image(tmp_canvas.image)
-
-        del tmp_canvas
-        del image_drawer
-
-    def draw_text(self, text, draw, x_offset):
-        charheight = self.o.charheight if hasattr(self.o, "charheight") else 8
+    def draw_text(self, text, c, x_offset):
         for line, arg in enumerate(text):
-            y = (line * charheight)
-            draw.text((x_offset, y), arg, fill='white')
+            y = (line * self.o.char_height)
+            c.text(arg, (x_offset, y))
 
     def get_displayed_text(self):
         start = self.h_scroll_index

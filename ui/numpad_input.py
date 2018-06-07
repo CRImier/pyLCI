@@ -33,7 +33,7 @@ def check_position_overflow(condition):
     return decorator
 
 
-class NumpadCharInput():
+class NumpadCharInput(object):
     """Implements a character input UI element for a numeric keypad, allowing to translate numbers into characters.
 
     Attributes:
@@ -344,3 +344,24 @@ class NumpadNumberInput(NumpadCharInput):
                "0":"0",
                "*":"*",
                "#":"#"}
+
+
+class NumpadHexInput(NumpadCharInput):
+    """Implements a hexadecimal number input UI element for a numeric keypad, allowing to translate number keys into hexadecimal numbers."""
+
+    default_mapping = {"1":"1",
+               "2" :"2",
+               "3" :"3",
+               "4" :"4",
+               "5" :"5",
+               "6" :"6",
+               "7" :"7",
+               "8" :"8",
+               "9" :"9",
+               "0" :"0",
+               "F3":"A",
+               "F4":"B",
+               "*" :"C ",
+               "#" :"Dx",
+               "F5":"E",
+               "F6":"F"}
