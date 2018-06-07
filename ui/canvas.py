@@ -126,7 +126,7 @@ class Canvas(object):
         coord_pairs = self.check_coordinate_pairs(coord_pairs)
         fill = kwargs.pop("fill", self.default_color)
         self.draw.point(coord_pairs, fill=fill, **kwargs)
-        if self.interactive: self.display()
+        self.display_if_interactive()
 
     def line(self, coords, **kwargs):
         """
@@ -141,7 +141,7 @@ class Canvas(object):
         fill = kwargs.pop("fill", self.default_color)
         coords = self.check_coordinates(coords)
         self.draw.line(coords, fill=fill, **kwargs)
-        if self.interactive: self.display()
+        self.display_if_interactive()
 
     def text(self, text, coords, **kwargs):
         """
@@ -165,7 +165,7 @@ class Canvas(object):
         font = self.decypher_font_reference(font)
         coords = self.check_coordinates(coords)
         self.draw.text(coords, text, fill=fill, font=font, **kwargs)
-        if self.interactive: self.display()
+        self.display_if_interactive()
 
     def rectangle(self, coords, **kwargs):
         """
@@ -183,7 +183,7 @@ class Canvas(object):
         outline = kwargs.pop("outline", self.default_color)
         fill = kwargs.pop("fill", None)
         self.draw.rectangle(coords, outline=outline, fill=fill, **kwargs)
-        if self.interactive: self.display()
+        self.display_if_interactive()
 
     def polygon(self, coord_pairs, **kwargs):
         """
@@ -200,7 +200,7 @@ class Canvas(object):
         outline = kwargs.pop("outline", self.default_color)
         fill = kwargs.pop("fill", None)
         self.draw.polygon(coord_pairs, outline=outline, fill=fill, **kwargs)
-        if self.interactive: self.display()
+        self.display_if_interactive()
 
     def circle(self, coords, **kwargs):
         """
@@ -221,7 +221,7 @@ class Canvas(object):
         fill = kwargs.pop("fill", None)
         ellipse_coords = (coords[0]-radius, coords[1]-radius, coords[0]+radius, coords[1]+radius)
         self.draw.ellipse(ellipse_coords, outline=outline, fill=fill, **kwargs)
-        if self.interactive: self.display()
+        self.display_if_interactive()
 
     def ellipse(self, coords, **kwargs):
         """
@@ -239,7 +239,7 @@ class Canvas(object):
         outline = kwargs.pop("outline", self.default_color)
         fill = kwargs.pop("fill", None)
         self.draw.ellipse(coords, outline=outline, fill=fill, **kwargs)
-        if self.interactive: self.display()
+        self.display_if_interactive()
 
     def get_image(self):
         """
@@ -260,7 +260,7 @@ class Canvas(object):
         Inverts the image that ``Canvas`` is currently operating on.
         """
         self.image = ImageOps.invert(self.image).convert(o.device_mode)
-        if self.interactive: self.display()
+        self.display_if_interactive()
 
     def display(self):
         """
@@ -282,7 +282,7 @@ class Canvas(object):
             fill = self.background_color
         coords = self.check_coordinates(coords)
         self.rectangle(coords, fill=fill, outline=fill)  # paint the background black first
-        if self.interactive: self.display()
+        self.display_if_interactive()
 
     def check_coordinates(self, coords, check_count=True):
         # type: tuple -> tuple
@@ -356,6 +356,7 @@ class Canvas(object):
         font = self.decypher_font_reference(font)
         coords = self.get_centered_text_bounds(text, font=font)
         self.text(text, (coords.left, coords.top), font=font)
+        self.display_if_interactive()
 
     def get_text_bounds(self, text, font=None):
         # type: str -> Rect
@@ -398,7 +399,11 @@ class Canvas(object):
 
         self.clear(coords)
         self.draw.bitmap((coords[0], coords[1]), image_subset, fill=self.default_color)
-        if self.interactive: self.display()
+        self.display_if_interactive()
+
+    def display_if_interactive(self):
+        if self.interactive:
+            self.display()
 
     def __getattr__(self, name):
         if hasattr(self.draw, name):
