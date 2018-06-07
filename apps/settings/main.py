@@ -214,13 +214,13 @@ class GitUpdater(GenericUpdater):
         GitInterface.pull(branch = current_branch_name)
 
     def do_pretest_migrations(self):
-        import pretest_migrations
-        pretest_migrations.main()
+        import pretest_migration
+        pretest_migration.main()
 
     def revert_pretest_migrations(self):
-        import pretest_migrations
-        if hasattr(pretest_migrations, 'revert'):
-            pretest_migrations.revert()
+        import pretest_migration
+        if hasattr(pretest_migration, 'revert'):
+            pretest_migration.revert()
 
     def do_tests(self):
         with open('test_commandline', 'r') as f:
