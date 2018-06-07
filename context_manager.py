@@ -6,7 +6,7 @@ from threading import Thread, Lock
 
 from helpers import setup_logger
 
-logger = setup_logger(__name__, "debug")
+logger = setup_logger(__name__, "info")
 
 def context_target_wrapper(context, func):
     @wraps(func)
