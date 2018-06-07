@@ -412,6 +412,28 @@ class Canvas(object):
         raise AttributeError
 
 
+class MockOutput(object):
+    """
+    A mock output device that you can use to draw icons and other bitmaps using
+    ``Canvas``.
+
+    Keyword arguments:
+
+      * ``width``
+      * ``height``
+      * ``type``: ZPUI output device type list (``["b&w-pixel"]`` by default)
+      * ``device_mode``: PIL device.mode attribute (by default, ``'1'``)
+    """
+
+    def __init__(self, width=128, height=64, type=None, device_mode='1'):
+        self.width = width
+        self.height = height
+        self.type = type if type else ["b&w-pixel"]
+        self.device_mode = device_mode
+
+    def display(self, *args):
+        return True
+
 def convert_flat_list_into_pairs(l):
     pl = []
     for i in range(len(l)/2):
