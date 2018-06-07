@@ -22,6 +22,10 @@ class InputDevice(InputSkeleton):
         self.rows = rows
         InputSkeleton.__init__(self, **kwargs)
 
+    def set_available_keys(self):
+        # mapping needs to be flattened before we can get available_keys from it
+        self.available_keys = [item for row in self.mapping for item in row]
+
     def init_hw(self):
         import RPi.GPIO as GPIO #Doing that because I couldn't mock it for ReadTheDocs
         self.GPIO = GPIO

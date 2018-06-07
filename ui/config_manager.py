@@ -17,7 +17,7 @@ def get_ui_config_manager():
     return _UI_CONFIG_MANAGER
 
 
-class UIConfigManager():
+class UIConfigManager(object):
     base_config_name = "base_config.json"
     user_config_prefix = "config"
     user_config_postfix = ".json"

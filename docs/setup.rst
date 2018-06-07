@@ -17,8 +17,8 @@ Installation
 
     git clone https://github.com/ZeroPhone/ZPUI
     cd ZPUI/
-    #Install main dependencies and create a system-wide ZPUI copy
-    sudo ./setup.sh 
+    #Install main dependencies (apt and pip packages), configure systemd, and create a system-wide ZPUI copy
+    sudo ./setup.sh
     #Start the system to test your configuration - do screen and buttons work OK?
     sudo python main.py 
     #Once tested:
@@ -84,6 +84,8 @@ In that case, just run ZPUI with ``sudo python main.py`` from your local (or sys
 
 Installing the ZPUI emulator
 ============================
+
+.. image:: _static/ZPUI_Emulator.png
 
 If you want to develop ZPUI apps, but don't yet have the ZeroPhone hardware, 
 there's an option to use the emulator with a Linux PC - the emulator can use your 

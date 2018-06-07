@@ -49,6 +49,13 @@ class Listbox(BaseListUIElement):
         else:
             return self.contents[self.selected_entry][1]
 
+    def process_contents(self):
+        # Replacing string-based entry labels with single-element lists
+        for i, entry in enumerate(self.contents):
+            if isinstance(entry, basestring):
+                self.contents[i] = [entry]
+        logger.debug("{}: contents processed".format(self.name))
+
     @to_be_foreground
     def select_entry(self):
         """ Gets the currently specified entry's index and sets it as selected_entry attribute.

@@ -11,7 +11,15 @@ from time import sleep
 
 from ui import Menu, Printer, PrettyPrinter, Checkbox, MenuExitException
 
-import systemctl
+try:
+    import systemctl
+except ImportError as e:
+    try: # Are we missing gi.repository?
+        import gi.repository
+    except ImportError: # Yep, that's the case - let's disable the library so we can notify the user
+        systemctl = None
+    else: # Nope, it's something else - re-raising
+        raise e
 
 from helpers import read_or_create_config, write_config, local_path_gen
 local_path = local_path_gen(__name__)
@@ -41,29 +49,28 @@ def change_filters():
         checkbox_contents.append([type[0], type[1], type[1] in config["allowed_types"]])
     states = Checkbox(checkbox_contents, i, o, final_button_name="Save").activate()
     if states is None: return None
-    config["allowed_types"] = [state for state in states if states[state]] 
+    config["allowed_types"] = [state for state in states if states[state]]
     write_config(config, config_path)
-    
+
 def all_units():
     menu_contents = []
     units = systemctl.list_units()
-    for unit in units: 
-        menu_contents.append([unit["basename"], lambda x=unit: unit_menu(x)])
+    for unit in units:
+        menu_contents.append([unit["name"], lambda x=unit: unit_menu(x)])
     Menu(menu_contents, i, o, "Systemctl: all unit list menu").activate()
 
 def pinned_units():
     menu_contents = []
-    units = systemctl.list_units()
-    for unit_name in config["pinned_units"]:
-        menu_contents.append([unit_name, lambda x=unit_name: unit_menu({"name":x}, in_pinned=True)])
+    units = systemctl.list_units("name", config["pinned_units"])
+    for unit in units:
+        menu_contents.append([unit["name"], lambda x=unit["name"]: unit_menu({"name":x}, in_pinned=True)])
     Menu(menu_contents, i, o, "Pinned unit list menu").activate()
 
 def filtered_units():
     menu_contents = []
-    units = systemctl.list_units()
-    for unit in units: 
-        if unit["type"] in config["allowed_types"]:
-            menu_contents.append([unit["basename"], lambda x=unit: unit_menu(x)])
+    units = systemctl.list_units("unit_type", config["allowed_types"])
+    for unit in units:
+        menu_contents.append([unit["name"], lambda x=unit: unit_menu(x)])
     Menu(menu_contents, i, o, "Systemctl: filtered unit list menu").activate()
 
 def unit_menu(unit, in_pinned=False):
@@ -149,6 +156,9 @@ def disable_unit(name):
 
 
 def callback():
+    if systemctl is None:
+       PrettyPrinter("python-gi not found! Please install it using 'apt-get install python-gi' ", i, o, 5)
+       return
     try:
        systemctl.list_units()
     except OSError as e:

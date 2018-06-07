@@ -1,6 +1,8 @@
-
+from collections import namedtuple, Sequence
 from functools import wraps
 from time import time, sleep
+
+from PIL import ImageOps
 
 from helpers import setup_logger
 
@@ -31,6 +33,13 @@ def clamp(value, _min, _max):
     100
     """
     return max(_min, min(value, _max))
+
+
+def is_sequence_not_string(value):
+    """
+    Checks if the value passed is a sequence, like a list or tuple - except strings.
+    """
+    return isinstance(value, Sequence) and not isinstance(value, basestring)
 
 
 def modulo_list_index(value, _list):
@@ -198,3 +207,6 @@ class Ticker(object):
         elapsed = now - self.__last_call
         self.__last_call = now
         return elapsed
+
+
+Rect = namedtuple('Rect', ['left', 'top', 'right', 'bottom'])

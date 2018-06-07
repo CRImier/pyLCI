@@ -1,4 +1,3 @@
-
 import threading
 import pifacecad
 
@@ -8,7 +7,7 @@ from helpers import setup_logger
 
 logger = setup_logger(__name__, "warning")
 
-class InputDevice():
+class InputDevice(object):
     """ A driver for PiFace Control and Display Raspberry Pi shields. It has 5 buttons, one single-axis joystick with a pushbutton, a 16x2 HD44780 screen and an IR receiver (not used yet)."""
     mapping = [
     "KEY_LEFT",
@@ -16,7 +15,7 @@ class InputDevice():
     "KEY_HOME",
     "KEY_END",
     "KEY_DELETE",
-    "KEY_KPENTER",
+    "KEY_ENTER",
     "KEY_UP",
     "KEY_DOWN"]
     stop_flag = False

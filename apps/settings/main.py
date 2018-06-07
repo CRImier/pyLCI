@@ -1,7 +1,6 @@
-
 import os
 import signal
-from subprocess import check_output
+from subprocess import check_output, STDOUT, CalledProcessError
 from time import sleep
 
 try:
@@ -9,15 +8,16 @@ try:
 except:
     import http.client as httplib
 
-# Using a TextProgressBar because only it shows a message on the screen for now
-from ui import Menu, PrettyPrinter, DialogBox, TextProgressBar, Listbox
+from ui import Menu, PrettyPrinter, DialogBox, ProgressBar, Listbox
 from helpers.logger import setup_logger
+
+import logging_ui
 
 menu_name = "Settings"
 logger = setup_logger(__name__, "info")
 
 
-class GitInterface():
+class GitInterface(object):
 
     @classmethod
     def git_available(cls):
@@ -31,7 +31,7 @@ class GitInterface():
     def command(command):
         commandline = "git {}".format(command)
         logger.debug("Executing: {}".format(commandline))
-        return check_output(commandline, shell=True)
+        return check_output(commandline, shell=True, stderr=STDOUT)
 
     @classmethod
     def get_head_for_branch(cls, branch):
@@ -48,7 +48,28 @@ class GitInterface():
 
     @classmethod
     def pull(cls, source = "origin", branch = "master", opts="--no-edit"):
-        return cls.command("pull {2} {0} {1}".format(source, branch, opts))
+        try:
+            return cls.command("pull {2} {0} {1}".format(source, branch, opts))
+        except CalledProcessError as e:
+            lines = iter(e.output.split('\n'))
+            logger.debug("Parsing output")
+            marker1 = "following untracked working tree files would be overwritten by merge"
+            marker2 = "local changes to the following files would be overwritten by merge"
+            for line in lines:
+                logger.debug(repr(line))
+                if marker1 in line or marker2 in line:
+                    logger.info("Found interfering files!")
+                    line = next(lines)
+                    while line.startswith('\t'):
+                        line = line.strip()
+                        if not line.endswith('/'):
+                            try:
+                                logger.info("Removing interfering file: {}".format(line))
+                                os.remove(line)
+                            except OSError:
+                                logger.warning("Couldn't remove an interfering file {} while pulling!".format(line))
+                        line = next(lines)
+            return cls.command("pull {2} {0} {1}".format(source, branch, opts))
 
 
 class UpdateUnnecessary(Exception):
@@ -75,9 +96,9 @@ class GenericUpdater(object):
 
     def update(self):
         logger.info("Starting update process")
-        pb = TextProgressBar(i, o, message="Updating ZPUI")
+        pb = ProgressBar(i, o, message="Updating ZPUI")
         pb.run_in_background()
-        progress_per_step = 1.0 / len(self.steps)
+        progress_per_step = 100 / len(self.steps)
 
         completed_steps = []
         try:
@@ -96,27 +117,27 @@ class GenericUpdater(object):
             failed_step = step
             logger.exception("Failed on step {}".format(failed_step))
             failed_message = self.failed_messages.get(failed_step, "Failed on step '{}'".format(failed_step))
-            pb.stop()
+            pb.pause()
             PrettyPrinter(failed_message, i, o, 2)
             pb.set_message("Reverting update")
-            pb.run_in_background()
+            pb.resume()
             try:
                 logger.info("Reverting the failed step: {}".format(failed_step))
                 self.revert_step(failed_step)
             except:
                 logger.exception("Can't revert failed step {}".format(failed_step))
-                pb.stop()
+                pb.pause()
                 PrettyPrinter("Can't revert failed step '{}'".format(step), i, o, 2)
-                pb.run_in_background()
+                pb.resume()
             logger.info("Reverting the previous steps")
             for step in completed_steps:
                 try:
                     self.revert_step(step)
                 except:
                     logger.exception("Failed to revert step {}".format(failed_step))
-                    pb.stop()
+                    pb.pause()
                     PrettyPrinter("Failed to revert step '{}'".format(step), i, o, 2)
-                    pb.run_in_background()
+                    pb.resume()
                 pb.progress -= progress_per_step
             sleep(1) # Needed here so that 1) the progressbar goes to 0 2) run_in_background launches the thread before the final stop() call
             #TODO: add a way to pause the Refresher
@@ -139,14 +160,15 @@ class GenericUpdater(object):
 class GitUpdater(GenericUpdater):
     branch = "master"
 
-    steps = ["check_connection", "check_git", "check_revisions", "pull", "install_requirements", "tests"]
+    steps = ["check_connection", "check_git", "check_revisions", "pull", "install_requirements", "pretest_migrations", "tests"]
     progressbar_messages = {
         "check_connection": "Connection check",
         "check_git": "Running git",
         "check_revisions": "Comparing code",
         "pull": "Fetching code",
         "install_requirements": "Installing packages",
-        "tests": "Running tests",
+        "pretest_migrations": "Running migrations",
+        "tests": "Running tests"
     }
     failed_messages = {
         "check_connection": "No Internet connection!",
@@ -154,6 +176,7 @@ class GitUpdater(GenericUpdater):
         "check_revisions": "Exception while comparing revisions!",
         "pull": "Couldn't get new code!",
         "install_requirements": "Failed to install new packages!",
+        "pretest_migrations": "Failed to run migrations!",
         "tests": "Tests failed!"
     }
 
@@ -190,8 +213,18 @@ class GitUpdater(GenericUpdater):
         current_branch_name = GitInterface.get_current_branch()
         GitInterface.pull(branch = current_branch_name)
 
+    def do_pretest_migrations(self):
+        import pretest_migration
+        pretest_migration.main()
+
+    def revert_pretest_migrations(self):
+        import pretest_migration
+        if hasattr(pretest_migration, 'revert'):
+            pretest_migration.revert()
+
     def do_tests(self):
-        commandline = "python -B -m pytest --doctest-modules -v --doctest-ignore-import-errors --ignore=output/drivers --ignore=input/drivers --ignore=apps/hardware_apps/status/ --ignore=apps/test_hardware"
+        with open('test_commandline', 'r') as f:
+            commandline = f.readline().strip()
         output = check_output(commandline.split(" "))
         logger.debug("pytest output:")
         logger.debug(output)
@@ -199,7 +232,7 @@ class GitUpdater(GenericUpdater):
     def revert_pull(self):
         # do_check_revisions already ran, we now have the previous revision's
         # commit hash in self.previous_revision
-        GitInterface.command("reset --mixed {}".format(self.previous_revision))
+        GitInterface.command("reset --hard {}".format(self.previous_revision))
         # requirements.txt now contains old requirements, let's install them back
         self.do_install_requirements()
 
@@ -218,19 +251,20 @@ class GitUpdater(GenericUpdater):
                 #TODO: run tests?
 
 
-def settings():
-    git_updater = GitUpdater()
-    c = [["Update ZPUI", git_updater.update],
-         ["Select branch", git_updater.pick_branch]]
-    Menu(c, i, o, "ZPUI settings menu").activate()
-
-
-callback = settings
 i = None  # Input device
 o = None  # Output device
-
 
 def init_app(input, output):
     global i, o
     i = input
     o = output
+    logging_ui.i = i
+    logging_ui.o = o
+
+def callback():
+    git_updater = GitUpdater()
+    c = [["Update ZPUI", git_updater.update],
+         ["Select branch", git_updater.pick_branch],
+         #["Submit logs", logging_ui.submit_logs],
+         ["Logging settings", logging_ui.config_logging]]
+    Menu(c, i, o, "ZPUI settings menu").activate()
