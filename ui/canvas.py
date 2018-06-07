@@ -137,6 +137,7 @@ class Canvas(object):
         Keyword arguments:
 
           * ``fill``: line color (default: white, as default canvas color)
+          * ``width``: line width (default: 0, which results in a single-pixel-wide line)
         """
         fill = kwargs.pop("fill", self.default_color)
         coords = self.check_coordinates(coords)
