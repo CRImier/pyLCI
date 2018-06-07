@@ -160,7 +160,7 @@ class GenericUpdater(object):
 class GitUpdater(GenericUpdater):
     branch = "master"
 
-    steps = ["check_connection", "check_git", "check_revisions", "pull", "install_requirements", "tests"]
+    steps = ["check_connection", "check_git", "check_revisions", "pull", "install_requirements", "pretest_migrations", "tests"]
     progressbar_messages = {
         "check_connection": "Connection check",
         "check_git": "Running git",
@@ -210,6 +210,15 @@ class GitUpdater(GenericUpdater):
     def do_pull(self):
         current_branch_name = GitInterface.get_current_branch()
         GitInterface.pull(branch = current_branch_name)
+
+    def do_pretest_migrations(self):
+        import pretest_migrations
+        pretest_migrations.main()
+
+    def revert_pretest_migrations(self):
+        import pretest_migrations
+        if hasattr(pretest_migrations, 'revert'):
+            pretest_migrations.revert()
 
     def do_tests(self):
         with open('test_commandline', 'r') as f:
