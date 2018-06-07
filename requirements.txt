@@ -8,3 +8,4 @@ pytest
 mock
 pydbus
 pyotp
+jsonrpclib
