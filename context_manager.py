@@ -126,6 +126,7 @@ class Context(object):
         * Name (``"name"``) of the context
         * Menu name (``"menu_name"``) of the associated menu entry (if one exists, else ``None``)
         * Previous context name (``"previous_context"``) for the context (if one exists, else ``None``)
+        * Status (``"state"``) - ``"inactive"``, ``"running"`` or ``"non-threaded"``
         """
         return self.event_cb(self.name, "list_contexts")
 
@@ -427,6 +428,10 @@ class ContextManager(object):
                 c["name"] = name
                 c["menu_name"] = context.menu_name
                 c["previous_context"] = self.get_previous_context(name)
+                if not context.is_threaded():
+                    c["state"] = "non-threaded"
+                else:
+                    c["state"] = "running" if context.thread_is_active() else "inactive"
                 c_list.append(c)
             return c_list
         elif event == "request_switch":
