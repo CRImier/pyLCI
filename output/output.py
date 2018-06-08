@@ -157,7 +157,6 @@ class OutputProxy(CharacterOutputDevice, GraphicalOutputDevice):
         self.current_image = image
 
     def _clear(self):
-        print("Clearing screen proxy")
         self.current_image = None
 
     def _display_data(self, *data):
