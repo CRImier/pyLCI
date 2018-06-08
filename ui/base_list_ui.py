@@ -516,6 +516,10 @@ class EightPtView(TextView):
     x_scrollbar_offset = 5
     scrollbar_y_offset = 1
 
+    def __init__(self, *args, **kwargs):
+        self.full_width_cursor = kwargs.pop("full_width_cursor", False)
+        TextView.__init__(self, *args, **kwargs)
+
     def get_fow_width_in_chars(self):
         return (self.o.width - self.x_scrollbar_offset) / self.charwidth
 
@@ -567,11 +571,17 @@ class EightPtView(TextView):
         # We might not need to draw the cursor if there are no items present
         if cursor_y is not None:
             c_y = cursor_y * self.charheight + 1
+            if self.full_width_cursor:
+                x2 = c.width-(left_offset-1)
+            else:
+                menu_texts = menu_text[cursor_y:cursor_y+self.entry_height]
+                max_menu_text_len = max([len(t) for t in menu_texts])
+                x2 = self.charwidth * max_menu_text_len + left_offset
             cursor_dims = (
                 left_offset - 1,
                 c_y - 1,
-                self.charwidth * len(menu_text[cursor_y]) + left_offset,
-                c_y + self.charheight - 1
+                x2,
+                c_y + self.charheight*self.entry_height - 1
             )
             c.invert_rect(cursor_dims)
 
