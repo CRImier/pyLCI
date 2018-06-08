@@ -32,6 +32,7 @@ class Context(object):
     threaded = True
     i = None
     o = None
+    menu_name = None
 
     def __init__(self, name, event_callback):
         self.name = name
@@ -118,6 +119,16 @@ class Context(object):
         self.o._clear()
         return self.event_cb(self.name, "finished")
 
+    def list_contexts(self):
+        """
+        Returns a list of all available contexts, containing:
+
+        * Name (``"name"``) of the context
+        * Menu name (``"menu_name"``) of the associated menu entry (if one exists, else ``None``)
+        * Previous context name (``"previous_context"``) for the context (if one exists, else ``None``)
+        """
+        return self.event_cb(self.name, "list_contexts")
+
     def signal_background(self):
         """
         Signals to the ContextManager that the application wants to go into background.
@@ -125,12 +136,16 @@ class Context(object):
         """
         return self.event_cb(self.name, "background")
 
-    def request_switch(self):
+    def request_switch(self, requested_context=None):
         """
         Requests ContextManager to switch to the context in question. If switch is done,
-        returns True, otherwise returns False.
+        returns True, otherwise returns False. If a context name is supplied,
+        will switch to that context.
         """
-        return self.event_cb(self.name, "request_switch")
+        if requested_context:
+            return self.event_cb(self.name, "request_switch_to", requested_context)
+        else:
+            return self.event_cb(self.name, "request_switch")
 
     def is_active(self):
         """
@@ -226,6 +241,12 @@ class ContextManager(object):
         """
         logger.debug("Registering a thread target for the {} context".format(context_alias))
         self.contexts[context_alias].set_target(target)
+
+    def set_menu_name(self, context_alias, menu_name):
+        """
+        A context manager-side function that associates a menu name with a context.
+        """
+        self.contexts[context_alias].menu_name = menu_name
 
     def switch_to_context(self, context_alias):
         """
@@ -397,10 +418,28 @@ class ContextManager(object):
             self.am.register_action(**d)
         elif event ==  "get_actions":
             return self.am.get_actions()
+        elif event == "list_contexts":
+            logger.info("Context list requested by {} app".format(context_alias))
+            c_list = []
+            for name in self.contexts:
+                c = {}
+                context = self.contexts[name]
+                c["name"] = name
+                c["menu_name"] = context.menu_name
+                c["previous_context"] = self.get_previous_context(name)
+                c_list.append(c)
+            return c_list
         elif event == "request_switch":
             # As usecases appear, we will likely want to do some checks here
             logger.info("Context switch requested by {} app".format(context_alias))
             return self.switch_to_context(context_alias)
+        elif event == "request_switch_to":
+            # If app is not the one active, should we honor its request?
+            # probably not, but we might want to do something about it
+            # to be considered
+            new_context = args[0]
+            logger.info("Context switch to {} requested by {} app".format(new_context, context_alias))
+            return self.switch_to_context(new_context)
         elif event == "request_global_keymap":
             results = {}
             keymap = args[0]
