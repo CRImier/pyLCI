@@ -1,5 +1,6 @@
 from input.input import InputProxy
 from output.output import OutputProxy
+from action_manager import ActionManager
 
 from functools import wraps
 from threading import Thread, Lock
@@ -144,6 +145,28 @@ class Context(object):
         """
         return self.event_cb(self.name, "get_previous_context_image")
 
+    def register_action(self, name, cb, menu_name_cb, description="", aux_cb = None, documentation='', *args, **kwargs):
+        """
+        Allows an app to register an 'action' that can be used by other apps -
+        for example, ZeroMenu.
+
+        Arguments:
+
+          * ``name``: software-friendly name
+          * ``cb``: the main callback, which will be called when the action is called. Should expect no parameters.
+          * ``menu_name_cb``: the callback that will be called to get the menu name. Can be a string instead.
+          * ``description``: the user-friendly description of the action, one sentence or more
+          * ``aux_cb``: the auxiliary callback. For example, ZeroMenu will have that mapped to the right click.
+          * ``documentation``: documentation for the callback/auxiliary callback usage
+        """
+        d = {'name':name, 'cb':cb, 'menu_name_cb':menu_name_cb, 'description':description, 'aux_cb':aux_cb, 'documentation':documentation}
+        d.update(kwargs)
+        d['args'] = args
+        return self.event_cb(self.name, "register_action", dict=d)
+
+    def get_actions(self):
+        return self.event_cb(self.name, "get_actions")
+
     def request_global_keymap(self, keymap):
         """
         Requests ContextManager to set callbacks into the global keymap.
@@ -166,6 +189,7 @@ class ContextManager(object):
         self.contexts = {}
         self.previous_contexts = {}
         self.switching_contexts = Lock()
+        self.am = ActionManager()
 
     def init_io(self, input_processor, screen):
         """
@@ -366,6 +390,13 @@ class ContextManager(object):
             return self.contexts[previous_context].get_io()[1].get_current_image()
         elif event == "is_active":
             return context_alias == self.current_context
+        elif event == "register_action":
+            d = kwargs["dict"]
+            d["app_name"] = context_alias
+            d["full_name"] = "{}-{}".format(context_alias, d["name"])
+            self.am.register_action(**d)
+        elif event ==  "get_actions":
+            return self.am.get_actions()
         elif event == "request_switch":
             # As usecases appear, we will likely want to do some checks here
             logger.info("Context switch requested by {} app".format(context_alias))
