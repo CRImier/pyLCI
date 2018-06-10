@@ -2,7 +2,6 @@ menu_name = "ZeroMenu"
 
 import os
 from datetime import datetime
-from threading import Event
 
 from ui import Menu, PrettyPrinter, Checkbox, Listbox
 from helpers import read_or_create_config, local_path_gen, save_config_gen
