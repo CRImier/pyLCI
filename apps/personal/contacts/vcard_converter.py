@@ -3,7 +3,7 @@ import vobject
 from address_book import Contact
 from helpers import setup_logger
 
-logger = setup_logger(__name__)
+logger = setup_logger(__name__, "info")
 
 
 class VCardContactConverter(object):
