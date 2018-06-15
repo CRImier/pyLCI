@@ -35,7 +35,7 @@ class ATError(Exception):
         message = "Expected {}, got {}".format(expected, repr(received))
         Exception.__init__(self, message)
 
-class Phone():
+class Phone(object):
     
     modem = None
     modem_state = {}
@@ -109,7 +109,7 @@ class Phone():
             raise AttributeError
 
 
-class Modem():
+class Modem(object):
     #Serial port settings
     read_buffer_size = 1024
 

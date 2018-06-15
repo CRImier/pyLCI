@@ -9,7 +9,7 @@ class InputDevice(InputSkeleton):
     It supports both interrupt-driven mode (as fr now, RPi-only) and polling mode."""
 
     default_mapping = [
-    "KEY_KPENTER",
+    "KEY_ENTER",
     "KEY_DELETE",
     "KEY_END",
     "KEY_DOWN",

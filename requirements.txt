@@ -2,8 +2,11 @@ pydbus
 luma.oled
 python-nmap
 smspdu
-zerophone_hw
+zerophone_hw>=0.3.0
 gpio
 vobject
 pytest
 mock
+pydbus
+pyotp
+jsonrpclib

@@ -9,6 +9,10 @@ from ui.utils import to_be_foreground
 logger = setup_logger(__name__, "info")
 
 
+class RefresherExitException(Exception):
+    pass
+
+
 class Refresher(object):
     """
     A Refresher allows you to update the screen on a regular interval.
@@ -40,11 +44,8 @@ class Refresher(object):
         self.i = i
         self.o = o
         self.name = name
-        self.refresh_interval = refresh_interval
+        self.set_refresh_interval(refresh_interval)
         self.refresh_function = refresh_function
-        #interval for checking the in_background property in the activate()
-        #when refresh_interval is small enough, is the same as refresh_interval
-        self.sleep_time = 0.1 if refresh_interval > 0.1 else refresh_interval
         self.calculate_intervals()
         self.set_keymap(keymap if keymap else {})
         self.in_foreground = False
@@ -55,8 +56,8 @@ class Refresher(object):
         logger.debug("refresher {} in foreground".format(self.name))
         self.in_background.set()
         self.in_foreground = True
-        self.refresh()
         self.activate_keymap()
+        self.refresh()
 
     def to_background(self):
         """ Signals ``activate`` to finish executing """
@@ -72,6 +73,10 @@ class Refresher(object):
         logger.debug(self.name+" exited")
         return True
 
+    @property
+    def activated(self):
+        return self.in_background
+
     def pause(self):
         """
         Pauses the refresher, not allowing it to print anything on the screen
@@ -84,9 +89,18 @@ class Refresher(object):
         Resumes the refresher after it's been paused, allowing it to continue
         printing things on the screen. Refreshes the screen when it's called.
         """
-        self.in_foreground = True
-        self.activate_keymap()
-        self.refresh()
+        if not self.in_foreground:
+            self.in_foreground = True
+            self.activate_keymap()
+            self.refresh()
+
+    def set_refresh_interval(self, new_interval):
+        """Allows setting Refresher's refresh intervals after it's been initialized"""
+        #interval for checking the in_background property in the activate()
+        #when refresh_interval is small enough, is the same as refresh_interval
+        self.refresh_interval = new_interval
+        self.sleep_time = 0.1 if new_interval > 0.1 else new_interval
+        self.calculate_intervals()
 
     def calculate_intervals(self):
         """Calculates the sleep intervals of the refresher, so that no matter the
@@ -128,37 +142,55 @@ class Refresher(object):
         def wrapper(*args, **kwargs):
             self.to_background()
             func(*args, **kwargs)
-            logger.debug("Executed wrapped function: {}".format(func.__name__))
+            logger.debug("{}: executed wrapped function: {}".format(self.name, func.__name__))
             if self.in_background.isSet():
                 self.to_foreground()
         wrapper.__name__ == func.__name__
         return wrapper
 
-    def process_keymap(self, keymap):
-        """Processes the keymap. In future, will allow per-system keycode-to-callback tweaking using a config file. """
+    def process_keymap(self, keymap, override_left=True):
+        """
+        Processes the keymap, wrapping all callbacks using the ``process_callback`` method.
+        Also, sets KEY_LEFT unless ``override_left`` keyword argument is False
+        (use with caution, there aren't many good reasons to do this).
+        """
         logger.debug("{}: processing keymap - {}".format(self.name, keymap))
         for key in keymap:
             callback = self.process_callback(keymap[key])
             keymap[key] = callback
-        if not "KEY_LEFT" in keymap:
-            keymap["KEY_LEFT"] = self.deactivate
+        if override_left:
+            if not "KEY_LEFT" in keymap:
+                keymap["KEY_LEFT"] = self.deactivate
         return keymap
 
     def set_keymap(self, keymap):
         """Sets the refresher's keymap (filtered using ``process_keymap`` before setting)."""
         self.keymap = self.process_keymap(keymap)
 
+    def update_keymap(self, new_keymap):
+        """Sets the refresher's keymap (filtered using ``process_keymap`` before setting)."""
+        processed_keymap = self.process_keymap(new_keymap, override_left=False)
+        self.keymap.update(processed_keymap)
+
     @to_be_foreground
     def activate_keymap(self):
-        self.i.stop_listen()
-        self.i.clear_keymap()
-        self.i.set_keymap(self.keymap)
-        self.i.listen()
+        if self.i:
+            self.i.stop_listen()
+            self.i.clear_keymap()
+            self.i.set_keymap(self.keymap)
+            self.i.listen()
+        else:
+            logger.warning("{}: no input device object supplied, not setting the keymap".format(self.name))
 
     @to_be_foreground
     def refresh(self):
         logger.debug("{}: refreshed data on display".format(self.name))
-        data_to_display = self.refresh_function()
+        try:
+            data_to_display = self.refresh_function()
+        except RefresherExitException:
+            logger.info("{}: received exit exception, deactivating".format(self.name))
+            self.deactivate()
+            return
         if isinstance(data_to_display, basestring):
             #Passed a string, not a list.
             #Let's be user-friendly and wrap it in a list!

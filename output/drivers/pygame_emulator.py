@@ -4,13 +4,9 @@ Allows development of sofware without ZeroPhone hardware,
 e.g. on a laptop with a USB keyboard.
 """
 
-from threading import Event
-from time import sleep
-
-from luma.core.render import canvas
-
 import emulator
 from output.output import OutputDevice
+
 from helpers import setup_logger
 logger = setup_logger(__name__, "info")
 
@@ -47,29 +43,3 @@ class Screen(OutputDevice):
 
     def __getattr__(self, name):
         return getattr(self.emulator, name)
-
-    #def display_data(self, *args):
-    #    """Displays data on display.
-    #    called from menu.py refresh() so don't remove this method
-    #    This function does the actual work of printing things to display.
-    #    ``*args`` is a list of strings,
-    #              where each string corresponds to a row of the display,
-    #              starting with 0.
-    #              Note:  the emulator does not support passing tuples, lists
-    #              or anything except comma delimited simple strings as args.
-    #    """
-    #    self.emulator.display_data(*args)
-
-    #def setCursor(self, row, col):
-    #    """
-    #    Called from menu.py refresh() so don't remove this method
-    #    Set current input cursor to ``row`` and ``column`` specified """
-    #    self.emulator.setCursor(row, col)
-
-    #def noCursor(self):
-    #    """ Turns the box cursor off """
-    #    self.emulator.noCursor()
-
-    #def cursor(self):
-    #    """ Turns the box cursor on """
-    #    self.emulator.cursor()

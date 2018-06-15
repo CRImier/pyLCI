@@ -33,6 +33,9 @@ var/
 pip-log.txt
 pip-delete-this-directory.txt
 
+#PyTest
+.pytest_cache
+
 # Unit test / coverage reports
 htmlcov/
 .tox/
@@ -64,3 +67,6 @@ config.json
 # We ship do_not_load files in some directories, but do not track user-created files
 # (only user-removed ones)
 do_not_load
+log_conf.ini
+# Ignoring the default screenshot folder
+screenshots/
