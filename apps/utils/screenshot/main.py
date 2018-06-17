@@ -39,7 +39,7 @@ def list_screenshots():
         date_part = filename.split('_', 1)[-1].rsplit('.')[0]
         path = os.path.join(screenshot_folder, filename)
         mc.append([date_part, lambda x=path: show_screenshot(x)])
-    mc = list(sorted(mc))
+    mc = list(reversed(sorted(mc)))
     Menu(mc, i, o, name="Screenshot list ").activate()
 
 def callback():
