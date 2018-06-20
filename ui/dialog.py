@@ -128,7 +128,7 @@ class DialogBox(object):
         self.view.refresh()
 
 
-class TextView():
+class TextView(object):
 
     def __init__(self, o, el):
         self.o = o
@@ -139,7 +139,7 @@ class TextView():
         labels = [label for label, value in self.el.values]
         label_string = " ".join(labels)
         if len(label_string) > self.o.cols:
-            raise ValueError("DialogBox {}: all values combined are longer than screen's width".format(self.name))
+            raise ValueError("DialogBox {}: all values combined are longer than screen's width".format(self.el.name))
         self.right_offset = (self.o.cols - len(label_string))/2
         self.displayed_label = " "*self.right_offset+label_string
         #Need to go through the string to mark the first places because we need to remember where to put the cursors
@@ -163,7 +163,8 @@ class GraphicalView(TextView):
 
         #Drawing text
         second_line_position = 10
-        c.text(self.el.message, (2, 0))
+        ctc = c.get_centered_text_bounds(self.el.message)
+        c.text(self.el.message, (ctc.left, 0))
         c.text(self.displayed_label, (2, second_line_position))
 
         #Calculating the cursor dimensions
@@ -177,7 +178,7 @@ class GraphicalView(TextView):
         cursor_dims = ( c_x1, c_y1, c_x2 + 2, c_y2 + 2 )
 
         #Drawing the cursor
-        c.invert_rect_colors(cursor_dims)
+        c.invert_rect(cursor_dims)
 
         return c.get_image()
 

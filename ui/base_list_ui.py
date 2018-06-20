@@ -259,7 +259,13 @@ class BaseListUIElement(object):
     def select_entry(self):
         """To be overridden by child UI elements. Is executed when ENTER is pressed
            in UI element."""
-        logger.debug(self.contents[self.pointer])
+        logger.debug("Enter key press detected on {}".format(self.contents[self.pointer]))
+
+    @to_be_foreground
+    def process_right_press(self):
+        """To be overridden by child UI elements. Is executed when RIGHT is pressed
+           in UI element."""
+        logger.debug("Right key press detected on {}".format(self.contents[self.pointer]))
 
     # Working with the keymap
 
@@ -278,7 +284,8 @@ class BaseListUIElement(object):
             "KEY_DOWN": lambda: self.move_down(),
             "KEY_PAGEUP": lambda: self.page_up(),
             "KEY_PAGEDOWN": lambda: self.page_down(),
-            "KEY_ENTER": lambda: self.select_entry()
+            "KEY_ENTER": lambda: self.select_entry(),
+            "KEY_RIGHT": lambda: self.process_right_press()
         })
         if self.exitable:
             self.keymap["KEY_LEFT"] = lambda: self.deactivate()
@@ -301,7 +308,7 @@ class BaseListUIElement(object):
         for entry in contents:
             entry_repr = entry[0]
             if not isinstance(entry_repr, basestring) and not isinstance(entry_repr, list):
-                raise Exception("Entries can be either strings or lists of strings - {} is neither!".format(entry))
+                raise Exception("Entry labels can be either strings or lists of strings - {} is neither!".format(entry))
             if isinstance(entry_repr, list):
                 for entry_str in entry_repr:
                     if not isinstance(entry_str, basestring):
@@ -381,7 +388,7 @@ class BaseListBackgroundableUIElement(BaseListUIElement):
 
 # Views.
 
-class TextView():
+class TextView(object):
     first_displayed_entry = 0
     last_displayed_entry = None
 
@@ -444,12 +451,12 @@ class TextView():
         displayed_data = []
         disp_entry_positions = range(self.first_displayed_entry, self.last_displayed_entry + 1)
         for entry_num in disp_entry_positions:
-            displayed_entry = self.render_displayed_entry(entry_num)
+            displayed_entry = self.render_displayed_entry_text(entry_num)
             displayed_data += displayed_entry
         logger.debug("Displayed data: {}".format(displayed_data))
         return displayed_data
 
-    def render_displayed_entry(self, entry_num):
+    def render_displayed_entry_text(self, entry_num):
         """Renders an UI element entry by its position number in self.contents, determined also by display width, self.entry_height and entry's representation type.
         If entry representation is a string, splits it into parts as long as the display's width in characters.
            If active flag is set, appends a "*" as the first entry's character. Otherwise, appends " ".
@@ -509,6 +516,10 @@ class EightPtView(TextView):
     x_scrollbar_offset = 5
     scrollbar_y_offset = 1
 
+    def __init__(self, *args, **kwargs):
+        self.full_width_cursor = kwargs.pop("full_width_cursor", False)
+        TextView.__init__(self, *args, **kwargs)
+
     def get_fow_width_in_chars(self):
         return (self.o.width - self.x_scrollbar_offset) / self.charwidth
 
@@ -519,7 +530,7 @@ class EightPtView(TextView):
     def refresh(self):
         logger.debug("{}: refreshed data on display".format(self.el.name))
         self.fix_pointers_on_refresh()
-        image = self.get_displayed_image(cursor_y=self.get_active_line_num())
+        image = self.get_displayed_image()
         self.o.display_image(image)
 
     def get_scrollbar_top_bottom(self):
@@ -538,12 +549,7 @@ class EightPtView(TextView):
         bottom = top + length
         return top, bottom
 
-    @to_be_foreground
-    def get_displayed_image(self, cursor_x=0, cursor_y=None):
-        """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.display_image function.
-        |Doesn't support partly-rendering entries yet."""
-        menu_text = self.get_displayed_text()
-        c = Canvas(self.o)
+    def draw_scrollbar(self, c):
         scrollbar_coordinates = self.get_scrollbar_top_bottom()
         # Drawing scrollbar, if applicable
         if scrollbar_coordinates == (0, 0):
@@ -553,60 +559,59 @@ class EightPtView(TextView):
             left_offset = self.x_scrollbar_offset
             y1, y2 = scrollbar_coordinates
             c.rectangle((1, y1, 2, y2))
-        #Drawing the text itself
+        return left_offset
+
+    def draw_menu_text(self, c, menu_text, left_offset):
         for i, line in enumerate(menu_text):
             y = (i * self.charheight - 1) if i != 0 else 0
             c.text(line, (left_offset, y))
+
+    def draw_cursor(self, c, menu_text, left_offset):
+        cursor_y = self.get_active_line_num()
+        # We might not need to draw the cursor if there are no items present
         if cursor_y is not None:
-            c_x = cursor_x * self.charwidth + 1
             c_y = cursor_y * self.charheight + 1
+            if self.full_width_cursor:
+                x2 = c.width-(left_offset-1)
+            else:
+                menu_texts = menu_text[cursor_y:cursor_y+self.entry_height]
+                max_menu_text_len = max([len(t) for t in menu_texts])
+                x2 = self.charwidth * max_menu_text_len + left_offset
             cursor_dims = (
-                c_x - 1 + left_offset,
+                left_offset - 1,
                 c_y - 1,
-                c_x + self.charwidth * len(menu_text[cursor_y]) + left_offset,
-                c_y + self.charheight
+                x2,
+                c_y + self.charheight*self.entry_height - 1
             )
-            c.invert_rect_colors(cursor_dims)
+            c.invert_rect(cursor_dims)
+
+    @to_be_foreground
+    def get_displayed_image(self):
+        """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.display_image function.
+        |Doesn't support partly-rendering entries yet."""
+        c = Canvas(self.o)
+        # Get the menu text
+        menu_text = self.get_displayed_text()
+        # Drawing the scrollbar (will only be drawn if applicable)
+        left_offset = self.draw_scrollbar(c)
+        # Drawing the text itself
+        self.draw_menu_text(c, menu_text, left_offset)
+        # Drawing the cursor
+        self.draw_cursor(c, menu_text, left_offset)
+        # Returning the image
         return c.get_image()
 
 
 class SixteenPtView(EightPtView):
     charwidth = 8
     charheight = 16
+    font = "Fixedsys62.ttf"
 
-    @to_be_foreground
-    def get_displayed_image(self, cursor_x=0, cursor_y=None):
-        """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.display_image function.
-        |Doesn't support partly-rendering entries yet."""
-        menu_text = self.get_displayed_text()
-        c = Canvas(self.o)
-        scrollbar_coordinates = self.get_scrollbar_top_bottom()
-        # Drawing scrollbar, if applicable
-        if scrollbar_coordinates == (0, 0):
-            # left offset is dynamic and depends on whether there's a scrollbar or not
-            left_offset = self.x_offset
-        else:
-            left_offset = self.x_scrollbar_offset
-            y1, y2 = scrollbar_coordinates
-            c.rectangle((1, y1, 2, y2))
-        #Drawing the text itself
-        #http://pillow.readthedocs.io/en/3.1.x/reference/ImageFont.html
-        font = c.load_font("Fixedsys62.ttf", 16)
+    def draw_menu_text(self, c, menu_text, left_offset):
+        font = c.load_font(self.font, self.charheight)
         for i, line in enumerate(menu_text):
             y = (i * self.charheight - 1) if i != 0 else 0
             c.text(line, (left_offset, y), font=font)
-        # Drawing cursor, if enabled
-        if cursor_y is not None:
-            c_x = cursor_x * self.charwidth
-            c_y = cursor_y * self.charheight
-            cursor_dims = (
-                c_x - 1 + left_offset,
-                c_y - 1,
-                c_x + self.charwidth * len(menu_text[cursor_y]) + left_offset,
-                c_y + self.charheight
-            )
-            c.invert_rect_colors(cursor_dims)
-        return c.get_image()
 
 
 class MainMenuTripletView(SixteenPtView):
@@ -620,7 +625,7 @@ class MainMenuTripletView(SixteenPtView):
         self.charheight = self.o.height / 3
 
     @to_be_foreground
-    def get_displayed_canvas(self, cursor_x=0, cursor_y=None):
+    def get_displayed_image(self):
         # This view doesn't have a cursor, instead, the entry that's currently active is in the display center
         c = Canvas(self.o)
         central_position = (10, 16)

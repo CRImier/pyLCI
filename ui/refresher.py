@@ -9,6 +9,10 @@ from ui.utils import to_be_foreground
 logger = setup_logger(__name__, "info")
 
 
+class RefresherExitException(Exception):
+    pass
+
+
 class Refresher(object):
     """
     A Refresher allows you to update the screen on a regular interval.
@@ -52,8 +56,8 @@ class Refresher(object):
         logger.debug("refresher {} in foreground".format(self.name))
         self.in_background.set()
         self.in_foreground = True
-        self.refresh()
         self.activate_keymap()
+        self.refresh()
 
     def to_background(self):
         """ Signals ``activate`` to finish executing """
@@ -69,6 +73,10 @@ class Refresher(object):
         logger.debug(self.name+" exited")
         return True
 
+    @property
+    def activated(self):
+        return self.in_background
+
     def pause(self):
         """
         Pauses the refresher, not allowing it to print anything on the screen
@@ -81,9 +89,10 @@ class Refresher(object):
         Resumes the refresher after it's been paused, allowing it to continue
         printing things on the screen. Refreshes the screen when it's called.
         """
-        self.in_foreground = True
-        self.activate_keymap()
-        self.refresh()
+        if not self.in_foreground:
+            self.in_foreground = True
+            self.activate_keymap()
+            self.refresh()
 
     def set_refresh_interval(self, new_interval):
         """Allows setting Refresher's refresh intervals after it's been initialized"""
@@ -165,15 +174,23 @@ class Refresher(object):
 
     @to_be_foreground
     def activate_keymap(self):
-        self.i.stop_listen()
-        self.i.clear_keymap()
-        self.i.set_keymap(self.keymap)
-        self.i.listen()
+        if self.i:
+            self.i.stop_listen()
+            self.i.clear_keymap()
+            self.i.set_keymap(self.keymap)
+            self.i.listen()
+        else:
+            logger.warning("{}: no input device object supplied, not setting the keymap".format(self.name))
 
     @to_be_foreground
     def refresh(self):
         logger.debug("{}: refreshed data on display".format(self.name))
-        data_to_display = self.refresh_function()
+        try:
+            data_to_display = self.refresh_function()
+        except RefresherExitException:
+            logger.info("{}: received exit exception, deactivating".format(self.name))
+            self.deactivate()
+            return
         if isinstance(data_to_display, basestring):
             #Passed a string, not a list.
             #Let's be user-friendly and wrap it in a list!

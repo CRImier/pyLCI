@@ -5,7 +5,7 @@ logger = setup_logger(__name__, "warning")
 
 from ui.utils import to_be_foreground
 
-class NumberKeypadInputLayer():
+class NumberKeypadInputLayer(object):
     """Experimental UI element. Suited for multi-row screens, not tested on and developed for 2x16 and no cursor implemented yet.
 
     Implements a number input UI element for a numeric keypad, allowing to translate keycodes directly into numbers.

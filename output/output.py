@@ -30,6 +30,7 @@ class OutputDevice(object):
         hidden_methods = ["init_proxy", "proxify_method", "detach_current_proxy", "attach_proxy", "get_proxied_method", "proxify_method"]
         attribute_names = [ k for (k, v) in public_attributes if not callable(v) and k not in hidden_attributes]
         method_names = [ k for (k, v) in public_attributes if callable(v) and k not in hidden_methods]
+        direct_methods = ["display_data_onto_image"]
         
         for attribute_name in attribute_names:
             #print("attribute: {}".format(attribute_name))
@@ -45,6 +46,9 @@ class OutputDevice(object):
             #print("method: {}".format(method_name))
             # Setting functions to proxy the current object's 
             self.proxify_method(proxy, method_name)
+        for method_name in direct_methods:
+            # Methods that are proxied directly
+            setattr(proxy, method_name, getattr(self, method_name))
         # Proxies have no use for hidden methods
         # Unless 
         #for attribute_name in hidden_attributes+hidden_methods:
@@ -120,6 +124,13 @@ class GraphicalOutputDevice(OutputDevice):
 
     current_image = None #an attribute for storing the currently displayed image
 
+    def display_data_onto_image(self, *args, **kwargs):
+        """
+        A function that draws text on a PIL.Image, emulating
+        character displays (to be used with display_data).
+        """
+        raise NotImplementedError
+
     def display_image(self, image):
         """
         A function that shows a PIL.Image on the display.
@@ -127,10 +138,17 @@ class GraphicalOutputDevice(OutputDevice):
         """
         raise NotImplementedError
 
+    def clear(self):
+        """
+        Clears the display, so that there's nothing shown on it.
+        """
+        raise NotImplementedError
 
 class OutputProxy(CharacterOutputDevice, GraphicalOutputDevice):
 
     current_image = None
+    __cursor_enabled = False
+    __cursor_position = (0, 0)
 
     def __init__(self, context_alias):
         self.context_alias = context_alias
@@ -138,8 +156,12 @@ class OutputProxy(CharacterOutputDevice, GraphicalOutputDevice):
     def _display_image(self, image):
         self.current_image = image
 
+    def _clear(self):
+        self.current_image = None
+
     def _display_data(self, *data):
-        self.__displayed_data = data
+        cursor_position = self.__cursor_position if self.__cursor_enabled else None
+        self.current_image = self.display_data_onto_image(*data, cursor_position=cursor_position)
 
     def _cursor(self):
         self.__cursor_enabled = True
@@ -147,8 +169,8 @@ class OutputProxy(CharacterOutputDevice, GraphicalOutputDevice):
     def _noCursor(self):
         self.__cursor_enabled = False
 
-    def _cursor(self):
-        self.__cursor_enabled = True
+    def _setCursor(self, *position):
+        self.__cursor_position = position
 
     def get_current_image(self):
         return self.current_image

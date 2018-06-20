@@ -1,12 +1,13 @@
 from input.input import InputProxy
 from output.output import OutputProxy
+from action_manager import ActionManager
 
 from functools import wraps
 from threading import Thread, Lock
 
 from helpers import setup_logger
 
-logger = setup_logger(__name__, "debug")
+logger = setup_logger(__name__, "info")
 
 def context_target_wrapper(context, func):
     @wraps(func)
@@ -31,6 +32,7 @@ class Context(object):
     threaded = True
     i = None
     o = None
+    menu_name = None
 
     def __init__(self, name, event_callback):
         self.name = name
@@ -110,9 +112,23 @@ class Context(object):
 
     def signal_finished(self):
         """
-        Signals to the ContextManager that the application has finished running.
+        Signals to the ContextManager that the application has finished running,
+        as well as clears the display (to avoid a bug from happening, where last
+        contents of the display are shortly shown on the next reactivation).
         """
+        self.o._clear()
         return self.event_cb(self.name, "finished")
+
+    def list_contexts(self):
+        """
+        Returns a list of all available contexts, containing:
+
+        * Name (``"name"``) of the context
+        * Menu name (``"menu_name"``) of the associated menu entry (if one exists, else ``None``)
+        * Previous context name (``"previous_context"``) for the context (if one exists, else ``None``)
+        * Status (``"state"``) - ``"inactive"``, ``"running"`` or ``"non-threaded"``
+        """
+        return self.event_cb(self.name, "list_contexts")
 
     def signal_background(self):
         """
@@ -121,12 +137,16 @@ class Context(object):
         """
         return self.event_cb(self.name, "background")
 
-    def request_switch(self):
+    def request_switch(self, requested_context=None):
         """
         Requests ContextManager to switch to the context in question. If switch is done,
-        returns True, otherwise returns False.
+        returns True, otherwise returns False. If a context name is supplied,
+        will switch to that context.
         """
-        return self.event_cb(self.name, "request_switch")
+        if requested_context:
+            return self.event_cb(self.name, "request_switch_to", requested_context)
+        else:
+            return self.event_cb(self.name, "request_switch")
 
     def is_active(self):
         """
@@ -137,9 +157,31 @@ class Context(object):
     def get_previous_context_image(self):
         """
         Useful for making screenshots (mainly, for ZeroMenu). Might get deprecated in
-        the future.
+        the future, once a better way to do this is found.
         """
         return self.event_cb(self.name, "get_previous_context_image")
+
+    def register_action(self, name, cb, menu_name_cb, description="", aux_cb = None, documentation='', *args, **kwargs):
+        """
+        Allows an app to register an 'action' that can be used by other apps -
+        for example, ZeroMenu.
+
+        Arguments:
+
+          * ``name``: software-friendly name
+          * ``cb``: the main callback, which will be called when the action is called. Should expect no parameters.
+          * ``menu_name_cb``: the callback that will be called to get the menu name. Can be a string instead.
+          * ``description``: the user-friendly description of the action, one sentence or more
+          * ``aux_cb``: the auxiliary callback. For example, ZeroMenu will have that mapped to the right click.
+          * ``documentation``: documentation for the callback/auxiliary callback usage
+        """
+        d = {'name':name, 'cb':cb, 'menu_name_cb':menu_name_cb, 'description':description, 'aux_cb':aux_cb, 'documentation':documentation}
+        d.update(kwargs)
+        d['args'] = args
+        return self.event_cb(self.name, "register_action", dict=d)
+
+    def get_actions(self):
+        return self.event_cb(self.name, "get_actions")
 
     def request_global_keymap(self, keymap):
         """
@@ -147,6 +189,8 @@ class Context(object):
         Returns a dictionary with results for each set key (with keys as dict. keys):
         if a callback for the key was set successfully, the value is True;
         otherwise, the value will be an exception raised in the process.
+
+        Might get deprecated in the future, once a better way to do this is found.
         """
         return self.event_cb(self.name, "request_global_keymap", keymap)
 
@@ -161,6 +205,7 @@ class ContextManager(object):
         self.contexts = {}
         self.previous_contexts = {}
         self.switching_contexts = Lock()
+        self.am = ActionManager()
 
     def init_io(self, input_processor, screen):
         """
@@ -197,6 +242,12 @@ class ContextManager(object):
         """
         logger.debug("Registering a thread target for the {} context".format(context_alias))
         self.contexts[context_alias].set_target(target)
+
+    def set_menu_name(self, context_alias, menu_name):
+        """
+        A context manager-side function that associates a menu name with a context.
+        """
+        self.contexts[context_alias].menu_name = menu_name
 
     def switch_to_context(self, context_alias):
         """
@@ -361,10 +412,39 @@ class ContextManager(object):
             return self.contexts[previous_context].get_io()[1].get_current_image()
         elif event == "is_active":
             return context_alias == self.current_context
+        elif event == "register_action":
+            d = kwargs["dict"]
+            d["app_name"] = context_alias
+            d["full_name"] = "{}-{}".format(context_alias, d["name"])
+            self.am.register_action(**d)
+        elif event ==  "get_actions":
+            return self.am.get_actions()
+        elif event == "list_contexts":
+            logger.info("Context list requested by {} app".format(context_alias))
+            c_list = []
+            for name in self.contexts:
+                c = {}
+                context = self.contexts[name]
+                c["name"] = name
+                c["menu_name"] = context.menu_name
+                c["previous_context"] = self.get_previous_context(name)
+                if not context.is_threaded():
+                    c["state"] = "non-threaded"
+                else:
+                    c["state"] = "running" if context.thread_is_active() else "inactive"
+                c_list.append(c)
+            return c_list
         elif event == "request_switch":
             # As usecases appear, we will likely want to do some checks here
             logger.info("Context switch requested by {} app".format(context_alias))
             return self.switch_to_context(context_alias)
+        elif event == "request_switch_to":
+            # If app is not the one active, should we honor its request?
+            # probably not, but we might want to do something about it
+            # to be considered
+            new_context = args[0]
+            logger.info("Context switch to {} requested by {} app".format(new_context, context_alias))
+            return self.switch_to_context(new_context)
         elif event == "request_global_keymap":
             results = {}
             keymap = args[0]

@@ -3,7 +3,7 @@ import os
 import unittest
 
 from mock import patch, Mock
-from PIL import Image
+from PIL import Image, ImageFont, ImageChops
 
 try:
     from ui import Canvas
@@ -63,6 +63,85 @@ class TestCanvas(unittest.TestCase):
         assert (c.check_coordinates(("-0", "-1", "-2", "-3")) == (w, h-1, w-2, h-3))
         assert (c.check_coordinates(("-0", "1", "-2", "-3")) == (w, h+1, w-2, h-3))
 
+    def test_howto_example_drawing_basics(self):
+        """tests the first canvas example from howto"""
+        test_image = get_image("canvas_1.png")
+        o = get_mock_output()
+        c = Canvas(o, name=c_name)
+        c.point((1, 2))
+        c.point( ( (2, 1), (2, 3), (3, 4) ) )
+        c.display() # Shouldn't throw an exception
+        assert(imgs_are_equal(c.get_image(), test_image))
+
+    def test_howto_example_drawing_text(self):
+        """tests the first canvas example from howto"""
+        test_image = get_image("canvas_2.png")
+        o = get_mock_output()
+        c = Canvas(o, name=c_name)
+        c.text("Hello world", (0, 0))
+        assert(imgs_are_equal(c.get_image(), test_image))
+
+    def test_howto_example_drawing_text(self):
+        """tests the second text canvas example from howto"""
+        test_image = get_image("canvas_7.png")
+        o = get_mock_output()
+        c = Canvas(o, name=c_name)
+        c.centered_text("Hello world")
+        assert(imgs_are_equal(c.get_image(), test_image))
+
+    def test_howto_example_drawing_centered_text(self):
+        """tests the third text canvas example from howto"""
+        test_image = get_image("canvas_8.png")
+        o = get_mock_output()
+        c = Canvas(o, name=c_name)
+        ctc = c.get_centered_text_bounds("a")
+        c.text("a", (ctc.left, 0))
+        c.text("b", (str(ctc.left-ctc.right), ctc.top))
+        c.text("c", (ctc.left, str(ctc.top-ctc.bottom)))
+        c.text("d", (0, ctc.top))
+        assert(imgs_are_equal(c.get_image(), test_image))
+
+    def test_howto_example_drawing_line(self):
+        """tests the third canvas example from howto"""
+        test_image = get_image("canvas_3.png")
+        o = get_mock_output()
+        c = Canvas(o, name=c_name)
+        c.line((10, 4, "-8", "-4"))
+        assert(imgs_are_equal(c.get_image(), test_image))
+
+    def test_howto_example_drawing_rectangle(self):
+        """tests the fourth canvas example from howto"""
+        test_image = get_image("canvas_4.png")
+        o = get_mock_output()
+        c = Canvas(o, name=c_name)
+        c.rectangle((10, 4, 20, "-10"))
+        assert(imgs_are_equal(c.get_image(), test_image))
+
+    def test_howto_example_drawing_line(self):
+        """tests the fifth canvas example from howto"""
+        test_image = get_image("canvas_5.png")
+        o = get_mock_output()
+        c = Canvas(o, name=c_name)
+        c.circle(("-8", 8, 4))
+        assert(imgs_are_equal(c.get_image(), test_image))
+
+    def test_howto_example_invert_region(self):
+        """tests the sixth canvas example from howto"""
+        test_image = get_image("canvas_6.png")
+        o = get_mock_output()
+        c = Canvas(o, name=c_name)
+        c.text("Hello world", (5, 5))
+        c.invert_rect((35, 5, 80, 17))
+        assert(imgs_are_equal(c.get_image(), test_image))
+
+
+def imgs_are_equal(i1, i2):
+    return ImageChops.difference(i1, i2).getbbox() is None
+
+def get_image(path):
+    if path not in os.listdir('.'):
+        path = os.path.join('ui/tests/', path)
+    return Image.open(path)
 
 if __name__ == '__main__':
     unittest.main()

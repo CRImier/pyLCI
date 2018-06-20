@@ -6,7 +6,7 @@ from mock import patch, Mock
 
 
 try:
-    from ui import Refresher
+    from ui import Refresher, RefresherExitException
 except ImportError:
     print("Absolute imports failed, trying relative imports")
     os.sys.path.append(os.path.dirname(os.path.abspath('.')))
@@ -22,7 +22,7 @@ except ImportError:
         return orig_import(name, *args)
 
     with patch('__builtin__.__import__', side_effect=import_mock):
-        from refresher import Refresher
+        from refresher import Refresher, RefresherExitException
 
 
 def get_mock_input():
@@ -131,6 +131,21 @@ class TestRefresher(unittest.TestCase):
         assert o.display_data.call_count == 3 #resume() refreshes the display
         r.idle_loop()
         assert o.display_data.call_count == 4 #should be refresh the display normally now
+
+    def test_refresher_exit_exception(self):
+        """
+        Tests whether the Refresher deactivates when it receives an exit exception.
+        """
+        i = get_mock_input()
+        o = get_mock_output()
+        def get_data():
+            raise RefresherExitException
+        r = Refresher(get_data, i, o, name=r_name, refresh_interval=0.1)
+
+        #Doing what an activate() would do, but without a loop
+        r.to_foreground()
+        #Should've caught the exception and exited, since to_foreground() calls refresh()
+        assert r.in_foreground == False
 
     def test_keymap_restore_on_resume(self):
         """Tests whether the Refresher re-sets the keymap upon resume."""

@@ -229,7 +229,7 @@ class CharArrowKeysInput(object):
         logger.debug("{}: refreshed data on display".format(self.name))
 
 
-class TextView():
+class TextView(object):
 
     last_displayed_char = 0
     first_displayed_char = 0
@@ -285,7 +285,7 @@ class GraphicalView(TextView):
         cursor_dims = ( c_x1, c_y1, c_x2 + 2, c_y2 + 1 )
 
         #Drawing the cursor
-        c.invert_rect_colors(cursor_dims)
+        c.invert_rect(cursor_dims)
 
         return c.get_image()
 
