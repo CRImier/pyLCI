@@ -705,3 +705,66 @@ place in the interface.
 The ``request_global_keymap`` call returns a dictionary with a keyname as a key for each
 requested callback, with ``True`` as the value if the key was set or, if an exception was
 raised while setting the , an exception object.
+
+Frequent mistakes
+=================
+
+Using variables named ``i`` in a function-based app
+---------------------------------------------------
+
+If you decided to go the easy way and make a function-based app, do keep in mind
+that they require global variables named ``i`` and ``o``. Therefore, if you use
+constructs like this in a function:
+
+.. code-block:: python
+    :class: warning
+
+    for i in range(8):
+        print(i) # do stuff
+
+the local ``i`` will overwrite the global ``i`` variable **locally**. So, this code:
+
+.. code-block:: python
+    :class: hint
+
+    for i in range(8):
+        print(i)
+    Printer("Done!", i, o) # this will fail
+
+will fail. Solutions? Don't use ``i`` as a local name in the same function where you'll
+need to access the global ``i``. Also, class-based apps won't suffer from this (admittedly
+minor) flaw.
+
+Dynamically building lists/dictionaries with lambdas
+----------------------------------------------------
+
+If you're dynamically building contents of a menu/listbox/whatever (for example, using
+a ``for`` loop or a list/dictionary comprehension), you will likely need to use lambdas,
+like this:
+
+.. code-block:: python
+    :class: warning
+
+    interfaces = ["eth0", "wlan0", "lo0"]
+    # No! Bad!
+    menu_contents = [[if_name, lambda: show_ip(if_name)] for if_name in interfaces]
+    Menu(menu_contents, i, o).activate()
+
+However, the lambdas constructed will not refer to the ``if_name`` by value - instead,
+it's referred by its name and the value will only be resolved at runtime when the
+lambda is called. So, all the ``show_ip`` lambdas constructed will execute with
+``"lo0"`` as their first argument (the last value that the ``if_name`` variable
+was assigned). There's a workaround - you can create a temporary keyword argument
+for the lambda with the default value of ``if_name``:
+
+.. code-block:: python
+    :class: hint
+
+    interfaces = ["eth0", "wlan0", "lo0"]
+    # The right way
+    menu_contents = [[if_name, lambda x=if_name: show_ip(x)] for if_name in interfaces]
+    Menu(menu_contents, i, o).activate()
+
+This way, a temporary variable is created, and the ``if_name`` variable is copied into
+it by value at list generation time, so the resulting lambda will use the proper value
+as the positional argument.
