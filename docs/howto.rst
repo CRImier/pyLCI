@@ -441,7 +441,7 @@ submit a bugreport to you!
         # .exception will also log the details of the exception after your message
 
 Add names to your UI elements
-=============================
+-----------------------------
 
 UI elements aren't perfect - sometimes, they themselves cause exceptions. In this case,
 we'll want to be able to debug them, to make sure we understand what was it that went
