@@ -129,8 +129,11 @@ class PathPicker(Menu):
         current_item = self.contents[self.pointer][0]
         full_path = os.path.join(self.path, current_item)
         def get_contents():
-            dh_option_label = "Hide .-files" if self.display_hidden else "Show .-files"
-            contents = [["Select path",lambda x=full_path: self.option_select(x)],
+            dh_option_label = "Show .-files" if self.display_hidden else "Hide .-files"
+            contents = []
+            if self.dirs_only:
+                contents.append(["Select current dir", lambda x=self.path: self.option_select(x)])
+            contents += [["Select path",lambda x=full_path: self.option_select(x)],
                         [dh_option_label, self.toggle_display_hidden],
                         ["See full name",lambda x=full_path: Printer(current_item, self.i, self.o)],
                         ["See full path",lambda x=full_path: Printer(x, self.i, self.o)],
