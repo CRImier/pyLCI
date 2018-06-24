@@ -84,7 +84,6 @@ class PathPicker(Menu):
         self.set_contents(self.regenerate_contents())
 
     def regenerate_contents(self):
-        print("Regenerating contents")
         contents = []
         self.pointer = 0
         if self.path != '/':
