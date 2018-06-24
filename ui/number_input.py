@@ -27,7 +27,7 @@ class IntegerAdjustInput(object):
 
     def __init__(self, number, i, o, message="Pick a number:", interval=1, name="IntegerAdjustInput", mode="normal"):
         """Initialises the IntegerAdjustInput object.
-        
+
         Args:
 
             * ``number``: number to be operated on
@@ -56,7 +56,7 @@ class IntegerAdjustInput(object):
 
     def to_foreground(self):
         """ Is called when ``activate()`` method is used, sets flags and performs all the actions so that UI element can display its contents and receive keypresses. Also, refreshes the screen."""
-        logger.info("{0} enabled".format(self.name))    
+        logger.info("{0} enabled".format(self.name))
         self.in_foreground = True
         self.refresh()
         self.set_keymap()
@@ -65,8 +65,8 @@ class IntegerAdjustInput(object):
         """ A method which is called when input element needs to start operating. Is blocking, sets up input&output devices, renders the UI element and waits until self.in_background is False, while callbacks are executed from the input device thread.
         This method returns the selected number if KEY_ENTER was pressed, thus accepting the selection.
         This method returns None when the UI element was exited by KEY_LEFT and thus it's assumed changes to the number were not accepted."""
-        logger.info("{0} activated".format(self.name))    
-        self.to_foreground() 
+        logger.info("{0} activated".format(self.name))
+        self.to_foreground()
         while self.in_foreground: #All the work is done in input callbacks
             sleep(0.1)
         logger.debug(self.name+" exited")
@@ -75,7 +75,7 @@ class IntegerAdjustInput(object):
     def deactivate(self):
         """ Deactivates the UI element, exiting it and thus making activate() return."""
         self.in_foreground = False
-        logger.info("{0} deactivated".format(self.name))    
+        logger.info("{0} deactivated".format(self.name))
 
     def print_number(self):
         """ A debug method. Useful for hooking up to an input event so that you can see current number value. """
@@ -83,7 +83,7 @@ class IntegerAdjustInput(object):
 
     def print_name(self):
         """ A debug method. Useful for hooking up to an input event so that you can see which UI element is currently processing input events. """
-        logger.info("{0} active".format(self.name))    
+        logger.info("{0} active".format(self.name))
 
     @to_be_foreground
     def decrement(self, multiplier=1):
