@@ -121,8 +121,8 @@ class BaseListUIElement(object):
         pass
 
     def before_activate(self):
-        """Hook for child UI elements, is called each time activate() is called. 
-        Is the perfect place to clear any flags that you don't want to persist 
+        """Hook for child UI elements, is called each time activate() is called.
+        Is the perfect place to clear any flags that you don't want to persist
         between multiple activations of a single instance of an UI element.
 
         For a start, resets the ``pointer`` to the ``start_pointer``."""

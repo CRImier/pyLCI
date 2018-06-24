@@ -25,9 +25,9 @@ class IntegerAdjustInput(object):
     number = 0
     selected_number = None
 
-    def __init__(self, number, i, o, message="Pick a number:", interval=1, name="IntegerAdjustInput", mode="normal"):
+    def __init__(self, number, i, o, message="Pick a number:", interval=1, name="IntegerAdjustInput", mode="normal", max=None, min=None):
         """Initialises the IntegerAdjustInput object.
-        
+
         Args:
 
             * ``number``: number to be operated on
@@ -35,18 +35,23 @@ class IntegerAdjustInput(object):
 
         Kwargs:
 
-            * ``message``: Message to be shown on the first line of the screen when UI element is active.
+            * ``message``: Message to be shown on the first line of the screen while UI element is active.
             * ``interval``: Value by which the number is incremented and decremented.
             * ``name``: UI element name which can be used internally and for debugging.
             * ``mode``: Number display mode, either "normal" (default) or "hex" ("float" will be supported eventually)
+            * ``min``: minimum value, will not go lower than that.
+            * ``max``: maximum value, will not go higher than that.
 
         """
         self.i = i
         self.o = o
         if type(number) != int:
             raise ValueError("IntegerAdjustInput operates on integers!")
-        self.initial_number = number
         self.number = number
+        self.min = min
+        self.max = max
+        self.clamp()
+        self.initial_number = self.number
         self.message = message
         self.name = name
         self.mode = mode
@@ -56,7 +61,7 @@ class IntegerAdjustInput(object):
 
     def to_foreground(self):
         """ Is called when ``activate()`` method is used, sets flags and performs all the actions so that UI element can display its contents and receive keypresses. Also, refreshes the screen."""
-        logger.info("{0} enabled".format(self.name))    
+        logger.info("{0} enabled".format(self.name))
         self.in_foreground = True
         self.refresh()
         self.set_keymap()
@@ -65,8 +70,8 @@ class IntegerAdjustInput(object):
         """ A method which is called when input element needs to start operating. Is blocking, sets up input&output devices, renders the UI element and waits until self.in_background is False, while callbacks are executed from the input device thread.
         This method returns the selected number if KEY_ENTER was pressed, thus accepting the selection.
         This method returns None when the UI element was exited by KEY_LEFT and thus it's assumed changes to the number were not accepted."""
-        logger.info("{0} activated".format(self.name))    
-        self.to_foreground() 
+        logger.info("{0} activated".format(self.name))
+        self.to_foreground()
         while self.in_foreground: #All the work is done in input callbacks
             sleep(0.1)
         logger.debug(self.name+" exited")
@@ -75,7 +80,7 @@ class IntegerAdjustInput(object):
     def deactivate(self):
         """ Deactivates the UI element, exiting it and thus making activate() return."""
         self.in_foreground = False
-        logger.info("{0} deactivated".format(self.name))    
+        logger.info("{0} deactivated".format(self.name))
 
     def print_number(self):
         """ A debug method. Useful for hooking up to an input event so that you can see current number value. """
@@ -83,26 +88,29 @@ class IntegerAdjustInput(object):
 
     def print_name(self):
         """ A debug method. Useful for hooking up to an input event so that you can see which UI element is currently processing input events. """
-        logger.info("{0} active".format(self.name))    
+        logger.info("{0} active".format(self.name))
 
     @to_be_foreground
     def decrement(self, multiplier=1):
         """Decrements the number by selected ``interval``"""
         self.number -= self.interval*multiplier
-        self.refresh()    
+        self.clamp()
+        self.refresh()
 
     @to_be_foreground
     def increment(self, multiplier=1):
         """Increments the number by selected ``interval``"""
         self.number += self.interval*multiplier
-        self.refresh()    
+        self.clamp()
+        self.refresh()
 
     @to_be_foreground
     def reset(self):
         """Resets the number, setting it to the number passed to the constructor."""
         logger.debug("Number reset")
         self.number = self.initial_number
-        self.refresh()    
+        self.clamp()
+        self.refresh()
 
     @to_be_foreground
     def select_number(self):
@@ -127,6 +135,15 @@ class IntegerAdjustInput(object):
         "KEY_ENTER":lambda: self.select_number(),
         "KEY_LEFT":lambda: self.exit()
         }
+
+    def clamp(self):
+        """
+        Clamps the number if either ``min`` or ``max`` are set.
+        """
+        if self.min is not None and self.number < self.min:
+            self.number = self.min
+        if self.max is not None and self.number > self.max:
+            self.number = self.max
 
     @to_be_foreground
     def set_keymap(self):
