@@ -706,6 +706,46 @@ The ``request_global_keymap`` call returns a dictionary with a keyname as a key 
 requested callback, with ``True`` as the value if the key was set or, if an exception was
 raised while setting the , an exception object.
 
+Readability
+===========
+
+When writing a ZPUI app, keep in mind that other people might refer to it afterwards,
+trying to understand how it works (possibly, also debugging).
+
+How to arrange imports
+----------------------
+
+One step towards readability is rearranging your import statements. Here's something you might
+start with:
+
+.. code-block:: python
+
+    from ui import GraphicsPrinter # ZPUI libraries
+    import json # built-in library
+    import smbus # external library, needs to be installed
+    ...
+
+A more readable way to arrange imports is:
+
+* Built-in libraries
+* ZPUI libraries
+* External libraries (that you need to install from pip/apt)
+* Local imports (something in the same folder as your ``main.py``
+
+It's best if you separate these groups with a single empty line. This is especially
+helpful once your app grows big. Here's an example:
+
+.. code-block:: python
+
+    import json # built-in
+
+    from ui import GraphicsPrinter # ZPUI
+
+    import smbus # external
+
+    import smbus_funcs # local
+    ...
+
 Frequent mistakes
 =================
 
