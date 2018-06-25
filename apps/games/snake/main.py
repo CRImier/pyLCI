@@ -24,19 +24,16 @@ def restart_game():
 	snake = [(10, 10), (11, 10), (12, 10)]
 	lose = False
 	direction = "right"
-	
 
 def init_app(input, output):
 	#Gets called when app is loaded
 	global i, o, c
 	i = input; o = output; c = Canvas(o)
 
-	
 def callback():
 	#Gets called when app is selected from menu
 	restart_game()
 	start_game()
-	#pass
 
 def avancer():
 	snake.remove(snake[0])
@@ -49,7 +46,6 @@ def avancer():
 	else:
 		snake.append((snake[-1][0], snake[-1][1]-1))
 
-
 def set_keymap():
 	keymap = {"KEY_LEFT": lambda:make_a_move("left"),
 			  "KEY_RIGHT": lambda:make_a_move("right"),
@@ -61,7 +57,7 @@ def set_keymap():
 	i.listen()
 
 def confirm_exit():
-	global i, o, choice_ongoing, lose
+	global choice_ongoing, lose
 	choice_ongoing = True
 	choice = DialogBox("ync", i, o, message="Exit the game?").activate() #TODO : Maybe a clearer message ?
 	if choice is True:		#Exit
