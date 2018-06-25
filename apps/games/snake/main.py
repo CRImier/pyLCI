@@ -34,6 +34,7 @@ def init_app(input, output):
 	
 def callback():
 	#Gets called when app is selected from menu
+	restart_game()
 	start_game()
 	#pass
 
