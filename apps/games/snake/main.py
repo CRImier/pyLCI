@@ -122,7 +122,7 @@ def start_game():
 		if restart == True:
 			restart = False
 			restart_game()
-		sleep(0.1)
+		sleep(0.01)
 
 def make_a_move(touche):
 	global direction
