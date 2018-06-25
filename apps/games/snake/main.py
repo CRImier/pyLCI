@@ -110,6 +110,7 @@ def start_game():
 		while choice_ongoing == True:
 			sleep(0.1)
 		c = Canvas(o)
+                c.rectangle((0, 0, 127, 63))
 		c.point(snake)
 		if not(applex and appley):
 			create_apple()
