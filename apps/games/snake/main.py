@@ -14,16 +14,16 @@ o = None #Output device
 snake = [(10, 10), (11, 10), (12, 10)]
 lose = False
 direction = "right"
-apple = False
+applex = None
+appley = None
 restart = False
 choice_ongoing = False
 
 def restart_game():
-	global snake, lose, direction, apple
+	global snake, lose, direction
 	snake = [(10, 10), (11, 10), (12, 10)]
 	lose = False
 	direction = "right"
-	apple = False
 	
 
 def init_app(input, output):
@@ -85,36 +85,41 @@ def perdu():
 			lose = True
 
 def eat():
-	global snake, apple
+	global snake
 	for segment in snake:
 		if (segment[0] == applex and segment[1] == appley):
-			apple = False
+			eat_apple()
 			liste = []
 			liste.append(snake[0])
 			liste.extend(snake)
 			snake = liste
 
+def eat_apple():
+	global applex, appley
+	applex = None; appley = None
+
+def create_apple():
+	global applex, appley
+	applex = randint(5,128-5) #Pour ne pas rendre le jeux trop difficile
+	appley = randint(5,64-5)
+	while (applex, appley) in snake:
+		# Will regenerate the apple x and y until they're no longer one of the snake points
+		# At some point, it *might* be close to impossible to generate a point, since the snake will be so long
+		# TODO: think of how to work around that? Maybe limit the length and then increase the speed ?
+		applex = randint(5,128-5)
+		appley = randint(5,64-5)
+
 def start_game():
-	global apple, lose, applex, appley, snake, restart, choice_ongoing
+	global lose, snake, restart, choice_ongoing
 	set_keymap()
 	while(lose == False):
 		while choice_ongoing == True:
 			sleep(0.1)
 		c = Canvas(o)
 		c.point(snake)
-		if apple == True:
-			c.point((applex, appley))
-		else :
-			applex = randint(5,128-5)#Pour ne pas rendre le jeux trop difficile
-			appley = randint(5,64-5)
-			while (applex, appley) in snake:
-				# Will regenerate the apple x and y until they're no longer one of the snake points
-				# At some point, it *might* be close to impossible to generate a point, since the snake will be so long
-				# TODO: think of how to work around that? Maybe limit the length and then increase the speed ?
-				applex = randint(5,128-5)
-				appley = randint(5,64-5)
-			c.point((applex, appley))
-			apple = True
+		if not(applex and appley):
+			create_apple()
+		c.point((applex, appley))
 		c.display() # Display the canvas on the screen
 		avancer()
 		eat()
