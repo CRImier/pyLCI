@@ -62,12 +62,9 @@ def confirm_exit():
 	choice = DialogBox("ync", i, o, message="Exit the game?").activate() #TODO : Maybe a clearer message ?
 	if choice is True:		#Exit
 		lose = True
-		choice_ongoing = False
 	elif choice is False:	#Restart
 		restart_game()
-		choice_ongoing = False
-	else:					#Cancel
-		choice_ongoing = False
+	choice_ongoing = False
 	set_keymap()
 
 def perdu():
