@@ -1,9 +1,9 @@
-from ui import Canvas
 from time import sleep
-from ui import DialogBox, ffs
-from helpers import ExitHelper
 from threading import Event, Lock
 from random import randint
+
+from ui import Canvas, DialogBox
+from helpers import ExitHelper
 
 menu_name = "Snake"
 
