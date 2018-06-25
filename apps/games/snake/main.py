@@ -9,13 +9,22 @@ menu_name = "Snake"
 
 i = None #Input device
 o = None #Output device
-do_exit = None
+
 
 snake = [(10, 10), (11, 10), (12, 10)]
 lose = False
 direction = "right"
 apple = False
+restart = False
+choice_ongoing = False
 
+def restart_game():
+	global snake, lose, direction, apple
+	snake = [(10, 10), (11, 10), (12, 10)]
+	lose = False
+	direction = "right"
+	apple = False
+	
 
 def init_app(input, output):
 	#Gets called when app is loaded
@@ -51,12 +60,18 @@ def set_keymap():
 	i.listen()
 
 def confirm_exit():
-	choices = ["y", "n"]
-	choice = DialogBox(choices, i, o, message="Exit the game?").activate()
-	if choice is True:
-		do_exit.set()
-	else:
-		start_game()
+	global i, o, choice_ongoing, lose
+	choice_ongoing = True
+	choice = DialogBox("ync", i, o, message="Exit the game?").activate() #TODO : Maybe a clearer message ?
+	if choice is True:		#Exit
+		lose = True
+		choice_ongoing = False
+	elif choice is False:	#Restart
+		restart_game()
+		choice_ongoing = False
+	else:					#Cancel
+		choice_ongoing = False
+	set_keymap()
 
 def perdu():
 	global lose
@@ -80,23 +95,33 @@ def eat():
 			snake = liste
 
 def start_game():
-	global apple, lose, applex, appley, snake
+	global apple, lose, applex, appley, snake, restart, choice_ongoing
 	set_keymap()
 	while(lose == False):
+		while choice_ongoing == True:
+			sleep(0.1)
 		c = Canvas(o)
-		for segment in snake:
-			c.point(segment)
+		c.point(snake)
 		if apple == True:
 			c.point((applex, appley))
 		else :
-			applex = randint(0,128)
-			appley = randint(0,64)
+			applex = randint(5,128-5)#Pour ne pas rendre le jeux trop difficile
+			appley = randint(5,64-5)
+			while (applex, appley) in snake:
+				# Will regenerate the apple x and y until they're no longer one of the snake points
+				# At some point, it *might* be close to impossible to generate a point, since the snake will be so long
+				# TODO: think of how to work around that? Maybe limit the length and then increase the speed ?
+				applex = randint(5,128-5)
+				appley = randint(5,64-5)
 			c.point((applex, appley))
 			apple = True
 		c.display() # Display the canvas on the screen
 		avancer()
 		eat()
 		perdu()
+		if restart == True:
+			restart = False
+			restart_game()
 		sleep(0.1)
 
 def make_a_move(touche):
