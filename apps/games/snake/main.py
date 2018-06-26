@@ -2,7 +2,7 @@ from time import sleep
 from threading import Event, Lock
 from random import randint
 
-from ui import Canvas, DialogBox
+from ui import Canvas, DialogBox, Listbox, PrettyPrinter, GraphicsPrinter
 from helpers import ExitHelper
 
 menu_name = "Snake"
@@ -10,7 +10,7 @@ menu_name = "Snake"
 i = None #Input device
 o = None #Output device
 
-
+score = 0
 snake = [(10, 10), (11, 10), (12, 10)]
 lose = False
 direction = "right"
@@ -18,12 +18,19 @@ applex = None
 appley = None
 restart = False
 choice_ongoing = False
+speed = 0.1
+level = 2
+hs_easy = 0
+hs_normal = 0
+hs_hard = 0
+fic = None
 
 def restart_game():
-	global snake, lose, direction
+	global snake, lose, direction, score
 	snake = [(10, 10), (11, 10), (12, 10)]
 	lose = False
 	direction = "right"
+	score = 0
 
 def init_app(input, output):
 	#Gets called when app is loaded
@@ -32,6 +39,22 @@ def init_app(input, output):
 
 def callback():
 	#Gets called when app is selected from menu
+	global speed, level, hs_easy, hs_normal, hs_hard, fic
+	GraphicsPrinter("apps/games/snake/snake.png", i, o, 0.5)
+	lc = [["Too young to die", 1], ["Hurt me plenty", 2], ["Nightmare !", 3]]
+	PrettyPrinter("Select your level of difficulty", i, o, 5)
+	level = Listbox(lc, i, o, name="Level").activate()
+	if level == 3:
+		speed = 0.05
+	try :
+		fic = open("apps/games/snake/highscore", "r")
+		hs_easy, hs_normal, hs_hard = [int(x) for x in next(fic).split()]
+		fic.close()
+		print "success"
+	except:
+		hs_easy = 0
+		hs_normal = 0
+		hs_hard = 0
 	restart_game()
 	start_game()
 
@@ -79,14 +102,24 @@ def perdu():
 			lose = True
 
 def eat():
-	global snake
+	global snake, score, level
 	for segment in snake:
-		if (segment[0] == applex and segment[1] == appley):
-			eat_apple()
-			liste = []
-			liste.append(snake[0])
-			liste.extend(snake)
-			snake = liste
+		if level != 1:
+			if (segment[0] == applex and segment[1] == appley):
+				eat_apple()
+				liste = []
+				liste.append(snake[0])
+				liste.extend(snake)
+				snake = liste
+				score += 1
+		else :
+			if (abs(segment[0] - applex) < 2 and abs(segment[1] - appley) < 2):	# we increse the size of the apple
+				eat_apple()
+				liste = []
+				liste.append(snake[0])
+				liste.extend(snake)
+				snake = liste
+				score += 1
 
 def eat_apple():
 	global applex, appley
@@ -94,7 +127,7 @@ def eat_apple():
 
 def create_apple():
 	global applex, appley
-	applex = randint(5,128-5) #Pour ne pas rendre le jeux trop difficile
+	applex = randint(5,128-5) #to limit the difficulty -> no apple to close to the border
 	appley = randint(5,64-5)
 	while (applex, appley) in snake:
 		# Will regenerate the apple x and y until they're no longer one of the snake points
@@ -104,7 +137,7 @@ def create_apple():
 		appley = randint(5,64-5)
 
 def start_game():
-	global lose, snake, restart, choice_ongoing
+	global lose, snake, restart, choice_ongoing, speed
 	set_keymap()
 	while(lose == False):
 		while choice_ongoing == True:
@@ -114,15 +147,43 @@ def start_game():
 		c.point(snake)
 		if not(applex and appley):
 			create_apple()
-		c.point((applex, appley))
-		c.display() # Display the canvas on the screen
+		if level == 1:		# We draw the apple
+			c.point([(applex, appley-1),									# the leaf
+					(applex-1, appley),(applex, appley),(applex+1, appley),	# the top half
+					(applex-1, appley+1),(applex, appley+1),(applex+1, appley+1)])# the lower half
+		else:
+			c.point((applex, appley))
+		c.display() 		# Display the canvas on the screen
 		avancer()
 		eat()
 		perdu()
 		if restart == True:
 			restart = False
 			restart_game()
-		sleep(0.01)
+		sleep(speed)		# Control the speed of the snake
+	c.centered_text("Score : " + str(score))
+	c.display()
+	sleep(1)
+	write_score()
+	c = Canvas(o)
+	c.centered_text("Bye !")
+	c.display()
+	sleep(0.5)
+
+
+def write_score():
+	global level, hs_easy, hs_normal, hs_hard, score
+	record = [hs_easy, hs_normal, hs_hard]
+	if score > record[level -1]:
+		record[level -1] = score
+		fic = open("apps/games/snake/highscore", 'w')
+		fic.write(str(record[0]) + " " + str(record[1]) + " " + str(record[2]))
+		c = Canvas(o)
+		c.centered_text("Highscore !")
+		c.display()
+		sleep(0.5)
+		
+	
 
 def make_a_move(touche):
 	global direction
