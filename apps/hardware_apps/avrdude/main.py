@@ -263,7 +263,7 @@ class AvrdudeApp(ZeroApp):
         data.
         """
         status = self.show_chip_status()
-        return graphics.make_image_from_status(self.o, hrs, success_message=success_message)
+        return graphics.make_image_from_status(self.o, status, success_message="Found chip!")
 
     def display_status(self, hrs, success_message = "Found chip!", delay=1):
         """
