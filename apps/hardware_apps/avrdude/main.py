@@ -6,6 +6,8 @@ from ui import Menu, Refresher, Checkbox, Listbox, DialogBox, RefresherExitExcep
 from helpers import ExitHelper, read_or_create_config, local_path_gen, save_config_method_gen, read_config
 local_path = local_path_gen(__name__)
 
+from subprocess import call
+
 from libs.pyavrdude import pyavrdude, heuristics
 
 import graphics
@@ -65,7 +67,18 @@ class AvrdudeApp(ZeroApp):
 
     # 1. Main menu
 
+    def check_avrdude_available(self):
+       try:
+           with open(os.devnull, "w") as f:
+              assert( call(['avrdude'], stdout=f, stderr=f) == 0 )
+           return True
+       except (AssertionError, OSError):
+           return False
+
     def on_start(self):
+        if not self.check_avrdude_available():
+            PrettyPrinter("Avrdude not available!", self.i, self.o, 3)
+            return
         mc = [["Read chip", self.read_menu],
               ["Write chip", self.write_menu],
               ["Erase chip", self.erase_menu],
