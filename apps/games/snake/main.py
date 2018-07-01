@@ -23,7 +23,6 @@ level = 2
 hs_easy = 0
 hs_normal = 0
 hs_hard = 0
-fic = None
 
 local_path = local_path_gen(__name__)
 
