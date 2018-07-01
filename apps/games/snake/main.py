@@ -2,7 +2,7 @@ from time import sleep
 from threading import Event, Lock
 from random import randint
 
-from ui import Canvas, DialogBox, Menu, Listbox, PrettyPrinter, GraphicsPrinter
+from ui import Canvas, DialogBox, Menu, Listbox, GraphicsPrinter
 from helpers import ExitHelper, local_path_gen
 
 menu_name = "Snake"
@@ -50,7 +50,6 @@ def callback():
 def change_difficulty():
 	global speed, level
 	lc = [["Too young to die", 1], ["Hurt me plenty", 2], ["Nightmare !", 3]]
-	PrettyPrinter("Select your level of difficulty", i, o, 5)
 	selected_level = Listbox(lc, i, o, name="Level").activate()
 	# If user presses Left, Listbox returns None
 	if selected_level:
