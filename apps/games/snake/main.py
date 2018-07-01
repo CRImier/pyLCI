@@ -128,7 +128,6 @@ def perdu():
 			lose = True
 
 def eat():
-	global snake, score, level
 	for segment in snake:
 		if level != 1:
 			if (segment[0] == applex and segment[1] == appley):
@@ -139,6 +138,7 @@ def eat():
 				consume_apple()
 
 def consume_apple():
+	global snake, score
 	eat_apple()
 	liste = []
 	liste.append(snake[0])
