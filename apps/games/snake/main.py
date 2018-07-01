@@ -125,20 +125,19 @@ def eat():
 	for segment in snake:
 		if level != 1:
 			if (segment[0] == applex and segment[1] == appley):
-				eat_apple()
-				liste = []
-				liste.append(snake[0])
-				liste.extend(snake)
-				snake = liste
-				score += 1
+				consume_apple()
 		else :
-			if (abs(segment[0] - applex) < 2 and abs(segment[1] - appley) < 2):	# we increse the size of the apple
-				eat_apple()
-				liste = []
-				liste.append(snake[0])
-				liste.extend(snake)
-				snake = liste
-				score += 1
+			if (abs(segment[0] - applex) < 2 and abs(segment[1] - appley) < 2):
+				# we increse the size of the apple
+				consume_apple()
+
+def consume_apple():
+	eat_apple()
+	liste = []
+	liste.append(snake[0])
+	liste.extend(snake)
+	snake = liste
+	score += 1
 
 def eat_apple():
 	global applex, appley
