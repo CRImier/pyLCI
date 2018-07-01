@@ -154,6 +154,21 @@ def create_apple():
 		applex = randint(5,128-5)
 		appley = randint(5,64-5)
 
+
+def draw_field():
+	c = Canvas(o)
+	c.rectangle((0, 0, 127, 63))
+	c.point(snake)
+	if not(applex and appley):
+		create_apple()
+	if level == 1:		# We draw the apple
+		c.point([(applex, appley-1),									# the leaf
+			(applex-1, appley),(applex, appley),(applex+1, appley),	# the top half
+			(applex-1, appley+1),(applex, appley+1),(applex+1, appley+1)]) # the lower half
+	else:
+		c.point((applex, appley))
+	c.display() 		# Display the canvas on the screen
+
 def start_game():
 	global lose, snake, restart, choice_ongoing, speed
 	restart_game()
@@ -161,18 +176,7 @@ def start_game():
 	while(lose == False):
 		while choice_ongoing == True:
 			sleep(0.1)
-		c = Canvas(o)
-                c.rectangle((0, 0, 127, 63))
-		c.point(snake)
-		if not(applex and appley):
-			create_apple()
-		if level == 1:		# We draw the apple
-			c.point([(applex, appley-1),									# the leaf
-					(applex-1, appley),(applex, appley),(applex+1, appley),	# the top half
-					(applex-1, appley+1),(applex, appley+1),(applex+1, appley+1)])# the lower half
-		else:
-			c.point((applex, appley))
-		c.display() 		# Display the canvas on the screen
+		draw_field()
 		avancer()
 		eat()
 		perdu()
