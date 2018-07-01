@@ -185,25 +185,22 @@ def start_game():
 			restart_game()
 		sleep(speed)		# Control the speed of the snake
 	check_highscore()
-	c = Canvas(o)
-	c.centered_text("Score : " + str(score))
-	c.display()
-	sleep(1)
-	c = Canvas(o)
-	c.centered_text("Bye !")
-	c.display()
-	sleep(0.5)
+	show_centered_text("Score : " + str(score), 1)
+	show_centered_text("Bye !", 0.5)
 
+def show_centered_text(self, text, delay=1):
+	c = Canvas(o)
+	c.centered_text(text)
+	c.display()
+	if delay:
+		sleep(delay)
 
 def check_highscore():
 	record = [hs_easy, hs_normal, hs_hard]
 	if score > record[level -1]:
 		record[level -1] = score
-		c = Canvas(o)
-		c.centered_text("Highscore !")
-		c.display()
+		show_centered_text("Highscore !", 0.5)
 		save_scores()
-		sleep(0.5)
 
 def make_a_move(key):
 	global direction
