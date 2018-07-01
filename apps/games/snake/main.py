@@ -90,10 +90,10 @@ def avancer():
 
 def set_keymap():
 	keymap = {"KEY_LEFT": lambda:make_a_move("left"),
-			  "KEY_RIGHT": lambda:make_a_move("right"),
-			  "KEY_UP": lambda:make_a_move("up"),
-			  "KEY_DOWN": lambda:make_a_move("down"),
-			  "KEY_ENTER": confirm_exit}
+			"KEY_RIGHT": lambda:make_a_move("right"),
+			"KEY_UP": lambda:make_a_move("up"),
+			"KEY_DOWN": lambda:make_a_move("down"),
+			"KEY_ENTER": confirm_exit}
 	i.stop_listen()
 	i.set_keymap(keymap)
 	i.listen()
@@ -101,8 +101,9 @@ def set_keymap():
 def confirm_exit():
 	global choice_ongoing, lose
 	choice_ongoing = True
-	choice = DialogBox("ync", i, o, message="Exit the game?").activate() #TODO : Maybe a clearer message ?
-	if choice is True:		#Exit
+	#TODO : Maybe a clearer message ?
+	choice = DialogBox("ync", i, o, message="Exit the game?").activate()
+	if choice is True:	#Exit
 		lose = True
 	elif choice is False:	#Restart
 		restart_game()
@@ -153,7 +154,6 @@ def create_apple():
 		# TODO: think of how to work around that? Maybe limit the length and then increase the speed ?
 		applex = randint(5,128-5)
 		appley = randint(5,64-5)
-
 
 def draw_field():
 	c = Canvas(o)
@@ -215,5 +215,3 @@ def make_a_move(key):
 		pass
 	else:
 		direction = key
-
-
