@@ -20,9 +20,7 @@ restart = False
 choice_ongoing = False
 speed = 0.1
 level = 2
-hs_easy = 0
-hs_normal = 0
-hs_hard = 0
+scores = []
 
 local_path = local_path_gen(__name__)
 
@@ -59,26 +57,23 @@ def change_difficulty():
 			speed = 0.05
 
 def see_highscores():
-	mc = [  [["Too young to die", str(hs_easy)]],
-		[["Hurt me plenty", str(hs_normal)]],
-		[["Nightmare !", str(hs_hard)]] ]
+	mc = [  [["Too young to die", str(scores[0])]],
+		[["Hurt me plenty", str(scores[1])]],
+		[["Nightmare !", str(scores[2])]] ]
 	Menu(mc, i, o, name="Snake game highscore menu", entry_height=2).activate()
 
 def load_scores():
-	global hs_easy, hs_normal, hs_hard
+	global scores
 	try:
 		with open(local_path("highscore"), "r") as f:
-			hs_easy, hs_normal, hs_hard = [int(x) for x in next(f).split()]
+			scores = [int(x) for x in next(f).split()]
 		print "success"
 	except:
-		hs_easy = 0
-		hs_normal = 0
-		hs_hard = 0
+		scores = [0, 0, 0]
 
 def save_scores():
-	record = [hs_easy, hs_normal, hs_hard]
 	with open(local_path("highscore"), 'w') as f:
-		fic.write(" ".join([str(r) for r in record]))
+		f.write(" ".join([str(s) for s in scores]))
 
 def splash():
 	GraphicsPrinter(local_path("snake.png"), i, o, 3)
@@ -202,9 +197,9 @@ def show_centered_text(text, delay=1):
 		sleep(delay)
 
 def check_highscore():
-	record = [hs_easy, hs_normal, hs_hard]
-	if score > record[level -1]:
-		record[level -1] = score
+	global scores
+	if score > scores[level -1]:
+		scores[level -1] = score
 		show_centered_text("Highscore !", 0.5)
 		save_scores()
 
