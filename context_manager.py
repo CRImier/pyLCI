@@ -358,7 +358,17 @@ class ContextManager(object):
         proxy_o = OutputProxy(context_alias)
         self.input_processor.register_proxy(proxy_i)
         self.screen.init_proxy(proxy_o)
+        self.set_default_callbacks_on_proxy(context_alias, proxy_i)
         return proxy_i, proxy_o
+
+    def set_default_callbacks_on_proxy(self, context_alias, proxy_i):
+        """
+        Sets some default callbacks on the input proxy. For now, the only
+        callback is the KEY_LEFT maskable callback exiting the app -
+        in case the app is hanging for some reason.
+        """
+        flc = lambda x=context_alias: self.failsafe_left_handler(x)
+        proxy_i.maskable_keymap["KEY_LEFT"] = flc
 
     def get_io_for_context(self, context_alias):
         """
@@ -379,6 +389,16 @@ class ContextManager(object):
         if prev_context == context_alias:
             prev_context = self.fallback_context
         return prev_context
+
+    def failsafe_left_handler(self, context_alias):
+        """
+        This function is set up as the default maskable callback for new contexts,
+        so that users can exit on LEFT press if the context is waiting.
+        """
+        previous_context = self.get_previous_context(context_alias)
+        if not previous_context:
+            previous_context = self.fallback_context
+        self.switch_to_context(previous_context)
 
     def signal_event(self, context_alias, event, *args, **kwargs):
         """
