@@ -194,7 +194,7 @@ def start_game():
 	show_centered_text("Score : " + str(score), 1)
 	show_centered_text("Bye !", 0.5)
 
-def show_centered_text(self, text, delay=1):
+def show_centered_text(text, delay=1):
 	c = Canvas(o)
 	c.centered_text(text)
 	c.display()
