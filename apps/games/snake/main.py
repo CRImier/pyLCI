@@ -27,11 +27,12 @@ hs_hard = 0
 local_path = local_path_gen(__name__)
 
 def restart_game():
-	global snake, lose, direction, score
+	global snake, lose, direction, score, choice_ongoing
 	snake = [(10, 10), (11, 10), (12, 10)]
 	lose = False
 	direction = "right"
 	score = 0
+	choice_ongoing = False
 
 def init_app(input, output):
 	#Gets called when app is loaded
