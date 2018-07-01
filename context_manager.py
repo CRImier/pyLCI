@@ -270,7 +270,7 @@ class ContextManager(object):
         """
         This is a non-thread-safe context switch function. Not to be used directly
         - is only for internal usage. In case an exception is raised, sets things as they
-        were before and re-raises the exception - in the worst case, 
+        were before and re-raises the exception - in the worst case,
         """
         logger.info("Switching to {} context".format(context_alias))
         previous_context = self.current_context
@@ -288,7 +288,7 @@ class ContextManager(object):
                 raise
             self.current_context = previous_context
             # Passing the exception back to the caller
-            raise 
+            raise
         # Activating the context - restoring everything if it fails
         try:
             self.contexts[context_alias].activate()
@@ -382,7 +382,7 @@ class ContextManager(object):
 
     def signal_event(self, context_alias, event, *args, **kwargs):
         """
-        A callback for context objects to use to signal/receive events - 
+        A callback for context objects to use to signal/receive events -
         providing an interface for apps to interact with the context manager.
         This function will, at some point in the future, be working through
         RPC.

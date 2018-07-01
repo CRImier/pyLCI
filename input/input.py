@@ -189,7 +189,7 @@ class InputProcessor(object):
         else:
             logger.debug("Key {} has no handlers - ignored!".format(key))
             pass #No handler for the key
-        
+
     def handle_callback(self, callback, key, pass_key=False, type="simple", context_name=None):
         try:
             if context_name:
@@ -219,8 +219,8 @@ class InputProcessor(object):
         self.processor_thread.start()
 
     def stop_listen(self):
-        """This sets a flag for ``event_loop`` to stop. If the ``event_loop()`` is 
-        currently executing a callback, it will exit as soon as the callback will 
+        """This sets a flag for ``event_loop`` to stop. If the ``event_loop()`` is
+        currently executing a callback, it will exit as soon as the callback will
         finish executing."""
         if self.stop_flag is not None:
             self.stop_flag.set()
@@ -304,10 +304,10 @@ class InputProxy(object):
         if key_name in self.reserved_keys:
             #Trying to set a special callback for a reserved key
             raise CallbackException(1, "Special callback for {} can't be set because it's one of the reserved keys".format(key_name))
-        elif key_name in self.nonmaskable_keymap:
+        if key_name in self.nonmaskable_keymap:
             #Key is already used in a non-maskable callback
             raise CallbackException(2, "Special callback for {} can't be set because it's already set as nonmaskable".format(key_name))
-        elif key_name in self.maskable_keymap: 
+        elif key_name in self.maskable_keymap:
             #Key is already used in a maskable callback
             raise CallbackException(3, "Special callback for {} can't be set because it's already set as maskable".format(key_name))
 
@@ -316,7 +316,7 @@ class InputProxy(object):
         if the callback is one of the reserved keys or already is in maskable/nonmaskable
         keymap.
 
-        A maskable callback is global (can be cleared) and will be called upon a keypress 
+        A maskable callback is global (can be cleared) and will be called upon a keypress
         unless a callback for the same keyname is already set in ``keymap``."""
         self.check_special_callback(key_name)
         self.maskable_keymap[key_name] = callback
@@ -326,7 +326,7 @@ class InputProxy(object):
         if the callback is one of the reserved keys or already is in maskable/nonmaskable
         keymap.
 
-        A nonmaskable callback is global (never cleared) and will be called upon a keypress 
+        A nonmaskable callback is global (never cleared) and will be called upon a keypress
         even if a callback for the same keyname is already set in ``keymap``
         (callback from the ``keymap`` won't be called)."""
         self.check_special_callback(key_name)
@@ -377,7 +377,7 @@ class InputProxy(object):
 
 def init(driver_configs, context_manager):
     """ This function is called by main.py to read the input configuration,
-    pick the corresponding drivers and initialize InputProcessor. Returns 
+    pick the corresponding drivers and initialize InputProcessor. Returns
     the InputProcessor instance created.`"""
     drivers = {}
     for driver_config in driver_configs:
