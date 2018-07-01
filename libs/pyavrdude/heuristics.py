@@ -99,8 +99,6 @@ def get_human_readable_status(status):
             return ["Failure", "Wrong chip found", "Found: {}".format(found_signature)]
         elif fuse_verify_fail(status):
             return ["Failure", "Can't verify fuses"]
-        elif wrong_input_file(status):
-            return ["Failure", "Input file problem!"]
         else:
             print(status)
             return ["Failure", "Unknown error"]
