@@ -205,12 +205,15 @@ def check_highscore():
 		save_scores()
 		sleep(0.5)
 
-def make_a_move(touche):
+def make_a_move(key):
 	global direction
-	assert(touche in ["up", "down", "left", "right"])
-	if (direction == "up" and touche == "down") or (direction == "down" and touche == "up") or (direction == "left" and touche == "right") or (direction == "right" and touche == "left"):
+	assert(key in ["up", "down", "left", "right"])
+	if (direction == "up" and key == "down")
+		or (direction == "down" and key == "up")
+		or (direction == "left" and key == "right")
+		or (direction == "right" and key == "left"):
 		pass
 	else:
-		direction = touche
+		direction = key
 
 
