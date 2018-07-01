@@ -3,7 +3,7 @@ from threading import Event, Lock
 from random import randint
 
 from ui import Canvas, DialogBox, Listbox, PrettyPrinter, GraphicsPrinter
-from helpers import ExitHelper
+from helpers import ExitHelper, local_path_gen
 
 menu_name = "Snake"
 
@@ -24,6 +24,8 @@ hs_easy = 0
 hs_normal = 0
 hs_hard = 0
 fic = None
+
+local_path = local_path_gen(__name__)
 
 def restart_game():
 	global snake, lose, direction, score
