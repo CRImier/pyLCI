@@ -2,7 +2,7 @@ from time import sleep
 from threading import Event, Lock
 from random import randint
 
-from ui import Canvas, DialogBox, Listbox, PrettyPrinter, GraphicsPrinter
+from ui import Canvas, DialogBox, Menu, Listbox, PrettyPrinter, GraphicsPrinter
 from helpers import ExitHelper, local_path_gen
 
 menu_name = "Snake"
@@ -41,24 +41,42 @@ def init_app(input, output):
 
 def callback():
 	#Gets called when app is selected from menu
-	global speed, level, hs_easy, hs_normal, hs_hard, fic
-	GraphicsPrinter("apps/games/snake/snake.png", i, o, 0.5)
+	splash()
+	load_scores()
+	mc = [  ["Start", start_game],
+		["Difficulty", change_difficulty],
+		["Highscores", see_highscores]]
+	Menu(mc, i, o, name="Snake game main menu").activate()
+
+def change_difficulty():
+	global speed, level
 	lc = [["Too young to die", 1], ["Hurt me plenty", 2], ["Nightmare !", 3]]
 	PrettyPrinter("Select your level of difficulty", i, o, 5)
-	level = Listbox(lc, i, o, name="Level").activate()
-	if level == 3:
-		speed = 0.05
-	try :
-		fic = open("apps/games/snake/highscore", "r")
-		hs_easy, hs_normal, hs_hard = [int(x) for x in next(fic).split()]
-		fic.close()
+	selected_level = Listbox(lc, i, o, name="Level").activate()
+	# If user presses Left, Listbox returns None
+	if selected_level:
+		level = selected_level
+		if level == 3:
+			speed = 0.05
+
+def load_scores():
+	global hs_easy, hs_normal, hs_hard
+	try:
+		with open(local_path("highscore"), "r") as f:
+			hs_easy, hs_normal, hs_hard = [int(x) for x in next(f).split()]
 		print "success"
 	except:
 		hs_easy = 0
 		hs_normal = 0
 		hs_hard = 0
-	restart_game()
-	start_game()
+
+def save_scores():
+	record = [hs_easy, hs_normal, hs_hard]
+	with open(local_path("highscore"), 'w') as f:
+		fic.write(" ".join([str(r) for r in record]))
+
+def splash():
+	GraphicsPrinter(local_path("snake.png"), i, o, 3)
 
 def avancer():
 	snake.remove(snake[0])
@@ -140,6 +158,7 @@ def create_apple():
 
 def start_game():
 	global lose, snake, restart, choice_ongoing, speed
+	restart_game()
 	set_keymap()
 	while(lose == False):
 		while choice_ongoing == True:
@@ -163,29 +182,26 @@ def start_game():
 			restart = False
 			restart_game()
 		sleep(speed)		# Control the speed of the snake
+	check_highscore()
+	c = Canvas(o)
 	c.centered_text("Score : " + str(score))
 	c.display()
 	sleep(1)
-	write_score()
 	c = Canvas(o)
 	c.centered_text("Bye !")
 	c.display()
 	sleep(0.5)
 
 
-def write_score():
-	global level, hs_easy, hs_normal, hs_hard, score
+def check_highscore():
 	record = [hs_easy, hs_normal, hs_hard]
 	if score > record[level -1]:
 		record[level -1] = score
-		fic = open("apps/games/snake/highscore", 'w')
-		fic.write(str(record[0]) + " " + str(record[1]) + " " + str(record[2]))
 		c = Canvas(o)
 		c.centered_text("Highscore !")
 		c.display()
+		save_scores()
 		sleep(0.5)
-		
-	
 
 def make_a_move(touche):
 	global direction
