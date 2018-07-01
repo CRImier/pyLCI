@@ -211,9 +211,9 @@ def check_highscore():
 def make_a_move(key):
 	global direction
 	assert(key in ["up", "down", "left", "right"])
-	if (direction == "up" and key == "down")
-		or (direction == "down" and key == "up")
-		or (direction == "left" and key == "right")
+	if (direction == "up" and key == "down") \
+		or (direction == "down" and key == "up") \
+		or (direction == "left" and key == "right") \
 		or (direction == "right" and key == "left"):
 		pass
 	else:
