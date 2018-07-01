@@ -58,6 +58,12 @@ def change_difficulty():
 		if level == 3:
 			speed = 0.05
 
+def see_highscores():
+	mc = [  [["Too young to die", str(hs_easy)]],
+		[["Hurt me plenty", str(hs_normal)]],
+		[["Nightmare !", str(hs_hard)]] ]
+	Menu(mc, i, o, name="Snake game highscore menu", entry_height=2).activate()
+
 def load_scores():
 	global hs_easy, hs_normal, hs_hard
 	try:
