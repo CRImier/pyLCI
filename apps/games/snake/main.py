@@ -103,10 +103,10 @@ def confirm_exit():
 	global choice_ongoing, lose
 	choice_ongoing = True
 	#TODO : Maybe a clearer message ?
-	choice = DialogBox("ync", i, o, message="Exit the game?").activate()
+	choice = DialogBox(["y", "n", ["Restart", None]], i, o, message="Exit the game?").activate()
 	if choice is True:	#Exit
 		lose = True
-	elif choice is False:	#Restart
+	elif choice is None:	#Restart
 		restart_game()
 	choice_ongoing = False
 	set_keymap()
