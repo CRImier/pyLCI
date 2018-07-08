@@ -20,9 +20,3 @@ class ZeroApp(object):
     @property
     def o(self):
         return self.__output
-
-    def on_start(self):
-        """
-        Called ONCE when the app is selected FOR THE FIRST TIME in the menu
-        """
-        pass
