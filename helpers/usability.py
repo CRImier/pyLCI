@@ -2,17 +2,22 @@ from __future__ import print_function
 from threading import Event
 
 class ExitHelper(object):
-    """A simple helper for loops, to allow exiting them on pressing KEY_LEFT (or other keys).
+    """
+    A simple helper for loops, to allow exiting them on pressing KEY_LEFT (or other keys).
 
-    You need to make sure that, while the loop is running, no other UI element 
+    You need to make sure that, while the loop is running, no other UI element
     sets its callbacks. with Printer UI elements, you can usually pass None
     instead of ``i`` to achieve that.
 
     Arguments:
 
         * ``i``: input device
-        * ``keys``: all the keys that should trigger an exit
-        * ``cb``: the callback that should be executed once one of the keys is pressed. By default, sets an internal flag that you can check with ``do_exit`` and ``do_run``."""
+        * ``keys``: all the keys that should trigger an exit. You can also pass "*" so that
+          it catches all of the keys (allowing you to make an "exit on any key" action).
+        * ``cb``: the callback that should be executed once one of the keys is pressed.
+          By default, sets an internal flag that you can check with ``do_exit`` and
+          ``do_run``.
+    """
 
     started = False
     callback = None
@@ -24,14 +29,24 @@ class ExitHelper(object):
         self.set_callback(cb)
 
     def start(self):
+        """
+        Sets up the input listener, then returns ``self`` (allowing for shortened usage,
+        like ``eh = ExitHelper(i).start()``.
+        """
+        self.setup_input()
+        self.started = True
+        return self
+
+    def setup_input(self):
         """Clears input device keymap, registers callbacks and enables input listener."""
         self.i.stop_listen()
         self.i.clear_keymap()
-        keymap = {key:self.callback for key in self.keys}
-        self.i.set_keymap(keymap)
+        if "*" in self.keys:
+            self.i.set_streaming(lambda *args: self.callback())
+        else:
+            keymap = {key:self.callback for key in self.keys}
+            self.i.set_keymap(keymap)
         self.i.listen()
-        self.started = True
-        return self #Allows shortened usage, like eh = ExitHelper(i).start()
 
     def set_callback(self, callback=None):
         if callback is None:
@@ -60,7 +75,7 @@ class ExitHelper(object):
         self._do_exit.clear()
 
     def stop(self):
-        """Stop input listener and remove the created keymap. Shouldn't usually be necessary, 
+        """Stop input listener and remove the created keymap. Shouldn't usually be necessary,
         since all other UI elements are supposed to make sure their callbacks are set."""
         self.started = False
         self.i.clear_keymap()
