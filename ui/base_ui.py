@@ -115,7 +115,7 @@ class BaseUIElement(object):
             self.to_background()
             func(*args, **kwargs)
             logger.debug("{}: executed wrapped function: {}".format(self.name, func.__name__))
-            if self.in_background.isSet():
+            if self.in_background:
                 self.to_foreground()
         wrapper.__name__ == func.__name__
         return wrapper
