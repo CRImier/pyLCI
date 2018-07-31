@@ -29,7 +29,6 @@ class LoadingBarExampleApp(ZeroApp):
         self.bar_choice_listbox = Listbox(lb_contents, self.i, self.o)
 
     def on_start(self):
-        super(LoadingBarExampleApp, self).on_start()
         with self.bar_choice_listbox.activate() as chosen_loading_bar:
             if hasattr(chosen_loading_bar, "progress"):
                 for i in range(101):

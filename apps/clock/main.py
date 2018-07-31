@@ -128,5 +128,4 @@ class ClockApp(ZeroApp, Refresher):
         )
 
     def on_start(self):
-        super(ClockApp, self).on_start()
         self.refresher.activate()
