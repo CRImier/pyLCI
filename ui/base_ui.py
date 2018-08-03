@@ -24,7 +24,7 @@ class BaseUIElement(object):
         self._input_necessary = input_necessary
         self._override_left = override_left
         if not i and input_necessary:
-            raise ValueError("UI element {} needs an input object supplied!")
+            raise ValueError("UI element {} needs an input object supplied!".format(self.name))
 
     @property
     def in_foreground(self):
@@ -77,6 +77,9 @@ class BaseUIElement(object):
         """
         A condition to be checked by ``activate`` to see when the UI element
         is active. Can be overridden by child elements if necessary.
+        By default returns ``self.in_background``, so if you only have a
+        single UI element without external callback processing, it might make
+        sense to check ``in_foreground`` instead.
         """
         return self.in_background
 
@@ -89,7 +92,7 @@ class BaseUIElement(object):
         raise NotImplementedError
 
     def deactivate(self):
-        """ Deactivates the UI element, exiting it."""
+        """ Deactivates the UI element, exiting it. """
         self.in_foreground = False
         self.in_background = False
         logger.debug("{} deactivated".format(self.name))
@@ -155,7 +158,10 @@ class BaseUIElement(object):
         self.keymap = self.process_keymap(keymap)
 
     def update_keymap(self, new_keymap):
-        """Sets the refresher's keymap (filtered using ``process_keymap`` before setting)."""
+        """
+        Updates the refresher's keymap with a new one (filtered using
+        ``process_keymap`` before updating).
+        """
         self._override_left = False
         processed_keymap = self.process_keymap(new_keymap)
         self._override_left = True

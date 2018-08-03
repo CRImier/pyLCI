@@ -12,7 +12,7 @@ class CharArrowKeysInput(object):
     """
     Implements a character input dialog which allows to input a character string using arrow keys to scroll through characters
     """
-    
+
     chars = string.ascii_lowercase
     Chars = string.ascii_uppercase
     numbers = '0123456789'
@@ -20,7 +20,7 @@ class CharArrowKeysInput(object):
     specials = "!\"#$%&'()[]<>*+,-./:;=?^_|"
     space = ' '
     backspace = chr(0x08)
-     
+
     mapping = {
     '][c':chars,
     '][C':Chars,
@@ -38,7 +38,7 @@ class CharArrowKeysInput(object):
 
     def __init__(self, i, o, message="Value:", value="",  allowed_chars=['][S', '][c', '][C', '][s', '][n'], name="CharArrowKeysInput", initial_value=""):
         """Initialises the CharArrowKeysInput object.
-        
+
         Args:
 
             * ``i``, ``o``: input&output device objects

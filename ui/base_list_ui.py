@@ -107,7 +107,7 @@ class BaseListUIElement(object):
         self.view = view(self.o, self.entry_height, self)
 
     def get_default_view(self):
-        """Decides on the view to use for UI element when config file has 
+        """Decides on the view to use for UI element when config file has
         no information on it."""
         if "b&w-pixel" in self.o.type:
             return self.views["SixteenPtView"]
@@ -140,7 +140,8 @@ class BaseListUIElement(object):
         self.set_keymap()
 
     def idle_loop(self):
-        """Contains code which will be executed in UI element's idle loop """
+        """Contains code which will be executed in UI element's idle loop.
+        By default, is just a 0.1 second sleep and a ``scroll()`` call. """
         sleep(0.1)
         self.scroll()
 
@@ -191,11 +192,6 @@ class BaseListUIElement(object):
         """ A debug method. Useful for hooking up to an input event so that
             you can see the representation of current UI element's contents. """
         logger.info(self.contents)
-
-    def print_name(self):
-        """ A debug method. Useful for hooking up to an input event so that
-            you can see which UI element is currently processing input events. """
-        logger.info("Active UI element is {0}".format(self.name))
 
     # Callbacks for moving up and down in the entry list
 

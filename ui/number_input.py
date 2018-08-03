@@ -17,7 +17,6 @@ class IntegerAdjustInput(object):
     * ``in_foreground`` : a flag which indicates if UI element is currently displayed. If it's not active, inhibits any of element's actions which can interfere with other UI element being displayed.
 
     """
-    display_callback = None
     in_foreground = False
     name = ""
     message = ""
@@ -56,7 +55,6 @@ class IntegerAdjustInput(object):
         self.name = name
         self.mode = mode
         self.interval = interval
-        self.set_display_callback(o.display_data)
         self.generate_keymap()
 
     def to_foreground(self):
@@ -164,9 +162,4 @@ class IntegerAdjustInput(object):
     @to_be_foreground
     def refresh(self):
         logger.debug("{0}: refreshed data on display".format(self.name))
-        self.display_callback(*self.get_displayed_data())
-
-    def set_display_callback(self, callback):
-        logger.debug("{0}: display callback set".format(self.name))
-        self.display_callback = callback
-
+        self.o.display_data(*self.get_displayed_data())
