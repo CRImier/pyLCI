@@ -130,14 +130,16 @@ class BaseUIElement(object):
         """
         logger.debug("{}: processing keymap - {}".format(self.name, keymap))
         for key in keymap:
-            callback_or_name = self.process_callback(keymap[key])
+            callback_or_name = keymap[key]
             if isinstance(callback_or_name, basestring):
                 if hasattr(self, callback_or_name):
-                    callback_or_name = getattr(self, callback_or_name)
+                    callback = getattr(self, callback_or_name)
+                    keymap[key] = callback
                 else:
-                    raise ValueError("{}: {} not an attribute/method".format(self.name, callback_or_name))
-            if callable(callback_or_name):
-                keymap[key] = callback_or_name
+                    raise ValueError("{}: {} not an attribute/method or callable".format(self.name, callback_or_name))
+            elif callable(callback_or_name):
+                callback = self.process_callback(keymap[key])
+                keymap[key] = callback
             else:
                 raise ValueError("{}: {} is not a callable".format(self.name, callback_or_name))
         if self._override_left:
