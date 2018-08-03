@@ -85,6 +85,7 @@ class NumpadCharInput(BaseUIElement):
         Args:
 
             * ``i``, ``o``: input&output device objects
+            * ``message``: message to show at the top of the screen
 
         """
         BaseUIElement.__init__(self, i, o, name)
