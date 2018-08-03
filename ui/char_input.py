@@ -6,9 +6,10 @@ import string
 
 from utils import to_be_foreground
 from canvas import Canvas
+from base_ui import BaseUIElement
 
 
-class CharArrowKeysInput(object):
+class CharArrowKeysInput(BaseUIElement):
     """
     Implements a character input dialog which allows to input a character string using arrow keys to scroll through characters
     """
@@ -61,10 +62,8 @@ class CharArrowKeysInput(object):
             * ``name``: UI element name which can be used internally and for debugging.
 
         """
-        self.i = i
-        self.o = o
+        BaseUIElement.__init__(self, i, o, name)
         self.message = message
-        self.name = name
         self.generate_keymap()
         self.allowed_chars = allowed_chars
         self.allowed_chars.append("][b") #Adding backspace by default
@@ -80,13 +79,6 @@ class CharArrowKeysInput(object):
             self.char_indices.append(self.charmap.index(char))
         self.set_view()
 
-    def to_foreground(self):
-        """ Is called when ``activate()`` method is used, sets flags and performs all the actions so that UI element can display its contents and receive keypresses. Also, refreshes the screen."""
-        logger.info("{0} enabled".format(self.name))    
-        self.in_foreground = True
-        self.refresh()
-        self.set_keymap()
-
     def set_view(self):
         if "b&w-pixel" in self.o.type:
             view_class = GraphicalView
@@ -96,15 +88,7 @@ class CharArrowKeysInput(object):
             raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
         self.view = view_class(self.o, self)
 
-    def activate(self):
-        """ A method which is called when input element needs to start operating. Is blocking, sets up input&output devices, renders the element and waits until self.in_background is False, while menu callbacks are executed from the input device thread.
-        This method returns the selected value if KEY_ENTER was pressed, thus accepting the selection.
-        This method returns None when the UI element was exited by KEY_LEFT and thus the value was not accepted. """
-        logger.info("{0} activated".format(self.name))    
-        self.to_foreground() 
-        while self.in_foreground: #All the work is done in input callbacks
-            self.idle_loop()
-        logger.debug(self.name+" exited")
+    def get_return_value(self):
         if self.cancel_flag:
             return None
         else:
@@ -113,23 +97,18 @@ class CharArrowKeysInput(object):
     def idle_loop(self):
         sleep(0.1)
 
-    def deactivate(self):
-        """ Deactivates the UI element, exiting it and thus making activate() return."""
-        self.in_foreground = False
-        logger.info("{0} deactivated".format(self.name))    
+    @property
+    def is_active(self):
+        return self.in_foreground
 
     def print_value(self):
         """ A debug method. Useful for hooking up to an input event so that you can see current value. """
         logger.info(self.value)
 
-    def print_name(self):
-        """ A debug method. Useful for hooking up to an input event so that you can see which UI element is currently processing input events. """
-        logger.info("{0} active".format(self.name))    
-
     @to_be_foreground
     def move_up(self):
         """Changes the current character to the next character in the charmap"""
-        while len(self.char_indices) <= self.position: 
+        while len(self.char_indices) <= self.position:
             self.char_indices.append(0)
             self.value.append(self.charmap[0])
 
@@ -140,12 +119,12 @@ class CharArrowKeysInput(object):
             char_index += 1
         self.char_indices[self.position] = char_index
         self.value[self.position] = self.charmap[char_index]
-        self.refresh()    
+        self.refresh()
 
     @to_be_foreground
     def move_down(self):
         """Changes the current character to the previous character in the charmap"""
-        while len(self.char_indices) <= self.position: 
+        while len(self.char_indices) <= self.position:
             self.char_indices.append(0)
             self.value.append(self.charmap[0])
         char_index = self.char_indices[self.position]
@@ -155,7 +134,7 @@ class CharArrowKeysInput(object):
             char_index -= 1
         self.char_indices[self.position] = char_index
         self.value[self.position] = self.charmap[char_index]
-        self.refresh()    
+        self.refresh()
 
     @to_be_foreground
     def move_right(self):
@@ -210,13 +189,6 @@ class CharArrowKeysInput(object):
             else:
                 self.charmap += value
 
-    @to_be_foreground
-    def set_keymap(self):
-        self.i.stop_listen()
-        self.i.clear_keymap()
-        self.i.keymap = self.keymap
-        self.i.listen()
-
     def check_for_backspace(self):
         for i, char_value in enumerate(self.value):
             if char_value == self.backspace:
@@ -255,7 +227,7 @@ class TextView(object):
         value = value.replace(self.el.backspace, chr(0x7f))
         value = value.replace(' ', chr(255)) #Displaying all spaces as black boxes
         return message, value
-        
+
     def refresh(self):
         self.o.noCursor()
         #self.o.cursor()# Only needed for testing TextView on luma.oled

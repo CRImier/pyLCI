@@ -1,11 +1,12 @@
 from time import sleep
 from helpers import setup_logger
 
+from base_ui import BaseUIElement
 from canvas import Canvas
 
 logger = setup_logger(__name__, "info")
 
-class DialogBox(object):
+class DialogBox(BaseUIElement):
     """Implements a dialog box with given values (or some default ones if chosen)."""
 
     value_selected = False
@@ -31,9 +32,7 @@ class DialogBox(object):
             * ``name``: UI element name which can be used internally and for debugging.
 
         """
-        self.i = i
-        self.o = o
-        self.name = name
+        BaseUIElement.__init__(self, i, o, name)
         if isinstance(values, basestring):
             self.values = []
             for char in values:
@@ -54,11 +53,6 @@ class DialogBox(object):
         self.generate_keymap()
         self.set_view()
 
-    def to_foreground(self):
-        self.in_foreground = True
-        self.refresh()
-        self.set_keymap()
-
     def set_view(self):
         if "b&w-pixel" in self.o.type:
             view_class = GraphicalView
@@ -74,14 +68,16 @@ class DialogBox(object):
         """
         self.start_option = option_number
 
-    def activate(self):
-        logger.debug("{0} activated".format(self.name))
+    def before_activate(self):
         self.value_selected = False
         self.selected_option = self.start_option
-        self.to_foreground()
-        while self.in_foreground: #All the work is done in input callbacks
-            self.idle_loop()
-        logger.debug(self.name+" exited")
+
+    @property
+    def is_active(self):
+        return self.in_foreground
+
+    def get_return_value(self):
+        print("Got called!")
         if self.value_selected:
             return self.values[self.selected_option][1]
         else:
@@ -90,22 +86,12 @@ class DialogBox(object):
     def idle_loop(self):
         sleep(0.1)
 
-    def deactivate(self):
-        self.in_foreground = False
-        logger.debug("{0} deactivated".format(self.name))
-
     def generate_keymap(self):
         self.keymap = {
         "KEY_RIGHT":lambda: self.move_right(),
         "KEY_LEFT":lambda: self.move_left(),
         "KEY_ENTER":lambda: self.accept_value()
         }
-
-    def set_keymap(self):
-        self.i.stop_listen()
-        self.i.clear_keymap()
-        self.i.keymap = self.keymap
-        self.i.listen()
 
     def move_left(self):
         if self.selected_option == 0:

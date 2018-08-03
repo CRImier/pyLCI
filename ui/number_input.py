@@ -3,10 +3,10 @@ from copy import copy
 from helpers import setup_logger
 logger = setup_logger(__name__, "warning")
 
-from ui.utils import to_be_foreground
+from utils import to_be_foreground
+from base_ui import BaseUIElement
 
-
-class IntegerAdjustInput(object):
+class IntegerAdjustInput(BaseUIElement):
     """Implements a simple number input dialog which allows you to increment/decrement a number using  which can be used to navigate through your application, output a list of values or select actions to perform. Is one of the most used elements, used both in system core and in most of the applications.
 
     Attributes:
@@ -42,8 +42,7 @@ class IntegerAdjustInput(object):
             * ``max``: maximum value, will not go higher than that.
 
         """
-        self.i = i
-        self.o = o
+        BaseUIElement.__init__(self, i, o, name)
         if type(number) != int:
             raise ValueError("IntegerAdjustInput operates on integers!")
         self.number = number
@@ -52,41 +51,16 @@ class IntegerAdjustInput(object):
         self.clamp()
         self.initial_number = self.number
         self.message = message
-        self.name = name
         self.mode = mode
         self.interval = interval
         self.generate_keymap()
 
-    def to_foreground(self):
-        """ Is called when ``activate()`` method is used, sets flags and performs all the actions so that UI element can display its contents and receive keypresses. Also, refreshes the screen."""
-        logger.info("{0} enabled".format(self.name))
-        self.in_foreground = True
-        self.refresh()
-        self.set_keymap()
-
-    def activate(self):
-        """ A method which is called when input element needs to start operating. Is blocking, sets up input&output devices, renders the UI element and waits until self.in_background is False, while callbacks are executed from the input device thread.
-        This method returns the selected number if KEY_ENTER was pressed, thus accepting the selection.
-        This method returns None when the UI element was exited by KEY_LEFT and thus it's assumed changes to the number were not accepted."""
-        logger.info("{0} activated".format(self.name))
-        self.to_foreground()
-        while self.in_foreground: #All the work is done in input callbacks
-            sleep(0.1)
-        logger.debug(self.name+" exited")
+    def get_return_value(self):
         return self.selected_number
-
-    def deactivate(self):
-        """ Deactivates the UI element, exiting it and thus making activate() return."""
-        self.in_foreground = False
-        logger.info("{0} deactivated".format(self.name))
 
     def print_number(self):
         """ A debug method. Useful for hooking up to an input event so that you can see current number value. """
         logger.info(self.number)
-
-    def print_name(self):
-        """ A debug method. Useful for hooking up to an input event so that you can see which UI element is currently processing input events. """
-        logger.info("{0} active".format(self.name))
 
     @to_be_foreground
     def decrement(self, multiplier=1):
@@ -124,15 +98,16 @@ class IntegerAdjustInput(object):
         self.deactivate()
 
     def generate_keymap(self):
-        self.keymap = {
-        "KEY_RIGHT":lambda: self.reset(),
-        "KEY_UP":lambda: self.increment(),
-        "KEY_DOWN":lambda: self.decrement(),
+        keymap = {
+        "KEY_RIGHT":'reset',
+        "KEY_UP":'increment',
+        "KEY_DOWN":'decrement',
         "KEY_PAGEUP":lambda: self.increment(multiplier=10),
         "KEY_PAGEDOWN":lambda: self.decrement(multiplier=10),
-        "KEY_ENTER":lambda: self.select_number(),
-        "KEY_LEFT":lambda: self.exit()
+        "KEY_ENTER":'select_number',
+        "KEY_LEFT":'exit'
         }
+        self.set_keymap(keymap)
 
     def clamp(self):
         """
@@ -142,14 +117,6 @@ class IntegerAdjustInput(object):
             self.number = self.min
         if self.max is not None and self.number > self.max:
             self.number = self.max
-
-    @to_be_foreground
-    def set_keymap(self):
-        self.generate_keymap()
-        self.i.stop_listen()
-        self.i.clear_keymap()
-        self.i.keymap = self.keymap
-        self.i.listen()
 
     def get_displayed_data(self):
         if self.mode == "hex":
