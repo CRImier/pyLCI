@@ -86,7 +86,7 @@ class TestBaseListUIElement(unittest.TestCase):
         # Checking at the start of the list
         def scenario():
             el.deactivate()  # KEY_LEFT
-            assert not el.in_foreground
+            assert not el.is_active
 
         with patch.object(el, 'idle_loop', side_effect=scenario) as p:
             return_value = el.activate()
@@ -97,7 +97,7 @@ class TestBaseListUIElement(unittest.TestCase):
             for i in range(num_elements):
                 el.move_down()  # KEY_DOWN x3
             el.deactivate()  # KEY_LEFT
-            assert not el.in_foreground
+            assert not el.is_active
 
         with patch.object(el, 'idle_loop', side_effect=scenario) as p:
             return_value = el.activate()
@@ -112,10 +112,10 @@ class TestBaseListUIElement(unittest.TestCase):
         # Exiting immediately, but we should get at least one redraw
         def scenario():
             el.deactivate()  # KEY_LEFT
-            assert not el.in_foreground
+            assert not el.is_active
 
         with patch.object(el, 'idle_loop', side_effect=scenario) as p:
-            return_value = el.activate()
+            el.activate()
         assert o.display_image.called
         assert o.display_image.call_count == 1 #One in to_foreground
 
@@ -129,7 +129,7 @@ class TestBaseListUIElement(unittest.TestCase):
         # Checking at other elements - shouldn't return
         def scenario():
             el.select_entry()  # KEY_ENTER
-            assert el.in_foreground  # Should still be active
+            assert el.is_active  # Should still be active
             el.deactivate()  # because is not deactivated yet and would idle loop otherwise
 
         with patch.object(el, 'idle_loop', side_effect=scenario) as p:
@@ -141,7 +141,7 @@ class TestBaseListUIElement(unittest.TestCase):
             for i in range(num_elements):
                 el.move_down()  # KEY_DOWN x3
             el.select_entry()  # KEY_ENTER
-            assert not el.in_foreground
+            assert not el.is_active
 
         with patch.object(el, 'idle_loop', side_effect=scenario) as p:
             return_value = el.activate()
@@ -159,6 +159,7 @@ class TestBaseListUIElement(unittest.TestCase):
 
         def scenario():
             el.deactivate()
+            assert not el.is_active
 
         with patch.object(el, 'idle_loop', side_effect=scenario) as p:
             el.activate()

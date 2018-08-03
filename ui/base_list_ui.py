@@ -3,13 +3,12 @@ Best example of such an element is a Menu element - it has menu entries you can 
  when you click on them. """
 
 from copy import copy
-from threading import Event
 from time import sleep
 
 from canvas import Canvas
 from helpers import setup_logger
 from utils import to_be_foreground, clamp_list_index
-
+from base_ui import BaseUIElement
 
 logger = setup_logger(__name__, "warning")
 
@@ -30,7 +29,7 @@ else:
         logger.exception(e)
 
 
-class BaseListUIElement(object):
+class BaseListUIElement(BaseUIElement):
     """This is a base UI element for list-like UI elements.
 
        This UI element has built-in scrolling of entries - if the entry text is longer
@@ -40,18 +39,15 @@ class BaseListUIElement(object):
     pointer = 0
     start_pointer = 0
     in_foreground = False
-    name = ""
     exit_entry = ["Back", "exit"]
 
     config_key = "base_list_ui"
 
     def __init__(self, contents, i, o, name=None, entry_height=1, append_exit=True, exitable=True, scrolling=True,
                  config=None, keymap=None):
-        self.i = i
-        self.o = o
+        BaseUIElement.__init__(self, i, o, name, input_necessary=True)
         self.entry_height = entry_height
         self.keymap = keymap if keymap else {}
-        self.name = name
         self.append_exit = append_exit
         self.exitable = exitable
         self.scrolling = {
@@ -116,28 +112,19 @@ class BaseListUIElement(object):
         else:
             raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
 
-    def before_foreground(self):
-        """Hook for child UI elements. Is called each time to_foreground is called."""
-        pass
-
     def before_activate(self):
-        """Hook for child UI elements, is called each time activate() is called.
-        Is the perfect place to clear any flags that you don't want to persist
-        between multiple activations of a single instance of an UI element.
-
-        For a start, resets the ``pointer`` to the ``start_pointer``."""
+        """
+        Hook for child UI elements, meant to be called.
+        For a start, resets the ``pointer`` to the ``start_pointer``.
+        """
         self.pointer = self.start_pointer
 
     def to_foreground(self):
         """ Is called when UI element's ``activate()`` method is used, sets flags
             and performs all the actions so that UI element can display its contents
             and receive keypresses. Also, refreshes the screen."""
-        logger.info("{0} enabled".format(self.name))
-        self.before_foreground()
         self.reset_scrolling()
-        self.in_foreground = True
-        self.view.refresh()
-        self.set_keymap()
+        BaseUIElement.to_foreground(self)
 
     def idle_loop(self):
         """Contains code which will be executed in UI element's idle loop.
@@ -145,30 +132,9 @@ class BaseListUIElement(object):
         sleep(0.1)
         self.scroll()
 
-    def activate(self):
-        """ A method which is called when UI element needs to start operating.
-            Is blocking, sets up input&output devices, renders the UI element and
-            waits until self.in_foreground is False, while UI element callbacks
-            are executed from the input listener thread."""
-        logger.info("{0} activated".format(self.name))
-        self.before_activate()
-        self.to_foreground()
-        while self.in_foreground:  # All the work is done in input callbacks
-            self.idle_loop()
-        return_value = self.get_return_value()
-        logger.info("{} exited".format(self.name))
-        return return_value
-
-    def get_return_value(self):
-        """To be overridden by child UI elements. Return value will be returned when
-           UI element's ``activate()`` exits."""
-        return None  # Default value to indicate that no meaningful result was returned
-
-    def deactivate(self):
-        """Sets a flag that signals the UI element's ``activate()`` to return."""
-        self.in_foreground = False
-        self.o.noCursor()
-        logger.info("{} deactivated".format(self.name))
+    @property
+    def is_active(self):
+        return self.in_foreground
 
     # Scroll functions - will likely be moved into a mixin or views later on
 
@@ -265,26 +231,21 @@ class BaseListUIElement(object):
 
     # Working with the keymap
 
-    @to_be_foreground
-    def set_keymap(self):
-        """Sets the input device's keycode-to-callback mapping. Re-starts the input device because ofpassing-variables-between-threads issues."""
-        self.i.stop_listen()
-        self.i.set_keymap(self.keymap)
-        self.i.listen()
-
     def generate_keymap(self):
         """Makes the keymap dictionary for the input device."""
         # Has to be in a function because otherwise it will be a SyntaxError
-        self.keymap.update({
-            "KEY_UP": lambda: self.move_up(),
-            "KEY_DOWN": lambda: self.move_down(),
-            "KEY_PAGEUP": lambda: self.page_up(),
-            "KEY_PAGEDOWN": lambda: self.page_down(),
-            "KEY_ENTER": lambda: self.select_entry(),
-            "KEY_RIGHT": lambda: self.process_right_press()
-        })
-        if self.exitable:
-            self.keymap["KEY_LEFT"] = lambda: self.deactivate()
+        keymap = {
+            "KEY_UP": "move_up",
+            "KEY_DOWN": "move_down",
+            "KEY_PAGEUP": "page_up",
+            "KEY_PAGEDOWN": "page_down",
+            "KEY_ENTER": "select_entry",
+            "KEY_RIGHT": "process_right_press"
+        }
+        keymap.update(self.keymap)
+        if self.exitable and self._override_left:
+            keymap["KEY_LEFT"] = self.deactivate
+        self.set_keymap(keymap)
 
     def set_contents(self, contents):
         """Sets the UI element contents and triggers pointer recalculation in the view."""
@@ -323,6 +284,10 @@ class BaseListUIElement(object):
             self.contents.append(self.exit_entry)
         logger.debug("{}: contents processed".format(self.name))
 
+    def refresh(self):
+        """ A placeholder to be used for BaseUIElement. """
+        self.view.refresh()
+
 
 class BaseListBackgroundableUIElement(BaseListUIElement):
     """This is a base UI element for list-like UI elements.
@@ -333,54 +298,9 @@ class BaseListBackgroundableUIElement(BaseListUIElement):
        This UI element has built-in scrolling of entries - if the entry text is longer
        than the screen, once the entry is selected, UI element will scroll through its text."""
 
-    def __init__(self, *args, **kwargs):
-        self._in_background = Event()
-        BaseListUIElement.__init__(self, *args, **kwargs)
-
     @property
-    def in_background(self):
-        return self._in_background.isSet()
-
-    @in_background.setter
-    def in_background(self, value):
-        if value == True:
-            self._in_background.set()
-        elif value == False:
-            self._in_background.clear()
-
-    def to_foreground(self):
-        """ Is called when UI element's ``activate()`` method is used, sets flags
-            and performs all the actions so that UI element can display its contents
-            and receive keypresses. Also, refreshes the screen."""
-        self.in_background = True
-        BaseListUIElement.to_foreground(self)
-
-    @to_be_foreground
-    def to_background(self):
-        """ Inhibits all UI element's refreshes, effectively bringing it to background."""
-        self.o.noCursor()
-        self.in_foreground = False
-        logger.debug("{0} disabled".format(self.name))
-
-    def activate(self):
-        """ A method which is called when UI element needs to start operating.
-            Is blocking, sets up input&output devices, renders the UI element and
-            waits until self.in_background is False, while UI element callbacks
-            are executed from the input listener thread."""
-        logger.info("{0} activated".format(self.name))
-        self.before_activate()
-        self.to_foreground()
-        while self.in_background:  # All the work is done in input callbacks
-            self.idle_loop()
-        return_value = self.get_return_value()
-        logger.info("{} exited".format(self.name))
-        return return_value
-
-    def deactivate(self):
-        """Sets a flag that signals the UI element's ``activate()`` to return."""
-        self.in_background = False
-        BaseListUIElement.deactivate(self)
-
+    def is_active(self):
+        return self.in_background
 
 # Views.
 

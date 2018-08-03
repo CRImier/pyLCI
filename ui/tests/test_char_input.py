@@ -113,7 +113,7 @@ class TestCharArrowKeysInput(unittest.TestCase):
         def scenario():
             for key in test_keys:
                 execute_shorthand(ci, key)
-            assert not ci.in_foreground  # Should exit on last "e"
+            assert not ci.is_active  # Should exit on last "e"
 
         with patch.object(ci, 'idle_loop', side_effect=scenario) as p:
             return_value = ci.activate()

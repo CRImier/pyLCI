@@ -25,6 +25,12 @@ class BaseUIElement(object):
         self._override_left = override_left
         if not i and input_necessary:
             raise ValueError("UI element {} needs an input object supplied!".format(self.name))
+        self.check_properties()
+
+    def check_properties(self):
+        properties = ["in_foreground", "in_background", "is_active"]
+        for p in properties:
+            assert isinstance(getattr(self, p), bool), "{} needs to be a property".format(p)
 
     @property
     def in_foreground(self):
@@ -48,6 +54,7 @@ class BaseUIElement(object):
         activates the input device and draw the first image on the display.
         """
         logger.debug("{} in foreground".format(self.name))
+        self.before_foreground()
         self.in_background = True
         self.in_foreground = True
         self.activate_input()
@@ -58,6 +65,18 @@ class BaseUIElement(object):
         self.in_foreground = False
         logger.debug("refresher {} in background".format(self.name))
 
+    def before_foreground(self):
+        """Hook for child UI elements. Is called each time to_foreground is called."""
+        pass
+
+    def before_activate(self):
+        """
+        Hook for child UI elements, is called each time activate() is called.
+        Is the perfect place to clear any flags that you don't want to persist
+        between multiple activations of a single instance of an UI element.
+        """
+        pass
+
     def activate(self):
         """
         A method which is called when the UI element needs to start operating.
@@ -66,13 +85,23 @@ class BaseUIElement(object):
         ``self.in_foreground`` is True, while callbacks are executed from the
         input device thread.
         """
+        self.before_activate()
         logger.debug("{} activated".format(self.name))
         self.to_foreground()
         while self.is_active:
             self.idle_loop()
-        logger.debug(self.name+" exited")
-        return True
+        return_value = self.get_return_value()
+        logger.debug("{} exited".format(self.name))
+        return return_value
 
+    def get_return_value(self):
+        """
+        Can be overridden by child UI elements. Return value will be returned when
+        UI element's ``activate()`` exits.
+        """
+        return None  # Default value to indicate that no meaningful result was returned
+
+    @property
     def is_active(self):
         """
         A condition to be checked by ``activate`` to see when the UI element
