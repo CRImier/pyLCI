@@ -77,7 +77,6 @@ class DialogBox(BaseUIElement):
         return self.in_foreground
 
     def get_return_value(self):
-        print("Got called!")
         if self.value_selected:
             return self.values[self.selected_option][1]
         else:
