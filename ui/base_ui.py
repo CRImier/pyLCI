@@ -77,6 +77,14 @@ class BaseUIElement(object):
         """
         pass
 
+    def after_activate(self):
+        """
+        Hook for child UI elements, is called each time before activate() returns -
+        before ``get_return_value`` is called. Is the perfect place to, say, remove
+        input streaming callbacks.
+        """
+        pass
+
     def activate(self):
         """
         A method which is called when the UI element needs to start operating.
@@ -90,6 +98,7 @@ class BaseUIElement(object):
         self.to_foreground()
         while self.is_active:
             self.idle_loop()
+        self.after_activate()
         return_value = self.get_return_value()
         logger.debug("{} exited".format(self.name))
         return return_value
