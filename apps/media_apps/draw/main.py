@@ -227,8 +227,8 @@ class DrawingBoard(BaseUIElement):
         return {
             "KEY_UP": "move_up",
             "KEY_DOWN": "move_down",
-            "KEY_RIGHT": "move_left",
-            "KEY_LEFT": "move_right",
+            "KEY_LEFT": "move_left",
+            "KEY_RIGHT": "move_right",
             "KEY_ENTER": "on_enter",
             "KEY_PAGEUP": self.tool_settings,
             "KEY_F1": "back",
