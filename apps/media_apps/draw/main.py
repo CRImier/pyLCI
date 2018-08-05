@@ -4,7 +4,9 @@ from copy import copy
 from ui import Canvas, Listbox, PrettyPrinter
 from ui.base_ui import BaseUIElement
 from ui.utils import to_be_foreground
+from helpers import flatten
 from apps import ZeroApp
+
 
 class DrawingTool(object):
     def __init__(self, board):
@@ -124,6 +126,33 @@ class CircleTool(LineTool):
         return self.c.get_image()
 
 
+class PolygonTool(DrawingTool):
+
+    def init_vars(self):
+        self.polygon_coords = []
+
+    def tool_down(self):
+        if self.board.coords in self.polygon_coords:
+            self.polygon_coords.append(copy(self.board.coords))
+            self.board.update_image(self.draw_tool_position(self.board.field.get_image(), final=True))
+            self.polygon_coords = []
+        else:
+            self.polygon_coords.append(copy(self.board.coords))
+
+    def draw_tool_position(self, image, final=False):
+        pc = copy(self.polygon_coords)
+        if not final: pc.append(copy(self.board.coords))
+        self.c.load_image(image)
+        if len(pc) > 2:
+            self.c.polygon( pc )
+        elif len(pc) == 2:
+            self.c.line( flatten(pc) )
+        elif len(pc) == 1:
+            self.c.point( pc[0] )
+        self.c.point(self.board.coords)
+        return self.c.get_image()
+
+
 class DrawingBoard(BaseUIElement):
     def __init__(self, i, o):
         BaseUIElement.__init__(self, i, o, "Drawing app's drawing board", override_left=False)
@@ -188,7 +217,8 @@ class DrawingBoard(BaseUIElement):
                        ["Line", LineTool],
                        ["Rectangle", RectangleTool],
                        ["Circle", CircleTool],
-                       ["Ellipse", EllipseTool]]
+                       ["Ellipse", EllipseTool],
+                       ["Polygon", PolygonTool]]
         choice = Listbox(lb_contents, self.i, self.o, "Drawing app tool picker listbox").activate()
         if choice:
             self.tool = choice(self)
