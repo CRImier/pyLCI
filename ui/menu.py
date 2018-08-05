@@ -11,8 +11,8 @@ class MenuExitException(Exception):
 
 
 class Menu(BaseListBackgroundableUIElement):
-    """Implements a menu which can be used to navigate through your application, 
-    output a list of values or select actions to perform. Is one of the most used 
+    """Implements a menu which can be used to navigate through your application,
+    output a list of values or select actions to perform. Is one of the most used
     UI elements, used both in system core and in most of the applications."""
 
     pointer = 0  #: number of currently selected menu entry, starting from 0.

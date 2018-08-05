@@ -64,7 +64,7 @@ class BaseUIElement(object):
     def to_background(self):
         """ Signals ``activate`` to finish executing. """
         self.in_foreground = False
-        logger.debug("refresher {} in background".format(self.name))
+        logger.debug("{} in background".format(self.name))
 
     def before_foreground(self):
         """Hook for child UI elements. Is called each time to_foreground is called."""
@@ -151,7 +151,7 @@ class BaseUIElement(object):
         Decorates a function so that during its execution the UI element stops
         being in foreground. Is typically used as a wrapper for a callback from
         input event processing thread. After callback's execution is finished,
-        sets the keymap again and refreshes the refresher.
+        sets the keymap again and refreshes the UI element.
         """
         def wrapper(*args, **kwargs):
             self.to_background()
@@ -211,7 +211,7 @@ class BaseUIElement(object):
 
     def update_keymap(self, new_keymap):
         """
-        Updates the refresher's keymap with a new one (filtered using
+        Updates the UI element's keymap with a new one (filtered using
         ``process_keymap`` before updating).
         """
         self._override_left = False
