@@ -328,9 +328,9 @@ class AvrdudeApp(ZeroApp):
                 # Status changed, updating
                 if s["status"] == "started":
                     self.read_write_bar.pause()
-                    if not self.erase_restore_indicator.activated:
+                    if not self.erase_restore_indicator.is_active:
                         self.erase_restore_indicator.run_in_background()
-                        while not self.erase_restore_indicator.activated():
+                        while not self.erase_restore_indicator.is_active:
                             pass
                     else:
                         self.erase_restore_indicator.resume()
@@ -338,9 +338,9 @@ class AvrdudeApp(ZeroApp):
                 elif s["status"] == "in progress":
                     if s["operation"] in ["reading", "writing", "verifying"]:
                         self.erase_restore_indicator.pause()
-                        if not self.read_write_bar.activated:
+                        if not self.read_write_bar.is_active:
                             self.read_write_bar.run_in_background()
-                            while not self.read_write_bar.activated():
+                            while not self.read_write_bar.is_active:
                                pass
                         else:
                             self.read_write_bar.resume()
@@ -349,9 +349,9 @@ class AvrdudeApp(ZeroApp):
                         self.read_write_bar.progress = s["progress"]
                     elif s["operation"] in ["erasing", "restoring fuses"]:
                         self.read_write_bar.pause()
-                        if not self.erase_restore_indicator.activated:
+                        if not self.erase_restore_indicator.is_active:
                             self.erase_restore_indicator.run_in_background()
-                            while not self.erase_restore_indicator.activated():
+                            while not self.erase_restore_indicator.is_active:
                                 pass
                         else:
                             self.erase_restore_indicator.resume()
