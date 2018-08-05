@@ -58,6 +58,10 @@ class Canvas(object):
             self.default_font = get_default_font()
         self.interactive = interactive
 
+    def load_image(self, image):
+        self.image = image.copy()
+        self.draw = ImageDraw.Draw(self.image)
+
     def load_font(self, path, size, alias=None, type="truetype"):
         """
         Loads a font by its path for the given size, then returns it.
