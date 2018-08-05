@@ -53,7 +53,6 @@ class IntegerAdjustInput(BaseUIElement):
         self.message = message
         self.mode = mode
         self.interval = interval
-        self.generate_keymap()
 
     def get_return_value(self):
         return self.selected_number
@@ -98,7 +97,7 @@ class IntegerAdjustInput(BaseUIElement):
         self.deactivate()
 
     def generate_keymap(self):
-        keymap = {
+        return {
         "KEY_RIGHT":'reset',
         "KEY_UP":'increment',
         "KEY_DOWN":'decrement',
@@ -107,7 +106,6 @@ class IntegerAdjustInput(BaseUIElement):
         "KEY_ENTER":'select_number',
         "KEY_LEFT":'exit'
         }
-        self.set_keymap(keymap)
 
     def clamp(self):
         """

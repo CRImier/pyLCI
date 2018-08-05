@@ -64,7 +64,6 @@ class CharArrowKeysInput(BaseUIElement):
         """
         BaseUIElement.__init__(self, i, o, name)
         self.message = message
-        self.generate_keymap()
         self.allowed_chars = allowed_chars
         self.allowed_chars.append("][b") #Adding backspace by default
         self.generate_charmap()
@@ -174,12 +173,12 @@ class CharArrowKeysInput(BaseUIElement):
         self.deactivate()
 
     def generate_keymap(self):
-        self.keymap = {
-        "KEY_RIGHT":lambda: self.move_right(),
-        "KEY_UP":lambda: self.move_up(),
-        "KEY_DOWN":lambda: self.move_down(),
-        "KEY_LEFT":lambda: self.move_left(),
-        "KEY_ENTER":lambda: self.accept_value()
+        return {
+        "KEY_RIGHT": 'move_right',
+        "KEY_UP": 'move_up',
+        "KEY_DOWN": 'move_down',
+        "KEY_LEFT": 'move_left',
+        "KEY_ENTER": 'accept_value'
         }
 
     def generate_charmap(self):

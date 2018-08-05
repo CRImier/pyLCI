@@ -50,7 +50,6 @@ class DialogBox(BaseUIElement):
                     values[i] = self.default_options[value]
             self.values = values
         self.message = message
-        self.generate_keymap()
         self.set_view()
 
     def set_view(self):
@@ -86,10 +85,10 @@ class DialogBox(BaseUIElement):
         sleep(0.1)
 
     def generate_keymap(self):
-        self.keymap = {
-        "KEY_RIGHT":lambda: self.move_right(),
-        "KEY_LEFT":lambda: self.move_left(),
-        "KEY_ENTER":lambda: self.accept_value()
+        return {
+        "KEY_RIGHT": 'move_right',
+        "KEY_LEFT": 'move_left',
+        "KEY_ENTER": 'accept_value'
         }
 
     def move_left(self):

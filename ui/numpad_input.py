@@ -269,6 +269,9 @@ class NumpadCharInput(BaseUIElement):
 
     #Functions that set up the input listener
 
+    def generate_keymap(self):
+        return {}
+
     @to_be_foreground
     def configure_input(self):
         self.i.clear_keymap()

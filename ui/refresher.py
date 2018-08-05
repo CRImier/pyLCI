@@ -42,11 +42,11 @@ class Refresher(BaseUIElement):
             * ``name``: Refresher name which can be used internally and for debugging.
 
         """
+        self.custom_keymap = keymap if keymap else {}
         BaseUIElement.__init__(self, i, o, name, input_necessary=False)
         self.set_refresh_interval(refresh_interval)
         self.refresh_function = refresh_function
         self.calculate_intervals()
-        self.set_keymap(keymap if keymap else {})
         self.in_foreground = False
         self.in_background = Event()
 
@@ -101,6 +101,13 @@ class Refresher(BaseUIElement):
                 self.refresh()
             self._counter += 1
         sleep(self.sleep_time)
+
+    def set_keymap(self, keymap):
+        keymap.update(self.custom_keymap)
+        BaseUIElement.set_keymap(self, keymap)
+
+    def generate_keymap(self):
+        return {}
 
     @to_be_foreground
     def refresh(self):

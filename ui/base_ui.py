@@ -26,6 +26,7 @@ class BaseUIElement(object):
         if not i and input_necessary:
             raise ValueError("UI element {} needs an input object supplied!".format(self.name))
         self.check_properties()
+        self.set_default_keymap()
 
     def check_properties(self):
         properties = ["in_foreground", "in_background", "is_active"]
@@ -194,6 +195,19 @@ class BaseUIElement(object):
         before setting).
         """
         self.keymap = self.process_keymap(keymap)
+
+    def set_default_keymap(self):
+        """
+        Sets the default keymap, getting it straight from the ``generate_keymap``.
+        """
+        self.set_keymap(self.generate_keymap())
+
+    def generate_keymap(self):
+        """
+        Returns the default keymap for the UI element.
+        To be implemented by a child object.
+        """
+        raise NotImplementedError
 
     def update_keymap(self, new_keymap):
         """

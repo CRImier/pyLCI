@@ -45,11 +45,11 @@ class BaseListUIElement(BaseUIElement):
 
     def __init__(self, contents, i, o, name=None, entry_height=1, append_exit=True, exitable=True, scrolling=True,
                  config=None, keymap=None):
+        self.exitable = exitable
+        self.custom_keymap = keymap if keymap else {}
         BaseUIElement.__init__(self, i, o, name, input_necessary=True)
         self.entry_height = entry_height
-        self.keymap = keymap if keymap else {}
         self.append_exit = append_exit
-        self.exitable = exitable
         self.scrolling = {
             "enabled": scrolling,
             "current_finished": False,
@@ -60,7 +60,6 @@ class BaseListUIElement(BaseUIElement):
         self.config = config if config is not None else global_config
         self.set_view(self.config.get(self.config_key, {}))
         self.set_contents(contents)
-        self.generate_keymap()
 
     def set_views_dict(self):
         self.views = {
@@ -234,7 +233,7 @@ class BaseListUIElement(BaseUIElement):
     def generate_keymap(self):
         """Makes the keymap dictionary for the input device."""
         # Has to be in a function because otherwise it will be a SyntaxError
-        keymap = {
+        return {
             "KEY_UP": "move_up",
             "KEY_DOWN": "move_down",
             "KEY_PAGEUP": "page_up",
@@ -242,10 +241,12 @@ class BaseListUIElement(BaseUIElement):
             "KEY_ENTER": "select_entry",
             "KEY_RIGHT": "process_right_press"
         }
-        keymap.update(self.keymap)
+
+    def set_keymap(self, keymap):
         if self.exitable and self._override_left:
-            keymap["KEY_LEFT"] = self.deactivate
-        self.set_keymap(keymap)
+            keymap["KEY_LEFT"] = "deactivate"
+        keymap.update(self.custom_keymap)
+        BaseUIElement.set_keymap(self, keymap)
 
     def set_contents(self, contents):
         """Sets the UI element contents and triggers pointer recalculation in the view."""
