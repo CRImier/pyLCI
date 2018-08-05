@@ -1,20 +1,44 @@
 from time import sleep
 from copy import copy
+from collections import OrderedDict
 
 from ui import Canvas, Listbox, PrettyPrinter
 from ui.base_ui import BaseUIElement
 from ui.utils import to_be_foreground
-from helpers import flatten
+from helpers import flatten, Singleton
 from apps import ZeroApp
 
 
+class ToolBucket(Singleton):
+    tools = OrderedDict()
+
+    @classmethod
+    def register_tool(self, name, obj):
+        print("Registering tool {}".format(name))
+        self.tools[name] = obj
+
+    @classmethod
+    def get_tools(self):
+        return list(self.tools.items())
+
+
+class ToolHandler(type):
+    def __init__(cls, name, bases, clsdict):
+        if hasattr(cls, "menu_name"):
+            ToolBucket().register_tool(cls.menu_name, cls)
+        super(ToolHandler, cls).__init__(name, bases, clsdict)
+
+
 class DrawingTool(object):
+    __metaclass__ = ToolHandler
+
     def __init__(self, board):
         self.board = board
         self.tool_is_up = False
         self.blink_on = True
         self.c = Canvas(self.board.o)
         self.init_vars()
+        #ToolBucket().register_tool(self.menu_name, self)
 
     def init_vars(self):
         pass
@@ -53,6 +77,7 @@ class DrawingTool(object):
 
 
 class PointTool(DrawingTool):
+    menu_name = "Point"
 
     def tool_down(self):
         self.board.update_image(self.draw_tool_position(self.board.field.get_image()))
@@ -64,6 +89,7 @@ class PointTool(DrawingTool):
 
 
 class LineTool(DrawingTool):
+    menu_name = "Line"
 
     def init_vars(self):
         self.start = None
@@ -86,6 +112,7 @@ class LineTool(DrawingTool):
 
 
 class RectangleTool(LineTool):
+    menu_name = "Rectangle"
 
     def draw_tool_position(self, image):
         self.c.load_image(image)
@@ -98,6 +125,7 @@ class RectangleTool(LineTool):
 
 
 class EllipseTool(LineTool):
+    menu_name = "Ellipse"
 
     def draw_tool_position(self, image):
         self.c.load_image(image)
@@ -110,6 +138,7 @@ class EllipseTool(LineTool):
 
 
 class CircleTool(LineTool):
+    menu_name = "Circle"
 
     def draw_tool_position(self, image):
         self.c.load_image(image)
@@ -127,6 +156,7 @@ class CircleTool(LineTool):
 
 
 class PolygonTool(DrawingTool):
+    menu_name = "Polygon"
 
     def init_vars(self):
         self.polygon_coords = []
@@ -213,12 +243,7 @@ class DrawingBoard(BaseUIElement):
         self.deactivate()
 
     def pick_tools(self):
-        lb_contents = [["Point", PointTool],
-                       ["Line", LineTool],
-                       ["Rectangle", RectangleTool],
-                       ["Circle", CircleTool],
-                       ["Ellipse", EllipseTool],
-                       ["Polygon", PolygonTool]]
+        lb_contents = ToolBucket().get_tools()
         choice = Listbox(lb_contents, self.i, self.o, "Drawing app tool picker listbox").activate()
         if choice:
             self.tool = choice(self)
