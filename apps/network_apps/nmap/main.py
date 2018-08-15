@@ -6,7 +6,7 @@ from functools import wraps
 import time
 import os, sys
 
-from ui import Menu, Printer, Checkbox, format_for_screen as ffs, NumpadNumberInput, NumpadCharInput
+from ui import Menu, PrettyPrinter, Checkbox, NumpadNumberInput, LoadingIndicator
 from if_info import get_ip_addr, get_network_from_ip, sort_ips
 
 try:
@@ -63,7 +63,7 @@ def smart_scan():
             networks.append( ["{}:{}".format(interface_name, ip), ip] )
     if not networks:
         #No suitable interfaces found after filtering
-        Printer(ffs("No suitable network interfaces found!", o.cols), i, o, 3)
+        PrettyPrinter("No suitable network interfaces found!", i, o, 3)
         return None
     if len(networks) == 1:
         #Only one good interface, using it automatically
@@ -86,9 +86,9 @@ def smart_scan():
     port_string = ",".join(list(set(port_string.split(","))))
     #De-duplicated and ready to go.
     print(port_string)
-    Printer(ffs("Scanning {}".format(network_ip), o.cols), i, o, 0)
-    nm = nmap.PortScanner()
-    nm.scan(network_ip, arguments="-n -p {}".format(port_string))
+    with LoadingIndicator(i, o, message=network_ip):
+        nm = nmap.PortScanner()
+        nm.scan(network_ip, arguments="-n -p {}".format(port_string))
     print(nm)
     show_quick_scan_results_for_network(network_ip, nm)
 
@@ -171,7 +171,7 @@ def scan_arbitrary_ip():
             ip = cleanup_validate_ip(ip)
         except ValueError as e:
             #If not valid, giving an opportunity to either fix it or cancel the scan
-            Printer(ffs("Invalid ip: {}! Reason: {}".format(ip, e.message), o.cols), i, o, 3)
+            PrettyPrinter("Invalid ip: {}! Reason: {}".format(ip, e.message), i, o, 3)
             ip = NumpadIPAddressInput(i, o, message="Fix the IP", value=ip).activate()
             if ip is None: return #Cancelled
             #To the next loop iteration
@@ -181,11 +181,11 @@ def scan_arbitrary_ip():
         #Network address with a netmask, interpreting it as a network address and just calling nmap
         quick_scan_network_by_ip(ip)
     elif "*" in ip:
-        Printer(ffs("Wildcards without a netmask are not yet supported by the interface, sorry", o.cols), i, o, 3)
+        PrettyPrinter("Wildcards without a netmask are not yet supported by the interface, sorry", i, o, 3)
         return
     else:
         scan_ip(ip)
-    
+
 
 #"Dump scan to file" functions
 
@@ -200,7 +200,7 @@ def dump_current_scan_to_file():
         print("Saved report {}".format(filename))
 
 def save_restore_global_storage(func):
-    """A decorator that restores previous contents of report storage 
+    """A decorator that restores previous contents of report storage
     once the function that last overwrote it exits."""
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -220,22 +220,22 @@ def scan_localhost(host = "127.0.0.1"):
     scan_ip(host)
 
 def scan_ip(ip, ports="0-1023"):
-    Printer("Scanning {}:{}".format(ip, ports), i, o, 0) #Leaves the message on the screen
-    nm = nmap.PortScanner()
-    nm.scan(ip, ports)
+    with LoadingIndicator(i, o, message="{}:{}".format(ip, ports)):
+        nm = nmap.PortScanner()
+        nm.scan(ip, ports)
     show_scan_results_for_ip(ip, nm)
 
 def quick_scan_network_by_ip(ip_on_network):
     if ip_on_network == "None":
-        Printer("No IP to scan!", i, o, 2)
+        PrettyPrinter("No IP to scan!", i, o, 2)
         return False
     network_ip = get_network_from_ip(ip_on_network)
-    Printer("Scanning {}".format(network_ip), i, o, 0)
-    nm = nmap.PortScanner()
-    nm.scan(network_ip, arguments="-sn")
+    with LoadingIndicator(i, o, message=network_ip):
+        nm = nmap.PortScanner()
+        nm.scan(network_ip, arguments="-sn")
     show_quick_scan_results_for_network(network_ip, nm)
 
-    
+
 #Different menus
 
 def scan_network_menu():
@@ -271,7 +271,7 @@ def ip_info_menu(ip_info):
             menu_contents.append(["No open ports found"])
     menu_contents.append(["-Scan ports 0-1023", lambda: scan_ip(ip)])
     Menu(menu_contents, i, o).activate()
-    
+
 
 #Scan result display functions
 
@@ -324,19 +324,19 @@ def show_quick_scan_results_for_network(net_ip, net_results):
         net_report.append([[ip, info_str], lambda x=result: ip_info_menu(x)])
     Menu(net_report, i, o, entry_height=2).activate()
 
-    
+
 #ZPUI functions
 
 def callback():
     #Check if we have all the software necessary for the app to work
     #If not, show error messages and exit
     if nmap is None:
-        Printer(ffs("nmap Python module not found!", o.cols), i, o, 3)
+        PrettyPrinter("nmap Python module not found!", i, o, 3)
         return False
     try:
         nm = nmap.PortScanner()
     except nmap.nmap.PortScannerError:
-        Printer(ffs("nmap not installed!", o.cols), i, o, 3)
+        PrettyPrinter("nmap not installed!", i, o, 3)
         return False
     #Dump function support
     i.set_maskable_callback("KEY_F5", dump_current_scan_to_file)
