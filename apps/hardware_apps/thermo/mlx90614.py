@@ -7,7 +7,7 @@ echo "Y" > /sys/module/i2c_bcm2708/parameters/combined
 
 import smbus
 
-class MLX90614():
+class MLX90614(object):
 
     MLX90614_RAWIR1=0x04
     MLX90614_RAWIR2=0x05

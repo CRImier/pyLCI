@@ -1,5 +1,3 @@
-
-
 import smbus
 from time import sleep
 
