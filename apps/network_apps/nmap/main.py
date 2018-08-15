@@ -32,7 +32,7 @@ heuristic_ports = [["SSH,Telnet",          "22,23",                         True
                    ["File sharing",        "445,21,944,2049",               True],
                    ["Windows stuff",       "135,445,593",                   True],
                    ["Misc",                "19,502",                       False]]
-                   
+
 
 #Figuring out the path of the app folder - not that simple
 current_module_path = os.path.dirname(sys.modules[__name__].__file__)
@@ -91,12 +91,12 @@ def smart_scan():
     nm.scan(network_ip, arguments="-n -p {}".format(port_string))
     print(nm)
     show_quick_scan_results_for_network(network_ip, nm)
-    
+
 #"Arbitrary IP/network scan" functions
 
 class NumpadIPAddressInput(NumpadNumberInput):
     #Making an UI input element with IP address-suitable character mapping
-    mapping = {"1":"1", "2":"2", "3":"3", "4":"4", "5":"5", "6":"6", "7":"7", "8":"8", "9":"9", "0":"0", "*":".*", "#":"/"}
+    default_mapping = {"1":"1", "2":"2", "3":"3", "4":"4", "5":"5", "6":"6", "7":"7", "8":"8", "9":"9", "0":"0", "*":".*", "#":"/"}
 
 def cleanup_validate_ip(ip):
     if "/" in ip:
@@ -162,7 +162,7 @@ def cleanup_validate_ip(ip):
         return ip
 
 def scan_arbitrary_ip():
-    ip = NumpadIPAddressInput(i, o, message="IP to scan:", debug=True).activate()
+    ip = NumpadIPAddressInput(i, o, message="IP to scan:").activate()
     if ip is None: return #Cancelled
     valid_ip = False
     while not valid_ip:
@@ -172,7 +172,7 @@ def scan_arbitrary_ip():
         except ValueError as e:
             #If not valid, giving an opportunity to either fix it or cancel the scan
             Printer(ffs("Invalid ip: {}! Reason: {}".format(ip, e.message), o.cols), i, o, 3)
-            ip = NumpadIPAddressInput(i, o, message="Fix the IP", value=ip, debug=True).activate()
+            ip = NumpadIPAddressInput(i, o, message="Fix the IP", value=ip).activate()
             if ip is None: return #Cancelled
             #To the next loop iteration
         else:
