@@ -178,6 +178,65 @@ through a really long list of options to choose from, here's what you can do:
         print(choices)
     # {"replace_on_change":True, "delete_in_destination":False, "save_settings":False}
 
+-----------
+
+Indicate progress
+-----------------
+
+If you're going to launch a background task, it's best if the user knows what's
+happening. The simplest way is to print something on the screen:
+
+.. code-block:: python
+
+    from ui import PrettyPrinter
+    ...
+    PrettyPrinter("Scanning ports", i, o, 5)
+    results = scan_ports()
+    print_results(results)
+
+Or, a little bit prettier:
+
+.. code-block:: python
+
+    from ui import Canvas
+    ...
+    c = Canvas(o)
+    c.centered_text("Scanning ports")
+    c.display()
+    results = scan_ports()
+    print_results(results)
+
+Or, even better - use a LoadingIndicator UI element, which is much prettier and
+user-friendly:
+
+.. code-block:: python
+
+    from ui import LoadingIndicator
+    ...
+    with LoadingIndicator(i, o, message="Scanning ports"):
+        results = scan_ports()
+    print_results(results)
+
+What if you actually know how much of the task is completed? Then, you can use a
+ProgressBar, which is going to show the user a percentage of the task completed:
+
+.. code-block:: python
+
+    from ui import ProgressBar
+    ...
+    ports = [22, 23, 80, 111, 443]
+    with ProgressBar(i, o, message="Scanning ports") as pb:
+        process = PortScanner(ports)
+        process.start()
+        while process.is_ongoing():
+            current_port_index = ports.index(process.current_port)
+            # Calculating progress from 0 to 100
+            progress = int( 100.0/len(ports) * current_port_index )
+            pb.progress = progress
+    print_results(results)
+
+-----------
+
 Pick a file/directory
 ---------------------
 
