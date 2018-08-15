@@ -9,6 +9,7 @@
     {"name":"A. Micro", "file":"Caterina-Micro.hex", "lfuse":"0xff", "hfuse":"0xd8", "efuse":"0xb"},
     {"name":"A. Pro Mini 16MHz 328P", "file":"ATmegaBOOT_atmega328.hex", "lfuse":"0xff", "hfuse":"0xda", "efuse":"0x5"},
     {"name":"A. Pro Mini 8MHz 328P", "file":"ATmegaBOOT_atmega328_pro_8MHz.hex", "lfuse":"0xff", "hfuse":"0xda", "efuse":"0x5"},
+    {"name":"ATMega328P - 8MHz internal", "file":"ATmegaBOOT_atmega328_pro_8MHz.hex", "lfuse":"0xe2", "hfuse":"0xda", "efuse":"0x5"},
     {"name":"ATMega8 Optiboot", "file":"optiboot_atmega8.hex", "lfuse":"0xbf", "hfuse":"0xcc"}
   ],
 "fuse_format":"m",
