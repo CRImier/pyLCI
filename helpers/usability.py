@@ -97,3 +97,12 @@ class ExitHelper(object):
         self.started = False
         self.i.clear_keymap()
         self.i.stop_listen()
+
+
+def remove_left_failsafe(i):
+    """
+    Removes the "exit context on LEFT unless a callback for KEY_LEFT is set"
+    failsafe that's added to all ``InputProxy`` objects by default.
+    """
+    if "KEY_LEFT" in i.maskable_keymap:
+        i.remove_maskable_callback("KEY_LEFT")
