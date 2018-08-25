@@ -21,6 +21,7 @@ class ExitHelper(object):
 
     started = False
     callback = None
+    last_key = None
 
     def __init__(self, i, keys=["KEY_LEFT"], cb=None):
         self.i = i
@@ -42,11 +43,19 @@ class ExitHelper(object):
         self.i.stop_listen()
         self.i.clear_keymap()
         if "*" in self.keys:
-            self.i.set_streaming(lambda *args: self.callback())
+            self.i.set_streaming(self.save_key_and_callback)
         else:
-            keymap = {key:self.callback for key in self.keys}
+            keymap = {key:lambda x=key:self.save_key_and_callback(x) for key in self.keys}
             self.i.set_keymap(keymap)
         self.i.listen()
+
+    def save_key_and_callback(self, key):
+        """
+        Saves the key to the ``last_key`` attribute before calling the callback
+        (not passing the ``key`` argument).
+        """
+        self.last_key = key
+        self.callback()
 
     def set_callback(self, callback=None):
         if callback is None:
