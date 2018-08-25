@@ -39,7 +39,9 @@ class ExitHelper(object):
         return self
 
     def setup_input(self):
-        """Clears input device keymap, registers callbacks and enables input listener."""
+        """
+        Clears input device keymap, registers callbacks and enables input listener.
+        """
         self.i.stop_listen()
         self.i.clear_keymap()
         if "*" in self.keys:
@@ -58,6 +60,11 @@ class ExitHelper(object):
         self.callback()
 
     def set_callback(self, callback=None):
+        """
+        Allows you to define a custom callback (which will still set the internal flag).
+        If no callback is passed, simply uses the internal one (so calling this function
+        with no arguments clears whatever callback you might've set previously).
+        """
         if callback is None:
             self.callback = self.signal_exit
         elif not callable(callback):
@@ -77,6 +84,7 @@ class ExitHelper(object):
         return not self._do_exit.isSet()
 
     def signal_exit(self):
+        """Internal function to set the exit flag."""
         self._do_exit.set()
 
     def reset(self):
