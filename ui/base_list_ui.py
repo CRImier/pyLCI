@@ -245,8 +245,15 @@ class BaseListUIElement(BaseUIElement):
     def set_keymap(self, keymap):
         if self.exitable and self._override_left:
             keymap["KEY_LEFT"] = "deactivate"
+        # BaseUIElement.process_contents ignores self.exitable
+        # and only honors self._override_left
+        # Let's save it to a temp variable and process the contents!
+        override_left = self._override_left
+        self._override_left = False
         keymap.update(self.custom_keymap)
         BaseUIElement.set_keymap(self, keymap)
+        # Restoring self._override_left
+        self._override_left = override_left
 
     def set_contents(self, contents):
         """Sets the UI element contents and triggers pointer recalculation in the view."""
