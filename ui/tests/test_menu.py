@@ -70,7 +70,23 @@ class TestMenu(unittest.TestCase):
         assert (c2.exit_entry != c3.exit_entry)
         assert (c1.exit_entry != c3.exit_entry)
 
+    def test_left_key_disabled_when_not_exitable(self):
+        """Tests whether a menu does not exit on KEY_LEFT when exitable is set to False"""
+        num_elements = 3
+        contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        mu = Menu(contents, get_mock_input(), get_mock_output(), name=mu_name, exitable=False, config={})
+        mu.refresh = lambda *args, **kwargs: None
+
+        def scenario():
+            assert "KEY_LEFT" not in mu.keymap  # KEY_LEFT
+            mu.deactivate()
+            assert not mu.in_foreground
+
+        with patch.object(mu, 'idle_loop', side_effect=scenario) as p:
+            mu.activate()
+
     def test_left_key_returns_none(self):
+        """ A Menu is never supposed to return anything other than None"""
         num_elements = 3
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
         mu = Menu(contents, get_mock_input(), get_mock_output(), name=mu_name, config={})
