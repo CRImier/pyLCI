@@ -167,8 +167,8 @@ class BaseUIElement(object):
         Processes the keymap, wrapping all callbacks using the ``process_callback`` method.
         If a string is supplied instead of a callable, it looks it up from methods -
         if a method is not found, raises ``ValueError``.
-        Also, sets KEY_LEFT to ``deactivate`` unless ``override_left``
-        keyword argument is False (override with caution).
+        Also, sets KEY_LEFT to ``deactivate`` unless ``self.override_left``
+        is set to False (override with caution).
         """
         logger.debug("{}: processing keymap - {}".format(self.name, keymap))
         for key in keymap:
