@@ -336,21 +336,35 @@ class TextView(object):
     def get_fow_height_in_chars(self):
         return self.o.rows
 
+    def init_last_displayed_entry(self, full_entries_shown, entry_count, clamped_pointer):
+        # Scenarios:
+        # 3 entries, 4-entry screen, pointer = 0 => 2
+        # 3 entries, 4-entry screen, pointer = 1 => 2
+        # 5 entries, 4-entry screen, pointer = 1 => 3
+        # 5 entries, 4-entry screen, pointer = 5 => 4
+        # Magic:
+        return max(clamped_pointer, min(full_entries_shown, entry_count)) - 1
+
     def fix_pointers_on_contents_update(self):
         """Boundary-checks ``pointer``, re-sets ``last`` & ``first_displayed_entry`` pointers
            and calculates the value for ``last_displayed_entry`` pointer."""
-        self.el.pointer = clamp_list_index(self.el.pointer, self.el.contents)  # Makes sure the pointer isn't >
         full_entries_shown = self.get_entry_count_per_screen()
         entry_count = len(self.el.contents)
-        self.first_displayed_entry = 0
-        if full_entries_shown > entry_count:  # Display is capable of showing more entries than we have, so the last displayed entry is the last menu entry
-            # There are some free display rows, adjusting last_displayed_entry
-            self.last_displayed_entry = entry_count - 1
-        else:
-            # There are no empty spaces on the display
-            self.last_displayed_entry = full_entries_shown - 1  # We start numbering entries with 0, so 4-row screen would show entries 0-3
-        # print("First displayed entry is {}".format(self.first_displayed_entry))
-        # print("Last displayed entry is {}".format(self.last_displayed_entry))
+
+        new_pointer = clamp_list_index(self.el.pointer, self.el.contents)  # Makes sure the pointer isn't larger than the entry count
+        # Initializing last_displayed_entry in case it's not yet initialized
+        if self.last_displayed_entry is None or full_entries_shown < entry_count:
+            self.last_displayed_entry = self.init_last_displayed_entry(full_entries_shown, entry_count, new_pointer)
+        if new_pointer == self.el.pointer:
+            return # Pointer didn't change from clamping, no action needs to be taken
+
+        self.el.pointer = new_pointer
+
+        if self.last_displayed_entry >= entry_count:
+            self.last_displayed_entry = self.init_last_displayed_entry(full_entries_shown, entry_count, new_pointer)
+
+        if self.first_displayed_entry < new_pointer - full_entries_shown:
+            self.first_displayed_entry = new_pointer - full_entries_shown
 
     def fix_pointers_on_refresh(self):
         if self.el.pointer < self.first_displayed_entry:
