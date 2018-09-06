@@ -337,6 +337,7 @@ class TextView(object):
 
     def fix_pointers_on_contents_update(self):
         """Boundary-checks ``pointer``, re-sets the ``first_displayed_entry`` pointer."""
+        full_entries_shown = self.get_entry_count_per_screen()
         entry_count = len(self.el.contents)
 
         new_pointer = clamp_list_index(self.el.pointer, self.el.contents)  # Makes sure the pointer isn't larger than the entry count
