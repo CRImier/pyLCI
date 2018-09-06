@@ -17,17 +17,19 @@ class MatrixClientApp(ZeroApp):
 		self.displayRooms()
 
 	def login(self):
-		username = NumpadCharInput(self.i, self.o, message="Username", name="username_dialog").activate()
+		username = NumpadCharInput(self.i, self.o, message="Enter username", name="username_dialog").activate()
 		if username is None:
 			return False
 
 		print(username)
 
-		password = NumpadCharInput(self.i, self.o, message="Password", name="password_dialog").activate()
+		password = NumpadCharInput(self.i, self.o, message="Enter password", name="password_dialog").activate()
 		if password is None:
 			return False
 
 		print(password)
+
+		PrettyPrinter("Logging in ...", self.i, self.o)
 
 		self.client = Client(username, password)
 
@@ -41,7 +43,7 @@ class MatrixClientApp(ZeroApp):
 		for r in rooms:
 			lc.append([rooms[r].display_name, r])
 
-		PrettyPrinter("Select a room", self.i, self.o, 3)
+		PrettyPrinter("Select a room", self.i, self.o, 2)
 		chosenRoom = Listbox(lc, self.i, self.o, name="Room menu").activate()
 
 		if not chosenRoom:
@@ -66,7 +68,7 @@ class MatrixClientApp(ZeroApp):
 		self.client.client.start_listener_thread()
 
 		# Create a menu in which the messages are displayed
-		self.messages_menu = Menu(self.stored_messages, self.i, self.o, "Messages")
+		self.messages_menu = Menu(self.stored_messages, self.i, self.o, name="matrix_messages_menu", entry_height=1)
 		self.messages_menu.activate()
 
 	def choose_room_action(self, room):

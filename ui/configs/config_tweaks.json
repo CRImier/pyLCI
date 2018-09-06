@@ -1,0 +1,7 @@
+{
+	"base_list_ui": {
+		"custom_views": {
+			"matrix_messages_menu": "SimpleGraphicalView"
+		}
+	}
+}
