@@ -314,7 +314,6 @@ class BaseListBackgroundableUIElement(BaseListUIElement):
 
 class TextView(object):
     first_displayed_entry = 0
-    last_displayed_entry = None
 
     def __init__(self, o, entry_height, ui_element):
         self.o = o
@@ -336,47 +335,28 @@ class TextView(object):
     def get_fow_height_in_chars(self):
         return self.o.rows
 
-    def init_last_displayed_entry(self, full_entries_shown, entry_count, clamped_pointer):
-        # Scenarios:
-        # 3 entries, 4-entry screen, pointer = 0 => 2
-        # 3 entries, 4-entry screen, pointer = 1 => 2
-        # 5 entries, 4-entry screen, pointer = 1 => 3
-        # 5 entries, 4-entry screen, pointer = 5 => 4
-        # Magic:
-        return max(clamped_pointer, min(full_entries_shown, entry_count)) - 1
-
     def fix_pointers_on_contents_update(self):
-        """Boundary-checks ``pointer``, re-sets ``last`` & ``first_displayed_entry`` pointers
-           and calculates the value for ``last_displayed_entry`` pointer."""
+        """Boundary-checks ``pointer``, re-sets the ``first_displayed_entry`` pointer."""
         full_entries_shown = self.get_entry_count_per_screen()
         entry_count = len(self.el.contents)
 
         new_pointer = clamp_list_index(self.el.pointer, self.el.contents)  # Makes sure the pointer isn't larger than the entry count
-        # Initializing last_displayed_entry in case it's not yet initialized
-        if self.last_displayed_entry is None or full_entries_shown < entry_count:
-            self.last_displayed_entry = self.init_last_displayed_entry(full_entries_shown, entry_count, new_pointer)
         if new_pointer == self.el.pointer:
             return # Pointer didn't change from clamping, no action needs to be taken
 
         self.el.pointer = new_pointer
-
-        if self.last_displayed_entry >= entry_count:
-            self.last_displayed_entry = self.init_last_displayed_entry(full_entries_shown, entry_count, new_pointer)
-
         if self.first_displayed_entry < new_pointer - full_entries_shown:
             self.first_displayed_entry = new_pointer - full_entries_shown
 
     def fix_pointers_on_refresh(self):
+        full_entries_shown = self.get_entry_count_per_screen()
         if self.el.pointer < self.first_displayed_entry:
             logger.debug("Pointer went too far to top, correcting")
-            self.last_displayed_entry -= self.first_displayed_entry - self.el.pointer  # The difference will mostly be 1 but I guess it might be more in case of concurrency issues
             self.first_displayed_entry = self.el.pointer
-        if self.el.pointer > self.last_displayed_entry:
-            logger.debug("Pointer went too far to bottom, correcting")
-            self.first_displayed_entry += self.el.pointer - self.last_displayed_entry
-            self.last_displayed_entry = self.el.pointer
+        while self.el.pointer >= self.first_displayed_entry + full_entries_shown:
+            logger.debug("Pointer went too far to bottom, incrementing first_displayed_entry")
+            self.first_displayed_entry += 1
         logger.debug("First displayed entry is {}".format(self.first_displayed_entry))
-        logger.debug("Last displayed entry is {}".format(self.last_displayed_entry))
 
     def entry_is_active(self, entry_num):
         return entry_num == self.el.pointer
@@ -387,7 +367,9 @@ class TextView(object):
         of them and concatenates them into one big list which it returns.
         |Doesn't support partly-rendering entries yet."""
         displayed_data = []
-        disp_entry_positions = range(self.first_displayed_entry, self.last_displayed_entry + 1)
+        full_entries_shown = self.get_entry_count_per_screen()
+        last_displayed_entry = clamp_list_index(self.first_displayed_entry+full_entries_shown, self.el.contents)
+        disp_entry_positions = range(self.first_displayed_entry, last_displayed_entry+1)
         for entry_num in disp_entry_positions:
             displayed_entry = self.render_displayed_entry_text(entry_num)
             displayed_data += displayed_entry
@@ -471,19 +453,23 @@ class EightPtView(TextView):
         image = self.get_displayed_image()
         self.o.display_image(image)
 
-    def get_scrollbar_top_bottom(self):
-        scrollbar_max_length = self.o.height - (self.scrollbar_y_offset * 2)
+    def scrollbar_needed(self):
+        # No scrollbar if all the entries fit on the screen
+        full_entries_shown = self.get_entry_count_per_screen()
         total_entry_count = len(self.el.contents)
-        entries_before = self.first_displayed_entry
-        entries_after = total_entry_count - self.last_displayed_entry - 1
-        entries_on_screen = total_entry_count - entries_before - entries_after
-        if entries_on_screen >= total_entry_count:
-            # No scrollbar if there are no entries not shown on the screen
+        return total_entry_count > full_entries_shown
+
+    def get_scrollbar_top_bottom(self):
+        if not self.scrollbar_needed():
             return 0, 0
+        full_entries_shown = self.get_entry_count_per_screen()
+        total_entry_count = len(self.el.contents)
+        scrollbar_max_length = self.o.height - (self.scrollbar_y_offset * 2)
+        entries_before = self.first_displayed_entry
         # Scrollbar length per one entry
         length_unit = float(scrollbar_max_length) / total_entry_count
         top = self.scrollbar_y_offset + int(entries_before * length_unit)
-        length = int(entries_on_screen * length_unit)
+        length = int(full_entries_shown * length_unit)
         bottom = top + length
         return top, bottom
 
