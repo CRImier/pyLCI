@@ -1,5 +1,5 @@
 from apps import ZeroApp
-from ui import CharArrowKeysInput, Listbox, PrettyPrinter, NumpadCharInput, Menu
+from ui import CharArrowKeysInput, Listbox, PrettyPrinter, NumpadCharInput, Menu, LoadingIndicator
 
 from time import sleep
 
@@ -29,10 +29,8 @@ class MatrixClientApp(ZeroApp):
 
 		print(password)
 
-		PrettyPrinter("Logging in ...", self.i, self.o)
-
-		self.client = Client(username, password)
-
+		with LoadingIndicator(self.i, self.o, message="Logging in ..."):
+			self.client = Client(username, password)
 		
 	def displayRooms(self):
 		# Get all rooms the user is in
@@ -82,16 +80,17 @@ class MatrixClientApp(ZeroApp):
 	def _on_message(self, room, event):
 		print("New event: %s" % event['type'])
 
+		# Check if a new user joined the room
 		if event['type'] == "m.room.member":
 			if event['membership'] == "join":
 				self.stored_messages.append(["{0} joined".format(event['content']['displayname'])])
 				print("{0} joined".format(event['content']['displayname']))
 
+		# Check for new messages
 		elif event['type'] == "m.room.message":
 			if event['content']['msgtype'] == "m.text":
 				self.stored_messages.append([event['content']['body']])
 				print("New message: %s wrote: %s" % (event['sender'], event['content']['body']))
-
 
 		# Update the contents of the menu and refresh it
 		self.messages_menu.set_contents(self.stored_messages)
