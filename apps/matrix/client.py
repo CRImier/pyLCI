@@ -30,7 +30,7 @@ class Client():
 
 	def updateDisplayName(self):
 		try:
-			self.user = self.matrix_client.get_user("@%s:matrix.org" % self.username)
+			self.user = self.matrix_client.get_user("@{}:matrix.org".format(self.username))
 			return self.user.get_display_name()
 
 		except MatrixRequestError as e:
