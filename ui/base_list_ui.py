@@ -368,8 +368,8 @@ class TextView(object):
         |Doesn't support partly-rendering entries yet."""
         displayed_data = []
         full_entries_shown = self.get_entry_count_per_screen()
-        last_displayed_entry = clamp_list_index(self.first_displayed_entry+full_entries_shown, self.el.contents)
-        disp_entry_positions = range(self.first_displayed_entry, last_displayed_entry+1)
+        entries_shown = min(len(self.el.contents), full_entries_shown)
+        disp_entry_positions = range(self.first_displayed_entry, self.first_displayed_entry+entries_shown)
         for entry_num in disp_entry_positions:
             displayed_entry = self.render_displayed_entry_text(entry_num)
             displayed_data += displayed_entry
