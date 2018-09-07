@@ -1,7 +1,7 @@
 from apps import ZeroApp
-from ui import CharArrowKeysInput, Listbox, PrettyPrinter, NumpadCharInput, Menu, LoadingIndicator
+from ui import CharArrowKeysInput, Listbox, PrettyPrinter, NumpadCharInput, Menu, LoadingIndicator, TextReader
 
-from time import sleep
+from time import sleep, strftime, localtime
 
 from client import Client
 
@@ -41,7 +41,6 @@ class MatrixClientApp(ZeroApp):
 		for r in rooms:
 			lc.append([rooms[r].display_name, r])
 
-		PrettyPrinter("Select a room", self.i, self.o, 2)
 		chosenRoom = Listbox(lc, self.i, self.o, name="Room menu").activate()
 
 		if not chosenRoom:
@@ -60,7 +59,7 @@ class MatrixClientApp(ZeroApp):
 
 		PrettyPrinter(message, self.i, self.o, 3)
 
-	def read_messages(self, room):
+	def display_messages(self, room):
 		# Add a listener to the room and provide a callback
 		room.add_listener(self._on_message)
 		self.client.client.start_listener_thread()
@@ -69,16 +68,24 @@ class MatrixClientApp(ZeroApp):
 		self.messages_menu = Menu(self.stored_messages, self.i, self.o, name="matrix_messages_menu", entry_height=1)
 		self.messages_menu.activate()
 
+	def display_single_message(self, msg, author, unix_time):
+		description = "{0} | {1}: {2}".format(strftime("%m-%d %H:%M", localtime(unix_time / 1000)), author, msg)
+
+		TextReader(description, self.i, self.o, h_scroll=True).activate()
+
 	def choose_room_action(self, room):
 		menu_contents = [
 			["Write message", lambda: self.write_message(room)],
-			["Read messages", lambda: self.read_messages(room)]
+			["Read messages", lambda: self.display_messages(room)]
 		]
 
 		Menu(menu_contents, self.i, self.o, "Choose action").activate()
 
 	def _on_message(self, room, event):
 		print("New event: %s" % event['type'])
+		print(event.keys())
+		print(event['content'].keys())
+		print(event['origin_server_ts'])
 
 		# Check if a new user joined the room
 		if event['type'] == "m.room.member":
@@ -89,7 +96,9 @@ class MatrixClientApp(ZeroApp):
 		# Check for new messages
 		elif event['type'] == "m.room.message":
 			if event['content']['msgtype'] == "m.text":
-				self.stored_messages.append([event['content']['body']])
+				self.stored_messages.append([event['content']['body'],
+					lambda: self.display_single_message(event['content']['body'], event['sender'], event['origin_server_ts'])])
+
 				print("New message: %s wrote: %s" % (event['sender'], event['content']['body']))
 
 		# Update the contents of the menu and refresh it
