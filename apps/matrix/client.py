@@ -7,10 +7,10 @@ from requests.exceptions import MissingSchema
 class Client():
 
 	def __init__(self, username, password):
-		self.client = MatrixClient("https://matrix.org")
+		self.matrix_client = MatrixClient("https://matrix.org")
 
 		try:
-			self.client.login_with_password(username, password)
+			self.matrix_client.login_with_password(username, password)
 
 		except MatrixRequestError as e:
 			print(e)
@@ -30,7 +30,7 @@ class Client():
 
 	def updateDisplayName(self):
 		try:
-			self.user = self.client.get_user("@%s:matrix.org" % self.username)
+			self.user = self.matrix_client.get_user("@%s:matrix.org" % self.username)
 
 			return self.user.get_display_name()
 
@@ -42,7 +42,7 @@ class Client():
 
 	def updateRooms(self):
 		try:
-			self.rooms = self.client.get_rooms()
+			self.rooms = self.matrix_client.get_rooms()
 
 			return self.rooms
 
