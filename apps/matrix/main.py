@@ -1,5 +1,5 @@
 from apps import ZeroApp
-from ui import CharArrowKeysInput, Listbox, PrettyPrinter, NumpadCharInput, Menu, LoadingIndicator, TextReader
+from ui import Listbox, PrettyPrinter, NumpadCharInput, Menu, LoadingIndicator, TextReader
 from helpers import setup_logger
 
 from time import sleep, strftime, localtime
