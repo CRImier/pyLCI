@@ -52,11 +52,15 @@ class BaseListUIElement(BaseUIElement):
         self.append_exit = append_exit
         self.scrolling = {
             "enabled": scrolling,
+            "current_scrollable": False
+        }
+        self.scrolling_defaults = {
             "current_finished": False,
-            "current_scrollable": False,
+            "current_speed": 1,
             "counter": 0,
             "pointer": 0
         }
+        self.reset_scrolling()
         self.config = config if config is not None else global_config
         self.set_view(self.config.get(self.config_key, {}))
         self.set_contents(contents)
@@ -142,14 +146,12 @@ class BaseListUIElement(BaseUIElement):
         if self.scrolling["enabled"] and not self.scrolling["current_finished"] and self.scrolling["current_scrollable"]:
             self.scrolling["counter"] += 1
             if self.scrolling["counter"] == 10:
-                self.scrolling["pointer"] += 1
+                self.scrolling["pointer"] += self.scrolling["current_speed"]
                 self.scrolling["counter"] = 0
                 self.view.refresh()
 
     def reset_scrolling(self):
-        self.scrolling["current_finished"] = False
-        self.scrolling["pointer"] = 0
-        self.scrolling["counter"] = 0
+        self.scrolling.update(self.scrolling_defaults)
 
     # Debugging helpers - you can set them as callbacks for keys you don't use
 
@@ -314,11 +316,16 @@ class BaseListBackgroundableUIElement(BaseListUIElement):
 
 class TextView(object):
     first_displayed_entry = 0
+    scrolling_speed_divisor = 4
 
     def __init__(self, o, entry_height, ui_element):
         self.o = o
         self.entry_height = entry_height
         self.el = ui_element
+        self.setup_scrolling()
+
+    def setup_scrolling(self):
+        self.el.scrolling_defaults["current_speed"] = self.get_fow_width_in_chars()/self.scrolling_speed_divisor
 
     @property
     def in_foreground(self):
@@ -368,13 +375,37 @@ class TextView(object):
         |Doesn't support partly-rendering entries yet."""
         displayed_data = []
         full_entries_shown = self.get_entry_count_per_screen()
-        last_displayed_entry = clamp_list_index(self.first_displayed_entry+full_entries_shown, self.el.contents)
-        disp_entry_positions = range(self.first_displayed_entry, last_displayed_entry+1)
+        entries_shown = min(len(self.el.contents), full_entries_shown)
+        disp_entry_positions = range(self.first_displayed_entry, self.first_displayed_entry+entries_shown)
         for entry_num in disp_entry_positions:
             displayed_entry = self.render_displayed_entry_text(entry_num)
             displayed_data += displayed_entry
         logger.debug("Displayed data: {}".format(displayed_data))
         return displayed_data
+
+    def process_active_entry(self, entry):
+        """ This function processes text of the active entry in order to scroll it. """
+        avail_display_chars = (self.get_fow_width_in_chars() * self.entry_height)
+        # Scrolling only works with strings for now
+        # Maybe scrolling should be its own mixin?
+        # Likely, yes.
+        self.el.scrolling["current_scrollable"] = len(entry) > avail_display_chars
+        if not self.el.scrolling["current_scrollable"]:
+            return entry
+        overflow_amount = len(entry) - self.el.scrolling["pointer"] - avail_display_chars
+        if overflow_amount <= -self.el.scrolling["current_speed"]:
+            self.el.scrolling["pointer"] = 0
+            self.el.scrolling["current_finished"] = True
+        elif overflow_amount < 0:
+            # If a pointer is clamped, we still need to display the last part
+            # - without whitespace
+            self.el.scrolling["pointer"] = len(entry) - avail_display_chars
+        if self.el.scrolling["current_scrollable"] and not self.el.scrolling["current_finished"]:
+            entry = entry[self.el.scrolling["pointer"]:]
+        return entry
+
+    def process_inactive_entry(self, entry):
+        return entry
 
     def render_displayed_entry_text(self, entry_num):
         """Renders an UI element entry by its position number in self.contents, determined also by display width, self.entry_height and entry's representation type.
@@ -387,16 +418,11 @@ class TextView(object):
         entry = self.el.contents[entry_num][0]
         active = self.entry_is_active(entry_num)
         display_columns = self.get_fow_width_in_chars()
-        avail_display_chars = (display_columns * self.entry_height)
         if type(entry) in [str, unicode]:
             if active:
-                # Scrolling only works with strings for now
-                # Maybe scrolling should be part of view, too?
-                # Likely, yes.
-                self.el.scrolling["current_scrollable"] = len(entry) > avail_display_chars
-                self.el.scrolling["current_finished"] = len(entry) - self.el.scrolling["pointer"] < avail_display_chars
-                if self.el.scrolling["current_scrollable"] and not self.el.scrolling["current_finished"]:
-                    entry = entry[self.el.scrolling["pointer"]:]
+                entry = self.process_active_entry(entry)
+            else:
+                entry = self.process_inactive_entry(entry)
             rendered_entry.append(entry[:display_columns])  # First part of string displayed
             entry = entry[display_columns:]  # Shifting through the part we just displayed
             for row_num in range(
