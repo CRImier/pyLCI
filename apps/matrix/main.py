@@ -11,8 +11,9 @@ class MatrixClientApp(ZeroApp):
 	menu_name = "Matrix Client"
 	
 	def on_start(self):
-		self.stored_messages = []
+		self.stored_messages = {}
 		self.messages_menu = None
+		self.active_room = ""
 
 		self.login()
 		self.displayRooms()
@@ -32,42 +33,55 @@ class MatrixClientApp(ZeroApp):
 
 		with LoadingIndicator(self.i, self.o, message="Logging in ..."):
 			self.client = Client(username, password)
+
+		# Add a listener to all rooms the user is in
+		self.rooms = self.client.updateRooms()
+
+		for r in self.rooms:
+			self.rooms[r].add_listener(self._on_message)
+
+			self.stored_messages[r] = []
+
+		self.client.client.start_listener_thread()
 		
 	def displayRooms(self):
-		# Get all rooms the user is in
-		rooms = self.client.updateRooms()
+		menu_contents = []
+		for r in self.rooms:
+			current_room = self.rooms[r]
 
-		# Create a list of rooms to choose from
-		lc = []
-		for r in rooms:
-			lc.append([rooms[r].display_name, r])
+			print(current_room.display_name)
 
-		chosenRoom = Listbox(lc, self.i, self.o, name="Room menu").activate()
+			menu_contents.append([
+				current_room.display_name,
+				lambda x=current_room: self.display_messages(x),
+				lambda x=current_room: self.write_message(x)
+			])
 
-		if not chosenRoom:
-			return False
-
-		self.choose_room_action(rooms[chosenRoom])
+		Menu(menu_contents, self.i, self.o).activate()
 
 	def write_message(self, room):
 		message = NumpadCharInput(self.i, self.o, message="Message", name="message_dialog").activate()
 		if message is None:
 			return False
 
-		print(message)
-
 		room.send_text(message)
-
-		PrettyPrinter(message, self.i, self.o, 3)
+		PrettyPrinter(message, self.i, self.o, 1)
 
 	def display_messages(self, room):
-		# Add a listener to the room and provide a callback
-		room.add_listener(self._on_message)
-		self.client.client.start_listener_thread()
+		print("Viewing room: {0}".format(room.display_name))
 
+		self.active_room = room.room_id
+
+		print(self.stored_messages)
+		for k in self.stored_messages:
+			print(self.rooms[k].display_name)
+			print len(self.stored_messages[k])
 		# Create a menu in which the messages are displayed
-		self.messages_menu = Menu(self.stored_messages, self.i, self.o, name="matrix_messages_menu", entry_height=1)
+		self.messages_menu = Menu(self.stored_messages[room.room_id], self.i, self.o, name="matrix_messages_menu", entry_height=1)
 		self.messages_menu.activate()
+
+		self.messages_menu.set_contents(self.stored_messages[room.room_id])
+		self.messages_menu.refresh()
 
 	def display_single_message(self, msg, author, unix_time):
 		full_msg = "{0}\n{1}\n\n".format(strftime("%m-%d %H:%M", localtime(unix_time / 1000)), author)
@@ -78,36 +92,31 @@ class MatrixClientApp(ZeroApp):
 
 		TextReader(full_msg, self.i, self.o).activate()
 
-	def choose_room_action(self, room):
-		menu_contents = [
-			["Write message", lambda: self.write_message(room)],
-			["Read messages", lambda: self.display_messages(room)]
-		]
-
-		Menu(menu_contents, self.i, self.o, "Choose action").activate()
-
 	def _on_message(self, room, event):
 		print("New event: %s" % event['type'])
 		print(event.keys())
 		print(event['content'].keys())
 		print(event['origin_server_ts'])
 
+		print(room.room_id)
+
 		# Check if a new user joined the room
 		if event['type'] == "m.room.member":
 			if event['membership'] == "join":
-				self.stored_messages.append(["{0} joined".format(event['content']['displayname'])])
+				self.stored_messages[room.room_id].append(["{0} joined".format(event['content']['displayname'])])
 				print("{0} joined".format(event['content']['displayname']))
 
 		# Check for new messages
 		elif event['type'] == "m.room.message":
 			if event['content']['msgtype'] == "m.text":
-				self.stored_messages.append([event['content']['body'],
+				self.stored_messages[room.room_id].append([event['content']['body'],
 					lambda: self.display_single_message(event['content']['body'], event['sender'], event['origin_server_ts'])])
 
 				print("New message: %s wrote: %s" % (event['sender'], event['content']['body']))
 
 		# Update the contents of the menu and refresh it
-		self.messages_menu.set_contents(self.stored_messages)
-		self.messages_menu.refresh()
+		if self.active_room == room.room_id:
+			self.messages_menu.set_contents(self.stored_messages[room.room_id])
+			self.messages_menu.refresh()
 
 
