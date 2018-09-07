@@ -26,8 +26,6 @@ class Client():
 			print(e)
 			sys.exit(3)
 
-		print("Logged in")
-
 	def updateDisplayName(self):
 		try:
 			self.user = self.matrix_client.get_user("@%s:matrix.org" % self.username)
