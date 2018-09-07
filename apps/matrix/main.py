@@ -2,6 +2,7 @@ from apps import ZeroApp
 from ui import CharArrowKeysInput, Listbox, PrettyPrinter, NumpadCharInput, Menu, LoadingIndicator, TextReader
 
 from time import sleep, strftime, localtime
+from textwrap import wrap
 
 from client import Client
 
@@ -69,9 +70,13 @@ class MatrixClientApp(ZeroApp):
 		self.messages_menu.activate()
 
 	def display_single_message(self, msg, author, unix_time):
-		description = "{0} | {1}: {2}".format(strftime("%m-%d %H:%M", localtime(unix_time / 1000)), author, msg)
+		full_msg = "{0}\n{1}\n\n".format(strftime("%m-%d %H:%M", localtime(unix_time / 1000)), author)
 
-		TextReader(description, self.i, self.o, h_scroll=True).activate()
+		for line in wrap(msg, 24):
+			full_msg += line
+			full_msg += "\n"
+
+		TextReader(full_msg, self.i, self.o).activate()
 
 	def choose_room_action(self, room):
 		menu_contents = [
