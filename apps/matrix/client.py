@@ -6,45 +6,47 @@ from requests.exceptions import MissingSchema
 
 class Client():
 
-	def __init__(self, username, password):
+	def __init__(self, username, password, logger):
 		self.matrix_client = MatrixClient("https://matrix.org")
+		self.logger = logger
 
 		try:
 			self.matrix_client.login_with_password(username, password)
 
 		except MatrixRequestError as e:
-			print(e)
+			self.logger.error(e)
 			if e.code == 403:
-				print("Wrong username or password")
+				self.logger.error("Wrong username or password")
 				sys.exit(4)
 			else:
-				print("Check server details")
+				self.logger.error("Check server details")
 				sys.exit(2)
 
 		except MissingSchema as e:
-			print("Bad URL format")
-			print(e)
+			self.logger.error(e)
+			self.logger.error("Bad URL format")
+
 			sys.exit(3)
 
 	def updateDisplayName(self):
 		try:
 			self.user = self.matrix_client.get_user("@%s:matrix.org" % self.username)
-
 			return self.user.get_display_name()
 
 		except MatrixRequestError as e:
-			print(e)
+			self.logger.error(e)
 			if e.code == 400:
-				print("User ID/Alias in the wrong format")
+				self.logger.error("User ID/Alias in the wrong format")
+
 				sys.exit(11)
 
 	def updateRooms(self):
 		try:
 			self.rooms = self.matrix_client.get_rooms()
-
 			return self.rooms
 
 		except MatrixRequestError as e:
-			print(e)
-			print("Error occured while getting rooms")
+			self.logger.error(e)
+			self.logger.error("Error occured while getting rooms")
+
 			sys.exit(12)

@@ -33,7 +33,7 @@ class MatrixClientApp(ZeroApp):
 		self.logger.info("Trying to log in the user")
 
 		with LoadingIndicator(self.i, self.o, message="Logging in ..."):
-			self.client = Client(username, password)
+			self.client = Client(username, password, self.logger)
 
 		self.logger.info("Succesfully logged in")
 
