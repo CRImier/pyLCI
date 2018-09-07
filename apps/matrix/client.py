@@ -7,13 +7,10 @@ from requests.exceptions import MissingSchema
 class Client():
 
 	def __init__(self, username, password):
-		self.username = username
-		self.password = password
-
 		self.client = MatrixClient("https://matrix.org")
 
 		try:
-			self.client.login_with_password(self.username, self.password)
+			self.client.login_with_password(username, password)
 
 		except MatrixRequestError as e:
 			print(e)
@@ -53,17 +50,3 @@ class Client():
 			print(e)
 			print("Error occured while getting rooms")
 			sys.exit(12)
-
-	def on_message(self, room, event, message_contents):
-		if event['type'] == "m.room.member":
-			if event['membership'] == "join":
-				print("{0} joined".format(event['content']['displayname']))
-				message_contents.append("{0} joined".format(event['content']['displayname']))
-
-			elif event['type'] == "m.room.message":
-				if event['content']['msgtype'] == "m.text":
-					print("{0}: {1}".format(event['sender'], event['content']['body']))
-					message_contents.append("{0}: {1}".format(event['sender'], event['content']['body']))
-
-			else:
-				print(event['type'])
