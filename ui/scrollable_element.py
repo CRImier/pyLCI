@@ -4,6 +4,7 @@ from textwrap import wrap
 from time import sleep, time
 
 from canvas import Canvas
+from funcs import format_for_screen
 from helpers import setup_logger
 from ui.utils import to_be_foreground, clamp
 
@@ -144,10 +145,10 @@ class TextReader(object):
         char_width = self.o.char_width
         text_width = self.o.cols - (self.v_scrollbar.width // char_width)
 
-        self._content_width = max([len(line) for line in text.splitlines()])
-        self._content_height = len(text.splitlines())
-        self.horizontal_scroll = h_scroll if h_scroll is not None else self._content_width > self.o.cols
-        self._content = text.splitlines() if self.horizontal_scroll else wrap(text, text_width)
+        self._content = text.splitlines() if h_scroll else format_for_screen(text, text_width)
+        self._content_width = max([len(line) for line in self._content])
+        self.horizontal_scroll = h_scroll if h_scroll else self._content_width > self.o.cols
+        self._content_height = len(self._content)
 
         self.in_foreground = False
         self.v_scroll_index = 0
