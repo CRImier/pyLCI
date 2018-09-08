@@ -19,7 +19,7 @@ class MatrixClientApp(ZeroApp):
 		self.logger = setup_logger(__name__, "info")
 
 		self.login()
-		self.displayRooms()
+		self.display_rooms()
 
 	# Login the user
 	def login(self):
@@ -53,7 +53,7 @@ class MatrixClientApp(ZeroApp):
 		self.client.matrix_client.start_listener_thread()
 		
 	# Displays a list of all rooms the user is in
-	def displayRooms(self):
+	def display_rooms(self):
 		menu_contents = []
 		for r in self.rooms:
 			current_room = self.rooms[r]
