@@ -12,6 +12,7 @@ from ui import Menu, PrettyPrinter, DialogBox, ProgressBar, Listbox
 from helpers.logger import setup_logger
 
 import logging_ui
+import about
 
 menu_name = "Settings"
 logger = setup_logger(__name__, "info")
@@ -260,11 +261,15 @@ def init_app(input, output):
     o = output
     logging_ui.i = i
     logging_ui.o = o
+    about.i = i
+    about.o = o
+    about.git_if = GitInterface
 
 def callback():
     git_updater = GitUpdater()
     c = [["Update ZPUI", git_updater.update],
          ["Select branch", git_updater.pick_branch],
          #["Submit logs", logging_ui.submit_logs],
-         ["Logging settings", logging_ui.config_logging]]
+         ["Logging settings", logging_ui.config_logging],
+         ["About", about.about]]
     Menu(c, i, o, "ZPUI settings menu").activate()
