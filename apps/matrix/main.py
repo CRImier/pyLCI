@@ -41,9 +41,9 @@ class MatrixClientApp(ZeroApp):
 		self.logger.info("Succesfully logged in")
 
 		# Add a listener to all rooms the user is in
-		self.rooms = self.client.updateRooms()
+		self.rooms = self.client.update_rooms()
 
-		self.user_name = self.client.updateDisplayName()
+		self.user_name = self.client.update_display_name()
 
 		for r in self.rooms:
 			self.rooms[r].add_listener(self._on_message)

@@ -32,7 +32,7 @@ class Client():
 			sys.exit(3)
 
 	# Get the user's display name, store and return it
-	def updateDisplayName(self):
+	def update_display_name(self):
 		try:
 			self.user = self.matrix_client.get_user("@{}:matrix.org".format(self.username))
 			return self.user.get_display_name()
@@ -45,7 +45,7 @@ class Client():
 				sys.exit(11)
 
 	# Get the user's rooms, store and return them
-	def updateRooms(self):
+	def update_rooms(self):
 		try:
 			self.rooms = self.matrix_client.get_rooms()
 			return self.rooms
