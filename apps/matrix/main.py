@@ -43,6 +43,8 @@ class MatrixClientApp(ZeroApp):
 		# Add a listener to all rooms the user is in
 		self.rooms = self.client.updateRooms()
 
+		self.user_name = self.client.updateDisplayName()
+
 		for r in self.rooms:
 			self.rooms[r].add_listener(self._on_message)
 			self.stored_messages[r] = []
@@ -113,7 +115,11 @@ class MatrixClientApp(ZeroApp):
 		# Check for new messages
 		elif event['type'] == "m.room.message":
 			if event['content']['msgtype'] == "m.text":
-				self.stored_messages[room.room_id].append([event['content']['body'],
+				prefix = ""
+				if event['sender'] == self.client.get_user().user_id:
+					prefix = "* "
+
+				self.stored_messages[room.room_id].append([prefix + event['content']['body'],
 					lambda: self.display_single_message(event['content']['body'], event['sender'], event['origin_server_ts'])])
 
 		# Update the contents of the menu and refresh it

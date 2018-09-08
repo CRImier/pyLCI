@@ -10,6 +10,8 @@ class Client():
 		self.matrix_client = MatrixClient("https://matrix.org")
 		self.logger = logger
 
+		self.username = username
+
 		# Try logging in the user
 		try:
 			self.matrix_client.login_with_password(username, password)
@@ -53,3 +55,6 @@ class Client():
 			self.logger.error("Error occured while getting rooms")
 
 			sys.exit(12)
+
+	def get_user(self):
+		return self.user
