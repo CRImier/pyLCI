@@ -171,6 +171,25 @@ class TestBaseListUIElement(unittest.TestCase):
         assert o.display_data.call_count == 1 #One in to_foreground
         assert o.display_data.call_args[0] == ('A0', 'A1', 'A2', 'Back')
 
+    def test_append_exit_works(self):
+        """
+        Tests whether the BaseListUIElement stops appending "Exit" when append_exit
+        is set to false.
+        """
+        contents = [["A" + str(i), "a" + str(i)] for i in range(3)]
+        i = get_mock_input()
+        o = get_mock_output()
+        el = BaseListUIElement(contents, i, o, name=el_name, append_exit=False, config={})
+
+        def scenario():
+            el.deactivate()
+            assert not el.is_active
+
+        with patch.object(el, 'idle_loop', side_effect=scenario) as p:
+            el.activate()
+
+        assert o.display_data.call_args[0] == ('A0', 'A1', 'A2')
+
     def test_content_update_maintains_pointers(self):
         """Tests whether the BaseListUIElement outputs data on screen when it's ran"""
         i = get_mock_input()
@@ -186,7 +205,6 @@ class TestBaseListUIElement(unittest.TestCase):
             # Now, we should be on element "A3"
             assert o.display_data.called
             assert o.display_data.call_count == 6 # 1 in to_foreground, 5 in move_down
-            print(o.display_data.call_args)
             assert o.display_data.call_args[0] == ('A0', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7')
 
             # Setting shorter contents and scrolling some more
@@ -194,7 +212,6 @@ class TestBaseListUIElement(unittest.TestCase):
             el.move_up()
             for x in range(3):
                 el.move_down()
-            print(o.display_data.call_count)
             assert o.display_data.call_count == 6 + 2 # 1 in move_up, 3 in move_down but 2 didn't work
             assert o.display_data.call_args[0] == ('A0', 'A1', 'A2', 'Back')
 
