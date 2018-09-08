@@ -1,9 +1,9 @@
+from time import sleep, strftime, localtime
+from textwrap import wrap
+
 from apps import ZeroApp
 from ui import Listbox, PrettyPrinter, NumpadCharInput, Menu, LoadingIndicator, TextReader
 from helpers import setup_logger
-
-from time import sleep, strftime, localtime
-from textwrap import wrap
 
 from client import Client
 
@@ -21,7 +21,9 @@ class MatrixClientApp(ZeroApp):
 		self.login()
 		self.displayRooms()
 
+	# Login the user
 	def login(self):
+		# Get the required user data
 		username = NumpadCharInput(self.i, self.o, message="Enter username", name="username_dialog").activate()
 		if username is None:
 			return False
@@ -30,6 +32,7 @@ class MatrixClientApp(ZeroApp):
 		if password is None:
 			return False
 
+		# Start the logging in process
 		self.logger.info("Trying to log in the user")
 
 		with LoadingIndicator(self.i, self.o, message="Logging in ..."):
@@ -47,6 +50,7 @@ class MatrixClientApp(ZeroApp):
 		# Start a new thread for the listeners, waiting for events to happen
 		self.client.matrix_client.start_listener_thread()
 		
+	# Displays a list of all rooms the user is in
 	def displayRooms(self):
 		menu_contents = []
 		for r in self.rooms:
@@ -62,6 +66,7 @@ class MatrixClientApp(ZeroApp):
 
 		Menu(menu_contents, self.i, self.o).activate()
 
+	# Creates a new screen with an Input
 	def write_message(self, room):
 		message = NumpadCharInput(self.i, self.o, message="Message", name="message_dialog").activate()
 		if message is None:
@@ -71,6 +76,7 @@ class MatrixClientApp(ZeroApp):
 		room.send_text(message)
 		PrettyPrinter(message, self.i, self.o, 0.5)
 
+	# Displays all messages in a room
 	def display_messages(self, room):
 		self.logger.debug("Viewing room: {}".format(room.display_name))
 
@@ -85,6 +91,7 @@ class MatrixClientApp(ZeroApp):
 		self.messages_menu.set_contents(self.stored_messages[room.room_id])
 		self.messages_menu.refresh()
 
+	# Displays a single message fully with additional information (author, time)
 	def display_single_message(self, msg, author, unix_time):
 		full_msg = "{0}\n{1}\n\n".format(strftime("%m-%d %H:%M", localtime(unix_time / 1000)), author)
 
@@ -94,6 +101,7 @@ class MatrixClientApp(ZeroApp):
 
 		TextReader(full_msg, self.i, self.o).activate()
 
+	# Used as callback for the room listeners
 	def _on_message(self, room, event):
 		self.logger.info("New event: {}".format(event['type']))
 

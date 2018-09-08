@@ -10,6 +10,7 @@ class Client():
 		self.matrix_client = MatrixClient("https://matrix.org")
 		self.logger = logger
 
+		# Try logging in the user
 		try:
 			self.matrix_client.login_with_password(username, password)
 
@@ -28,6 +29,7 @@ class Client():
 
 			sys.exit(3)
 
+	# Get the user's display name, store and return it
 	def updateDisplayName(self):
 		try:
 			self.user = self.matrix_client.get_user("@{}:matrix.org".format(self.username))
@@ -40,6 +42,7 @@ class Client():
 
 				sys.exit(11)
 
+	# Get the user's rooms, store and return them
 	def updateRooms(self):
 		try:
 			self.rooms = self.matrix_client.get_rooms()
