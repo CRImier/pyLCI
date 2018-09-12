@@ -3,8 +3,8 @@ python:
   - "2.7"
 # command to install dependencies
 install:
-  pip install -r requirements.txt
-  pip install codecov pytest-cov
+  - pip install -r requirements.txt
+  - pip install codecov pytest-cov
 script:
   python -B -m pytest --cov=./ --doctest-modules -v --doctest-ignore-import-errors --ignore=output/drivers --ignore=input/drivers --ignore=apps/hardware_apps/ --ignore=apps/example_apps/fire_detector --ignore=apps/test_hardware --ignore=docs/ --ignore=apps/hardware_apps --ignore=utils/
 branches:
