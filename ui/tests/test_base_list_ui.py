@@ -8,6 +8,8 @@ try:
     from ui.base_list_ui import BaseListUIElement, BaseListBackgroundableUIElement, Canvas
     fonts_dir = "ui/fonts"
 except ImportError as e:
+    print(e)
+    import traceback; traceback.print_exc()
     print("Absolute imports failed, trying relative imports")
     os.sys.path.append(os.path.dirname(os.path.abspath('.')))
     # Store original __import__
