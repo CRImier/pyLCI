@@ -76,6 +76,7 @@ class MatrixClientApp(ZeroApp):
 
 		# Send the message to the room and display it for a short amount of time
 		room.send_text(message)
+
 		PrettyPrinter(message, self.i, self.o, 0.5)
 
 	# Displays all messages in a room

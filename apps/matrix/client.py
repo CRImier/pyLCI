@@ -14,7 +14,7 @@ class Client():
 
 		# Try logging in the user
 		try:
-			self.matrix_client.login_with_password(username, password)
+			self.matrix_client.login(username=username, password=password)
 
 		except MatrixRequestError as e:
 			self.logger.error(e)
