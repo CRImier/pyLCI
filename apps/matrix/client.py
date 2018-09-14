@@ -7,7 +7,7 @@ from requests.exceptions import MissingSchema
 class Client():
 
 	def __init__(self, username, password, logger):
-		self.matrix_client = MatrixClient("https://matrix.org", encryption=True)
+		self.matrix_client = MatrixClient("https://matrix.org", encryption=True, restore_device_id=True)
 		self.logger = logger
 
 		self.username = username
