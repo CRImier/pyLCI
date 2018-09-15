@@ -28,6 +28,9 @@ class MatrixClientApp(ZeroApp):
 		if username is None:
 			return False
 
+		# Create a matrix user id from the username, currently only ids on matrix.org are possible
+		username = "@{}:matrix.org".format(username)
+
 		password = NumpadCharInput(self.i, self.o, message="Enter password", name="password_dialog").activate()
 		if password is None:
 			return False
@@ -70,7 +73,7 @@ class MatrixClientApp(ZeroApp):
 
 	# Creates a new screen with an Input
 	def write_message(self, room):
-		message = NumpadCharInput(self.i, self.o, message="Message", name="message_dialog").activate()
+		message = NumpadKeyboardInput(self.i, self.o, message="Message", name="message_dialog").activate()
 		if message is None:
 			return False
 

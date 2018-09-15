@@ -361,3 +361,5 @@ class NumpadKeyboardInput(NumpadCharInput):
 
     for c in keys:
         default_mapping[c] = c
+
+    default_mapping["SPACE"] = " "
