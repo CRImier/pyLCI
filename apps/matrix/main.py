@@ -2,7 +2,7 @@ from time import sleep, strftime, localtime
 from textwrap import wrap
 
 from apps import ZeroApp
-from ui import Listbox, PrettyPrinter, NumpadCharInput, Menu, LoadingIndicator, TextReader
+from ui import Listbox, PrettyPrinter, NumpadCharInput, Menu, LoadingIndicator, TextReader, NumpadKeyboardInput
 from helpers import setup_logger
 
 from client import Client
@@ -24,7 +24,7 @@ class MatrixClientApp(ZeroApp):
 	# Login the user
 	def login(self):
 		# Get the required user data
-		username = NumpadCharInput(self.i, self.o, message="Enter username", name="username_dialog").activate()
+		username = NumpadKeyboardInput(self.i, self.o, message="Enter username", name="username_dialog").activate()
 		if username is None:
 			return False
 
