@@ -159,3 +159,30 @@ class MeSixteenPtView(MenuRenderingMixin, SixteenPtView):
             y = (i * self.charheight - 1) if i != 0 else 0
             c.text(line, (left_offset, y), font=font)
             self.draw_triangle(c, i)
+
+class MessagesMenu(Menu):
+    """A modified version of the Menu class for displaying a list of messages and loading new ones"""
+
+    def __init__(self, *args, **kwargs):
+        self.callback = kwargs.pop("callback", None)
+
+        self.catch_exit = kwargs.pop("catch_exit", True)
+        self.contents_hook = kwargs.pop("contents_hook", None)
+        BaseListBackgroundableUIElement.__init__(self, *args, **kwargs)
+
+    @to_be_foreground
+    def move_up(self):
+        """ Moves the pointer one entry up, if possible.
+        |Is typically used as a callback from input event processing thread.
+        |TODO: support going from top to bottom when pressing "up" with
+        first entry selected."""
+        if self.pointer != 0:
+            logger.debug("moved up")
+            self.pointer -= 1
+            self.view.refresh()
+            self.reset_scrolling()
+            return True
+        elif self.pointer == 0:
+            self.callback()
+        else:
+            return False
