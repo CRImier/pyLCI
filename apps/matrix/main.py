@@ -31,7 +31,7 @@ class MatrixClientApp(ZeroApp):
 		# Create a matrix user id from the username, currently only ids on matrix.org are possible
 		username = "@{}:matrix.org".format(username)
 
-		password = NumpadCharInput(self.i, self.o, message="Enter password", name="password_dialog").activate()
+		password = NumpadKeyboardInput(self.i, self.o, message="Enter password", name="password_dialog").activate()
 		if password is None:
 			return False
 
@@ -61,10 +61,13 @@ class MatrixClientApp(ZeroApp):
 		for r in self.rooms:
 			current_room = self.rooms[r]
 
+			room_name = "E " if current_room.encrypted else ""
+			room_name += current_room.display_name
+
 			# Enter 		-> Read messages in room
 			# Right arrow 	-> Write message to room
 			menu_contents.append([
-				current_room.display_name,
+				room_name,
 				lambda x=current_room: self.display_messages(x),
 				lambda x=current_room: self.write_message(x)
 			])
