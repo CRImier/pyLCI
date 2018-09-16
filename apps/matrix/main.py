@@ -2,7 +2,7 @@ from time import sleep, strftime, localtime
 from textwrap import wrap
 
 from apps import ZeroApp
-from ui import Listbox, PrettyPrinter, NumpadCharInput, Menu, LoadingIndicator, TextReader, NumpadKeyboardInput
+from ui import Listbox, PrettyPrinter, NumpadCharInput, Menu, LoadingIndicator, TextReader, NumpadKeyboardInput, MessagesMenu
 from helpers import setup_logger
 
 from client import Client
@@ -54,6 +54,9 @@ class MatrixClientApp(ZeroApp):
 
 		# Start a new thread for the listeners, waiting for events to happen
 		self.client.matrix_client.start_listener_thread()
+
+		for r in self.rooms:
+			self.rooms[r].backfill_previous_messages()
 		
 	# Displays a list of all rooms the user is in
 	def display_rooms(self):
@@ -93,7 +96,9 @@ class MatrixClientApp(ZeroApp):
 		self.active_room = room.room_id
 
 		# Create a menu in which the messages are displayed
-		self.messages_menu = Menu(self.stored_messages[room.room_id], self.i, self.o, name="matrix_messages_menu", entry_height=1)
+		self.messages_menu = Menu(self.stored_messages[room.room_id], self.i, self.o, name="matrix_messages_menu", 
+			entry_height=1)
+
 		self.messages_menu.activate()
 
 		# Set the contents of the menu to the messages for this room and refresh it
