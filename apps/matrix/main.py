@@ -43,11 +43,13 @@ class MatrixClientApp(ZeroApp):
 
 		self.logger.info("Succesfully logged in")
 
-		# Add a listener to all rooms the user is in
+		# Get the users rooms
 		self.rooms = self.client.update_rooms()
 
+		# Get the users display name
 		self.user_name = self.client.update_display_name()
 
+		# Add a listener for new events to all rooms the user is in
 		for r in self.rooms:
 			self.rooms[r].add_listener(self._on_message)
 			self.stored_messages[r] = []
@@ -55,6 +57,7 @@ class MatrixClientApp(ZeroApp):
 		# Start a new thread for the listeners, waiting for events to happen
 		self.client.matrix_client.start_listener_thread()
 
+		# Load older messages for each room
 		for r in self.rooms:
 			self.rooms[r].backfill_previous_messages()
 		
@@ -64,6 +67,7 @@ class MatrixClientApp(ZeroApp):
 		for r in self.rooms:
 			current_room = self.rooms[r]
 
+			# Add an 'E' to the name of encrypted rooms
 			room_name = "E " if current_room.encrypted else ""
 			room_name += current_room.display_name
 
@@ -77,7 +81,7 @@ class MatrixClientApp(ZeroApp):
 
 		Menu(menu_contents, self.i, self.o).activate()
 
-	# Creates a new screen with an Input
+	# Creates a new screen with an Input to write a message
 	def write_message(self, room):
 		message = NumpadKeyboardInput(self.i, self.o, message="Message", name="message_dialog").activate()
 		if message is None:
@@ -88,14 +92,14 @@ class MatrixClientApp(ZeroApp):
 
 		PrettyPrinter(message, self.i, self.o, 0.5)
 
-	# Displays all messages in a room
+	# Display all messages of a specific room
 	def display_messages(self, room):
 		self.logger.debug("Viewing room: {}".format(room.display_name))
 
-		# Set the currently active room to this room
+		# Set the currently active room to this room, important for adding messages and refreshing the menu
 		self.active_room = room.room_id
 
-		# Create a menu in which the messages are displayed
+		# Create a menu to display the messages
 		self.messages_menu = Menu(self.stored_messages[room.room_id], self.i, self.o, name="matrix_messages_menu", 
 			entry_height=1)
 
@@ -119,7 +123,7 @@ class MatrixClientApp(ZeroApp):
 	def _on_message(self, room, event):
 		self.logger.info("New event: {}".format(event['type']))
 
-		# Check if a new user joined the room
+		# Check if a user joined the room
 		if event['type'] == "m.room.member":
 			if event['membership'] == "join":
 				self.stored_messages[room.room_id].append(["{0} joined".format(event['content']['displayname'])])
@@ -129,12 +133,13 @@ class MatrixClientApp(ZeroApp):
 			if event['content']['msgtype'] == "m.text":
 				prefix = ""
 				if event['sender'] == self.client.get_user().user_id:
+					# Prefix own messages with a '*'
 					prefix = "* "
 
 				self.stored_messages[room.room_id].append([prefix + event['content']['body'],
 					lambda: self.display_single_message(event['content']['body'], event['sender'], event['origin_server_ts'])])
 
-		# Update the contents of the menu and refresh it
+		# Update the current view if required
 		if self.active_room == room.room_id:
 			self.messages_menu.set_contents(self.stored_messages[room.room_id])
 			self.messages_menu.refresh()
