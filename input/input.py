@@ -10,8 +10,6 @@ from helpers import setup_logger
 
 import inspect
 
-listener = None
-
 logger = setup_logger(__name__, "warning")
 
 class CallbackException(Exception):
@@ -21,7 +19,7 @@ class CallbackException(Exception):
 
 
 class InputProcessor(object):
-    """A class which listens for input device events and processes the callbacks 
+    """A class which listens for input device events and processes the callbacks
     set in the InputProxy instance for the currently active context."""
     stop_flag = None
     thread_index = 0
@@ -59,7 +57,7 @@ class InputProcessor(object):
 
     def attach_proxy(self, proxy):
         """
-        This method is to be called from the ContextManager. Saves a proxy
+        This method is to be called from the ``ContextManager``. Saves a proxy
         internally, so that when a callback is received, its keymap can be
         referenced.
         """
@@ -93,8 +91,9 @@ class InputProcessor(object):
         self.global_keymap[key] = callback
 
     def receive_key(self, key):
-        """ This is the method that receives keypresses from drivers and puts
-        them into ``self.queue``, to be processed by ``self.event_loop`` 
+        """
+        This is the method that receives keypresses from drivers and puts
+        them into ``self.queue``, to be processed by ``self.event_loop``
         Will block with full queue until the queue has a free spot.
         """
         self.queue.put(key)
@@ -247,8 +246,15 @@ class InputProcessor(object):
 
     def register_proxy(self, proxy):
         context_alias = proxy.context_alias
+        self.proxies.append(proxy)
+        self.set_proxy_methods(proxy, context_alias)
+        self.set_proxy_attrs(proxy)
+
+    def set_proxy_methods(self, proxy, alias):
         for method_name in self.proxy_methods:
-            setattr(proxy, method_name, lambda x=method_name, y=context_alias, *a, **k: self.proxy_method(x, y, *a, **k))
+            setattr(proxy, method_name, lambda x=method_name, y=alias, *a, **k: self.proxy_method(x, y, *a, **k))
+
+    def set_proxy_attrs(self, proxy):
         for attr_name in self.proxy_attrs:
             setattr(proxy, attr_name, copy(getattr(self, attr_name)))
 
