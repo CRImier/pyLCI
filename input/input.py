@@ -63,6 +63,7 @@ class InputProcessor(object):
         """
         logger.info("Attaching driver: {}".format(name))
         self.drivers[name] = driver
+        driver._old_send_key = driver.send_key
         driver.send_key = self.receive_key #Overriding the send_key method so that keycodes get sent to InputListener
         self.available_keys[name] = driver.available_keys
         self.update_all_proxy_attrs()
@@ -75,6 +76,7 @@ class InputProcessor(object):
         logger.info("Detaching driver: {}".format(name))
         if driver in self.initial_drivers.values():
             raise ValueError("Driver {} is from config.json, not removing for safety purposes".format(name))
+        driver.send_key = driver._old_send_key
         driver = self.drivers.pop(name)
         driver.stop()
         self.available_keys.pop(name)
