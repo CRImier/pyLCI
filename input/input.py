@@ -28,25 +28,69 @@ class InputProcessor(object):
     current_proxy = None
     proxy_methods = ["listen", "stop_listen"]
     proxy_attrs = ["available_keys"]
+    proxies = []
 
-    def __init__(self, drivers, context_manager):
+    def __init__(self, initial_drivers, context_manager):
         self.global_keymap = {}
-        self.drivers = drivers
+        self.initial_drivers = initial_drivers
         self.cm = context_manager
         self.queue = Queue.Queue()
         self.available_keys = {}
-        for driver_name, driver in self.drivers.items():
-            driver.send_key = self.receive_key #Overriding the send_key method so that keycodes get sent to InputListener
-            self.available_keys[driver_name] = driver.available_keys
-            driver.start()
+        self.drivers = {}
+        for driver_name, driver in self.initial_drivers.items():
+            # Generating an unique yet human-readable name
+            counter = 0
+            name = "{}-{}".format(driver_name, counter)
+            while name in self.drivers:
+                counter += 1
+                name = "{}-{}".format(driver_name, counter)
+            self.attach_driver(driver, name)
         atexit.register(self.atexit)
 
     def receive_key(self, key):
-        """ This is the method that receives keypresses from drivers and puts them into ``self.queue`` for ``self.event_loop`` to receive """
+        """
+        Receives keypresses from drivers and puts them into ``self.queue``
+        for ``self.event_loop`` to process.
+        """
         try:
             self.queue.put(key)
         except:
             raise #Just collecting possible exceptions for now
+
+    def attach_driver(self, driver, name):
+        """
+        Attaches the driver to ``InputProcessor``.
+        """
+        logger.info("Attaching driver: {}".format(name))
+        self.drivers[name] = driver
+        driver.send_key = self.receive_key #Overriding the send_key method so that keycodes get sent to InputListener
+        self.available_keys[name] = driver.available_keys
+        self.update_all_proxy_attrs()
+        driver.start()
+
+    def detach_driver(self, name):
+        """
+        Detaches a driver from the ``InputProcessor``.
+        """
+        logger.info("Detaching driver: {}".format(name))
+        if driver in self.initial_drivers.values():
+            raise ValueError("Driver {} is from config.json, not removing for safety purposes".format(name))
+        driver = self.drivers.pop(name)
+        driver.stop()
+        self.available_keys.pop(name)
+        self.update_all_proxy_attrs()
+
+    def list_drivers(self):
+        """
+        Returns a list of drivers description lists, containing items as follows:
+
+          * Driver name (auto-generated, in form of "driver_name-number")
+          * Driver object
+          * Available keys
+          * ``True`` if driver is supplied from ``config.json``, else ``False``
+        """
+        return [[name, driver, self.available_keys[name], driver in self.initial_drivers.values()]
+                  for name, driver in self.drivers.items()]
 
     def attach_new_proxy(self, proxy):
         """
@@ -257,6 +301,14 @@ class InputProcessor(object):
     def set_proxy_attrs(self, proxy):
         for attr_name in self.proxy_attrs:
             setattr(proxy, attr_name, copy(getattr(self, attr_name)))
+
+    def update_all_proxy_attrs(self):
+        """
+        Updates all the proxied attributes for proxies, to be triggered when
+        one of the attributes is changed.
+        """
+        for proxy in self.proxies:
+            self.set_proxy_attrs(proxy)
 
 
 class InputProxy(object):
