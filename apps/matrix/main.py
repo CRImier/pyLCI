@@ -56,10 +56,6 @@ class MatrixClientApp(ZeroApp):
 
 		# Start a new thread for the listeners, waiting for events to happen
 		self.client.matrix_client.start_listener_thread()
-
-		# Load older messages for each room
-		for r in self.rooms:
-			self.rooms[r].backfill_previous_messages()
 		
 	# Displays a list of all rooms the user is in
 	def display_rooms(self):
