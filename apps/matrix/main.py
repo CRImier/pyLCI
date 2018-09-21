@@ -52,7 +52,8 @@ class MatrixClientApp(ZeroApp):
 		# Add a listener for new events to all rooms the user is in
 		for r in self.rooms:
 			self.rooms[r].add_listener(self._on_message)
-			self.stored_messages[r] = []
+			self.stored_messages[r] = {}
+			self.stored_messages[r]["room_messages"] = []
 
 		# Start a new thread for the listeners, waiting for events to happen
 		self.client.matrix_client.start_listener_thread()
@@ -62,6 +63,12 @@ class MatrixClientApp(ZeroApp):
 		menu_contents = []
 		for r in self.rooms:
 			current_room = self.rooms[r]
+
+			for e in current_room.get_events():
+				self._on_message(current_room, e)
+
+			# Set the backfilled value of each room in the stored_messages dict to false
+			self.stored_messages[current_room.room_id]["backfilled"] = False
 
 			# Add an 'E' to the name of encrypted rooms
 			room_name = "E " if current_room.encrypted else ""
@@ -96,13 +103,13 @@ class MatrixClientApp(ZeroApp):
 		self.active_room = room.room_id
 
 		# Create a menu to display the messages
-		self.messages_menu = Menu(self.stored_messages[room.room_id], self.i, self.o, name="matrix_messages_menu", 
+		self.messages_menu = Menu(self.stored_messages[room.room_id]["room_messages"], self.i, self.o, name="matrix_messages_menu", 
 			entry_height=1)
 
 		self.messages_menu.activate()
 
 		# Set the contents of the menu to the messages for this room and refresh it
-		self.messages_menu.set_contents(self.stored_messages[room.room_id])
+		self.messages_menu.set_contents(self.stored_messages[room.room_id]["room_messages"])
 		self.messages_menu.refresh()
 
 	# Displays a single message fully with additional information (author, time)
@@ -122,22 +129,23 @@ class MatrixClientApp(ZeroApp):
 		# Check if a user joined the room
 		if event['type'] == "m.room.member":
 			if event['membership'] == "join":
-				self.stored_messages[room.room_id].append(["{0} joined".format(event['content']['displayname'])])
+				self.stored_messages[room.room_id]["room_messages"].append(["{0} joined".format(event['content']['displayname'])])
 
 		# Check for new messages
 		elif event['type'] == "m.room.message":
 			if event['content']['msgtype'] == "m.text":
 				prefix = ""
 				if event['sender'] == self.client.get_user().user_id:
+					print(self.client.get_user().user_id)
 					# Prefix own messages with a '*'
 					prefix = "* "
 
-				self.stored_messages[room.room_id].append([prefix + event['content']['body'],
+				self.stored_messages[room.room_id]["room_messages"].append([prefix + event['content']['body'],
 					lambda: self.display_single_message(event['content']['body'], event['sender'], event['origin_server_ts'])])
 
 		# Update the current view if required
 		if self.active_room == room.room_id:
-			self.messages_menu.set_contents(self.stored_messages[room.room_id])
+			self.messages_menu.set_contents(self.stored_messages[room.room_id]["room_messages"])
 			self.messages_menu.refresh()
 
 
