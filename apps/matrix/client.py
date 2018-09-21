@@ -45,17 +45,9 @@ class Client():
 
 				sys.exit(11)
 
-	# Get the user's rooms, store and return them
-	def update_rooms(self):
-		try:
-			self.rooms = self.matrix_client.get_rooms()
-			return self.rooms
-
-		except MatrixRequestError as e:
-			self.logger.error(e)
-			self.logger.error("Error occured while getting rooms")
-
-			sys.exit(12)
+	# Get the rooms of the user
+	def get_rooms(self):
+		return self.matrix_client.rooms
 
 	def get_user(self):
 		return self.user

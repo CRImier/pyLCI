@@ -44,7 +44,7 @@ class MatrixClientApp(ZeroApp):
 		self.logger.info("Succesfully logged in")
 
 		# Get the users rooms
-		self.rooms = self.client.update_rooms()
+		self.rooms = self.client.get_rooms()
 
 		# Get the users display name
 		self.user_name = self.client.update_display_name()
