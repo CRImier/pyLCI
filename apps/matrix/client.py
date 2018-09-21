@@ -2,6 +2,7 @@ import sys
 
 from matrix_client.client import MatrixClient
 from matrix_client.api import MatrixRequestError
+from matrix_client.user import User
 from requests.exceptions import MissingSchema
 
 class Client():
@@ -16,6 +17,7 @@ class Client():
 		# Try logging in the user
 		try:
 			self.matrix_client.login(username=username, password=password)
+			self.user = User(self.matrix_client, self.matrix_client.user_id)
 
 		except MatrixRequestError as e:
 			self.logger.error(e)
@@ -32,18 +34,9 @@ class Client():
 
 			sys.exit(3)
 
-	# Get the user's display name, store and return it
-	def update_display_name(self):
-		try:
-			self.user = self.matrix_client.get_user("@{}:matrix.org".format(self.username))
-			return self.user.get_display_name()
-
-		except MatrixRequestError as e:
-			self.logger.error(e)
-			if e.code == 400:
-				self.logger.error("User ID/Alias in the wrong format")
-
-				sys.exit(11)
+	# Return the user's display name
+	def get_user_display_name(self):
+		return self.user.get_display_name()
 
 	# Get the rooms of the user
 	def get_rooms(self):

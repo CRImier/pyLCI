@@ -46,9 +46,6 @@ class MatrixClientApp(ZeroApp):
 		# Get the users rooms
 		self.rooms = self.client.get_rooms()
 
-		# Get the users display name
-		self.user_name = self.client.update_display_name()
-
 		# Add a listener for new events to all rooms the user is in
 		for r in self.rooms:
 			self.rooms[r].add_listener(self._on_message)
@@ -126,22 +123,27 @@ class MatrixClientApp(ZeroApp):
 	def _on_message(self, room, event):
 		self.logger.info("New event: {}".format(event['type']))
 
-		# Check if a user joined the room
-		if event['type'] == "m.room.member":
-			if event['membership'] == "join":
-				self.stored_messages[room.room_id]["room_messages"].append(["{0} joined".format(event['content']['displayname'])])
+		try:
 
-		# Check for new messages
-		elif event['type'] == "m.room.message":
-			if event['content']['msgtype'] == "m.text":
-				prefix = ""
-				if event['sender'] == self.client.get_user().user_id:
-					print(self.client.get_user().user_id)
-					# Prefix own messages with a '*'
-					prefix = "* "
+			# Check if a user joined the room
+			if event['type'] == "m.room.member":
+				if event['membership'] == "join":
+					self.stored_messages[room.room_id]["room_messages"].append(["{0} joined".format(event['content']['displayname'])])
 
-				self.stored_messages[room.room_id]["room_messages"].append([prefix + event['content']['body'],
-					lambda: self.display_single_message(event['content']['body'], event['sender'], event['origin_server_ts'])])
+			# Check for new messages
+			elif event['type'] == "m.room.message":
+				if event['content']['msgtype'] == "m.text":
+					prefix = ""
+					if event['sender'] == self.client.get_user().user_id:
+						print(self.client.get_user().user_id)
+						# Prefix own messages with a '*'
+						prefix = "* "
+
+					self.stored_messages[room.room_id]["room_messages"].append([prefix + event['content']['body'],
+						lambda: self.display_single_message(event['content']['body'], event['sender'], event['origin_server_ts'])])
+
+		except Exception as e:
+			self.logger.warning(e)
 
 		# Update the current view if required
 		if self.active_room == room.room_id:
