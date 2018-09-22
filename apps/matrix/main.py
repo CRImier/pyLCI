@@ -50,7 +50,13 @@ class MatrixClientApp(ZeroApp):
 		for r in self.rooms:
 			self.rooms[r].add_listener(self._on_message)
 			self.stored_messages[r] = {}
-			self.stored_messages[r]["room_messages"] = []
+
+			# Used to store data for each event
+			self.stored_messages[r]["event_data"] = {}
+
+			# Used for storing messages for the MessagesMenu
+			self.stored_messages[r]["event_data"]["display_messages"] = []
+
 
 		# Start a new thread for the listeners, waiting for events to happen
 		self.client.matrix_client.start_listener_thread()
@@ -61,11 +67,13 @@ class MatrixClientApp(ZeroApp):
 		for r in self.rooms:
 			current_room = self.rooms[r]
 
-			for e in current_room.get_events():
-				self._on_message(current_room, e)
+			# Count the amount of backfilled messages for each room
+			self.stored_messages[current_room.room_id]["backfilled"] = 0
 
-			# Set the backfilled value of each room in the stored_messages dict to false
-			self.stored_messages[current_room.room_id]["backfilled"] = False
+			# Get the last 10 messages for each room and update stored_messages
+			for e in reversed(current_room.get_events()):
+				self._on_message(current_room, e)
+				# self.stored_messages[current_room.room_id]["backfilled"] += 1
 
 			# Add an 'E' to the name of encrypted rooms
 			room_name = "E " if current_room.encrypted else ""
@@ -99,14 +107,16 @@ class MatrixClientApp(ZeroApp):
 		# Set the currently active room to this room, important for adding messages and refreshing the menu
 		self.active_room = room.room_id
 
+		cb = lambda x=room: self._handle_messages_top(x)
+
 		# Create a menu to display the messages
-		self.messages_menu = Menu(self.stored_messages[room.room_id]["room_messages"], self.i, self.o, name="matrix_messages_menu", 
-			entry_height=1)
+		self.messages_menu = MessagesMenu(self.stored_messages[room.room_id]["event_data"]["display_messages"], self.i, self.o, name="matrix_messages_menu", 
+			entry_height=1, top_callback=lambda x=room: self._handle_messages_top(x))
 
 		self.messages_menu.activate()
 
 		# Set the contents of the menu to the messages for this room and refresh it
-		self.messages_menu.set_contents(self.stored_messages[room.room_id]["room_messages"])
+		self.messages_menu.set_contents(self.stored_messages[room.room_id]["event_data"]["display_messages"])
 		self.messages_menu.refresh()
 
 	# Displays a single message fully with additional information (author, time)
@@ -128,7 +138,7 @@ class MatrixClientApp(ZeroApp):
 			# Check if a user joined the room
 			if event['type'] == "m.room.member":
 				if event['membership'] == "join":
-					self.stored_messages[room.room_id]["room_messages"].append(["{0} joined".format(event['content']['displayname'])])
+					self.stored_messages[room.room_id]["event_data"]["display_messages"].insert(0, ["{0} joined".format(event['content']['displayname'])])
 
 			# Check for new messages
 			elif event['type'] == "m.room.message":
@@ -139,7 +149,7 @@ class MatrixClientApp(ZeroApp):
 						# Prefix own messages with a '*'
 						prefix = "* "
 
-					self.stored_messages[room.room_id]["room_messages"].append([prefix + event['content']['body'],
+					self.stored_messages[room.room_id]["event_data"]["display_messages"].insert(0, [prefix + event['content']['body'],
 						lambda: self.display_single_message(event['content']['body'], event['sender'], event['origin_server_ts'])])
 
 		except Exception as e:
@@ -147,7 +157,15 @@ class MatrixClientApp(ZeroApp):
 
 		# Update the current view if required
 		if self.active_room == room.room_id:
-			self.messages_menu.set_contents(self.stored_messages[room.room_id]["room_messages"])
+			self.messages_menu.set_contents(self.stored_messages[room.room_id]["event_data"]["display_messages"])
 			self.messages_menu.refresh()
+
+	# Callback for MessagesMenu
+	def _handle_messages_top(self, room):
+		print("Reached top")
+		room.backfill_previous_messages(limit=self.stored_messages[room.room_id]["backfilled"]+5, reverse=True)
+		self.stored_messages[room.room_id]["backfilled"] += 5
+		print(self.stored_messages[room.room_id]["backfilled"])
+
 
 

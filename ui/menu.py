@@ -164,11 +164,9 @@ class MessagesMenu(Menu):
     """A modified version of the Menu class for displaying a list of messages and loading new ones"""
 
     def __init__(self, *args, **kwargs):
-        self.callback = kwargs.pop("callback", None)
+        self.top_callback = kwargs.pop("top_callback", None)
 
-        self.catch_exit = kwargs.pop("catch_exit", True)
-        self.contents_hook = kwargs.pop("contents_hook", None)
-        BaseListBackgroundableUIElement.__init__(self, *args, **kwargs)
+        Menu.__init__(self, *args, **kwargs)
 
     @to_be_foreground
     def move_up(self):
@@ -183,6 +181,6 @@ class MessagesMenu(Menu):
             self.reset_scrolling()
             return True
         elif self.pointer == 0:
-            self.callback()
+            self.top_callback()
         else:
             return False
