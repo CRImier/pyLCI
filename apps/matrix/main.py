@@ -4,6 +4,7 @@ To use this some additional things have to be installed:
 - The Olm C library: Either from source or via a package manager
 - Additional E2E dependencies: Run the following command
 	pip install -e 'git+https://github.com/Zil0/matrix-python-sdk@e2e_beta_2#egg=matrix-python-sdk-e2e[e2e]' --process-dependency-links
+	This command clones the repo and installs some things
 
 More information: https://github.com/matrix-org/matrix-python-sdk/issues/100#issuecomment-402508438
 """

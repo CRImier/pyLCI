@@ -1,5 +1,3 @@
-import sys
-
 from matrix_client.client import MatrixClient
 from matrix_client.api import MatrixRequestError
 from matrix_client.user import User
@@ -23,16 +21,12 @@ class Client():
 			self.logger.error(e)
 			if e.code == 403:
 				self.logger.error("Wrong username or password")
-				sys.exit(4)
 			else:
 				self.logger.error("Check server details")
-				sys.exit(2)
 
 		except MissingSchema as e:
 			self.logger.error(e)
 			self.logger.error("Bad URL format")
-
-			sys.exit(3)
 
 	# Return the user's display name
 	def get_user_display_name(self):
