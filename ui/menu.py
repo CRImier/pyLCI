@@ -170,18 +170,7 @@ class MessagesMenu(Menu):
 
     @to_be_foreground
     def move_up(self):
-        """ Moves the pointer one entry up, if possible.
-        |Is typically used as a callback from input event processing thread.
-        |TODO: support going from top to bottom when pressing "up" with
-        first entry selected."""
-        if self.pointer != 0:
-            if self.pointer <= 5:
-                self.top_callback()
-                
-            logger.debug("moved up")
-            self.pointer -= 1
-            self.view.refresh()
-            self.reset_scrolling()
-            return True
-        else:
-            return False
+        Menu.move_up(self)
+
+        if self.pointer <= 5:
+            self.top_callback()
