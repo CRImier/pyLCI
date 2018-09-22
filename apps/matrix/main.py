@@ -133,38 +133,38 @@ class MatrixClientApp(ZeroApp):
 	def _on_message(self, room, event):
 		self.logger.info("New event: {}".format(event['type']))
 
-		try:
+		event_type = event.get('type', "not_a_defined_event")
 
-			# Check if a user joined the room
-			if event['type'] == "m.room.member":
-				if event['membership'] == "join":
+		# Check if a user joined the room
+		if event_type == "m.room.member":
+			if event.get('membership', None) == "join":
 
-					self._add_new_message(room.room_id, {
-							'timestamp': event['origin_server_ts'],
-							'type': event['type'],
-							'sender': event['sender'],
-							'content': "{} joined".format(event['content']['displayname']),
-							'id': event['event_id']
-						})
+				self._add_new_message(room.room_id, {
+						'timestamp': event['origin_server_ts'],
+						'type': event['type'],
+						'sender': event['sender'],
+						'content': "{} joined".format(event['content']['displayname']),
+						'id': event['event_id']
+					})
 
-			# Check for new messages
-			elif event['type'] == "m.room.message":
-				if event['content']['msgtype'] == "m.text":
-					prefix = ""
-					if event['sender'] == self.client.get_user().user_id:
-						# Prefix own messages with a '*'
-						prefix = "* "
+		# Check for new messages
+		elif event_type == "m.room.message":
+			if event['content']['msgtype'] == "m.text":
+				prefix = ""
+				if event['sender'] == self.client.get_user().user_id:
+					# Prefix own messages with a '*'
+					prefix = "* "
 
-					self._add_new_message(room.room_id, {
-							'timestamp': event['origin_server_ts'],
-							'type': event['type'],
-							'sender': event['sender'],
-							'content': prefix + event['content']['body'],
-							'id': event['event_id']
-						})
+				self._add_new_message(room.room_id, {
+						'timestamp': event['origin_server_ts'],
+						'type': event['type'],
+						'sender': event['sender'],
+						'content': prefix + event['content']['body'],
+						'id': event['event_id']
+					})
 
-		except Exception as e:
-			self.logger.warning(e)
+		elif event_type == "not_a_defined_event":
+			self.logger.warning("Undefined event")
 
 		# Update the current view if required
 		if self.active_room == room.room_id:
