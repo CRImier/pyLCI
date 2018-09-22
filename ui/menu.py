@@ -175,12 +175,13 @@ class MessagesMenu(Menu):
         |TODO: support going from top to bottom when pressing "up" with
         first entry selected."""
         if self.pointer != 0:
+            if self.pointer <= 5:
+                self.top_callback()
+                
             logger.debug("moved up")
             self.pointer -= 1
             self.view.refresh()
             self.reset_scrolling()
             return True
-        elif self.pointer == 0:
-            self.top_callback()
         else:
             return False
