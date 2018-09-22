@@ -25,8 +25,7 @@ class Client():
 				self.logger.error("Check server details")
 
 		except MissingSchema as e:
-			self.logger.error(e)
-			self.logger.error("Bad URL format")
+			self.logger.exception("Bad URL format")
 
 	# Return the user's display name
 	def get_user_display_name(self):
