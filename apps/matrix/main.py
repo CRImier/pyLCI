@@ -35,24 +35,25 @@ class MatrixClientApp(ZeroApp):
 		if password is None:
 			return False
 
+		# Show a beatufil loading animation while setting everything up
 		with LoadingIndicator(self.i, self.o, message="Logging in ..."):
 			self.client = Client(username, password, self.logger)
 
+			# Get the users rooms
+			self.rooms = self.client.get_rooms()
+
+			# Add a listener for new events to all rooms the user is in
+			for r in self.rooms:
+				self.rooms[r].add_listener(self._on_message)
+				self.stored_messages[r] = {}
+
+				# Used to store data for each event
+				self.stored_messages[r]["events"] = []
+
+			# Start a new thread for the listeners, waiting for events to happen
+			self.client.matrix_client.start_listener_thread()
+
 		self.logger.info("Succesfully logged in")
-
-		# Get the users rooms
-		self.rooms = self.client.get_rooms()
-
-		# Add a listener for new events to all rooms the user is in
-		for r in self.rooms:
-			self.rooms[r].add_listener(self._on_message)
-			self.stored_messages[r] = {}
-
-			# Used to store data for each event
-			self.stored_messages[r]["events"] = []
-
-		# Start a new thread for the listeners, waiting for events to happen
-		self.client.matrix_client.start_listener_thread()
 		
 	# Displays a list of all rooms the user is in
 	def display_rooms(self):
@@ -128,11 +129,12 @@ class MatrixClientApp(ZeroApp):
 			if event['type'] == "m.room.member":
 				if event['membership'] == "join":
 
-					self.stored_messages[room.room_id]['events'].append({
+					self._add_new_message(room.room_id, {
 							'timestamp': event['origin_server_ts'],
 							'type': event['type'],
 							'sender': event['sender'],
-							'content': "{} joined".format(event['content']['displayname'])
+							'content': "{} joined".format(event['content']['displayname']),
+							'id': event['event_id']
 						})
 
 			# Check for new messages
@@ -143,11 +145,12 @@ class MatrixClientApp(ZeroApp):
 						# Prefix own messages with a '*'
 						prefix = "* "
 
-					self.stored_messages[room.room_id]['events'].append({
+					self._add_new_message(room.room_id, {
 							'timestamp': event['origin_server_ts'],
 							'type': event['type'],
 							'sender': event['sender'],
-							'content': prefix + event['content']['body']
+							'content': prefix + event['content']['body'],
+							'id': event['event_id']
 						})
 
 		except Exception as e:
@@ -158,7 +161,17 @@ class MatrixClientApp(ZeroApp):
 			self.messages_menu.set_contents(self._get_messages_menu_contents(room.room_id))
 			self.messages_menu.refresh()
 
+	def _add_new_message(self, room_id, new_message):
+		# Check whether it's a duplicate
+		for m in self.stored_messages[room_id]['events']:
+			if m['id'] == new_message['id']:
+				return
+
+		self.stored_messages[room_id]['events'].append(new_message)
+
+	# Uses stored_messages to create a suitable list of menu entries for MessagesMenu
 	def _get_messages_menu_contents(self, room_id):
+		# Sort messages by their timestamp
 		sorted_messages = sorted(self.stored_messages[room_id]['events'], key=lambda k: k['timestamp'])
 
 		menu_contents = []
@@ -170,8 +183,10 @@ class MatrixClientApp(ZeroApp):
 
 	# Callback for MessagesMenu
 	def _handle_messages_top(self, room):
-		room.backfill_previous_messages(limit=self.stored_messages[room.room_id]["backfilled"]+5, reverse=True, num_of_messages=10)
-		self.stored_messages[room.room_id]["backfilled"] += 10
+		messages_to_load = 5
+
+		room.backfill_previous_messages(limit=self.stored_messages[room.room_id]["backfilled"]+5, reverse=True, num_of_messages=messages_to_load)
+		self.stored_messages[room.room_id]["backfilled"] += messages_to_load
 
 
 
