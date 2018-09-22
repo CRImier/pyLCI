@@ -1,4 +1,4 @@
-from numpad_input import NumpadCharInput, NumpadNumberInput, NumpadHexInput
+from numpad_input import NumpadCharInput, NumpadNumberInput, NumpadHexInput, NumpadKeyboardInput
 from char_input import CharArrowKeysInput
 
 def UniversalInput(i, o, *args, **kwargs):
@@ -11,8 +11,9 @@ def UniversalInput(i, o, *args, **kwargs):
     """
     charmap = kwargs.pop("charmap", "full")
     # Determining which input is necessary, according to the charmap requested
-    numpadinputs = {"full":NumpadCharInput, "number":NumpadNumberInput, "hex":NumpadHexInput}
+    numpadinputs = {"full":NumpadCharInput, "number":NumpadNumberInput, "hex":NumpadHexInput, "keyboard":NumpadKeyboardInput}
     numpadinput_cls = numpadinputs[charmap]
+    # What goes here for NumpadKeyboardInput
     arrowkeyinput_maps = {"full":['][S', '][c', '][C', '][s', '][n'], "number":['][n'], "hex":['][h']}
     arrowkeyinput_map = arrowkeyinput_maps[charmap]
     # First, checking if any of the drivers with None as available_keys is present
