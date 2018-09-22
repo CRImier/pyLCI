@@ -74,7 +74,7 @@ class InputDevice(InputSkeleton):
                 key_name = 'KEY_' + KEY_MAP[key].replace('KP', '')
             logger.debug('Mapped key %s' % key_name)
 
-            self.send_key(key_name)
+            self.send_key(key_name.upper())
 
         self.emulator.quit()
 
