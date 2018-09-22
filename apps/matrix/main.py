@@ -35,9 +35,6 @@ class MatrixClientApp(ZeroApp):
 		if password is None:
 			return False
 
-		# Start the logging in process
-		self.logger.info("Trying to log in the user")
-
 		with LoadingIndicator(self.i, self.o, message="Logging in ..."):
 			self.client = Client(username, password, self.logger)
 
@@ -159,6 +156,7 @@ class MatrixClientApp(ZeroApp):
 		# Update the current view if required
 		if self.active_room == room.room_id:
 			self.messages_menu.set_contents(self._get_messages_menu_contents(room.room_id))
+			self.messages_menu.refresh()
 
 	def _get_messages_menu_contents(self, room_id):
 		sorted_messages = sorted(self.stored_messages[room_id]['events'], key=lambda k: k['timestamp'])
@@ -172,10 +170,8 @@ class MatrixClientApp(ZeroApp):
 
 	# Callback for MessagesMenu
 	def _handle_messages_top(self, room):
-		print("Reached top")
-		room.backfill_previous_messages(limit=self.stored_messages[room.room_id]["backfilled"]+5, reverse=True)
-		self.stored_messages[room.room_id]["backfilled"] += 5
-		print(self.stored_messages[room.room_id]["backfilled"])
+		room.backfill_previous_messages(limit=self.stored_messages[room.room_id]["backfilled"]+5, reverse=True, num_of_messages=10)
+		self.stored_messages[room.room_id]["backfilled"] += 10
 
 
 
