@@ -166,7 +166,7 @@ class MatrixClientApp(ZeroApp):
 		menu_contents = []
 
 		for message in sorted_messages:
-			menu_contents.append([message['content'], lambda: self.display_single_message(message['content'], message['sender'], message['timestamp'])])
+			menu_contents.append([message['content'], lambda c=message['content'], s=message['sender'], t=message['timestamp']: self.display_single_message(c, s, t)])
 
 		return menu_contents
 
