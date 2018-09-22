@@ -52,11 +52,7 @@ class MatrixClientApp(ZeroApp):
 			self.stored_messages[r] = {}
 
 			# Used to store data for each event
-			self.stored_messages[r]["event_data"] = {}
-
-			# Used for storing messages for the MessagesMenu
-			self.stored_messages[r]["event_data"]["display_messages"] = []
-
+			self.stored_messages[r]["events"] = []
 
 		# Start a new thread for the listeners, waiting for events to happen
 		self.client.matrix_client.start_listener_thread()
@@ -110,14 +106,10 @@ class MatrixClientApp(ZeroApp):
 		cb = lambda x=room: self._handle_messages_top(x)
 
 		# Create a menu to display the messages
-		self.messages_menu = MessagesMenu(self.stored_messages[room.room_id]["event_data"]["display_messages"], self.i, self.o, name="matrix_messages_menu", 
+		self.messages_menu = MessagesMenu(self._get_messages_menu_contents(room.room_id), self.i, self.o, name="matrix_messages_menu", 
 			entry_height=1, top_callback=lambda x=room: self._handle_messages_top(x))
 
 		self.messages_menu.activate()
-
-		# Set the contents of the menu to the messages for this room and refresh it
-		self.messages_menu.set_contents(self.stored_messages[room.room_id]["event_data"]["display_messages"])
-		self.messages_menu.refresh()
 
 	# Displays a single message fully with additional information (author, time)
 	def display_single_message(self, msg, author, unix_time):
@@ -138,27 +130,45 @@ class MatrixClientApp(ZeroApp):
 			# Check if a user joined the room
 			if event['type'] == "m.room.member":
 				if event['membership'] == "join":
-					self.stored_messages[room.room_id]["event_data"]["display_messages"].insert(0, ["{0} joined".format(event['content']['displayname'])])
+
+					self.stored_messages[room.room_id]['events'].append({
+							'timestamp': event['origin_server_ts'],
+							'type': event['type'],
+							'sender': event['sender'],
+							'content': "{} joined".format(event['content']['displayname'])
+						})
 
 			# Check for new messages
 			elif event['type'] == "m.room.message":
 				if event['content']['msgtype'] == "m.text":
 					prefix = ""
 					if event['sender'] == self.client.get_user().user_id:
-						print(self.client.get_user().user_id)
 						# Prefix own messages with a '*'
 						prefix = "* "
 
-					self.stored_messages[room.room_id]["event_data"]["display_messages"].insert(0, [prefix + event['content']['body'],
-						lambda: self.display_single_message(event['content']['body'], event['sender'], event['origin_server_ts'])])
+					self.stored_messages[room.room_id]['events'].append({
+							'timestamp': event['origin_server_ts'],
+							'type': event['type'],
+							'sender': event['sender'],
+							'content': prefix + event['content']['body']
+						})
 
 		except Exception as e:
 			self.logger.warning(e)
 
 		# Update the current view if required
 		if self.active_room == room.room_id:
-			self.messages_menu.set_contents(self.stored_messages[room.room_id]["event_data"]["display_messages"])
-			self.messages_menu.refresh()
+			self.messages_menu.set_contents(self._get_messages_menu_contents(room.room_id))
+
+	def _get_messages_menu_contents(self, room_id):
+		sorted_messages = sorted(self.stored_messages[room_id]['events'], key=lambda k: k['timestamp'])
+
+		menu_contents = []
+
+		for message in sorted_messages:
+			menu_contents.append([message['content'], lambda: self.display_single_message(message['content'], message['sender'], message['timestamp'])])
+
+		return menu_contents
 
 	# Callback for MessagesMenu
 	def _handle_messages_top(self, room):
