@@ -14,7 +14,7 @@ from time import sleep, strftime, localtime
 from textwrap import wrap
 
 from apps import ZeroApp
-from ui import Listbox, PrettyPrinter, NumpadCharInput, Menu, LoadingIndicator, TextReader, NumpadKeyboardInput, MessagesMenu
+from ui import Listbox, PrettyPrinter, NumpadCharInput, Menu, LoadingIndicator, TextReader, UniversalInput, MessagesMenu
 from helpers import setup_logger
 
 from client import Client
@@ -36,14 +36,14 @@ class MatrixClientApp(ZeroApp):
 	# Login the user
 	def login(self):
 		# Get the required user data
-		username = NumpadKeyboardInput(self.i, self.o, message="Enter username", name="username_dialog").activate()
+		username = UniversalInput(self.i, self.o, message="Enter username", name="username_dialog").activate()
 		if username is None:
 			return False
 
 		# Create a matrix user id from the username, currently only ids on matrix.org are possible
 		username = "@{}:matrix.org".format(username)
 
-		password = NumpadKeyboardInput(self.i, self.o, message="Enter password", name="password_dialog").activate()
+		password = UniversalInput(self.i, self.o, message="Enter password", name="password_dialog").activate()
 		if password is None:
 			return False
 
@@ -97,7 +97,7 @@ class MatrixClientApp(ZeroApp):
 
 	# Creates a new screen with an Input to write a message
 	def write_message(self, room):
-		message = NumpadKeyboardInput(self.i, self.o, message="Message", name="message_dialog").activate()
+		message = UniversalInput(self.i, self.o, message="Message", name="message_dialog").activate()
 		if message is None:
 			return False
 

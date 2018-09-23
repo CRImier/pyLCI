@@ -47,7 +47,9 @@ class InputDevice(InputSkeleton):
         return True
 
     def set_available_keys(self):
-        self.available_keys = KEY_MAP.values()
+        # Add a KEY_ in front of every value
+        temp = ["KEY_{}".format(c.upper()) for c in KEY_MAP.values()]
+        self.available_keys = temp
 
     def runner(self):
         """
@@ -67,7 +69,9 @@ class InputDevice(InputSkeleton):
             if key not in KEY_MAP:
                 logger.debug('Ignoring key %s' % key)
                 continue
+
             key_name = 'KEY_' + KEY_MAP[key]
+            print(key_name)
             key_name = mapping.get(key_name, key_name)
 
             if 'KP' in key_name:

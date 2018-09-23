@@ -11,7 +11,7 @@ def UniversalInput(i, o, *args, **kwargs):
     """
     charmap = kwargs.pop("charmap", "full")
     # Determining which input is necessary, according to the charmap requested
-    numpadinputs = {"full":NumpadCharInput, "number":NumpadNumberInput, "hex":NumpadHexInput, "keyboard":NumpadKeyboardInput}
+    numpadinputs = {"full":NumpadCharInput, "number":NumpadNumberInput, "hex":NumpadHexInput}
     numpadinput_cls = numpadinputs[charmap]
     # What goes here for NumpadKeyboardInput
     arrowkeyinput_maps = {"full":['][S', '][c', '][C', '][s', '][n'], "number":['][n'], "hex":['][h']}
@@ -22,6 +22,16 @@ def UniversalInput(i, o, *args, **kwargs):
         # Let's use the most fully-functional input available at the moment
         return numpadinput_cls(i, o, *args, **kwargs)
     all_available_keys = sum(i.available_keys.values(), [])
+
+    ascii_keys = ["KEY_{}".format(c.upper()) for c in list("abcdefghijklmnopqrstuvwxyz123456789")]
+    ascii_keys_available = all([ascii_key in all_available_keys for ascii_key in ascii_keys])
+    print(all_available_keys)
+    print(ascii_keys)
+    if ascii_keys_available:
+        print("Use ascii keyboard")
+        # All required ASCII keys are supported
+        return NumpadKeyboardInput(i, o, *args, **kwargs)
+
     number_keys = ["KEY_{}".format(x) for x in range(10)]
     number_keys_available = all([number_key in all_available_keys for number_key in number_keys ])
     if number_keys_available:
