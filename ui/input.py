@@ -23,7 +23,7 @@ def UniversalInput(i, o, *args, **kwargs):
         return numpadinput_cls(i, o, *args, **kwargs)
     all_available_keys = sum(i.available_keys.values(), [])
 
-    ascii_keys = ["KEY_{}".format(c.upper()) for c in list("abcdefghijklmnopqrstuvwxyz123456789")]
+    ascii_keys = ["KEY_{}".format(c.upper()) for c in list("abcdefghijklmnopqrstuvwxyz123456789") + ["SPACE"]]
     ascii_keys_available = all([ascii_key in all_available_keys for ascii_key in ascii_keys])
     print(all_available_keys)
     print(ascii_keys)
