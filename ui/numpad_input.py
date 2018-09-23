@@ -360,6 +360,15 @@ class NumpadKeyboardInput(NumpadCharInput):
     default_mapping = {}
     keys = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 
+    action_keys = {
+       "ENTER":"accept_value",
+       "F1":"deactivate",
+       "LEFT":"deactivate_if_first",
+       "RIGHT":"skip",
+       "F2":"backspace",
+       "BACKSPACE": "backspace"
+    }
+
     for c in keys:
         default_mapping[c] = c.lower()
         default_mapping[c] += c
