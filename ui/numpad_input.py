@@ -360,7 +360,12 @@ class NumpadKeyboardInput(NumpadCharInput):
     keys = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 
     action_keys = {
-        "BACKSPACE": "backspace"
+       "ENTER":"accept_value",
+       "F1":"deactivate",
+       "LEFT":"deactivate_if_first",
+       "RIGHT":"skip",
+       "F2":"backspace",
+       "BACKSPACE": "backspace"
     }
 
     for c in keys:
