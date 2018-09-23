@@ -352,3 +352,15 @@ class NumpadHexInput(NumpadCharInput):
                "#" :"Dx",
                "F5":"E",
                "F6":"F"}
+
+class NumpadKeyboardInput(NumpadCharInput):
+    """Implements a normal keyboard input"""
+
+    default_mapping = {}
+    keys = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+
+    for c in keys:
+        default_mapping[c] = c.lower()
+        default_mapping[c] += c
+
+    default_mapping["SPACE"] = " "

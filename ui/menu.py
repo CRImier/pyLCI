@@ -159,3 +159,18 @@ class MeSixteenPtView(MenuRenderingMixin, SixteenPtView):
             y = (i * self.charheight - 1) if i != 0 else 0
             c.text(line, (left_offset, y), font=font)
             self.draw_triangle(c, i)
+
+class MessagesMenu(Menu):
+    """A modified version of the Menu class for displaying a list of messages and loading new ones"""
+
+    def __init__(self, *args, **kwargs):
+        self.top_callback = kwargs.pop("top_callback", None)
+
+        Menu.__init__(self, *args, **kwargs)
+
+    @to_be_foreground
+    def move_up(self):
+        Menu.move_up(self)
+
+        if self.pointer <= 5:
+            self.top_callback()
