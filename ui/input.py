@@ -25,10 +25,7 @@ def UniversalInput(i, o, *args, **kwargs):
 
     ascii_keys = ["KEY_{}".format(c.upper()) for c in list("abcdefghijklmnopqrstuvwxyz123456789") + ["SPACE"]]
     ascii_keys_available = all([ascii_key in all_available_keys for ascii_key in ascii_keys])
-    print(all_available_keys)
-    print(ascii_keys)
     if ascii_keys_available:
-        print("Use ascii keyboard")
         # All required ASCII keys are supported
         return NumpadKeyboardInput(i, o, *args, **kwargs)
 

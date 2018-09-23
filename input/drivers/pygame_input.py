@@ -71,7 +71,6 @@ class InputDevice(InputSkeleton):
                 continue
 
             key_name = 'KEY_' + KEY_MAP[key]
-            print(key_name)
             key_name = mapping.get(key_name, key_name)
 
             if 'KP' in key_name:
