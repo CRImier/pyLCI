@@ -8,8 +8,8 @@ from threading import current_thread
 import olm
 from appdirs import user_data_dir
 
-from matrix_client.crypto.sessions import MegolmOutboundSession, MegolmInboundSession
-from matrix_client.device import Device
+from .sessions import MegolmOutboundSession, MegolmInboundSession
+from ..device import Device
 
 logger = logging.getLogger(__name__)
 

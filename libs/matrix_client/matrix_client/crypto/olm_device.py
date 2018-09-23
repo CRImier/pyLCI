@@ -5,16 +5,16 @@ from collections import defaultdict
 import olm
 from canonicaljson import encode_canonical_json
 
-from matrix_client.checks import check_user_id
-from matrix_client.device import Device
-from matrix_client.errors import E2EUnknownDevices, UnableToDecryptError
-from matrix_client.crypto.one_time_keys import OneTimeKeysManager
-from matrix_client.crypto.device_list import DeviceList
-from matrix_client.crypto.sessions import MegolmOutboundSession, MegolmInboundSession
-from matrix_client.crypto.crypto_store import CryptoStore
-from matrix_client.crypto.verified_event import VerifiedEvent
-from matrix_client.crypto.key_sharing import KeySharingManager
-from matrix_client.crypto.key_export import encrypt_and_save, decrypt_and_read
+from ..checks import check_user_id
+from ..device import Device
+from ..errors import E2EUnknownDevices, UnableToDecryptError
+from .one_time_keys import OneTimeKeysManager
+from .device_list import DeviceList
+from .sessions import MegolmOutboundSession, MegolmInboundSession
+from .crypto_store import CryptoStore
+from .verified_event import VerifiedEvent
+from .key_sharing import KeySharingManager
+from .key_export import encrypt_and_save, decrypt_and_read
 
 logger = logging.getLogger(__name__)
 

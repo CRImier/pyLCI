@@ -21,6 +21,7 @@ try:
     from .crypto.olm_device import OlmDevice
     ENCRYPTION_SUPPORT = True
 except ImportError:
+    import traceback; traceback.print_exc()
     ENCRYPTION_SUPPORT = False
 from threading import Thread
 from time import sleep

@@ -2,8 +2,8 @@ import logging
 from collections import defaultdict
 from threading import Thread, Condition, Event, Lock
 
-from matrix_client.device import Device
-from matrix_client.errors import MatrixHttpLibError, MatrixRequestError
+from ..device import Device
+from ..errors import MatrixHttpLibError, MatrixRequestError
 
 logger = logging.getLogger(__name__)
 

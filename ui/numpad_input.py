@@ -3,7 +3,7 @@ from time import sleep
 from threading import Lock
 from functools import wraps
 
-from helpers import setup_logger
+from helpers import setup_logger, remove_left_failsafe
 from utils import to_be_foreground, check_value_lock
 from base_ui import BaseUIElement
 
@@ -275,6 +275,7 @@ class NumpadCharInput(BaseUIElement):
     @to_be_foreground
     def configure_input(self):
         self.i.clear_keymap()
+        remove_left_failsafe(self.i)
         self.i.set_streaming(self.process_streaming_keycode)
 
     #Functions that are responsible for input to display
