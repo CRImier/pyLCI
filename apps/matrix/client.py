@@ -1,6 +1,6 @@
-from matrix_client.client import MatrixClient
-from matrix_client.api import MatrixRequestError
-from matrix_client.user import User
+from libs.matrix_client.matrix_client.client import MatrixClient
+from libs.matrix_client.matrix_client.api import MatrixRequestError
+from libs.matrix_client.matrix_client.user import User
 from requests.exceptions import MissingSchema
 
 class Client():
