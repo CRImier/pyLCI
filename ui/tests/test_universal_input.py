@@ -23,7 +23,7 @@ except ImportError:
     with patch('__builtin__.__import__', side_effect=import_mock):
         from input import UniversalInput
         from char_input import CharArrowKeysInput
-        from numpad_input import NumpadCharInput, NumpadNumberInput, NumpadHexInput
+        from numpad_input import NumpadCharInput, NumpadNumberInput, NumpadHexInput, NumpadKeyboardInput
 
 zerophone_keys = [ "KEY_LEFT", "KEY_UP", "KEY_DOWN", "KEY_RIGHT", "KEY_ENTER",
                    "KEY_1", "KEY_2", "KEY_3", "KEY_4", "KEY_5", "KEY_6", "KEY_7",
