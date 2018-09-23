@@ -30,21 +30,23 @@ class MatrixClientApp(ZeroApp):
 
 		self.logger = setup_logger(__name__, "info")
 
-		self.login()
+		if not self.login():
+			return False
+
 		self.display_rooms()
 
 	# Login the user
 	def login(self):
 		# Get the required user data
 		username = UniversalInput(self.i, self.o, message="Enter username", name="username_dialog").activate()
-		if username is None:
+		if username == "":
 			return False
 
 		# Create a matrix user id from the username, currently only ids on matrix.org are possible
 		username = "@{}:matrix.org".format(username)
 
 		password = UniversalInput(self.i, self.o, message="Enter password", name="password_dialog").activate()
-		if password is None:
+		if password == "":
 			return False
 
 		# Show a beatufil loading animation while setting everything up
