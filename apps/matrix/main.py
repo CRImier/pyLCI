@@ -68,6 +68,8 @@ class MatrixClientApp(ZeroApp):
 			self.client.matrix_client.start_listener_thread()
 
 		self.logger.info("Succesfully logged in")
+
+		return True
 		
 	# Displays a list of all rooms the user is in
 	def display_rooms(self):
