@@ -135,7 +135,7 @@ class MatrixClientApp(ZeroApp):
 
 	# Used as callback for the room listeners
 	def _on_message(self, room, event):
-		self.logger.info("New event: {}".format(event['type']))
+		self.logger.debug("New event: {}".format(event['type']))
 
 		event_type = event.get('type', "not_a_defined_event")
 
