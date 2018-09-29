@@ -228,6 +228,9 @@ class TextReader(object):
         self.after_move()
 
     def move_left(self):
+        if self.v_scroll_index == 0:
+            self.deactivate()
+
         self.v_scroll_index -= self.scroll_speed
         self.after_move()
 
