@@ -53,14 +53,28 @@ class DatePicker(BaseUIElement):
 		centered_cords = self.c.get_centered_text_bounds(self.year_month)
 		self.c.text(self.year_month, (centered_cords[0], 0))
 
-		# Draw the calendar grid
-		step_width = self.c.width / 8
-		for x in range(step_width, self.c.width, step_width):
-			self.c.line((x, month_year_text_bounds[1], x, self.c.height))
+		date = 1
 
-		step_height = (self.c.height - month_year_text_bounds[1]) / 4
-		for y in range(step_height, self.c.height, step_height):
-			self.c.line((0, y, self.c.width, y))
+		# Draw the calendar grid
+		step_width = self.c.width / 7
+		step_height = (self.c.height - month_year_text_bounds[1]) / 5
+
+		for x in range(step_width, self.c.width-step_width, step_width):
+			self.c.line((x+1, month_year_text_bounds[1], x+1, step_height*6))
+
+			for y in range(step_height, self.c.height, step_height):
+				self.c.line((0, y, self.c.width, y))
+
+		for y in range(5):
+			for x in range(7):
+				date_text_bounds = self.c.get_text_bounds(str(date))
+				x_cord = x*step_width+((step_width-date_text_bounds[0])/2)
+				y_cord = y*step_height+step_height+((step_height-date_text_bounds[1])/2)
+
+				self.c.text(str(date), (x_cord+1, y_cord+1))
+
+				date = date % 31
+				date += 1
 
 		self.c.display()
 
