@@ -1,3 +1,5 @@
+from time import sleep
+
 from base_ui import BaseUIElement
 from canvas import Canvas
 
@@ -10,7 +12,7 @@ class DatePicker(BaseUIElement):
 		self.c = Canvas(self.o)
 		self.selected_option = (0, 0)
 
-		self.draw_calendar()
+		self.year_month = "2018 - Oct"
 	
 	def generate_keymap(self):
 		return {
@@ -20,6 +22,9 @@ class DatePicker(BaseUIElement):
 			"KEY_DOWN": "move_down",
 			"KEY_ENTER": "accept_value"
 		}
+
+	def idle_loop(self):
+		sleep(0.1)
 
 	def move_right(self):
 		self.selected_option[0] += 1
@@ -43,9 +48,19 @@ class DatePicker(BaseUIElement):
 	def draw_calendar(self):
 		self.c.clear()
 
-		step_width = self.c.width/8
+		# Draw year - month at the top
+		month_year_text_bounds = self.c.get_text_bounds(self.year_month)
+		centered_cords = self.c.get_centered_text_bounds(self.year_month)
+		self.c.text(self.year_month, (centered_cords[0], 0))
+
+		# Draw the calendar grid
+		step_width = self.c.width / 8
 		for x in range(step_width, self.c.width, step_width):
-			self.c.line((x, 0, x, self.c.height))
+			self.c.line((x, month_year_text_bounds[1], x, self.c.height))
+
+		step_height = (self.c.height - month_year_text_bounds[1]) / 4
+		for y in range(step_height, self.c.height, step_height):
+			self.c.line((0, y, self.c.width, y))
 
 		self.c.display()
 
