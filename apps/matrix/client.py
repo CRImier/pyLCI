@@ -7,7 +7,7 @@ class Client():
 
 	def __init__(self, username, password, logger):
 		# Create the matrix client
-		self.matrix_client = MatrixClient("https://matrix.org", encryption=True, restore_device_id=True)
+		self.matrix_client = MatrixClient("https://matrix.org")
 		self.logger = logger
 
 		self.username = username
