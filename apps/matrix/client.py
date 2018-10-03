@@ -5,27 +5,36 @@ from requests.exceptions import MissingSchema
 
 class Client():
 
-	def __init__(self, username, password, logger):
-		# Create the matrix client
-		self.matrix_client = MatrixClient("https://matrix.org")
+	def __init__(self, username, logger, password=None, token=None):
 		self.logger = logger
 
 		self.username = username
+		self.token = None
+		self.logged_in = True
 
-		# Try logging in the user
-		try:
-			self.matrix_client.login(username=username, password=password)
+		# Create the matrix client
+		if token == None and password != None:
+			self.matrix_client = MatrixClient("https://matrix.org")
+
+			# Try logging in the user
+			try:
+				self.token = self.matrix_client.login(username=username, password=password)
+				self.user = User(self.matrix_client, self.matrix_client.user_id)
+
+			except MatrixRequestError as e:
+				self.logged_in = False
+				self.logger.error(e)
+				if e.code == 403:
+					self.logger.error("Wrong username or password")
+				else:
+					self.logger.error("Check server details")
+
+			except MissingSchema as e:
+				self.logger.exception("Bad URL format")
+
+		else:
+			self.matrix_client = MatrixClient("https://matrix.org", token=token, user_id=username)
 			self.user = User(self.matrix_client, self.matrix_client.user_id)
-
-		except MatrixRequestError as e:
-			self.logger.error(e)
-			if e.code == 403:
-				self.logger.error("Wrong username or password")
-			else:
-				self.logger.error("Check server details")
-
-		except MissingSchema as e:
-			self.logger.exception("Bad URL format")
 
 	# Return the user's display name
 	def get_user_display_name(self):
@@ -37,3 +46,6 @@ class Client():
 
 	def get_user(self):
 		return self.user
+
+	def get_token(self):
+		return self.token

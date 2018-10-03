@@ -15,13 +15,17 @@ from textwrap import wrap
 
 from apps import ZeroApp
 from ui import Listbox, PrettyPrinter, NumpadCharInput, Menu, LoadingIndicator, TextReader, UniversalInput, MessagesMenu
-from helpers import setup_logger
+from helpers import setup_logger, read_or_create_config, local_path_gen, save_config_method_gen
 
 from client import Client
+
+local_path = local_path_gen(__name__)
 
 class MatrixClientApp(ZeroApp):
 
 	menu_name = "Matrix Client"
+	default_config = '{"user_id":"undefined", "token":"undefined"}'
+	config_filename = "config.json"
 	
 	def on_start(self):
 		self.stored_messages = {}
@@ -30,6 +34,9 @@ class MatrixClientApp(ZeroApp):
 
 		self.logger = setup_logger(__name__, "info")
 
+		self.config = read_or_create_config(local_path(self.config_filename), self.default_config, self.menu_name+" app")
+		self.save_config = save_config_method_gen(self, local_path(self.config_filename))
+
 		if not self.login():
 			return False
 
@@ -37,37 +44,50 @@ class MatrixClientApp(ZeroApp):
 
 	# Login the user
 	def login(self):
-		# Get the required user data
-		username = UniversalInput(self.i, self.o, message="Enter username", name="username_dialog").activate()
-		if username == "":
-			return False
+		# Check whether the user has been logged in before
+		if self.config['user_id'] != 'undefined' and self.config['token'] != 'undefined':
+			self.logger.debug("User has been logged in before")
+			self.client = Client(self.config['user_id'], self.logger, token=self.config['token'])
 
-		# Create a matrix user id from the username, currently only ids on matrix.org are possible
-		username = "@{}:matrix.org".format(username)
+		else:
 
-		password = UniversalInput(self.i, self.o, message="Enter password", name="password_dialog").activate()
-		if password == "":
-			return False
+			# Get the required user data
+			username = UniversalInput(self.i, self.o, message="Enter username", name="username_dialog").activate()
+			if username == "":
+				return False
 
-		# Show a beatufil loading animation while setting everything up
-		with LoadingIndicator(self.i, self.o, message="Logging in ..."):
-			self.client = Client(username, password, self.logger)
+			# Create a matrix user id from the username, currently only ids on matrix.org are possible
+			username = "@{}:matrix.org".format(username)
 
-			# Get the users rooms
-			self.rooms = self.client.get_rooms()
+			password = UniversalInput(self.i, self.o, message="Enter password", name="password_dialog").activate()
+			if password == "":
+				return False
 
-			# Add a listener for new events to all rooms the user is in
-			for r in self.rooms:
-				self.rooms[r].add_listener(self._on_message)
-				self.stored_messages[r] = {}
+			# Show a beatufil loading animation while setting everything up
+			with LoadingIndicator(self.i, self.o, message="Logging in ..."):
+				self.client = Client(username, self.logger, password=password)
 
-				# Used to store data for each event
-				self.stored_messages[r]["events"] = []
+				# Store username and token
+				if self.client.logged_in:
+					self.config['user_id'] = username
+					self.config['token'] = self.client.get_token()
+					self.save_config()
 
-			# Start a new thread for the listeners, waiting for events to happen
-			self.client.matrix_client.start_listener_thread()
+					self.logger.info("Succesfully logged in")
 
-		self.logger.info("Succesfully logged in")
+		# Get the users rooms
+		self.rooms = self.client.get_rooms()
+
+		# Add a listener for new events to all rooms the user is in
+		for r in self.rooms:
+			self.rooms[r].add_listener(self._on_message)
+			self.stored_messages[r] = {}
+
+			# Used to store data for each event
+			self.stored_messages[r]["events"] = []
+
+		# Start a new thread for the listeners, waiting for events to happen
+		self.client.matrix_client.start_listener_thread()
 
 		return True
 		
