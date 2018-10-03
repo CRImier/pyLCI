@@ -169,7 +169,7 @@ class MatrixClientApp(ZeroApp):
 						'timestamp': event['origin_server_ts'],
 						'type': event['type'],
 						'sender': unicode(event['sender']),
-						'content': unicode("{} joined".format(event['content']['displayname'])),
+						'content': unicode("+ {}".format(event['content']['displayname'])),
 						'id': event['event_id']
 					})
 
