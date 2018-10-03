@@ -166,8 +166,8 @@ class MatrixClientApp(ZeroApp):
 				self._add_new_message(room.room_id, {
 						'timestamp': event['origin_server_ts'],
 						'type': event['type'],
-						'sender': event['sender'],
-						'content': "{} joined".format(event['content']['displayname']),
+						'sender': unicode(event['sender']),
+						'content': unicode("{} joined".format(event['content']['displayname'])),
 						'id': event['event_id']
 					})
 
@@ -182,8 +182,8 @@ class MatrixClientApp(ZeroApp):
 				self._add_new_message(room.room_id, {
 						'timestamp': event['origin_server_ts'],
 						'type': event['type'],
-						'sender': event['sender'],
-						'content': prefix + event['content']['body'],
+						'sender': unicode(event['sender']),
+						'content': unicode(prefix + event['content']['body']),
 						'id': event['event_id']
 					})
 
