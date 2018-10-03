@@ -47,7 +47,9 @@ class MatrixClientApp(ZeroApp):
 		# Check whether the user has been logged in before
 		if self.config['user_id'] != 'undefined' and self.config['token'] != 'undefined':
 			self.logger.debug("User has been logged in before")
-			self.client = Client(self.config['user_id'], self.logger, token=self.config['token'])
+
+			with LoadingIndicator(self.i, self.o, message="Starting ..."):
+				self.client = Client(self.config['user_id'], self.logger, token=self.config['token'])
 
 		else:
 
