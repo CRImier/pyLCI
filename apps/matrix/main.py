@@ -62,14 +62,14 @@ class MatrixClientApp(ZeroApp):
 
 			# Get the required user data
 			username = UniversalInput(self.i, self.o, message="Enter username", name="username_dialog").activate()
-			if username == "":
+			if not username:
 				return False
 
 			# Create a matrix user id from the username, currently only ids on matrix.org are possible
 			username = "@{}:matrix.org".format(username)
 
 			password = UniversalInput(self.i, self.o, message="Enter password", name="password_dialog").activate()
-			if password == "":
+			if not username:
 				return False
 
 			# Show a beatiful loading animation while setting everything up
