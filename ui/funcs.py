@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+
+import string
+
+from helpers import setup_logger
+
+logger = setup_logger(__name__, "info")
+
+printable_characters = set(string.printable)
+replace_characters = {u"ö":u"o"}
+
+
 def ellipsize(string, length, ellipsis="..."):
     if len(string) <= length:
         return string
@@ -41,3 +53,31 @@ def format_for_screen(data, screen_width, break_words=False, linebreak=None):
     return screen_data
 
 ffs = format_for_screen
+
+
+def add_character_replacement(character, replacement):
+    logger.info(u"Adding char replacement: {} for {}".format(character, replacement))
+    if character in replace_characters:
+        logger.warning(u"Character {} already set! (to {} )".format(character, replace_characters[character]))
+    replace_characters[character] = replacement
+
+acr = add_character_replacement
+
+def replace_filter_ascii(text, replace_characters=replace_characters):
+    """
+    Replaces non-ASCII characters with their ASCII equivalents if available,
+    removes them otherwise. You can add new replacement characters using the
+    ``add_character_replacement`` function. The output of this function is ASCII
+    printable characters.
+
+    This function is mostly useful because the default PIL font doesn't have many Unicode
+    characters (in fact, it's doubtful it has any). So, if you're going to display
+    strings with Unicode characters, you'll want to use this function to filter your
+    text before displaying.
+    """
+    for character, replacement in replace_characters.items():
+        text = text.replace(character, replacement)
+    text = filter(lambda x: x in printable_characters, text)
+    return text
+
+rfa = replace_filter_ascii
