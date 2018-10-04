@@ -24,7 +24,7 @@ local_path = local_path_gen(__name__)
 class MatrixClientApp(ZeroApp):
 
 	menu_name = "Matrix Client"
-	default_config = '{"user_id":"", "token":""}'
+	default_config = '{"user_id":"", "token":"", "your_other_usernames":[]}'
 	config_filename = "config.json"
 
 	def on_start(self):
@@ -52,8 +52,9 @@ class MatrixClientApp(ZeroApp):
 			with LoadingIndicator(self.i, self.o, message="Logging in ..."):
 				try:
 					self.client = Client(self.config['user_id'], self.logger, token=self.config['token'])
-				except MatrixRequestError:
-					self.logger.exception("Wrong or outdated token/username")
+				except MatrixRequestError as e:
+					self.logger.exception("Wrong or outdated token/username?")
+					self.logger.error(dir(e))
 				else:
 					logged_in_with_token = self.client.logged_in
 
@@ -199,7 +200,7 @@ class MatrixClientApp(ZeroApp):
 		elif event_type == "m.room.message":
 			if event['content']['msgtype'] == "m.text":
 				prefix = ""
-				if event['sender'] == self.client.get_user().user_id:
+				if event['sender'] == self.client.get_user().user_id or event["sender"] in self.config["your_other_usernames"]:
 					# Prefix own messages with a '*'
 					prefix = "* "
 
