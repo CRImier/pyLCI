@@ -14,7 +14,7 @@ from time import sleep, strftime, localtime
 from textwrap import wrap
 
 from apps import ZeroApp
-from ui import Listbox, PrettyPrinter as Printer, NumpadCharInput, Menu, LoadingIndicator, TextReader, UniversalInput, MessagesMenu, rfa
+from ui import Listbox, PrettyPrinter as Printer, NumpadCharInput, Menu, LoadingIndicator, TextReader, UniversalInput, MessagesMenu, rfa, MenuExitException
 from helpers import setup_logger, read_or_create_config, local_path_gen, save_config_method_gen
 
 from client import Client, MatrixRequestError
@@ -130,7 +130,18 @@ class MatrixClientApp(ZeroApp):
 				lambda x=current_room: self.write_message(x)
 			])
 
+                menu_contents.append(["Settings", self.show_settings])
 		Menu(menu_contents, self.i, self.o).activate()
+
+        def show_settings(self):
+            mc = [["Log out", self.logout]]
+            Menu(mc, self.i, self.o, catch_exit=False).activate()
+
+        def logout(self):
+            self.config["token"] = ''
+            self.config["username"] = ''
+            self.save_config()
+            raise MenuExitException
 
 	# Creates a new screen with an Input to write a message
 	def write_message(self, room):
