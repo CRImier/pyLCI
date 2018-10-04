@@ -26,7 +26,7 @@ class MatrixClientApp(ZeroApp):
 	menu_name = "Matrix Client"
 	default_config = '{"user_id":"", "token":""}'
 	config_filename = "config.json"
-	
+
 	def on_start(self):
 		self.stored_messages = {}
 		self.messages_menu = None
@@ -87,18 +87,18 @@ class MatrixClientApp(ZeroApp):
 		self.rooms = self.client.get_rooms()
 
 		# Add a listener for new events to all rooms the user is in
-		for r in self.rooms:
-			self.rooms[r].add_listener(self._on_message)
-			self.stored_messages[r] = {}
+		for room_name in self.rooms:
+			self.rooms[room_name].add_listener(self._on_message)
+			self.stored_messages[room_name] = {}
 
 			# Used to store data for each event
-			self.stored_messages[r]["events"] = []
+			self.stored_messages[room_name]["events"] = []
 
 		# Start a new thread for the listeners, waiting for events to happen
 		self.client.matrix_client.start_listener_thread()
 
 		return True
-		
+
 	# Displays a list of all rooms the user is in
 	def display_rooms(self):
 		menu_contents = []
