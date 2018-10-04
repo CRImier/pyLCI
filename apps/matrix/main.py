@@ -24,7 +24,7 @@ local_path = local_path_gen(__name__)
 class MatrixClientApp(ZeroApp):
 
 	menu_name = "Matrix Client"
-	default_config = '{"user_id":"undefined", "token":"undefined"}'
+	default_config = '{"user_id":"", "token":""}'
 	config_filename = "config.json"
 	
 	def on_start(self):
@@ -45,7 +45,7 @@ class MatrixClientApp(ZeroApp):
 	# Login the user
 	def login(self):
 		# Check whether the user has been logged in before
-		if self.config['user_id'] != 'undefined' and self.config['token'] != 'undefined':
+		if self.config['user_id'] and self.config['token']:
 			self.logger.debug("User has been logged in before")
 
 			with LoadingIndicator(self.i, self.o, message="Starting ..."):
