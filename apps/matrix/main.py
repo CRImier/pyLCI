@@ -14,7 +14,7 @@ from time import sleep, strftime, localtime
 from textwrap import wrap
 
 from apps import ZeroApp
-from ui import Listbox, PrettyPrinter, NumpadCharInput, Menu, LoadingIndicator, TextReader, UniversalInput, MessagesMenu
+from ui import Listbox, PrettyPrinter as Printer, NumpadCharInput, Menu, LoadingIndicator, TextReader, UniversalInput, MessagesMenu, rfa
 from helpers import setup_logger, read_or_create_config, local_path_gen, save_config_method_gen
 
 from client import Client, MatrixRequestError
@@ -115,7 +115,7 @@ class MatrixClientApp(ZeroApp):
 
 			# Add an 'E' to the name of encrypted rooms
 			room_name = "E " if current_room.encrypted else ""
-			room_name += current_room.display_name
+			room_name += rfa(current_room.display_name)
 
 			# Enter 		-> Read messages in room
 			# Right arrow 	-> Write message to room
@@ -153,10 +153,10 @@ class MatrixClientApp(ZeroApp):
 
 	# Displays a single message fully with additional information (author, time)
 	def display_single_message(self, msg, author, unix_time):
-		full_msg = "{0}\n{1}\n\n".format(strftime("%m-%d %H:%M", localtime(unix_time / 1000)), author)
+		full_msg = "{0}\n{1}\n\n".format(strftime("%m-%d %H:%M", localtime(unix_time / 1000)), rfa(author))
 
 		for line in wrap(msg, 24):
-			full_msg += line
+			full_msg += rfa(line)
 			full_msg += "\n"
 
 		TextReader(full_msg, self.i, self.o).activate()
@@ -174,8 +174,8 @@ class MatrixClientApp(ZeroApp):
 				self._add_new_message(room.room_id, {
 						'timestamp': event['origin_server_ts'],
 						'type': event['type'],
-						'sender': unicode(event['sender']),
-						'content': unicode("+ {}".format(event['content']['displayname'])),
+						'sender': unicode(rfa(event['sender'])),
+						'content': rfa(unicode("+ {}").format(event['content']['displayname'])),
 						'id': event['event_id']
 					})
 
@@ -190,8 +190,8 @@ class MatrixClientApp(ZeroApp):
 				self._add_new_message(room.room_id, {
 						'timestamp': event['origin_server_ts'],
 						'type': event['type'],
-						'sender': unicode(event['sender']),
-						'content': unicode(prefix + event['content']['body']),
+						'sender': unicode(rfa(event['sender'])),
+						'content': unicode(prefix + rfa(event['content']['body'])),
 						'id': event['event_id']
 					})
 
@@ -219,7 +219,8 @@ class MatrixClientApp(ZeroApp):
 		menu_contents = []
 
 		for message in sorted_messages:
-			menu_contents.append([message['content'], lambda c=message['content'], s=message['sender'], t=message['timestamp']: self.display_single_message(c, s, t)])
+			content = rfa(message["content"])
+			menu_contents.append([content, lambda c=content, s=rfa(message['sender']), t=message['timestamp']: self.display_single_message(c, s, t)])
 
 		return menu_contents
 
