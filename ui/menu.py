@@ -69,9 +69,10 @@ class Menu(BaseListBackgroundableUIElement):
         if callable(self.contents_hook):
             self.set_contents(self.contents_hook())
 
-    def return_value(self):
+    def get_return_value(self):
         if self.exit_exception:
             if not self.catch_exit:
+                logger.info("{} received MenuExitException, raising it further".format(self.name))
                 raise MenuExitException
         return True
 
