@@ -132,7 +132,7 @@ class MatrixClientApp(ZeroApp):
 
 	# Display all messages of a specific room
 	def display_messages(self, room):
-		self.logger.debug("Viewing room: {}".format(room.display_name))
+		self.logger.debug(u"Viewing room: {}".format(room.display_name))
 
 		# Set the currently active room to this room, important for adding messages and refreshing the menu
 		self.active_room = room.room_id
@@ -157,7 +157,7 @@ class MatrixClientApp(ZeroApp):
 
 	# Used as callback for the room listeners
 	def _on_message(self, room, event):
-		self.logger.debug("New event: {}".format(event['type']))
+		self.logger.debug(u"New event: {}".format(event['type']))
 
 		event_type = event.get('type', "not_a_defined_event")
 
