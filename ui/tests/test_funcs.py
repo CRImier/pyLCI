@@ -34,18 +34,15 @@ class TestFuncs(unittest.TestCase):
 
     def test_rfa(self):
         """Tests replace_filter_ascii, as well as add_character_replacement"""
-        assert(rfa(u"can I have some lööps bröther") == "can I have some loops brother")
-        # sneaky Russian letters - ought to insert them in the replace_characters, too
-        assert(rfa(u"can I have some lооps brоther") == "can I have some lps brther")
-        add_character_replacement(u"о", u"o") # adding the Russian letter
-        assert(rfa(u"can I have some lооps brоther") == "can I have some loops brother")
-        #c = Canvas(get_mock_output(), name=c_name)
-        #self.assertIsNotNone(c)
+        assert(rfa(u"may I have some lööps bröther") == "may I have some loops brother")
+        # sneaky Russian letters
+        assert(rfa(u"may I have some lооps brоther") == "may I have some loops brother")
+        assert(rfa(u"may I have some lооps бrоther") == "may I have some loops brother")
 
     def test_ffs(self):
         """Tests format_for_screen"""
         assert(ffs("Hello", 16) == ["Hello "])
-        assert(ffs("can I have some loops brother", 16) == ['can I have some ', 'loops brother '])
+        assert(ffs("may I have some loops brother", 16) == ['may I have some ', 'loops brother '])
 
     def test_ellipsize(self):
         """Tests ellipsize"""

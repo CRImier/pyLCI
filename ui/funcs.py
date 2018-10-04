@@ -4,6 +4,8 @@ import string
 
 from helpers import setup_logger
 
+from unidecode import unidecode
+
 logger = setup_logger(__name__, "info")
 
 printable_characters = set(string.printable)
@@ -56,6 +58,10 @@ ffs = format_for_screen
 
 
 def add_character_replacement(character, replacement):
+    """
+    In case a Unicode character isn't replaced in the way you want it replaced,
+    use this function to add a special case.
+    """
     logger.info(u"Adding char replacement: {} for {}".format(character, replacement))
     if character in replace_characters:
         logger.warning(u"Character {} already set! (to {} )".format(character, replace_characters[character]))
@@ -75,8 +81,13 @@ def replace_filter_ascii(text, replace_characters=replace_characters):
     strings with Unicode characters, you'll want to use this function to filter your
     text before displaying.
     """
+    # First, developer-added exceptions
     for character, replacement in replace_characters.items():
-        text = text.replace(character, replacement)
+        if character in text:
+            text = text.replace(character, replacement)
+    # Then, use the unidecode() function
+    text = unidecode(text)
+    # Filter all non-printable characters left
     text = filter(lambda x: x in printable_characters, text)
     return text
 
