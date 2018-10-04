@@ -74,7 +74,6 @@ class Menu(BaseListBackgroundableUIElement):
             if not self.catch_exit:
                 logger.info("{} received MenuExitException, raising it further".format(self.name))
                 raise MenuExitException
-        return True
 
     @to_be_foreground
     def select_entry(self, callback_number=1):
