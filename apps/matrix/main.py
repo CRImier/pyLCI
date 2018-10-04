@@ -17,7 +17,7 @@ from apps import ZeroApp
 from ui import Listbox, PrettyPrinter, NumpadCharInput, Menu, LoadingIndicator, TextReader, UniversalInput, MessagesMenu
 from helpers import setup_logger, read_or_create_config, local_path_gen, save_config_method_gen
 
-from client import Client
+from client import Client, MatrixRequestError
 
 local_path = local_path_gen(__name__)
 
@@ -45,13 +45,19 @@ class MatrixClientApp(ZeroApp):
 	# Login the user
 	def login(self):
 		# Check whether the user has been logged in before
+		logged_in_with_token = False
 		if self.config['user_id'] and self.config['token']:
 			self.logger.debug("User has been logged in before")
 
-			with LoadingIndicator(self.i, self.o, message="Starting ..."):
-				self.client = Client(self.config['user_id'], self.logger, token=self.config['token'])
+			with LoadingIndicator(self.i, self.o, message="Logging in ..."):
+				try:
+					self.client = Client(self.config['user_id'], self.logger, token=self.config['token'])
+				except MatrixRequestError:
+					self.logger.exception("Wrong or outdated token/username")
+				else:
+					logged_in_with_token = self.client.logged_in
 
-		else:
+		if not logged_in_with_token:
 
 			# Get the required user data
 			username = UniversalInput(self.i, self.o, message="Enter username", name="username_dialog").activate()
