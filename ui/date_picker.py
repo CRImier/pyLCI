@@ -10,7 +10,7 @@ class DatePicker(BaseUIElement):
 		BaseUIElement.__init__(self, i, o, name)
 
 		self.c = Canvas(self.o)
-		self.selected_option = (0, 0)
+		self.selected_option = [0, 0]
 
 		self.year_month = "2018 - Oct"
 	
@@ -27,19 +27,23 @@ class DatePicker(BaseUIElement):
 		sleep(0.1)
 
 	def move_right(self):
-		self.selected_option[0] += 1
+		if self.selected_option[0] < 6:
+			self.selected_option[0] += 1
 		self.refresh()
 
 	def move_left(self):
-		self.selected_option[0] -= 1
+		if self.selected_option[0] > 0:
+			self.selected_option[0] -= 1
 		self.refresh()
 
 	def move_up(self):
-		self.selected_option[1] -= 1
+		if self.selected_option[1] > 0:
+			self.selected_option[1] -= 1
 		self.refresh()
 
 	def move_down(self):
-		self.selected_option[1] += 1
+		if self.selected_option[1] < 4:
+			self.selected_option[1] += 1
 		self.refresh()
 
 	def accept_value(self):
@@ -75,6 +79,10 @@ class DatePicker(BaseUIElement):
 
 				date = date % 31
 				date += 1
+
+		selected_x = self.selected_option[0]*step_width
+		selected_y = self.selected_option[1]*step_height+step_height
+		self.c.invert_rect((selected_x+1, selected_y+1, selected_x+step_width+1, selected_y+step_height))
 
 		self.c.display()
 
