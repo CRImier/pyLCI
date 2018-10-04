@@ -71,8 +71,8 @@ class MatrixClientApp(ZeroApp):
 			if password == "":
 				return False
 
-			# Show a beatufil loading animation while setting everything up
-			with LoadingIndicator(self.i, self.o, message="Logging in ..."):
+			# Show a beatiful loading animation while setting everything up
+			with LoadingIndicator(self.i, self.o, message="Logging in ...") as l:
 				self.client = Client(username, self.logger, password=password)
 
 				# Store username and token
@@ -82,6 +82,11 @@ class MatrixClientApp(ZeroApp):
 					self.save_config()
 
 					self.logger.info("Succesfully logged in")
+				else:
+					l.pause()
+					Printer("Failed to log in", self.i, self.o)
+					l.resume()
+					return False
 
 		# Get the users rooms
 		self.rooms = self.client.get_rooms()
