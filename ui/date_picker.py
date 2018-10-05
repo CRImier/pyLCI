@@ -1,3 +1,4 @@
+import calendar
 from time import sleep
 
 from base_ui import BaseUIElement
@@ -13,6 +14,8 @@ class DatePicker(BaseUIElement):
 		self.selected_option = [0, 0]
 
 		self.year_month = "2018 - Oct"
+
+		self.cal = calendar.Calendar()
 	
 	def generate_keymap(self):
 		return {
@@ -52,14 +55,14 @@ class DatePicker(BaseUIElement):
 	def draw_calendar(self):
 		self.c.clear()
 
-		# Draw year - month at the top
+		# Draw 'year - month' at the top
 		month_year_text_bounds = self.c.get_text_bounds(self.year_month)
 		centered_cords = self.c.get_centered_text_bounds(self.year_month)
 		self.c.text(self.year_month, (centered_cords[0], 0))
 
 		date = 1
 
-		# Draw the calendar grid
+		# Draw calendar grid
 		step_width = self.c.width / 7
 		step_height = (self.c.height - month_year_text_bounds[1]) / 5
 
@@ -69,17 +72,36 @@ class DatePicker(BaseUIElement):
 			for y in range(step_height, self.c.height, step_height):
 				self.c.line((0, y, self.c.width, y))
 
-		for y in range(5):
-			for x in range(7):
-				date_text_bounds = self.c.get_text_bounds(str(date))
-				x_cord = x*step_width+((step_width-date_text_bounds[0])/2)
-				y_cord = y*step_height+step_height+((step_height-date_text_bounds[1])/2)
+		# Draw dates
+		first_day, _ = calendar.monthrange(2018, 10)
+		print(first_day)
 
-				self.c.text(str(date), (x_cord+1, y_cord+1))
+		i = first_day
+		for date in self.cal.itermonthdays(2018, 10):
+			if date == 0:
+				continue
 
-				date = date % 31
-				date += 1
+			date_text_bounds = self.c.get_text_bounds(str(date))
 
+			x_cord = (i%7)*step_width+((step_width-date_text_bounds[0])/2)
+			y_cord = (i // 7)*step_height+step_height+((step_height-date_text_bounds[1])/2)
+
+			self.c.text(str(date), (x_cord+1, y_cord+1))
+
+			i += 1
+
+		# for y in range(5):
+		# 	for x in range(7):
+		# 		date_text_bounds = self.c.get_text_bounds(str(date))
+		# 		x_cord = x*step_width+((step_width-date_text_bounds[0])/2)
+		# 		y_cord = y*step_height+step_height+((step_height-date_text_bounds[1])/2)
+
+		# 		self.c.text(str(date), (x_cord+1, y_cord+1))
+
+		# 		date = date % 31
+		# 		date += 1
+
+		# Highlight selected option
 		selected_x = self.selected_option[0]*step_width
 		selected_y = self.selected_option[1]*step_height+step_height
 		self.c.invert_rect((selected_x+1, selected_y+1, selected_x+step_width+1, selected_y+step_height))
