@@ -88,7 +88,13 @@ class InputDevice(InputSkeleton):
                     logger.error("Can't get data from keypad!")
                 else:
                     if data != 0:
-                        self.send_key(self.mapping[data-1])
+                        data -= 1
+                        if data in range(len(self.mapping)):
+                            key_name = self.mapping[data]
+                            logger.debug("Maps to valid key: {}".format(key_name))
+                            self.send_key(key_name)
+                        else:
+                            logger.info("Unknown data arrived: {}".format(data))
                     else:
                         logger.warning("Received 0 from keypad though the interrupt has been triggered!")
                         sleep(0.1)
