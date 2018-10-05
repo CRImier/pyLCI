@@ -40,18 +40,18 @@ class InputDevice(InputSkeleton):
     ]
 
     def __init__(self, addr = 0x12, bus = 1, int_pin = 16, **kwargs):
-        """Initialises the ``InputDevice`` object.  
-                                                                               
-        Kwargs:                                                                  
-                                                                                 
+        """Initialises the ``InputDevice`` object.
+
+        Kwargs:
+
             * ``bus``: I2C bus number.
             * ``addr``: I2C address of the device.
-            * ``int_pin``: GPIO pin for interrupt mode. 
+            * ``int_pin``: GPIO pin for interrupt mode.
 
         """
         self.bus_num = bus
         self.bus = smbus.SMBus(self.bus_num)
-        if type(addr) in [str, unicode]:
+        if isinstance(addr, basestring):
             addr = int(addr, 16)
         self.addr = addr
         self.int_pin = int_pin
@@ -69,7 +69,7 @@ class InputDevice(InputSkeleton):
         """Runs either interrupt-driven or polling loop."""
         self.stop_flag = False
         if self.int_pin is None:
-            self.loop_polling()
+            self.loop_polling() # Actually... it's not implemented =D
         else:
             self.loop_interrupts()
 
@@ -80,8 +80,10 @@ class InputDevice(InputSkeleton):
         GPIO.setup(self.int_pin, GPIO.IN)
         while not self.stop_flag:
             while GPIO.input(self.int_pin) == False and self.enabled:
+                logger.debug("GPIO low, reading data")
                 try:
                     data = self.bus.read_byte(self.addr)
+                    logger.debug("Received {:#010b}".format(data))
                 except IOError:
                     logger.error("Can't get data from keypad!")
                 else:
