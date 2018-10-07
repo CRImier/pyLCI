@@ -32,23 +32,27 @@ class DatePicker(BaseUIElement):
 
 	def move_right(self):
 		if self.selected_option[0] < 6:
-			self.selected_option[0] += 1
-		self.refresh()
+			if self._check_movable_field(self.selected_option[0]+1, self.selected_option[1]):
+				self.selected_option[0] += 1
+				self.refresh()
 
 	def move_left(self):
 		if self.selected_option[0] > 0:
-			self.selected_option[0] -= 1
-		self.refresh()
+			if self._check_movable_field(self.selected_option[0]-1, self.selected_option[1]):
+				self.selected_option[0] -= 1
+				self.refresh()
 
 	def move_up(self):
 		if self.selected_option[1] > 0:
-			self.selected_option[1] -= 1
-		self.refresh()
+			if self._check_movable_field(self.selected_option[0], self.selected_option[1]-1):
+				self.selected_option[1] -= 1
+				self.refresh()
 
 	def move_down(self):
 		if self.selected_option[1] < 4:
-			self.selected_option[1] += 1
-		self.refresh()
+			if self._check_movable_field(self.selected_option[0], self.selected_option[1]+1):
+				self.selected_option[1] += 1
+				self.refresh()
 
 	def accept_value(self):
 		pass
@@ -60,8 +64,6 @@ class DatePicker(BaseUIElement):
 		month_year_text_bounds = self.c.get_text_bounds(self.year_month)
 		centered_cords = self.c.get_centered_text_bounds(self.year_month)
 		self.c.text(self.year_month, (centered_cords[0], 0))
-
-		date = 1
 
 		# Draw calendar grid
 		step_width = self.c.width / 7
@@ -109,4 +111,10 @@ class DatePicker(BaseUIElement):
 
 	def refresh(self):
 		self.draw_calendar()
+
+	def _check_movable_field(self, x, y):
+		if self.calendar_grid[x+y*7] != -1:
+			return True
+		else:
+			return False
 
