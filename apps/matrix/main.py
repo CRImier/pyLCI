@@ -31,6 +31,7 @@ class MatrixClientApp(ZeroApp):
 		self.stored_messages = {}
 		self.messages_menu = None
 		self.active_room = ""
+		self.seen_events = []
 
 		self.logger = setup_logger(__name__, "info")
 
@@ -181,6 +182,10 @@ class MatrixClientApp(ZeroApp):
 
 	# Used as callback for the room listeners
 	def _on_message(self, room, event):
+		if event["event_id"] in self.seen_events:
+			self.logger.debug("Event {} seen, ignoring".format(event["event_id"]))
+			return
+		self.seen_events.append(event["event_id"])
 		self.logger.debug(u"New event: {}".format(event['type']))
 		event_type = event.get('type', "not_a_defined_event")
 		# Check if a user joined the room
@@ -220,9 +225,10 @@ class MatrixClientApp(ZeroApp):
 			self.messages_menu.refresh()
 
 	def _add_new_message(self, room_id, new_message):
-		# Check whether it's a duplicate
+		# Check whether it's a duplicate - shouldn't trigger because of the deduplication
 		for m in self.stored_messages[room_id]['events']:
 			if m['id'] == new_message['id']:
+				logger.error("Message ID check triggered despite deduplication")
 				return
 
 		self.stored_messages[room_id]['events'].append(new_message)
