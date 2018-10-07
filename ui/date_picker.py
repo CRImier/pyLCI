@@ -16,7 +16,7 @@ class DatePicker(BaseUIElement):
 
 		self.c = Canvas(self.o)
 
-		# Top - Left cell is (1, 1)
+		# Top-left cell is (1, 1)
 		self.selected_option = {'x': 1, 'y': 1}
 
 		self.year_month = "2018 - Oct"
@@ -94,8 +94,8 @@ class DatePicker(BaseUIElement):
 		self.c.text(self.year_month, (centered_cords[0], 0))
 
 		# Draw calendar grid
-		step_width = self.c.width / 7
-		step_height = (self.c.height - month_year_text_bounds[1]) / 5
+		step_width = self.c.width / self.GRID_WIDTH
+		step_height = (self.c.height - month_year_text_bounds[1]) / self.GRID_HEIGHT
 
 		for x in range(step_width, self.c.width-step_width, step_width):
 			self.c.line((x+1, month_year_text_bounds[1], x+1, step_height*6))
@@ -119,15 +119,15 @@ class DatePicker(BaseUIElement):
 
 			date_text_bounds = self.c.get_text_bounds(str(date))
 
-			x_cord = (i%7)*step_width+((step_width-date_text_bounds[0])/2)
-			y_cord = (i // 7)*step_height+step_height+((step_height-date_text_bounds[1])/2)
+			x_cord = (i%self.GRID_WIDTH)*step_width+((step_width-date_text_bounds[0])/2)
+			y_cord = (i//self.GRID_WIDTH)*step_height+step_height+((step_height-date_text_bounds[1])/2)
 
 			self.c.text(str(date), (x_cord+1, y_cord+1))
 
 			i += 1
 
 		# Assign -1 to empty cells
-		for i in range(35-i):
+		for i in range(self.GRID_WIDTH*self.GRID_HEIGHT-i):
 			self.calendar_grid.append(-1)
 
 		# Highlight selected option
@@ -142,7 +142,7 @@ class DatePicker(BaseUIElement):
 
 	# Check for empty cells
 	def _check_movable_field(self, x, y):
-		if self.calendar_grid[(x-1)+(y-1)*7] != -1:
+		if self.calendar_grid[(x-1)+(y-1)*self.GRID_WIDTH] != -1:
 			return True
 		else:
 			return False
