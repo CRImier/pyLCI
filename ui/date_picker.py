@@ -6,12 +6,18 @@ from canvas import Canvas
 
 class DatePicker(BaseUIElement):
 
+	# Grid dimensions
+	GRID_WIDTH = 7
+	GRID_HEIGHT = 5
+
 	def __init__(self, i, o, name="DatePicker"):
 
 		BaseUIElement.__init__(self, i, o, name)
 
 		self.c = Canvas(self.o)
-		self.selected_option = [0, 0]
+
+		# Top - Left cell is (1, 1)
+		self.selected_option = {'x': 1, 'y': 1}
 
 		self.year_month = "2018 - Oct"
 		self.calendar_grid = []
@@ -31,49 +37,49 @@ class DatePicker(BaseUIElement):
 		sleep(0.1)
 
 	def move_right(self):
-		if self.selected_option[0] < 6:
-			if self._check_movable_field(self.selected_option[0]+1, self.selected_option[1]):
-				self.selected_option[0] += 1
+		if self.selected_option['x'] < self.GRID_WIDTH:
+			if self._check_movable_field(self.selected_option['x']+1, self.selected_option['y']):
+				self.selected_option['x'] += 1
 				self.refresh()
 
-		elif self.selected_option[0] == 6 and self.selected_option[1] < 4:
-			if self._check_movable_field(0, self.selected_option[1]+1):
-				self.selected_option[0] = 0
-				self.selected_option[1] += 1
+		elif self.selected_option['x'] == self.GRID_WIDTH and self.selected_option['y'] < self.GRID_HEIGHT:
+			if self._check_movable_field(1, self.selected_option['y']+1):
+				self.selected_option['x'] = 1
+				self.selected_option['y'] += 1
 				self.refresh()
 
 	def move_left(self):
-		if self.selected_option[0] > 0:
-			if self._check_movable_field(self.selected_option[0]-1, self.selected_option[1]):
-				self.selected_option[0] -= 1
+		if self.selected_option['x'] > 1:
+			if self._check_movable_field(self.selected_option['x']-1, self.selected_option['y']):
+				self.selected_option['x'] -= 1
 				self.refresh()
 
-		elif self.selected_option[0] == 0 and self.selected_option[1] > 0:
-			if self._check_movable_field(0, self.selected_option[1]-1):
-				self.selected_option[0] = 6
-				self.selected_option[1] -= 1
+		elif self.selected_option['x'] == 1 and self.selected_option['y'] > 1:
+			if self._check_movable_field(1, self.selected_option['y']-1):
+				self.selected_option['x'] = self.GRID_WIDTH
+				self.selected_option['y'] -= 1
 				self.refresh()
 
 	def move_up(self):
-		if self.selected_option[1] > 0:
-			if self._check_movable_field(self.selected_option[0], self.selected_option[1]-1):
-				self.selected_option[1] -= 1
+		if self.selected_option['y'] > 1:
+			if self._check_movable_field(self.selected_option['x'], self.selected_option['y']-1):
+				self.selected_option['y'] -= 1
 				self.refresh()
 
-		elif self.selected_option[1] == 0:
-			if self._check_movable_field(self.selected_option[0], 4):
-				self.selected_option[1] = 4
+		elif self.selected_option['y'] == 1:
+			if self._check_movable_field(self.selected_option['x'], self.GRID_HEIGHT):
+				self.selected_option['y'] = self.GRID_HEIGHT
 				self.refresh()
 
 	def move_down(self):
-		if self.selected_option[1] < 4:
-			if self._check_movable_field(self.selected_option[0], self.selected_option[1]+1):
-				self.selected_option[1] += 1
+		if self.selected_option['y'] < self.GRID_HEIGHT:
+			if self._check_movable_field(self.selected_option['x'], self.selected_option['y']+1):
+				self.selected_option['y'] += 1
 				self.refresh()
 
-		elif self.selected_option[1] == 4:
-			if self._check_movable_field(self.selected_option[0], 0):
-				self.selected_option[1] = 0
+		elif self.selected_option['y'] == self.GRID_HEIGHT:
+			if self._check_movable_field(self.selected_option['x'], 1):
+				self.selected_option['y'] = 1
 				self.refresh()
 
 	def accept_value(self):
@@ -125,8 +131,8 @@ class DatePicker(BaseUIElement):
 			self.calendar_grid.append(-1)
 
 		# Highlight selected option
-		selected_x = self.selected_option[0]*step_width
-		selected_y = self.selected_option[1]*step_height+step_height
+		selected_x = (self.selected_option['x']-1)*step_width
+		selected_y = (self.selected_option['y']-1)*step_height+step_height
 		self.c.invert_rect((selected_x+1, selected_y+1, selected_x+step_width+1, selected_y+step_height))
 
 		self.c.display()
@@ -136,7 +142,7 @@ class DatePicker(BaseUIElement):
 
 	# Check for empty cells
 	def _check_movable_field(self, x, y):
-		if self.calendar_grid[x+y*7] != -1:
+		if self.calendar_grid[(x-1)+(y-1)*7] != -1:
 			return True
 		else:
 			return False
