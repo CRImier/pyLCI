@@ -173,7 +173,7 @@ class MatrixClientApp(ZeroApp):
 	def display_single_message(self, msg, author, unix_time):
 		full_msg = "{0}\n{1}\n\n".format(strftime("%m-%d %H:%M", localtime(unix_time / 1000)), rfa(author))
 
-		for line in wrap(msg, 24):
+		for line in wrap(msg, self.o.cols):
 			full_msg += rfa(line)
 			full_msg += "\n"
 
