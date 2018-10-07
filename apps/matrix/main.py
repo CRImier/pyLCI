@@ -12,6 +12,7 @@ More information: https://github.com/matrix-org/matrix-python-sdk/issues/100#iss
 
 from time import sleep, strftime, localtime
 from textwrap import wrap
+from threading import Event
 
 from apps import ZeroApp
 from ui import Listbox, PrettyPrinter as Printer, NumpadCharInput, Menu, LoadingIndicator, TextReader, UniversalInput, MessagesMenu, rfa, MenuExitException
@@ -32,6 +33,7 @@ class MatrixClientApp(ZeroApp):
 		self.messages_menu = None
 		self.active_room = ""
 		self.seen_events = []
+		self.has_processed_new_events = Event()
 
 		self.logger = setup_logger(__name__, "info")
 
@@ -166,7 +168,7 @@ class MatrixClientApp(ZeroApp):
 
 		# Create a menu to display the messages
 		self.messages_menu = MessagesMenu(self._get_messages_menu_contents(room.room_id), self.i, self.o, name="Matrix MessageMenu for {}".format(room_name),
-			entry_height=1, top_callback=lambda x=room: self._handle_messages_top(x))
+			entry_height=1, load_more_callback=lambda x=room: self._handle_messages_top(x))
 
 		self.messages_menu.activate()
 
@@ -223,6 +225,10 @@ class MatrixClientApp(ZeroApp):
 		if self.active_room == room.room_id:
 			self.messages_menu.set_contents(self._get_messages_menu_contents(room.room_id))
 			self.messages_menu.refresh()
+		# Setting flag - if not already set
+		if not self.has_processed_new_events.isSet():
+			self.logger.debug("New event processed, setting flag")
+		self.has_processed_new_events.set()
 
 	def _add_new_message(self, room_id, new_message):
 		# Check whether it's a duplicate - shouldn't trigger because of the deduplication
@@ -249,9 +255,15 @@ class MatrixClientApp(ZeroApp):
 	# Callback for MessagesMenu
 	def _handle_messages_top(self, room):
 		messages_to_load = 5
-
-		room.backfill_previous_messages(limit=self.stored_messages[room.room_id]["backfilled"]+5, reverse=True, num_of_messages=messages_to_load)
-		self.stored_messages[room.room_id]["backfilled"] += messages_to_load
-
-
-
+		self.has_processed_new_events.clear()
+		try:
+			room.backfill_previous_messages(limit=self.stored_messages[room.room_id]["backfilled"]+messages_to_load, reverse=True, num_of_messages=messages_to_load)
+			self.stored_messages[room.room_id]["backfilled"] += messages_to_load
+		except:
+			self.logger.exception("Couldn't load previous messages!")
+			return False
+		else:
+			if self.has_processed_new_events.isSet():
+				self.has_processed_new_events.clear()
+				return True
+			return False
