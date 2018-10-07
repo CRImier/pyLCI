@@ -61,14 +61,14 @@ class MatrixClientApp(ZeroApp):
 		if not logged_in_with_token:
 
 			# Get the required user data
-			username = UniversalInput(self.i, self.o, message="Enter username", name="username_dialog").activate()
+			username = UniversalInput(self.i, self.o, message="Enter username", name="Matrix app username dialog").activate()
 			if not username:
 				return False
 
 			# Create a matrix user id from the username, currently only ids on matrix.org are possible
 			username = "@{}:matrix.org".format(username)
 
-			password = UniversalInput(self.i, self.o, message="Enter password", name="password_dialog").activate()
+			password = UniversalInput(self.i, self.o, message="Enter password", name="Matrix app password dialog").activate()
 			if not username:
 				return False
 
@@ -131,22 +131,22 @@ class MatrixClientApp(ZeroApp):
 				lambda x=current_room: self.write_message(x)
 			])
 
-                menu_contents.append(["Settings", self.show_settings])
-		Menu(menu_contents, self.i, self.o).activate()
+		menu_contents.append(["Settings", self.show_settings])
+		Menu(menu_contents, self.i, self.o, name="Matrix app main menu").activate()
 
-        def show_settings(self):
-            mc = [["Log out", self.logout]]
-            Menu(mc, self.i, self.o, catch_exit=False).activate()
+	def show_settings(self):
+		mc = [["Log out", self.logout]]
+		Menu(mc, self.i, self.o, catch_exit=False, name="Matrix app settings menu").activate()
 
-        def logout(self):
-            self.config["token"] = ''
-            self.config["username"] = ''
-            self.save_config()
-            raise MenuExitException
+	def logout(self):
+		self.config["token"] = ''
+		self.config["username"] = ''
+		self.save_config()
+		raise MenuExitException
 
 	# Creates a new screen with an Input to write a message
 	def write_message(self, room):
-		message = UniversalInput(self.i, self.o, message="Message", name="message_dialog").activate()
+		message = UniversalInput(self.i, self.o, message="Message", name="Matrix app message input").activate()
 		if message is None:
 			return False
 
@@ -155,7 +155,8 @@ class MatrixClientApp(ZeroApp):
 
 	# Display all messages of a specific room
 	def display_messages(self, room):
-		self.logger.debug(u"Viewing room: {}".format(room.display_name))
+		room_name = rfa(room.display_name)
+		self.logger.debug(u"Viewing room: {}".format(room_name))
 
 		# Set the currently active room to this room, important for adding messages and refreshing the menu
 		self.active_room = room.room_id
@@ -163,7 +164,7 @@ class MatrixClientApp(ZeroApp):
 		cb = lambda x=room: self._handle_messages_top(x)
 
 		# Create a menu to display the messages
-		self.messages_menu = MessagesMenu(self._get_messages_menu_contents(room.room_id), self.i, self.o, name="matrix_messages_menu", 
+		self.messages_menu = MessagesMenu(self._get_messages_menu_contents(room.room_id), self.i, self.o, name="Matrix MessageMenu for {}".format(room_name),
 			entry_height=1, top_callback=lambda x=room: self._handle_messages_top(x))
 
 		self.messages_menu.activate()
@@ -176,14 +177,12 @@ class MatrixClientApp(ZeroApp):
 			full_msg += rfa(line)
 			full_msg += "\n"
 
-		TextReader(full_msg, self.i, self.o).activate()
+		TextReader(full_msg, self.i, self.o, name="Matrix message display menu").activate()
 
 	# Used as callback for the room listeners
 	def _on_message(self, room, event):
 		self.logger.debug(u"New event: {}".format(event['type']))
-
 		event_type = event.get('type', "not_a_defined_event")
-
 		# Check if a user joined the room
 		if event_type == "m.room.member":
 			if event.get('membership', None) == "join":
@@ -213,7 +212,7 @@ class MatrixClientApp(ZeroApp):
 					})
 
 		elif event_type == "not_a_defined_event":
-			self.logger.warning("Undefined event")
+			self.logger.warning("Unknown event: {}".format(event))
 
 		# Update the current view if required
 		if self.active_room == room.room_id:
