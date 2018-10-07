@@ -36,10 +36,22 @@ class DatePicker(BaseUIElement):
 				self.selected_option[0] += 1
 				self.refresh()
 
+		elif self.selected_option[0] == 6 and self.selected_option[1] < 4:
+			if self._check_movable_field(0, self.selected_option[1]+1):
+				self.selected_option[0] = 0
+				self.selected_option[1] += 1
+				self.refresh()
+
 	def move_left(self):
 		if self.selected_option[0] > 0:
 			if self._check_movable_field(self.selected_option[0]-1, self.selected_option[1]):
 				self.selected_option[0] -= 1
+				self.refresh()
+
+		elif self.selected_option[0] == 0 and self.selected_option[1] > 0:
+			if self._check_movable_field(0, self.selected_option[1]-1):
+				self.selected_option[0] = 6
+				self.selected_option[1] -= 1
 				self.refresh()
 
 	def move_up(self):
@@ -48,10 +60,20 @@ class DatePicker(BaseUIElement):
 				self.selected_option[1] -= 1
 				self.refresh()
 
+		elif self.selected_option[1] == 0:
+			if self._check_movable_field(self.selected_option[0], 4):
+				self.selected_option[1] = 4
+				self.refresh()
+
 	def move_down(self):
 		if self.selected_option[1] < 4:
 			if self._check_movable_field(self.selected_option[0], self.selected_option[1]+1):
 				self.selected_option[1] += 1
+				self.refresh()
+
+		elif self.selected_option[1] == 4:
+			if self._check_movable_field(self.selected_option[0], 0):
+				self.selected_option[1] = 0
 				self.refresh()
 
 	def accept_value(self):
@@ -112,6 +134,7 @@ class DatePicker(BaseUIElement):
 	def refresh(self):
 		self.draw_calendar()
 
+	# Check for empty cells
 	def _check_movable_field(self, x, y):
 		if self.calendar_grid[x+y*7] != -1:
 			return True
