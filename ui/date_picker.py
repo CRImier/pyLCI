@@ -74,7 +74,6 @@ class DatePicker(BaseUIElement):
 
 		# Draw dates
 		first_day, _ = calendar.monthrange(2018, 10)
-		print(first_day)
 
 		i = first_day
 		for date in self.cal.itermonthdays(2018, 10):
@@ -89,17 +88,6 @@ class DatePicker(BaseUIElement):
 			self.c.text(str(date), (x_cord+1, y_cord+1))
 
 			i += 1
-
-		# for y in range(5):
-		# 	for x in range(7):
-		# 		date_text_bounds = self.c.get_text_bounds(str(date))
-		# 		x_cord = x*step_width+((step_width-date_text_bounds[0])/2)
-		# 		y_cord = y*step_height+step_height+((step_height-date_text_bounds[1])/2)
-
-		# 		self.c.text(str(date), (x_cord+1, y_cord+1))
-
-		# 		date = date % 31
-		# 		date += 1
 
 		# Highlight selected option
 		selected_x = self.selected_option[0]*step_width
