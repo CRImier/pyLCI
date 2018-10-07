@@ -179,9 +179,12 @@ class MessagesMenu(Menu):
     def before_activate(self):
         Menu.before_activate(self)
         self.pointer = len(self.contents) - 2
+        if self.contents: # Not empty
+		self.add_load_more_marker()
 
     def add_load_more_marker(self):
-        self.contents = [self.load_more_marker] + self.contents
+	if [self.load_more_marker] not in self.contents:
+	        self.contents = [self.load_more_marker] + self.contents
 
     def remove_load_more_marker(self):
         while self.load_more_marker in self.contents:
