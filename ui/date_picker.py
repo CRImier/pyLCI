@@ -14,6 +14,7 @@ class DatePicker(BaseUIElement):
 		self.selected_option = [0, 0]
 
 		self.year_month = "2018 - Oct"
+		self.calendar_grid = []
 
 		self.cal = calendar.Calendar()
 	
@@ -75,10 +76,16 @@ class DatePicker(BaseUIElement):
 		# Draw dates
 		first_day, _ = calendar.monthrange(2018, 10)
 
+		# Assign -1 to empty cells
+		for i in range(first_day):
+			self.calendar_grid.append(-1)
+
 		i = first_day
 		for date in self.cal.itermonthdays(2018, 10):
 			if date == 0:
 				continue
+
+			self.calendar_grid.append(date)
 
 			date_text_bounds = self.c.get_text_bounds(str(date))
 
@@ -88,6 +95,10 @@ class DatePicker(BaseUIElement):
 			self.c.text(str(date), (x_cord+1, y_cord+1))
 
 			i += 1
+
+		# Assign -1 to empty cells
+		for i in range(35-i):
+			self.calendar_grid.append(-1)
 
 		# Highlight selected option
 		selected_x = self.selected_option[0]*step_width
