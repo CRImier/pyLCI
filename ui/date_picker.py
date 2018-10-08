@@ -10,6 +10,8 @@ class DatePicker(BaseUIElement):
 	GRID_WIDTH = 7
 	GRID_HEIGHT = 5
 
+	MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
 	def __init__(self, i, o, name="DatePicker"):
 
 		BaseUIElement.__init__(self, i, o, name)
