@@ -70,11 +70,17 @@ class DatePicker(BaseUIElement):
 			if self._check_movable_field(self.selected_option['x'], self.GRID_HEIGHT):
 				self.selected_option['y'] = self.GRID_HEIGHT
 				self.refresh()
+			else:
+				self.selected_option['y'] = self.GRID_HEIGHT-1
+				self.refresh()
 
 	def move_down(self):
 		if self.selected_option['y'] < self.GRID_HEIGHT:
 			if self._check_movable_field(self.selected_option['x'], self.selected_option['y']+1):
 				self.selected_option['y'] += 1
+				self.refresh()
+			else:
+				self.selected_option['y'] = 1
 				self.refresh()
 
 		elif self.selected_option['y'] == self.GRID_HEIGHT:
