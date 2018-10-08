@@ -69,9 +69,10 @@ class DatePicker(BaseUIElement):
 	def draw_calendar(self):
 		self.c.clear()
 
+		# Create the year - month header string
 		year_month = "{} - {}".format(self.MONTH_NAMES[self.current_month-1], self.current_year)
 
-		# Draw 'year - month' at the top
+		# Draw 'year - month' centered at the top of the screen
 		month_year_text_bounds = self.c.get_text_bounds(year_month)
 		centered_cords = self.c.get_centered_text_bounds(year_month)
 		self.c.text(year_month, (centered_cords[0], 0))
@@ -86,6 +87,7 @@ class DatePicker(BaseUIElement):
 			for y in range(step_height, self.c.height, step_height):
 				self.c.line((0, y, self.c.width, y))
 
+		# Draw dates
 		i = self.starting_weekday
 		for date in self.calendar_grid:
 			if date == -1:
@@ -113,20 +115,21 @@ class DatePicker(BaseUIElement):
 	# Moves the cursor
 	def _move_cursor(self, delta_x, delta_y):
 		if self._check_movable_field(self.selected_option['x']+delta_x, self.selected_option['y']+delta_y):
-			self.selected_option['x'] = self.selected_option['x'] + delta_x
+			self.selected_option['x'] += delta_x
 			self.selected_option['y'] += delta_y
 			self.refresh()
 
-	# Check for empty cells
+	# Check for whether the desired movement is viable
 	def _check_movable_field(self, new_x, new_y):
+		# New movement would definitely be out of grid
 		if (new_x-1)+(new_y-1)*self.GRID_WIDTH >= len(self.calendar_grid):
 			return False
 
-		if self.calendar_grid[(new_x-1)+(new_y-1)*self.GRID_WIDTH] != -1 and \
-			new_x <= self.GRID_WIDTH and \
-			new_x >= 1 and \
-			new_y <= self.GRID_HEIGHT and \
-			new_y >= 1:
+		if (	 self.calendar_grid[(new_x-1)+(new_y-1)*self.GRID_WIDTH] != -1
+			 and new_x <= self.GRID_WIDTH
+			 and new_x >= 1
+			 and new_y <= self.GRID_HEIGHT
+			 and new_y >= 1):
 
 			return True
 		else:
