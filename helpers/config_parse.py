@@ -80,16 +80,16 @@ def save_config_gen(path):
         write_config(config, path)
     return save_config
 
-def save_config_method_gen(obj, path):
+def save_config_method_gen(obj, path, config_attr_name='config'):
     """
     A helper function, generates a "save config" method with the
     config path already set (to decrease verbosity) and the config
     attribute name hard-coded. This is the ``save_config_gen``
     equivalent for class-based apps.
     """
-    def save_config(self, config_attr_name='config'):
+    def method(self):
         write_config(getattr(self, config_attr_name), path)
-    return MethodType(save_config, obj)
+    return MethodType(method, obj)
 
 if __name__ == "__main__":
     config = read_config("../config.json")
