@@ -18,13 +18,13 @@ class DatePicker(BaseUIElement):
 
 		self.c = Canvas(self.o)
 
-		# Top-left cell is (1, 1)
-		self.selected_option = {'x': 1, 'y': 1}
-
+		# Attributes to store the current values
 		self.current_month = 2
 		self.current_year = 2018
 		self.starting_weekday = 1
 
+		# Top-left cell is (1, 1)
+		self.selected_option = {'x': 1, 'y': 1}
 		self.calendar_grid = []
 
 		self.cal = calendar.Calendar()
@@ -45,6 +45,7 @@ class DatePicker(BaseUIElement):
 	def idle_loop(self):
 		sleep(0.1)
 
+	# Move the cursor around
 	def move_right(self):
 		self._move_cursor(1, 0)
 
@@ -57,12 +58,14 @@ class DatePicker(BaseUIElement):
 	def move_down(self):
 		self._move_cursor(0, 1)
 
+	# Switch between months - TODO
 	def next_month(self):
 		pass
 
 	def previous_month(self):
 		pass
 
+	# Accept the currently selected value - TODO
 	def accept_value(self):
 		pass
 
@@ -78,9 +81,11 @@ class DatePicker(BaseUIElement):
 		self.c.text(year_month, (centered_cords[0], 0))
 
 		# Draw calendar grid
+		# Calculate margin between vertical/horizontal lines
 		step_width = self.c.width / self.GRID_WIDTH
 		step_height = (self.c.height - month_year_text_bounds[1]) / self.GRID_HEIGHT
 
+		# Draw lines
 		for x in range(step_width, self.c.width-step_width, step_width):
 			self.c.line((x+1, month_year_text_bounds[1], x+1, step_height*6))
 
@@ -95,11 +100,13 @@ class DatePicker(BaseUIElement):
 
 			date_text_bounds = self.c.get_text_bounds(str(date))
 
+			# Calculate the coordinates for the date string
 			x_cord = (i%self.GRID_WIDTH)*step_width+((step_width-date_text_bounds[0])/2)
 			y_cord = (i//self.GRID_WIDTH)*step_height+step_height+((step_height-date_text_bounds[1])/2)
 
 			self.c.text(str(date), (x_cord+1, y_cord+1))
 
+			# Increase the counter and continue to the next date, import for positioning
 			i += 1
 
 		# Highlight selected option
@@ -119,7 +126,7 @@ class DatePicker(BaseUIElement):
 			self.selected_option['y'] += delta_y
 			self.refresh()
 
-	# Check for whether the desired movement is viable
+	# Check whether the desired movement is viable
 	def _check_movable_field(self, new_x, new_y):
 		# New movement would definitely be out of grid
 		if (new_x-1)+(new_y-1)*self.GRID_WIDTH >= len(self.calendar_grid):
@@ -135,6 +142,7 @@ class DatePicker(BaseUIElement):
 		else:
 			return False
 
+	# Set the current mont/year to display
 	def _set_month_year(self, month, year):
 		self.current_month = month
 		self.current_year = year
