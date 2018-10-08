@@ -9,7 +9,6 @@ mock
 pydbus
 pyotp
 jsonrpclib
-#git+https://github.com/poljar/python-olm.git#egg=python-olm-dev
 unidecode
 canonicaljson
 appdirs
