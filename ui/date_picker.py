@@ -19,7 +19,7 @@ class DatePicker(BaseUIElement):
 		self.c = Canvas(self.o)
 
 		# Attributes to store the current values
-		self.current_month = 2
+		self.current_month = 1
 		self.current_year = 2018
 		self.starting_weekday = 1
 
@@ -29,7 +29,7 @@ class DatePicker(BaseUIElement):
 
 		self.cal = calendar.Calendar()
 
-		self._set_month_year(2, 2018)
+		self._set_month_year(1, 2018)
 	
 	def generate_keymap(self):
 		return {
@@ -151,6 +151,7 @@ class DatePicker(BaseUIElement):
 		first_day, _ = calendar.monthrange(self.current_year, self.current_month)
 		self.starting_weekday = first_day
 
+		i = 0
 		# Assign -1 to empty cells
 		for i in range(first_day):
 			self.calendar_grid.append(-1)
