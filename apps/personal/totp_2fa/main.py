@@ -1,17 +1,18 @@
 menu_name = "2FA TOTP"
 
 import pyotp
- 
+
 from ui import Menu, PrettyPrinter as Printer, UniversalInput, Canvas, Refresher, DialogBox
 from helpers import read_or_create_config, local_path_gen, save_config_gen
 
 local_path = local_path_gen(__name__)
 config_path = local_path("config.json")
-config = read_or_create_config(config_path, '{"secrets":[]}', menu_name)
+default_config = '{"secrets":[]}'
 save_config = save_config_gen(config_path)
 
 i = None
 o = None
+config = None
 
 def init_app(input, output):
     global i, o
@@ -69,11 +70,13 @@ def delete_config_entry(name, secret, r):
         r.deactivate()
 
 # Main menu
-    
+
 def contents_hook():
     contents = [[name, lambda x=name, y=secret: show_totp(x, y)] for name, secret in config["secrets"]]
     contents.append(["Add TOTP...", add_secret])
     return contents
 
 def callback():
+    global config
+    config = read_or_create_config(config_path, default_config, menu_name)
     Menu([], i, o, "TOTP app main menu", contents_hook=contents_hook).activate()

@@ -81,10 +81,10 @@ class AppManager(object):
             subdir_path, app_dirname = os.path.split(app_path)
             ordering = self.get_ordering(subdir_path)
             menu_name = app.menu_name if hasattr(app, "menu_name") else app_dirname.capitalize()
-            self.bind_callback(app, app_path, menu_name, ordering, subdir_path)
+            self.bind_context(app, app_path, menu_name, ordering, subdir_path)
         return base_menu
 
-    def bind_callback(self, app, app_path, menu_name, ordering, subdir_path):
+    def bind_context(self, app, app_path, menu_name, ordering, subdir_path):
         if hasattr(app, "callback") and callable(app.callback):  # for function based apps
             app_callback = app.callback
         elif hasattr(app, "on_start") and callable(app.on_start):  # for class based apps
@@ -92,9 +92,10 @@ class AppManager(object):
         else:
             logger.debug("App \"{}\" has no callback; loading silently".format(menu_name))
             return
-        self.cm.register_context_target(app_path, app_callback)
         menu_callback = lambda: self.cm.switch_to_context(app_path)
-        #App callback is available and wrapped, inserting
+        self.cm.register_context_target(app_path, app_callback)
+        self.cm.set_menu_name(app_path, menu_name)
+        # App callback is available and wrapped, inserting
         subdir_menu = self.subdir_menus[subdir_path]
         subdir_menu_contents = self.insert_by_ordering([menu_name, menu_callback], os.path.split(app_path)[1],
                                                        subdir_menu.contents, ordering)

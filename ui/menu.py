@@ -1,3 +1,5 @@
+from threading import Event
+
 from base_list_ui import BaseListBackgroundableUIElement, to_be_foreground, TextView, EightPtView, SixteenPtView
 from helpers import setup_logger
 
@@ -11,8 +13,8 @@ class MenuExitException(Exception):
 
 
 class Menu(BaseListBackgroundableUIElement):
-    """Implements a menu which can be used to navigate through your application, 
-    output a list of values or select actions to perform. Is one of the most used 
+    """Implements a menu which can be used to navigate through your application,
+    output a list of values or select actions to perform. Is one of the most used
     UI elements, used both in system core and in most of the applications."""
 
     pointer = 0  #: number of currently selected menu entry, starting from 0.
@@ -69,11 +71,11 @@ class Menu(BaseListBackgroundableUIElement):
         if callable(self.contents_hook):
             self.set_contents(self.contents_hook())
 
-    def return_value(self):
+    def get_return_value(self):
         if self.exit_exception:
             if not self.catch_exit:
+                logger.info("{} received MenuExitException, raising it further".format(self.name))
                 raise MenuExitException
-        return True
 
     @to_be_foreground
     def select_entry(self, callback_number=1):
@@ -159,3 +161,59 @@ class MeSixteenPtView(MenuRenderingMixin, SixteenPtView):
             y = (i * self.charheight - 1) if i != 0 else 0
             c.text(line, (left_offset, y), font=font)
             self.draw_triangle(c, i)
+
+class MessagesMenu(Menu):
+    """A modified version of the Menu class for displaying a list of messages and loading new ones"""
+
+    load_more_possible = True
+    load_more_marker = ["Load more"]
+
+    def __init__(self, *args, **kwargs):
+        self.load_more_callback = kwargs.pop("load_more_callback", None)
+        self.load_more_trigger_point = kwargs.pop("load_more_trigger_point", 0)
+        self.load_more_allow_refresh = Event()
+        self.load_more_allow_refresh.set()
+
+        Menu.__init__(self, *args, **kwargs)
+
+    def before_activate(self):
+        Menu.before_activate(self)
+        self.pointer = len(self.contents) - 2
+        if self.contents: # Not empty
+		self.add_load_more_marker()
+
+    def add_load_more_marker(self):
+	if [self.load_more_marker] not in self.contents:
+	        self.contents = [self.load_more_marker] + self.contents
+
+    def remove_load_more_marker(self):
+        while self.load_more_marker in self.contents:
+            self.contents.remove(self.load_more_marker)
+
+    def load_more(self):
+        self.load_more_allow_refresh.clear()
+        before = len(self.contents)
+	self.remove_load_more_marker()
+        has_loaded_more = self.load_more_callback()
+        if has_loaded_more:
+		self.remove_load_more_marker()
+		self.add_load_more_marker()
+	        after = len(self.contents)
+                logger.info("Loaded {} messages".format(after-before))
+	        self.pointer += (after-before)+1
+	else:
+		self.remove_load_more_marker()
+        self.load_more_allow_refresh.set()
+        self.refresh()
+
+    def refresh(self):
+        if not self.load_more_allow_refresh.isSet():
+            return
+        Menu.refresh(self)
+
+    @to_be_foreground
+    def move_up(self):
+        Menu.move_up(self)
+
+        if self.pointer <= self.load_more_trigger_point:
+            self.load_more()

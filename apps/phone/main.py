@@ -23,7 +23,7 @@ init = None
 phone = None
 
 def answer():
-    #No context switching as for now, so all we can do is 
+    #No context switching as for now, so all we can do is
     #answer call is there's an active one
     try:
         phone.answer()
@@ -96,7 +96,7 @@ def check_modem_connection():
 
 def init_app(input, output):
     global i, o, init
-    i = input; o = output 
+    i = input; o = output
     i.set_maskable_callback("KEY_ANSWER", answer)
     i.set_nonmaskable_callback("KEY_HANGUP", hangup)
     try:
@@ -104,7 +104,6 @@ def init_app(input, output):
         os_call(["systemctl", "stop", "serial-getty@ttyAMA0.service"])
     except Exception as e:
         logger.exception(e)
-        #import pdb;pdb.set_trace()
     init = BackgroundRunner(init_hardware)
     init.run()
 
@@ -129,7 +128,7 @@ def callback(counter=0):
             PrettyPrinter("Modem connection failed 3 times", i, o, 1)
     else:
         if not status:
-            PrettyPrinter("Connecting...", i, o, 0)
+            PrettyPrinter("Connecting...", None, o, 0)
             wait_for_connection()
             callback(counter)
         else:

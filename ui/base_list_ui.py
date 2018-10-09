@@ -3,13 +3,12 @@ Best example of such an element is a Menu element - it has menu entries you can 
  when you click on them. """
 
 from copy import copy
-from threading import Event
 from time import sleep
 
 from canvas import Canvas
 from helpers import setup_logger
 from utils import to_be_foreground, clamp_list_index
-
+from base_ui import BaseUIElement
 
 logger = setup_logger(__name__, "warning")
 
@@ -30,7 +29,7 @@ else:
         logger.exception(e)
 
 
-class BaseListUIElement(object):
+class BaseListUIElement(BaseUIElement):
     """This is a base UI element for list-like UI elements.
 
        This UI element has built-in scrolling of entries - if the entry text is longer
@@ -40,31 +39,31 @@ class BaseListUIElement(object):
     pointer = 0
     start_pointer = 0
     in_foreground = False
-    name = ""
     exit_entry = ["Back", "exit"]
 
     config_key = "base_list_ui"
 
     def __init__(self, contents, i, o, name=None, entry_height=1, append_exit=True, exitable=True, scrolling=True,
                  config=None, keymap=None):
-        self.i = i
-        self.o = o
-        self.entry_height = entry_height
-        self.keymap = keymap if keymap else {}
-        self.name = name
-        self.append_exit = append_exit
         self.exitable = exitable
+        self.custom_keymap = keymap if keymap else {}
+        BaseUIElement.__init__(self, i, o, name, input_necessary=True)
+        self.entry_height = entry_height
+        self.append_exit = append_exit
         self.scrolling = {
             "enabled": scrolling,
+            "current_scrollable": False
+        }
+        self.scrolling_defaults = {
             "current_finished": False,
-            "current_scrollable": False,
+            "current_speed": 1,
             "counter": 0,
             "pointer": 0
         }
+        self.reset_scrolling()
         self.config = config if config is not None else global_config
         self.set_view(self.config.get(self.config_key, {}))
         self.set_contents(contents)
-        self.generate_keymap()
 
     def set_views_dict(self):
         self.views = {
@@ -107,7 +106,7 @@ class BaseListUIElement(object):
         self.view = view(self.o, self.entry_height, self)
 
     def get_default_view(self):
-        """Decides on the view to use for UI element when config file has 
+        """Decides on the view to use for UI element when config file has
         no information on it."""
         if "b&w-pixel" in self.o.type:
             return self.views["SixteenPtView"]
@@ -116,58 +115,29 @@ class BaseListUIElement(object):
         else:
             raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
 
-    def before_foreground(self):
-        """Hook for child UI elements. Is called each time to_foreground is called."""
-        pass
-
     def before_activate(self):
-        """Hook for child UI elements, is called each time activate() is called. 
-        Is the perfect place to clear any flags that you don't want to persist 
-        between multiple activations of a single instance of an UI element.
-
-        For a start, resets the ``pointer`` to the ``start_pointer``."""
+        """
+        Hook for child UI elements, meant to be called.
+        For a start, resets the ``pointer`` to the ``start_pointer``.
+        """
         self.pointer = self.start_pointer
 
     def to_foreground(self):
         """ Is called when UI element's ``activate()`` method is used, sets flags
             and performs all the actions so that UI element can display its contents
             and receive keypresses. Also, refreshes the screen."""
-        logger.info("{0} enabled".format(self.name))
-        self.before_foreground()
         self.reset_scrolling()
-        self.in_foreground = True
-        self.view.refresh()
-        self.set_keymap()
+        BaseUIElement.to_foreground(self)
 
     def idle_loop(self):
-        """Contains code which will be executed in UI element's idle loop """
+        """Contains code which will be executed in UI element's idle loop.
+        By default, is just a 0.1 second sleep and a ``scroll()`` call. """
         sleep(0.1)
         self.scroll()
 
-    def activate(self):
-        """ A method which is called when UI element needs to start operating.
-            Is blocking, sets up input&output devices, renders the UI element and
-            waits until self.in_foreground is False, while UI element callbacks
-            are executed from the input listener thread."""
-        logger.info("{0} activated".format(self.name))
-        self.before_activate()
-        self.to_foreground()
-        while self.in_foreground:  # All the work is done in input callbacks
-            self.idle_loop()
-        return_value = self.get_return_value()
-        logger.info("{} exited".format(self.name))
-        return return_value
-
-    def get_return_value(self):
-        """To be overridden by child UI elements. Return value will be returned when
-           UI element's ``activate()`` exits."""
-        return None  # Default value to indicate that no meaningful result was returned
-
-    def deactivate(self):
-        """Sets a flag that signals the UI element's ``activate()`` to return."""
-        self.in_foreground = False
-        self.o.noCursor()
-        logger.info("{} deactivated".format(self.name))
+    @property
+    def is_active(self):
+        return self.in_foreground
 
     # Scroll functions - will likely be moved into a mixin or views later on
 
@@ -176,14 +146,12 @@ class BaseListUIElement(object):
         if self.scrolling["enabled"] and not self.scrolling["current_finished"] and self.scrolling["current_scrollable"]:
             self.scrolling["counter"] += 1
             if self.scrolling["counter"] == 10:
-                self.scrolling["pointer"] += 1
+                self.scrolling["pointer"] += self.scrolling["current_speed"]
                 self.scrolling["counter"] = 0
                 self.view.refresh()
 
     def reset_scrolling(self):
-        self.scrolling["current_finished"] = False
-        self.scrolling["pointer"] = 0
-        self.scrolling["counter"] = 0
+        self.scrolling.update(self.scrolling_defaults)
 
     # Debugging helpers - you can set them as callbacks for keys you don't use
 
@@ -191,11 +159,6 @@ class BaseListUIElement(object):
         """ A debug method. Useful for hooking up to an input event so that
             you can see the representation of current UI element's contents. """
         logger.info(self.contents)
-
-    def print_name(self):
-        """ A debug method. Useful for hooking up to an input event so that
-            you can see which UI element is currently processing input events. """
-        logger.info("Active UI element is {0}".format(self.name))
 
     # Callbacks for moving up and down in the entry list
 
@@ -269,26 +232,30 @@ class BaseListUIElement(object):
 
     # Working with the keymap
 
-    @to_be_foreground
-    def set_keymap(self):
-        """Sets the input device's keycode-to-callback mapping. Re-starts the input device because ofpassing-variables-between-threads issues."""
-        self.i.stop_listen()
-        self.i.set_keymap(self.keymap)
-        self.i.listen()
-
     def generate_keymap(self):
         """Makes the keymap dictionary for the input device."""
         # Has to be in a function because otherwise it will be a SyntaxError
-        self.keymap.update({
-            "KEY_UP": lambda: self.move_up(),
-            "KEY_DOWN": lambda: self.move_down(),
-            "KEY_PAGEUP": lambda: self.page_up(),
-            "KEY_PAGEDOWN": lambda: self.page_down(),
-            "KEY_ENTER": lambda: self.select_entry(),
-            "KEY_RIGHT": lambda: self.process_right_press()
-        })
-        if self.exitable:
-            self.keymap["KEY_LEFT"] = lambda: self.deactivate()
+        return {
+            "KEY_UP": "move_up",
+            "KEY_DOWN": "move_down",
+            "KEY_PAGEUP": "page_up",
+            "KEY_PAGEDOWN": "page_down",
+            "KEY_ENTER": "select_entry",
+            "KEY_RIGHT": "process_right_press"
+        }
+
+    def set_keymap(self, keymap):
+        if self.exitable and self._override_left:
+            keymap["KEY_LEFT"] = "deactivate"
+        # BaseUIElement.process_contents ignores self.exitable
+        # and only honors self._override_left
+        # Let's save it to a temp variable and process the contents!
+        override_left = self._override_left
+        self._override_left = False
+        keymap.update(self.custom_keymap)
+        BaseUIElement.set_keymap(self, keymap)
+        # Restoring self._override_left
+        self._override_left = override_left
 
     def set_contents(self, contents):
         """Sets the UI element contents and triggers pointer recalculation in the view."""
@@ -327,6 +294,10 @@ class BaseListUIElement(object):
             self.contents.append(self.exit_entry)
         logger.debug("{}: contents processed".format(self.name))
 
+    def refresh(self):
+        """ A placeholder to be used for BaseUIElement. """
+        self.view.refresh()
+
 
 class BaseListBackgroundableUIElement(BaseListUIElement):
     """This is a base UI element for list-like UI elements.
@@ -337,65 +308,24 @@ class BaseListBackgroundableUIElement(BaseListUIElement):
        This UI element has built-in scrolling of entries - if the entry text is longer
        than the screen, once the entry is selected, UI element will scroll through its text."""
 
-    def __init__(self, *args, **kwargs):
-        self._in_background = Event()
-        BaseListUIElement.__init__(self, *args, **kwargs)
-
     @property
-    def in_background(self):
-        return self._in_background.isSet()
-
-    @in_background.setter
-    def in_background(self, value):
-        if value == True:
-            self._in_background.set()
-        elif value == False:
-            self._in_background.clear()
-
-    def to_foreground(self):
-        """ Is called when UI element's ``activate()`` method is used, sets flags
-            and performs all the actions so that UI element can display its contents
-            and receive keypresses. Also, refreshes the screen."""
-        self.in_background = True
-        BaseListUIElement.to_foreground(self)
-
-    @to_be_foreground
-    def to_background(self):
-        """ Inhibits all UI element's refreshes, effectively bringing it to background."""
-        self.o.noCursor()
-        self.in_foreground = False
-        logger.debug("{0} disabled".format(self.name))
-
-    def activate(self):
-        """ A method which is called when UI element needs to start operating.
-            Is blocking, sets up input&output devices, renders the UI element and
-            waits until self.in_background is False, while UI element callbacks
-            are executed from the input listener thread."""
-        logger.info("{0} activated".format(self.name))
-        self.before_activate()
-        self.to_foreground()
-        while self.in_background:  # All the work is done in input callbacks
-            self.idle_loop()
-        return_value = self.get_return_value()
-        logger.info("{} exited".format(self.name))
-        return return_value
-
-    def deactivate(self):
-        """Sets a flag that signals the UI element's ``activate()`` to return."""
-        self.in_background = False
-        BaseListUIElement.deactivate(self)
-
+    def is_active(self):
+        return self.in_background
 
 # Views.
 
 class TextView(object):
     first_displayed_entry = 0
-    last_displayed_entry = None
+    scrolling_speed_divisor = 4
 
     def __init__(self, o, entry_height, ui_element):
         self.o = o
         self.entry_height = entry_height
         self.el = ui_element
+        self.setup_scrolling()
+
+    def setup_scrolling(self):
+        self.el.scrolling_defaults["current_speed"] = self.get_fow_width_in_chars()/self.scrolling_speed_divisor
 
     @property
     def in_foreground(self):
@@ -413,32 +343,27 @@ class TextView(object):
         return self.o.rows
 
     def fix_pointers_on_contents_update(self):
-        """Boundary-checks ``pointer``, re-sets ``last`` & ``first_displayed_entry`` pointers
-           and calculates the value for ``last_displayed_entry`` pointer."""
-        self.el.pointer = clamp_list_index(self.el.pointer, self.el.contents)  # Makes sure the pointer isn't >
+        """Boundary-checks ``pointer``, re-sets the ``first_displayed_entry`` pointer."""
         full_entries_shown = self.get_entry_count_per_screen()
         entry_count = len(self.el.contents)
-        self.first_displayed_entry = 0
-        if full_entries_shown > entry_count:  # Display is capable of showing more entries than we have, so the last displayed entry is the last menu entry
-            # There are some free display rows, adjusting last_displayed_entry
-            self.last_displayed_entry = entry_count - 1
-        else:
-            # There are no empty spaces on the display
-            self.last_displayed_entry = full_entries_shown - 1  # We start numbering entries with 0, so 4-row screen would show entries 0-3
-        # print("First displayed entry is {}".format(self.first_displayed_entry))
-        # print("Last displayed entry is {}".format(self.last_displayed_entry))
+
+        new_pointer = clamp_list_index(self.el.pointer, self.el.contents)  # Makes sure the pointer isn't larger than the entry count
+        if new_pointer == self.el.pointer:
+            return # Pointer didn't change from clamping, no action needs to be taken
+
+        self.el.pointer = new_pointer
+        if self.first_displayed_entry < new_pointer - full_entries_shown:
+            self.first_displayed_entry = new_pointer - full_entries_shown
 
     def fix_pointers_on_refresh(self):
+        full_entries_shown = self.get_entry_count_per_screen()
         if self.el.pointer < self.first_displayed_entry:
             logger.debug("Pointer went too far to top, correcting")
-            self.last_displayed_entry -= self.first_displayed_entry - self.el.pointer  # The difference will mostly be 1 but I guess it might be more in case of concurrency issues
             self.first_displayed_entry = self.el.pointer
-        if self.el.pointer > self.last_displayed_entry:
-            logger.debug("Pointer went too far to bottom, correcting")
-            self.first_displayed_entry += self.el.pointer - self.last_displayed_entry
-            self.last_displayed_entry = self.el.pointer
+        while self.el.pointer >= self.first_displayed_entry + full_entries_shown:
+            logger.debug("Pointer went too far to bottom, incrementing first_displayed_entry")
+            self.first_displayed_entry += 1
         logger.debug("First displayed entry is {}".format(self.first_displayed_entry))
-        logger.debug("Last displayed entry is {}".format(self.last_displayed_entry))
 
     def entry_is_active(self, entry_num):
         return entry_num == self.el.pointer
@@ -449,12 +374,38 @@ class TextView(object):
         of them and concatenates them into one big list which it returns.
         |Doesn't support partly-rendering entries yet."""
         displayed_data = []
-        disp_entry_positions = range(self.first_displayed_entry, self.last_displayed_entry + 1)
+        full_entries_shown = self.get_entry_count_per_screen()
+        entries_shown = min(len(self.el.contents), full_entries_shown)
+        disp_entry_positions = range(self.first_displayed_entry, self.first_displayed_entry+entries_shown)
         for entry_num in disp_entry_positions:
             displayed_entry = self.render_displayed_entry_text(entry_num)
             displayed_data += displayed_entry
         logger.debug("Displayed data: {}".format(displayed_data))
         return displayed_data
+
+    def process_active_entry(self, entry):
+        """ This function processes text of the active entry in order to scroll it. """
+        avail_display_chars = (self.get_fow_width_in_chars() * self.entry_height)
+        # Scrolling only works with strings for now
+        # Maybe scrolling should be its own mixin?
+        # Likely, yes.
+        self.el.scrolling["current_scrollable"] = len(entry) > avail_display_chars
+        if not self.el.scrolling["current_scrollable"]:
+            return entry
+        overflow_amount = len(entry) - self.el.scrolling["pointer"] - avail_display_chars
+        if overflow_amount <= -self.el.scrolling["current_speed"]:
+            self.el.scrolling["pointer"] = 0
+            self.el.scrolling["current_finished"] = True
+        elif overflow_amount < 0:
+            # If a pointer is clamped, we still need to display the last part
+            # - without whitespace
+            self.el.scrolling["pointer"] = len(entry) - avail_display_chars
+        if self.el.scrolling["current_scrollable"] and not self.el.scrolling["current_finished"]:
+            entry = entry[self.el.scrolling["pointer"]:]
+        return entry
+
+    def process_inactive_entry(self, entry):
+        return entry
 
     def render_displayed_entry_text(self, entry_num):
         """Renders an UI element entry by its position number in self.contents, determined also by display width, self.entry_height and entry's representation type.
@@ -467,16 +418,11 @@ class TextView(object):
         entry = self.el.contents[entry_num][0]
         active = self.entry_is_active(entry_num)
         display_columns = self.get_fow_width_in_chars()
-        avail_display_chars = (display_columns * self.entry_height)
         if type(entry) in [str, unicode]:
             if active:
-                # Scrolling only works with strings for now
-                # Maybe scrolling should be part of view, too?
-                # Likely, yes.
-                self.el.scrolling["current_scrollable"] = len(entry) > avail_display_chars
-                self.el.scrolling["current_finished"] = len(entry) - self.el.scrolling["pointer"] < avail_display_chars
-                if self.el.scrolling["current_scrollable"] and not self.el.scrolling["current_finished"]:
-                    entry = entry[self.el.scrolling["pointer"]:]
+                entry = self.process_active_entry(entry)
+            else:
+                entry = self.process_inactive_entry(entry)
             rendered_entry.append(entry[:display_columns])  # First part of string displayed
             entry = entry[display_columns:]  # Shifting through the part we just displayed
             for row_num in range(
@@ -516,6 +462,10 @@ class EightPtView(TextView):
     x_scrollbar_offset = 5
     scrollbar_y_offset = 1
 
+    def __init__(self, *args, **kwargs):
+        self.full_width_cursor = kwargs.pop("full_width_cursor", False)
+        TextView.__init__(self, *args, **kwargs)
+
     def get_fow_width_in_chars(self):
         return (self.o.width - self.x_scrollbar_offset) / self.charwidth
 
@@ -529,19 +479,23 @@ class EightPtView(TextView):
         image = self.get_displayed_image()
         self.o.display_image(image)
 
-    def get_scrollbar_top_bottom(self):
-        scrollbar_max_length = self.o.height - (self.scrollbar_y_offset * 2)
+    def scrollbar_needed(self):
+        # No scrollbar if all the entries fit on the screen
+        full_entries_shown = self.get_entry_count_per_screen()
         total_entry_count = len(self.el.contents)
-        entries_before = self.first_displayed_entry
-        entries_after = total_entry_count - self.last_displayed_entry - 1
-        entries_on_screen = total_entry_count - entries_before - entries_after
-        if entries_on_screen >= total_entry_count:
-            # No scrollbar if there are no entries not shown on the screen
+        return total_entry_count > full_entries_shown
+
+    def get_scrollbar_top_bottom(self):
+        if not self.scrollbar_needed():
             return 0, 0
+        full_entries_shown = self.get_entry_count_per_screen()
+        total_entry_count = len(self.el.contents)
+        scrollbar_max_length = self.o.height - (self.scrollbar_y_offset * 2)
+        entries_before = self.first_displayed_entry
         # Scrollbar length per one entry
         length_unit = float(scrollbar_max_length) / total_entry_count
         top = self.scrollbar_y_offset + int(entries_before * length_unit)
-        length = int(entries_on_screen * length_unit)
+        length = int(full_entries_shown * length_unit)
         bottom = top + length
         return top, bottom
 
@@ -567,11 +521,17 @@ class EightPtView(TextView):
         # We might not need to draw the cursor if there are no items present
         if cursor_y is not None:
             c_y = cursor_y * self.charheight + 1
+            if self.full_width_cursor:
+                x2 = c.width-(left_offset-1)
+            else:
+                menu_texts = menu_text[cursor_y:cursor_y+self.entry_height]
+                max_menu_text_len = max([len(t) for t in menu_texts])
+                x2 = self.charwidth * max_menu_text_len + left_offset
             cursor_dims = (
                 left_offset - 1,
                 c_y - 1,
-                self.charwidth * len(menu_text[cursor_y]) + left_offset,
-                c_y + self.charheight - 1
+                x2,
+                c_y + self.charheight*self.entry_height - 1
             )
             c.invert_rect(cursor_dims)
 

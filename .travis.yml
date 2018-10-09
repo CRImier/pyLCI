@@ -2,10 +2,16 @@ language: python
 python:
   - "2.7"
 # command to install dependencies
-script: python -B -m pytest --doctest-modules -v --doctest-ignore-import-errors --ignore=output/drivers --ignore=input/drivers --ignore=apps/hardware_apps/ --ignore=apps/example_apps/fire_detector --ignore=apps/test_hardware --ignore=docs/ --ignore=apps/hardware_apps --ignore=utils/
+install:
+  - pip install -r requirements.txt
+  - pip install codecov pytest-cov
+script:
+  python -B -m pytest --cov=./ --doctest-modules -v --doctest-ignore-import-errors --ignore=output/drivers --ignore=input/drivers --ignore=apps/hardware_apps/ --ignore=apps/example_apps/fire_detector --ignore=apps/test_hardware --ignore=docs/ --ignore=apps/hardware_apps --ignore=utils/ --ignore=libs/
 branches:
   except:
     - test_branch_doug
+after_success:
+  codecov
 notifications:
   irc:
     channels: "chat.freenode.net#ZeroPhone"

@@ -10,8 +10,6 @@ from helpers import setup_logger
 
 import inspect
 
-listener = None
-
 logger = setup_logger(__name__, "warning")
 
 class CallbackException(Exception):
@@ -21,7 +19,7 @@ class CallbackException(Exception):
 
 
 class InputProcessor(object):
-    """A class which listens for input device events and processes the callbacks 
+    """A class which listens for input device events and processes the callbacks
     set in the InputProxy instance for the currently active context."""
     stop_flag = None
     thread_index = 0
@@ -30,25 +28,71 @@ class InputProcessor(object):
     current_proxy = None
     proxy_methods = ["listen", "stop_listen"]
     proxy_attrs = ["available_keys"]
+    proxies = []
 
-    def __init__(self, drivers, context_manager):
+    def __init__(self, initial_drivers, context_manager):
         self.global_keymap = {}
-        self.drivers = drivers
+        self.initial_drivers = initial_drivers
         self.cm = context_manager
         self.queue = Queue.Queue()
         self.available_keys = {}
-        for driver_name, driver in self.drivers.items():
-            driver.send_key = self.receive_key #Overriding the send_key method so that keycodes get sent to InputListener
-            self.available_keys[driver_name] = driver.available_keys
-            driver.start()
+        self.drivers = {}
+        for driver_name, driver in self.initial_drivers.items():
+            # Generating an unique yet human-readable name
+            counter = 0
+            name = "{}-{}".format(driver_name, counter)
+            while name in self.drivers:
+                counter += 1
+                name = "{}-{}".format(driver_name, counter)
+            self.attach_driver(driver, name)
         atexit.register(self.atexit)
 
     def receive_key(self, key):
-        """ This is the method that receives keypresses from drivers and puts them into ``self.queue`` for ``self.event_loop`` to receive """
+        """
+        Receives keypresses from drivers and puts them into ``self.queue``
+        for ``self.event_loop`` to process.
+        """
         try:
             self.queue.put(key)
         except:
             raise #Just collecting possible exceptions for now
+
+    def attach_driver(self, driver, name):
+        """
+        Attaches the driver to ``InputProcessor``.
+        """
+        logger.info("Attaching driver: {}".format(name))
+        self.drivers[name] = driver
+        driver._old_send_key = driver.send_key
+        driver.send_key = self.receive_key #Overriding the send_key method so that keycodes get sent to InputListener
+        self.available_keys[name] = driver.available_keys
+        self.update_all_proxy_attrs()
+        driver.start()
+
+    def detach_driver(self, name):
+        """
+        Detaches a driver from the ``InputProcessor``.
+        """
+        logger.info("Detaching driver: {}".format(name))
+        if driver in self.initial_drivers.values():
+            raise ValueError("Driver {} is from config.json, not removing for safety purposes".format(name))
+        driver.send_key = driver._old_send_key
+        driver = self.drivers.pop(name)
+        driver.stop()
+        self.available_keys.pop(name)
+        self.update_all_proxy_attrs()
+
+    def list_drivers(self):
+        """
+        Returns a list of drivers description lists, containing items as follows:
+
+          * Driver name (auto-generated, in form of "driver_name-number")
+          * Driver object
+          * Available keys
+          * ``True`` if driver is supplied from ``config.json``, else ``False``
+        """
+        return [[name, driver, self.available_keys[name], driver in self.initial_drivers.values()]
+                  for name, driver in self.drivers.items()]
 
     def attach_new_proxy(self, proxy):
         """
@@ -59,7 +103,7 @@ class InputProcessor(object):
 
     def attach_proxy(self, proxy):
         """
-        This method is to be called from the ContextManager. Saves a proxy
+        This method is to be called from the ``ContextManager``. Saves a proxy
         internally, so that when a callback is received, its keymap can be
         referenced.
         """
@@ -93,8 +137,9 @@ class InputProcessor(object):
         self.global_keymap[key] = callback
 
     def receive_key(self, key):
-        """ This is the method that receives keypresses from drivers and puts
-        them into ``self.queue``, to be processed by ``self.event_loop`` 
+        """
+        This is the method that receives keypresses from drivers and puts
+        them into ``self.queue``, to be processed by ``self.event_loop``
         Will block with full queue until the queue has a free spot.
         """
         self.queue.put(key)
@@ -189,7 +234,7 @@ class InputProcessor(object):
         else:
             logger.debug("Key {} has no handlers - ignored!".format(key))
             pass #No handler for the key
-        
+
     def handle_callback(self, callback, key, pass_key=False, type="simple", context_name=None):
         try:
             if context_name:
@@ -219,8 +264,8 @@ class InputProcessor(object):
         self.processor_thread.start()
 
     def stop_listen(self):
-        """This sets a flag for ``event_loop`` to stop. If the ``event_loop()`` is 
-        currently executing a callback, it will exit as soon as the callback will 
+        """This sets a flag for ``event_loop`` to stop. If the ``event_loop()`` is
+        currently executing a callback, it will exit as soon as the callback will
         finish executing."""
         if self.stop_flag is not None:
             self.stop_flag.set()
@@ -247,10 +292,25 @@ class InputProcessor(object):
 
     def register_proxy(self, proxy):
         context_alias = proxy.context_alias
+        self.proxies.append(proxy)
+        self.set_proxy_methods(proxy, context_alias)
+        self.set_proxy_attrs(proxy)
+
+    def set_proxy_methods(self, proxy, alias):
         for method_name in self.proxy_methods:
-            setattr(proxy, method_name, lambda x=method_name, y=context_alias, *a, **k: self.proxy_method(x, y, *a, **k))
+            setattr(proxy, method_name, lambda x=method_name, y=alias, *a, **k: self.proxy_method(x, y, *a, **k))
+
+    def set_proxy_attrs(self, proxy):
         for attr_name in self.proxy_attrs:
             setattr(proxy, attr_name, copy(getattr(self, attr_name)))
+
+    def update_all_proxy_attrs(self):
+        """
+        Updates all the proxied attributes for proxies, to be triggered when
+        one of the attributes is changed.
+        """
+        for proxy in self.proxies:
+            self.set_proxy_attrs(proxy)
 
 
 class InputProxy(object):
@@ -304,10 +364,10 @@ class InputProxy(object):
         if key_name in self.reserved_keys:
             #Trying to set a special callback for a reserved key
             raise CallbackException(1, "Special callback for {} can't be set because it's one of the reserved keys".format(key_name))
-        elif key_name in self.nonmaskable_keymap:
+        if key_name in self.nonmaskable_keymap:
             #Key is already used in a non-maskable callback
             raise CallbackException(2, "Special callback for {} can't be set because it's already set as nonmaskable".format(key_name))
-        elif key_name in self.maskable_keymap: 
+        elif key_name in self.maskable_keymap:
             #Key is already used in a maskable callback
             raise CallbackException(3, "Special callback for {} can't be set because it's already set as maskable".format(key_name))
 
@@ -316,7 +376,7 @@ class InputProxy(object):
         if the callback is one of the reserved keys or already is in maskable/nonmaskable
         keymap.
 
-        A maskable callback is global (can be cleared) and will be called upon a keypress 
+        A maskable callback is global (can be cleared) and will be called upon a keypress
         unless a callback for the same keyname is already set in ``keymap``."""
         self.check_special_callback(key_name)
         self.maskable_keymap[key_name] = callback
@@ -326,7 +386,7 @@ class InputProxy(object):
         if the callback is one of the reserved keys or already is in maskable/nonmaskable
         keymap.
 
-        A nonmaskable callback is global (never cleared) and will be called upon a keypress 
+        A nonmaskable callback is global (never cleared) and will be called upon a keypress
         even if a callback for the same keyname is already set in ``keymap``
         (callback from the ``keymap`` won't be called)."""
         self.check_special_callback(key_name)
@@ -377,7 +437,7 @@ class InputProxy(object):
 
 def init(driver_configs, context_manager):
     """ This function is called by main.py to read the input configuration,
-    pick the corresponding drivers and initialize InputProcessor. Returns 
+    pick the corresponding drivers and initialize InputProcessor. Returns
     the InputProcessor instance created.`"""
     drivers = {}
     for driver_config in driver_configs:

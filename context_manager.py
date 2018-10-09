@@ -1,5 +1,6 @@
 from input.input import InputProxy
 from output.output import OutputProxy
+from action_manager import ActionManager
 
 from functools import wraps
 from threading import Thread, Lock
@@ -31,6 +32,7 @@ class Context(object):
     threaded = True
     i = None
     o = None
+    menu_name = None
 
     def __init__(self, name, event_callback):
         self.name = name
@@ -117,6 +119,17 @@ class Context(object):
         self.o._clear()
         return self.event_cb(self.name, "finished")
 
+    def list_contexts(self):
+        """
+        Returns a list of all available contexts, containing:
+
+        * Name (``"name"``) of the context
+        * Menu name (``"menu_name"``) of the associated menu entry (if one exists, else ``None``)
+        * Previous context name (``"previous_context"``) for the context (if one exists, else ``None``)
+        * Status (``"state"``) - ``"inactive"``, ``"running"`` or ``"non-threaded"``
+        """
+        return self.event_cb(self.name, "list_contexts")
+
     def signal_background(self):
         """
         Signals to the ContextManager that the application wants to go into background.
@@ -124,12 +137,16 @@ class Context(object):
         """
         return self.event_cb(self.name, "background")
 
-    def request_switch(self):
+    def request_switch(self, requested_context=None):
         """
         Requests ContextManager to switch to the context in question. If switch is done,
-        returns True, otherwise returns False.
+        returns True, otherwise returns False. If a context name is supplied,
+        will switch to that context.
         """
-        return self.event_cb(self.name, "request_switch")
+        if requested_context:
+            return self.event_cb(self.name, "request_switch_to", requested_context)
+        else:
+            return self.event_cb(self.name, "request_switch")
 
     def is_active(self):
         """
@@ -143,6 +160,28 @@ class Context(object):
         the future, once a better way to do this is found.
         """
         return self.event_cb(self.name, "get_previous_context_image")
+
+    def register_action(self, name, cb, menu_name_cb, description="", aux_cb = None, documentation='', *args, **kwargs):
+        """
+        Allows an app to register an 'action' that can be used by other apps -
+        for example, ZeroMenu.
+
+        Arguments:
+
+          * ``name``: software-friendly name
+          * ``cb``: the main callback, which will be called when the action is called. Should expect no parameters.
+          * ``menu_name_cb``: the callback that will be called to get the menu name. Can be a string instead.
+          * ``description``: the user-friendly description of the action, one sentence or more
+          * ``aux_cb``: the auxiliary callback. For example, ZeroMenu will have that mapped to the right click.
+          * ``documentation``: documentation for the callback/auxiliary callback usage
+        """
+        d = {'name':name, 'cb':cb, 'menu_name_cb':menu_name_cb, 'description':description, 'aux_cb':aux_cb, 'documentation':documentation}
+        d.update(kwargs)
+        d['args'] = args
+        return self.event_cb(self.name, "register_action", dict=d)
+
+    def get_actions(self):
+        return self.event_cb(self.name, "get_actions")
 
     def request_global_keymap(self, keymap):
         """
@@ -166,6 +205,7 @@ class ContextManager(object):
         self.contexts = {}
         self.previous_contexts = {}
         self.switching_contexts = Lock()
+        self.am = ActionManager()
 
     def init_io(self, input_processor, screen):
         """
@@ -203,6 +243,12 @@ class ContextManager(object):
         logger.debug("Registering a thread target for the {} context".format(context_alias))
         self.contexts[context_alias].set_target(target)
 
+    def set_menu_name(self, context_alias, menu_name):
+        """
+        A context manager-side function that associates a menu name with a context.
+        """
+        self.contexts[context_alias].menu_name = menu_name
+
     def switch_to_context(self, context_alias):
         """
         Lets you switch to another context by its alias.
@@ -224,7 +270,7 @@ class ContextManager(object):
         """
         This is a non-thread-safe context switch function. Not to be used directly
         - is only for internal usage. In case an exception is raised, sets things as they
-        were before and re-raises the exception - in the worst case, 
+        were before and re-raises the exception - in the worst case,
         """
         logger.info("Switching to {} context".format(context_alias))
         previous_context = self.current_context
@@ -242,7 +288,7 @@ class ContextManager(object):
                 raise
             self.current_context = previous_context
             # Passing the exception back to the caller
-            raise 
+            raise
         # Activating the context - restoring everything if it fails
         try:
             self.contexts[context_alias].activate()
@@ -312,7 +358,17 @@ class ContextManager(object):
         proxy_o = OutputProxy(context_alias)
         self.input_processor.register_proxy(proxy_i)
         self.screen.init_proxy(proxy_o)
+        self.set_default_callbacks_on_proxy(context_alias, proxy_i)
         return proxy_i, proxy_o
+
+    def set_default_callbacks_on_proxy(self, context_alias, proxy_i):
+        """
+        Sets some default callbacks on the input proxy. For now, the only
+        callback is the KEY_LEFT maskable callback exiting the app -
+        in case the app is hanging for some reason.
+        """
+        flc = lambda x=context_alias: self.failsafe_left_handler(x)
+        proxy_i.maskable_keymap["KEY_LEFT"] = flc
 
     def get_io_for_context(self, context_alias):
         """
@@ -334,9 +390,19 @@ class ContextManager(object):
             prev_context = self.fallback_context
         return prev_context
 
+    def failsafe_left_handler(self, context_alias):
+        """
+        This function is set up as the default maskable callback for new contexts,
+        so that users can exit on LEFT press if the context is waiting.
+        """
+        previous_context = self.get_previous_context(context_alias)
+        if not previous_context:
+            previous_context = self.fallback_context
+        self.switch_to_context(previous_context)
+
     def signal_event(self, context_alias, event, *args, **kwargs):
         """
-        A callback for context objects to use to signal/receive events - 
+        A callback for context objects to use to signal/receive events -
         providing an interface for apps to interact with the context manager.
         This function will, at some point in the future, be working through
         RPC.
@@ -366,10 +432,39 @@ class ContextManager(object):
             return self.contexts[previous_context].get_io()[1].get_current_image()
         elif event == "is_active":
             return context_alias == self.current_context
+        elif event == "register_action":
+            d = kwargs["dict"]
+            d["app_name"] = context_alias
+            d["full_name"] = "{}-{}".format(context_alias, d["name"])
+            self.am.register_action(**d)
+        elif event ==  "get_actions":
+            return self.am.get_actions()
+        elif event == "list_contexts":
+            logger.info("Context list requested by {} app".format(context_alias))
+            c_list = []
+            for name in self.contexts:
+                c = {}
+                context = self.contexts[name]
+                c["name"] = name
+                c["menu_name"] = context.menu_name
+                c["previous_context"] = self.get_previous_context(name)
+                if not context.is_threaded():
+                    c["state"] = "non-threaded"
+                else:
+                    c["state"] = "running" if context.thread_is_active() else "inactive"
+                c_list.append(c)
+            return c_list
         elif event == "request_switch":
             # As usecases appear, we will likely want to do some checks here
             logger.info("Context switch requested by {} app".format(context_alias))
             return self.switch_to_context(context_alias)
+        elif event == "request_switch_to":
+            # If app is not the one active, should we honor its request?
+            # probably not, but we might want to do something about it
+            # to be considered
+            new_context = args[0]
+            logger.info("Context switch to {} requested by {} app".format(new_context, context_alias))
+            return self.switch_to_context(new_context)
         elif event == "request_global_keymap":
             results = {}
             keymap = args[0]

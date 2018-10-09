@@ -5,11 +5,11 @@ from funcs import format_for_screen as ffs
 
 def Printer(message, i, o, sleep_time=1, skippable=True):
     """Outputs a string, or a list of strings, on a display as soon as it's called.
-    A string will be split into a list, a list will not be modified. 
+    A string will be split into a list, a list will not be modified.
     The resulting list is then displayed string-by-string.
     If resulting strings will take more than one screen, they'll be split
     into multiple screenfuls and shown one-by-one.
-                                                                               
+
     Args:
 
         * ``message``: A string or list of strings to display.
@@ -74,9 +74,9 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
             sleep(poll_period)
 
 def PrettyPrinter(text, i, o, *args, **kwargs):
-    """Outputs string data on display as soon as it's called. Will pass the data 
+    """Outputs string data on display as soon as it's called. Will pass the data
     through format_for_screen function before passing it on to Printer.
-    If text will take more than one screen, it'll be split into multiple 
+    If text will take more than one screen, it'll be split into multiple
     screenfuls to fit.
 
     Args:
@@ -92,7 +92,7 @@ def PrettyPrinter(text, i, o, *args, **kwargs):
 
 def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
     """Outputs image on the display, as soon as it's called.
-    You can use either a PIL image, or a relative/absolute path 
+    You can use either a PIL image, or a relative/absolute path
     to a suitable image
 
     Args:

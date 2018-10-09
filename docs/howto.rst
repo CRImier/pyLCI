@@ -178,6 +178,65 @@ through a really long list of options to choose from, here's what you can do:
         print(choices)
     # {"replace_on_change":True, "delete_in_destination":False, "save_settings":False}
 
+-----------
+
+Indicate progress
+-----------------
+
+If you're going to launch a background task, it's best if the user knows what's
+happening. The simplest way is to print something on the screen:
+
+.. code-block:: python
+
+    from ui import PrettyPrinter
+    ...
+    PrettyPrinter("Scanning ports", i, o, 5)
+    results = scan_ports()
+    print_results(results)
+
+Or, a little bit prettier:
+
+.. code-block:: python
+
+    from ui import Canvas
+    ...
+    c = Canvas(o)
+    c.centered_text("Scanning ports")
+    c.display()
+    results = scan_ports()
+    print_results(results)
+
+Or, even better - use a LoadingIndicator UI element, which is much prettier and
+user-friendly:
+
+.. code-block:: python
+
+    from ui import LoadingIndicator
+    ...
+    with LoadingIndicator(i, o, message="Scanning ports"):
+        results = scan_ports()
+    print_results(results)
+
+What if you actually know how much of the task is completed? Then, you can use a
+ProgressBar, which is going to show the user a percentage of the task completed:
+
+.. code-block:: python
+
+    from ui import ProgressBar
+    ...
+    ports = [22, 23, 80, 111, 443]
+    with ProgressBar(i, o, message="Scanning ports") as pb:
+        process = PortScanner(ports)
+        process.start()
+        while process.is_ongoing():
+            current_port_index = ports.index(process.current_port)
+            # Calculating progress from 0 to 100
+            progress = int( 100.0/len(ports) * current_port_index )
+            pb.progress = progress
+    print_results(results)
+
+-----------
+
 Pick a file/directory
 ---------------------
 
@@ -441,7 +500,7 @@ submit a bugreport to you!
         # .exception will also log the details of the exception after your message
 
 Add names to your UI elements
-=============================
+-----------------------------
 
 UI elements aren't perfect - sometimes, they themselves cause exceptions. In this case,
 we'll want to be able to debug them, to make sure we understand what was it that went
@@ -705,3 +764,106 @@ place in the interface.
 The ``request_global_keymap`` call returns a dictionary with a keyname as a key for each
 requested callback, with ``True`` as the value if the key was set or, if an exception was
 raised while setting the , an exception object.
+
+Readability
+===========
+
+When writing a ZPUI app, keep in mind that other people might refer to it afterwards,
+trying to understand how it works (possibly, also debugging).
+
+How to arrange imports
+----------------------
+
+One step towards readability is rearranging your import statements. Here's something you might
+start with:
+
+.. code-block:: python
+
+    from ui import GraphicsPrinter # ZPUI libraries
+    import json # built-in library
+    import smbus # external library, needs to be installed
+    ...
+
+A more readable way to arrange imports is:
+
+* Built-in libraries
+* ZPUI libraries
+* External libraries (that you need to install from pip/apt)
+* Local imports (something in the same folder as your ``main.py``
+
+It's best if you separate these groups with a single empty line. This is especially
+helpful once your app grows big. Here's an example:
+
+.. code-block:: python
+
+    import json # built-in
+
+    from ui import GraphicsPrinter # ZPUI
+
+    import smbus # external
+
+    import smbus_funcs # local
+    ...
+
+Frequent mistakes
+=================
+
+Using variables named ``i`` in a function-based app
+---------------------------------------------------
+
+If you decided to go the easy way and make a function-based app, do keep in mind
+that they require global variables named ``i`` and ``o``. Therefore, if you use
+constructs like this in a function:
+
+.. code-block:: python
+    :class: warning
+
+    for i in range(8):
+        print(i) # do stuff
+
+the local ``i`` will overwrite the global ``i`` variable **locally**. So, this code:
+
+.. code-block:: python
+    :class: hint
+
+    for i in range(8):
+        print(i)
+    Printer("Done!", i, o) # this will fail
+
+will fail. Solutions? Don't use ``i`` as a local name in the same function where you'll
+need to access the global ``i``. Also, class-based apps won't suffer from this (admittedly
+minor) flaw.
+
+Dynamically building lists/dictionaries with lambdas
+----------------------------------------------------
+
+If you're dynamically building contents of a menu/listbox/whatever (for example, using
+a ``for`` loop or a list/dictionary comprehension), you will likely need to use lambdas,
+like this:
+
+.. code-block:: python
+    :class: warning
+
+    interfaces = ["eth0", "wlan0", "lo0"]
+    # No! Bad!
+    menu_contents = [[if_name, lambda: show_ip(if_name)] for if_name in interfaces]
+    Menu(menu_contents, i, o).activate()
+
+However, the lambdas constructed will not refer to the ``if_name`` by value - instead,
+it's referred by its name and the value will only be resolved at runtime when the
+lambda is called. So, all the ``show_ip`` lambdas constructed will execute with
+``"lo0"`` as their first argument (the last value that the ``if_name`` variable
+was assigned). There's a workaround - you can create a temporary keyword argument
+for the lambda with the default value of ``if_name``:
+
+.. code-block:: python
+    :class: hint
+
+    interfaces = ["eth0", "wlan0", "lo0"]
+    # The right way
+    menu_contents = [[if_name, lambda x=if_name: show_ip(x)] for if_name in interfaces]
+    Menu(menu_contents, i, o).activate()
+
+This way, a temporary variable is created, and the ``if_name`` variable is copied into
+it by value at list generation time, so the resulting lambda will use the proper value
+as the positional argument.
