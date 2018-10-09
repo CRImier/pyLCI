@@ -41,22 +41,22 @@ def do_divide():
 def do_operation(operation):
     values = get_numbers()
     if operation == '+':
-      result = ( values[0] + values[1] )
+        result = ( values[0] + values[1] )
     elif operation == '-':
-      result = ( values[0] - values[1] )
+        result = ( values[0] - values[1] )
     elif operation == '*':
-      result = ( values[0] * values[1] )
+        result = ( values[0] * values[1] )
     elif operation == '/':
-      if values[0] == 0:
-        result = 0
-      elif values[1] == 0:
-        result = "DNE"
-      else:
-        #TODO make decimal places a config item along with rounding options
-        result = ( values[0] / values[1] ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        if values[0] == 0:
+            result = 0
+        elif values[1] == 0:
+            result = "DNE"
+        else:
+            #TODO make decimal places a config item along with rounding options
+            result = ( values[0] / values[1] ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     
     if result == -0:
-      result = 0
+        result = 0
 
     Printer((str(values[0]) + ' ' + operation + ' ' + str(values[1]) + ' = ' + str(result)), i, o, 15)
 
