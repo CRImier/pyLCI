@@ -60,10 +60,20 @@ class DatePicker(BaseUIElement):
 
 	# Switch between months - TODO
 	def next_month(self):
-		pass
+		if self.current_month < 12:
+			self._set_month_year(self.current_month+1, self.current_year)
+		elif self.current_month == 12:
+			self._set_month_year(1, self.current_year+1)
+		else:
+			self.logger.error("Weird month value: {}".format(self.current_month))
 
 	def previous_month(self):
-		pass
+		if self.current_month > 1:
+			self._set_month_year(self.current_month-1, self.current_year)
+		elif self.current_month == 1:
+			self._set_month_year(12, self.current_year-1)
+		else:
+			self.logger.error("Weird month value: {}".format(self.current_month))
 
 	# Accept the currently selected value - TODO
 	def accept_value(self):
@@ -98,11 +108,16 @@ class DatePicker(BaseUIElement):
 			if date == -1:
 				continue
 
+			# Jump to the first line if it's reached the last cell
+			if i >= self.GRID_WIDTH * self.GRID_HEIGHT:
+				i = 0
+
 			date_text_bounds = self.c.get_text_bounds(str(date))
 
 			# Calculate the coordinates for the date string
 			x_cord = (i%self.GRID_WIDTH)*step_width+((step_width-date_text_bounds[0])/2)
 			y_cord = (i//self.GRID_WIDTH)*step_height+step_height+((step_height-date_text_bounds[1])/2)
+
 
 			self.c.text(str(date), (x_cord+1, y_cord+1))
 
@@ -144,8 +159,12 @@ class DatePicker(BaseUIElement):
 
 	# Set the current mont/year to display
 	def _set_month_year(self, month, year):
+		# Set new month and year
 		self.current_month = month
 		self.current_year = year
+
+		# Clear the calendar grid
+		self.calendar_grid = []
 
 		# Get the weekday of the first day of the month
 		first_day, _ = calendar.monthrange(self.current_year, self.current_month)
@@ -171,6 +190,8 @@ class DatePicker(BaseUIElement):
 		# Assign -1 to empty cells
 		for i in range(self.GRID_WIDTH*self.GRID_HEIGHT-i):
 			self.calendar_grid.append(-1)
+
+		self.refresh()
 
 
 
