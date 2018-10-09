@@ -1,4 +1,5 @@
 import calendar
+from datetime import datetime
 from time import sleep
 
 from base_ui import BaseUIElement
@@ -29,7 +30,8 @@ class DatePicker(BaseUIElement):
 
 		self.cal = calendar.Calendar()
 
-		self._set_month_year(1, 2018)
+		# Set month and year to current month/year
+		self._set_month_year(datetime.now().month, datetime.now().year)
 	
 	def generate_keymap(self):
 		return {
