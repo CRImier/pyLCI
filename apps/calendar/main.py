@@ -7,4 +7,4 @@ class CalendarApp(ZeroApp):
 
 	def on_start(self):
 		self.dp = DatePicker(self.i, self.o)
-		self.dp.activate()
+		print(self.dp.activate())

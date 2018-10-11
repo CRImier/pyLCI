@@ -2,6 +2,7 @@
 
  - CRImier (Arsenijs)
  - monsieur_h
+ - derivmug
  - Unnamed contributor
  - Björn Pettersson
  - Jon Maier

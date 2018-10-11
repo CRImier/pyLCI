@@ -28,17 +28,22 @@ class DatePicker(BaseUIElement):
 		self.selected_option = {'x': 1, 'y': 1}
 		self.calendar_grid = []
 
+		self.accepted_value = False
+
 		self.cal = calendar.Calendar()
 
 		# Set month and year to current month/year
 		self._set_month_year(datetime.now().month, datetime.now().year)
 
 	def get_return_value(self):
-		return {
-			'month': self.current_month,
-			'year': self.current_year,
-			'date': self.calendar_grid[self.selected_option['x']-1+(self.selected_option['y']-1)*self.GRID_WIDTH]
-		}
+		if self.accepted_value:
+			return {
+				'month': self.current_month,
+				'year': self.current_year,
+				'date': self.calendar_grid[self.selected_option['x']-1+(self.selected_option['y']-1)*self.GRID_WIDTH]
+			}
+		else:
+			return None
 	
 	def generate_keymap(self):
 		return {
@@ -86,6 +91,7 @@ class DatePicker(BaseUIElement):
 
 	# Accept the currently selected value - TODO
 	def accept_value(self):
+		self.accepted_value = True
 		self.deactivate()
 
 	def draw_calendar(self):
