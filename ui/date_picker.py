@@ -123,7 +123,9 @@ class DatePicker(BaseUIElement):
 
 		# Draw dates
 		i = self.starting_weekday
-		for date in self.calendar_grid:
+		for i in range(len(self.calendar_grid)):
+			date = self.calendar_grid[i]
+
 			if date == -1:
 				continue
 
@@ -202,13 +204,18 @@ class DatePicker(BaseUIElement):
 			if date == 0:
 				continue
 
-			self.calendar_grid.append(date)
+			if i >= self.GRID_WIDTH*self.GRID_HEIGHT:
+				self.calendar_grid[i%self.GRID_WIDTH*self.GRID_HEIGHT] = date
+			else:
+				self.calendar_grid.append(date)
 
 			i += 1
 
 		# Assign -1 to empty cells
 		for i in range(self.GRID_WIDTH*self.GRID_HEIGHT-i):
 			self.calendar_grid.append(-1)
+
+		print(self.calendar_grid)
 
 		self.refresh()
 
