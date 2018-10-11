@@ -53,11 +53,15 @@ class DatePicker(BaseUIElement):
 			"KEY_DOWN": "move_down",
 			"KEY_ENTER": "accept_value",
 			"KEY_PAGEUP": "next_month",
-			"KEY_PAGEDOWN": "previous_month"
+			"KEY_PAGEDOWN": "previous_month",
+			"KEY_F1": "exit_date_picker"
 		}
 
 	def idle_loop(self):
 		sleep(0.1)
+
+	def exit_date_picker(self):
+		self.deactivate()
 
 	# Move the cursor around
 	def move_right(self):
