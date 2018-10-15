@@ -43,16 +43,32 @@ class TimePicker(BaseUIElement):
 
 	def increase_one(self):
 		if self.position == 0:
-			self.currentHour = min(23, self.currentHour+1)
+			if self.currentHour == 23:
+				self.currentHour = 0
+			else:
+				self.currentHour = min(23, self.currentHour+1)
+
 		elif self.position == 1:
-			self.currentMinute = min(59, self.currentMinute+1)
+			if self.currentMinute == 59:
+				self.currentMinute = 0
+			else:
+				self.currentMinute = min(59, self.currentMinute+1)
+
 		self.refresh()
 
 	def decrease_one(self):
 		if self.position == 0:
-			self.currentHour = max(0, self.currentHour-1)
+			if self.currentHour == 0:
+				self.currentHour = 23
+			else:
+				self.currentHour = max(0, self.currentHour-1)
+				
 		elif self.position == 1:
-			self.currentMinute = max(0, self.currentMinute-1)
+			if self.currentMinute == 0:
+				self.currentMinute = 59
+			else:
+				self.currentMinute = max(0, self.currentMinute-1)
+
 		self.refresh()
 
 	def idle_loop(self):
@@ -75,13 +91,14 @@ class TimePicker(BaseUIElement):
 		height_padding = (self.c.height-clock_text_bounds[1])/2
 		self.c.text(clock_string, (width_padding, height_padding-2), font=self.font)
 
+		# Draw the arrows either on the left or right side depending on whether hours or minutes are being edited
 		bx = 0
 		if self.position == 0:
 			bx = 0
 		elif self.position == 1:
 			bx = self.c.width/2-width_padding+6
 
-		# Draw the two triangles
+		# Base coordinates for arrows
 		triangle_top = ((bx+width_padding+6, height_padding-5), (bx+self.c.width/2-10, height_padding-5), 
 			(bx+width_padding-2+((self.c.width/2-width_padding)/2), height_padding-15))
 
