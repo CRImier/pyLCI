@@ -45,7 +45,7 @@ class TimePicker(BaseUIElement):
 		if self.position == 0:
 			self.currentHour = min(23, self.currentHour+1)
 		elif self.position == 1:
-			self.currentMinute = min(59, self.currentMinute+5)
+			self.currentMinute = min(59, self.currentMinute+1)
 		self.refresh()
 
 	def decrease_one(self):
@@ -75,10 +75,18 @@ class TimePicker(BaseUIElement):
 		height_padding = (self.c.height-clock_text_bounds[1])/2
 		self.c.text(clock_string, (width_padding, height_padding-2), font=self.font)
 
+		bx = 0
+		if self.position == 0:
+			bx = 0
+		elif self.position == 1:
+			bx = self.c.width/2-width_padding+6
+
 		# Draw the two triangles
-		triangle_top = ((width_padding+6, height_padding-5), (self.c.width/2-10, height_padding-5), (width_padding-2+((self.c.width/2-width_padding)/2), height_padding-15))
-		triangle_bottom = ((width_padding+6, self.c.height-height_padding+5), (self.c.width/2-10, self.c.height-height_padding+5), 
-			(width_padding-2+((self.c.width/2-width_padding)/2), self.c.height-height_padding+15))
+		triangle_top = ((bx+width_padding+6, height_padding-5), (bx+self.c.width/2-10, height_padding-5), 
+			(bx+width_padding-2+((self.c.width/2-width_padding)/2), height_padding-15))
+
+		triangle_bottom = ((bx+width_padding+6, self.c.height-height_padding+5), (bx+self.c.width/2-10, self.c.height-height_padding+5), 
+			(bx+width_padding-2+((self.c.width/2-width_padding)/2), self.c.height-height_padding+15))
 
 		self.c.polygon(triangle_top, fill="white")
 		self.c.polygon(triangle_bottom, fill="white")
