@@ -12,8 +12,11 @@ class TimePicker(BaseUIElement):
 		self.c = Canvas(self.o)
 		self.font = self.c.load_font("Fixedsys62.ttf", 32)
 
-		self.currentHour = 12
+		self.currentHour = 0
 		self.currentMinute = 0
+
+		# Position 0 = hour, position 1 = minute
+		self.position = 0
 
 	def get_return_value(self):
 		pass
@@ -27,10 +30,12 @@ class TimePicker(BaseUIElement):
 		}
 
 	def move_right(self):
-		pass
+		if position == 0:
+			position = 1
 
 	def move_left(self):
-		pass
+		if position == 1:
+			position = 0
 
 	def idle_loop(self):
 		sleep(0.1)
@@ -46,9 +51,9 @@ class TimePicker(BaseUIElement):
 
 		clock_string = "{:02d}:{:02d}".format(self.currentHour, self.currentMinute)
 
-		centered_cords = self.c.get_centered_text_bounds(clock_string, font=self.font)
+		clock_text_bounds = self.c.get_text_bounds(clock_string, font=self.font)
 
-		self.c.text(clock_string, (centered_cords[0], centered_cords[1]), font=self.font)
+		self.c.text(clock_string, ((self.c.width-clock_text_bounds[0])/2, (self.c.height-clock_text_bounds[1])/2), font=self.font)
 
 		self.c.display()
 
