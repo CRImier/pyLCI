@@ -12,14 +12,22 @@ class TimePicker(BaseUIElement):
 		self.c = Canvas(self.o)
 		self.font = self.c.load_font("Fixedsys62.ttf", 32)
 
-		self.currentHour = 12
-		self.currentMinute = 30
+		self.current_hour = 12
+		self.current_minute = 30
+
+		self.accepted_value = False
 
 		# Position 0 = hour, position 1 = minute
 		self.position = 0
 
 	def get_return_value(self):
-		pass
+		if self.accepted_value:
+			return {
+				'hour': self.current_hour,
+				'minute': self.current_minute
+			}
+		else:
+			return None
 
 	def generate_keymap(self):
 		return {
@@ -43,31 +51,31 @@ class TimePicker(BaseUIElement):
 
 	def increase_one(self):
 		if self.position == 0:
-			if self.currentHour == 23:
-				self.currentHour = 0
+			if self.current_hour == 23:
+				self.current_hour = 0
 			else:
-				self.currentHour = min(23, self.currentHour+1)
+				self.current_hour = min(23, self.current_hour+1)
 
 		elif self.position == 1:
-			if self.currentMinute == 59:
-				self.currentMinute = 0
+			if self.current_minute == 59:
+				self.current_minute = 0
 			else:
-				self.currentMinute = min(59, self.currentMinute+1)
+				self.current_minute = min(59, self.current_minute+1)
 
 		self.refresh()
 
 	def decrease_one(self):
 		if self.position == 0:
-			if self.currentHour == 0:
-				self.currentHour = 23
+			if self.current_hour == 0:
+				self.current_hour = 23
 			else:
-				self.currentHour = max(0, self.currentHour-1)
+				self.current_hour = max(0, self.current_hour-1)
 				
 		elif self.position == 1:
-			if self.currentMinute == 0:
-				self.currentMinute = 59
+			if self.current_minute == 0:
+				self.current_minute = 59
 			else:
-				self.currentMinute = max(0, self.currentMinute-1)
+				self.current_minute = max(0, self.current_minute-1)
 
 		self.refresh()
 
@@ -78,13 +86,14 @@ class TimePicker(BaseUIElement):
 		self.deactivate()
 
 	def accept_value(self):
-		pass
+		self.accepted_value = True
+		self.deactivate()
 
 	def draw_clock(self):
 		self.c.clear()
 
 		# Draw the clock string centered on the screen
-		clock_string = "{:02d}:{:02d}".format(self.currentHour, self.currentMinute)
+		clock_string = "{:02d}:{:02d}".format(self.current_hour, self.current_minute)
 		clock_text_bounds = self.c.get_text_bounds(clock_string, font=self.font)
 
 		width_padding = (self.c.width-clock_text_bounds[0])/2
