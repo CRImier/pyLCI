@@ -154,7 +154,6 @@ def exception_wrapper(callback):
         status = 1
     except:
         logging.exception('A wild exception appears!')
-        logging.exception(traceback.format_exc())
         Printer(["A wild exception", "appears!"], None, screen, 0)
         status = 1
     else:
