@@ -192,30 +192,32 @@ class MatrixClientApp(ZeroApp):
 		event_type = event.get('type', "not_a_defined_event")
 		# Check if a user joined the room
 		if event_type == "m.room.member":
+			content = event.get('content', {})
 			if event.get('membership', None) == "join":
 
 				self._add_new_message(room.room_id, {
-						'timestamp': event['origin_server_ts'],
-						'type': event['type'],
-						'sender': unicode(rfa(event['sender'])),
-						'content': rfa(unicode("+ {}").format(event['content']['displayname'])),
-						'id': event['event_id']
+						'timestamp': event.get('origin_server_ts', 0),
+						'type': event.get('type', 'unknown_type'),
+						'sender': unicode(rfa(event.get('sender', 'unknown_sender'))),
+						'content': rfa(unicode("+ {}").format(content.get('displayname', ''))),
+						'id': event.get('event_id', 0)
 					})
 
 		# Check for new messages
 		elif event_type == "m.room.message":
-			if event['content']['msgtype'] == "m.text":
+			content = event.get('content', {})
+			if content.get('msgtype', None) == "m.text":
 				prefix = ""
-				if event['sender'] == self.client.get_user().user_id or event["sender"] in self.config["your_other_usernames"]:
+				if event.get('sender', None) == self.client.get_user().user_id or event.get("sender", None) in self.config["your_other_usernames"]:
 					# Prefix own messages with a '*'
 					prefix = "* "
 
 				self._add_new_message(room.room_id, {
-						'timestamp': event['origin_server_ts'],
-						'type': event['type'],
-						'sender': unicode(rfa(event['sender'])),
-						'content': unicode(prefix + rfa(event['content']['body'])),
-						'id': event['event_id']
+						'timestamp': event.get('origin_server_ts', 0),
+						'type': event.get('type', 'unknown_type'),
+						'sender': unicode(rfa(event.get('sender', 'unknown_sender'))),
+						'content': unicode(prefix + rfa(content.get('body', ''))),
+						'id': event.get('event_id', 0)
 					})
 
 		elif event_type == "not_a_defined_event":
