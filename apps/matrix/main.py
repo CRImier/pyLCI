@@ -22,6 +22,8 @@ from client import Client, MatrixRequestError
 
 local_path = local_path_gen(__name__)
 
+logger = setup_logger(__name__, "info")
+
 class MatrixClientApp(ZeroApp):
 
 	menu_name = "Matrix Client"
@@ -34,8 +36,6 @@ class MatrixClientApp(ZeroApp):
 		self.active_room = ""
 		self.seen_events = []
 		self.has_processed_new_events = Event()
-
-		self.logger = setup_logger(__name__, "info")
 
 		self.config = read_or_create_config(local_path(self.config_filename), self.default_config, self.menu_name+" app")
 		self.save_config = save_config_method_gen(self, local_path(self.config_filename))
@@ -50,14 +50,14 @@ class MatrixClientApp(ZeroApp):
 		# Check whether the user has been logged in before
 		logged_in_with_token = False
 		if self.config['user_id'] and self.config['token']:
-			self.logger.debug("User has been logged in before")
+			logger.debug("User has been logged in before")
 
 			with LoadingIndicator(self.i, self.o, message="Logging in ..."):
 				try:
-					self.client = Client(self.config['user_id'], self.logger, token=self.config['token'])
+					self.client = Client(self.config['user_id'], token=self.config['token'])
 				except MatrixRequestError as e:
-					self.logger.exception("Wrong or outdated token/username?")
-					self.logger.error(dir(e))
+					logger.exception("Wrong or outdated token/username?")
+					logger.error(dir(e))
 				else:
 					logged_in_with_token = self.client.logged_in
 
@@ -77,7 +77,7 @@ class MatrixClientApp(ZeroApp):
 
 			# Show a beatiful loading animation while setting everything up
 			with LoadingIndicator(self.i, self.o, message="Logging in ...") as l:
-				self.client = Client(username, self.logger, password=password)
+				self.client = Client(username, password=password)
 
 				# Store username and token
 				if self.client.logged_in:
@@ -85,7 +85,7 @@ class MatrixClientApp(ZeroApp):
 					self.config['token'] = self.client.get_token()
 					self.save_config()
 
-					self.logger.info("Succesfully logged in")
+					logger.info("Succesfully logged in")
 				else:
 					l.pause()
 					Printer("Failed to log in", self.i, self.o)
@@ -159,7 +159,7 @@ class MatrixClientApp(ZeroApp):
 	# Display all messages of a specific room
 	def display_messages(self, room):
 		room_name = rfa(room.display_name)
-		self.logger.debug(u"Viewing room: {}".format(room_name))
+		logger.debug(u"Viewing room: {}".format(room_name))
 
 		# Set the currently active room to this room, important for adding messages and refreshing the menu
 		self.active_room = room.room_id
@@ -185,10 +185,10 @@ class MatrixClientApp(ZeroApp):
 	# Used as callback for the room listeners
 	def _on_message(self, room, event):
 		if event["event_id"] in self.seen_events:
-			self.logger.debug("Event {} seen, ignoring".format(event["event_id"]))
+			logger.debug("Event {} seen, ignoring".format(event["event_id"]))
 			return
 		self.seen_events.append(event["event_id"])
-		self.logger.debug(u"New event: {}".format(event['type']))
+		logger.debug(u"New event: {}".format(event['type']))
 		event_type = event.get('type', "not_a_defined_event")
 		# Check if a user joined the room
 		if event_type == "m.room.member":
@@ -219,7 +219,7 @@ class MatrixClientApp(ZeroApp):
 					})
 
 		elif event_type == "not_a_defined_event":
-			self.logger.warning("Unknown event: {}".format(event))
+			logger.warning("Unknown event: {}".format(event))
 
 		# Update the current view if required
 		if self.active_room == room.room_id:
@@ -227,7 +227,7 @@ class MatrixClientApp(ZeroApp):
 			self.messages_menu.refresh()
 		# Setting flag - if not already set
 		if not self.has_processed_new_events.isSet():
-			self.logger.debug("New event processed, setting flag")
+			logger.debug("New event processed, setting flag")
 		self.has_processed_new_events.set()
 
 	def _add_new_message(self, room_id, new_message):
@@ -260,7 +260,7 @@ class MatrixClientApp(ZeroApp):
 			room.backfill_previous_messages(limit=self.stored_messages[room.room_id]["backfilled"]+messages_to_load, reverse=True, num_of_messages=messages_to_load)
 			self.stored_messages[room.room_id]["backfilled"] += messages_to_load
 		except:
-			self.logger.exception("Couldn't load previous messages!")
+			logger.exception("Couldn't load previous messages!")
 			return False
 		else:
 			if self.has_processed_new_events.isSet():
