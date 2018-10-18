@@ -81,7 +81,7 @@ class DatePicker(BaseUIElement):
 		# ----------->
 		# If day is last, move to the first day of the next month
 		if self.get_current_day() == self.get_days_of_current_month()[-1]:
-			self.move_to_next_month()
+			self._move_to_next_month()
 			self.set_current_day(1)
 		# If weekday is Sunday, move to the next Monday
 		elif self.selected_option['x'] == self.GRID_WIDTH-1:
@@ -94,7 +94,7 @@ class DatePicker(BaseUIElement):
 		# <-----------
 		# If day is 1st, move to the last day of the prev. month
 		if self.get_current_day() == 1:
-			self.move_to_previous_month()
+			self._move_to_previous_month()
 			self.set_current_day(self.get_days_of_current_month()[-1])
 		# If weekday is Monday, move to the previous Sunday
 		elif self.selected_option['x'] == 0:
@@ -115,21 +115,33 @@ class DatePicker(BaseUIElement):
 		self.refresh()
 
 	# Switch between months - TODO
-	def move_to_next_month(self):
+	def _move_to_next_month(self):
+		"""Moving to the next month - without refresh() (for internal use)"""
 		if self.current_month < 12:
 			self._set_month_year(self.current_month+1, self.current_year)
 		elif self.current_month == 12:
 			self._set_month_year(1, self.current_year+1)
 		else:
-			self.logger.error("Weird month value: {}".format(self.current_month))
+			raise ValueError("Weird month value: {}".format(self.current_month))
 
-	def move_to_previous_month(self):
+	def move_to_next_month(self):
+		"""Moving to the next month - with refresh() (key callback)"""
+		self._move_to_next_month()
+		self.refresh()
+
+	def _move_to_previous_month(self):
+		"""Moving to the previous month - without refresh() (for internal use)"""
 		if self.current_month > 1:
 			self._set_month_year(self.current_month-1, self.current_year)
 		elif self.current_month == 1:
 			self._set_month_year(12, self.current_year-1)
 		else:
-			self.logger.error("Weird month value: {}".format(self.current_month))
+			raise ValueError("Weird month value: {}".format(self.current_month))
+
+	def move_to_previous_month(self):
+		"""Moving to the previous month - with refresh() (key callback)"""
+		self._move_to_previous_month()
+		self.refresh()
 
 	def accept_value(self):
 		self.accepted_value = True
