@@ -44,7 +44,10 @@ class GitInterface(object):
 
     @classmethod
     def get_origin_url(cls):
-        return cls.command("remote get-url origin").strip()
+        try:
+            return cls.command("remote get-url origin").strip()
+        except CalledProcessError: #Git v2.1 does not support get-url
+            return cls.command("config remote.origin.url").strip()
 
     @classmethod
     def set_origin_url(cls, url):
