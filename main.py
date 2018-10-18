@@ -118,7 +118,6 @@ def launch(name=None, **kwargs):
             splash(i, o)
         except:
             logging.exception('Failed to load the splash screen')
-            logging.exception(traceback.format_exc())
 
         # Load all apps
         app_menu = app_man.load_all_apps()
