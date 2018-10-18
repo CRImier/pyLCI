@@ -167,16 +167,16 @@ class DatePicker(BaseUIElement):
 				continue
 
 			# Jump to the first line if it's reached the last cell
-			if i >= self.GRID_WIDTH * self.GRID_HEIGHT:
+			if i >= (self.GRID_WIDTH * self.GRID_HEIGHT):
 				i = 0
 
 			date_text_bounds = self.c.get_text_bounds(str(date))
-
 			# Calculate the coordinates for the date string
-			x_cord = (i%self.GRID_WIDTH)*step_width+((step_width-date_text_bounds[0])/2)
-			y_cord = (i//self.GRID_WIDTH)*step_height+step_height+((step_height-date_text_bounds[1])/2)
-
-
+			x_cord = ( i%self.GRID_WIDTH)*step_width + \
+					( (step_width-date_text_bounds[0])/2 )
+			y_cord = ( i//self.GRID_WIDTH)*step_height + \
+					step_height+ \
+					( (step_height-date_text_bounds[1])/2 )
 			self.c.text(str(date), (x_cord+1, y_cord+1))
 
 			# Increase the counter and continue to the next date, import for positioning
@@ -242,15 +242,12 @@ class DatePicker(BaseUIElement):
 				continue
 
 			if i >= self.GRID_WIDTH*self.GRID_HEIGHT:
-				self.calendar_grid[i%self.GRID_WIDTH*self.GRID_HEIGHT] = date
+				self.calendar_grid[i%(self.GRID_WIDTH*self.GRID_HEIGHT)] = date
 			else:
 				self.calendar_grid.append(date)
 
 			i += 1
-
 		# Assign -1 to empty cells
 		for i in range(self.GRID_WIDTH*self.GRID_HEIGHT-i):
 			self.calendar_grid.append(-1)
-
-		print(self.calendar_grid)
 
