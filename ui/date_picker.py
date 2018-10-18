@@ -22,10 +22,10 @@ class DatePicker(BaseUIElement):
 		# Attributes to store the current values
 		self.current_month = 1
 		self.current_year = 2018
-		self.starting_weekday = 1
+		self.starting_weekday = 0
 
-		# Top-left cell is (1, 1)
-		self.selected_option = {'x': 1, 'y': 1}
+		# Top-left cell is (0, 0)
+		self.selected_option = {'x': 0, 'y': 0}
 		self.calendar_grid = []
 
 		self.accepted_value = False
@@ -33,14 +33,30 @@ class DatePicker(BaseUIElement):
 		self.cal = calendar.Calendar()
 
 		# Set month and year to current month/year
-		self._set_month_year(datetime.now().month, datetime.now().year)
+		self._set_month_year(datetime.now().month+1, datetime.now().year)
+		self.set_current_day(datetime.now().day)
+
+	def get_current_day(self):
+		return self.calendar_grid[
+			(self.selected_option['y'])*self.GRID_WIDTH +
+			self.selected_option['x']]
+
+	def get_days_of_current_month(self):
+		days = filter(None, list(self.cal.itermonthdays(self.current_year, self.current_month)))
+		return list(sorted(days))
+
+	def set_current_day(self, day):
+		index = self.calendar_grid.index(day)
+		x = int(index % self.GRID_WIDTH)
+		y = int(index / self.GRID_WIDTH)
+		self.selected_option = {'x': x, 'y': y}
 
 	def get_return_value(self):
 		if self.accepted_value:
 			return {
 				'month': self.current_month,
 				'year': self.current_year,
-				'date': self.calendar_grid[self.selected_option['x']-1+(self.selected_option['y']-1)*self.GRID_WIDTH]
+				'date': self.get_current_day()
 			}
 		else:
 			return None
@@ -142,8 +158,8 @@ class DatePicker(BaseUIElement):
 			i += 1
 
 		# Highlight selected option
-		selected_x = (self.selected_option['x']-1)*step_width
-		selected_y = (self.selected_option['y']-1)*step_height+step_height
+		selected_x = (self.selected_option['x'])*step_width
+		selected_y = (self.selected_option['y'])*step_height+step_height
 		self.c.invert_rect((selected_x+1, selected_y+1, selected_x+step_width+1, selected_y+step_height))
 
 		self.c.display()
@@ -161,14 +177,15 @@ class DatePicker(BaseUIElement):
 	# Check whether the desired movement is viable
 	def _check_movable_field(self, new_x, new_y):
 		# New movement would definitely be out of grid
-		if (new_x-1)+(new_y-1)*self.GRID_WIDTH >= len(self.calendar_grid):
+		limit = (new_x)+(new_y)*self.GRID_WIDTH
+		if limit >= len(self.calendar_grid):
 			return False
 
-		if (	 self.calendar_grid[(new_x-1)+(new_y-1)*self.GRID_WIDTH] != -1
-			 and new_x <= self.GRID_WIDTH
-			 and new_x >= 1
-			 and new_y <= self.GRID_HEIGHT
-			 and new_y >= 1):
+		if (	 self.calendar_grid[(new_x)+(new_y)*self.GRID_WIDTH] != -1
+			 and new_x < self.GRID_WIDTH
+			 and new_x >= 0
+			 and new_y < self.GRID_HEIGHT
+			 and new_y >= 0):
 
 			return True
 		else:
@@ -193,7 +210,7 @@ class DatePicker(BaseUIElement):
 			self.calendar_grid.append(-1)
 
 		# Set the cursor to the first viable cell
-		self.selected_option['x'] = i+2
+		self.selected_option['x'] = i+1
 
 		i = first_day
 		for date in self.cal.itermonthdays(self.current_year, self.current_month):
