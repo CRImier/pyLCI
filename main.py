@@ -39,12 +39,8 @@ config = None
 config_path = None
 app_man = None
 
-def init():
-    """Initialize input and output objects"""
-
-    global input_processor, screen, cm, config, config_path
+def load_config():
     config = None
-
     # Load config
     for config_path in config_paths:
         #Only try to load the config file if it's present
@@ -55,11 +51,20 @@ def init():
                 config = read_config(config_path)
             except:
                 logging.exception('Failed to load config from {}'.format(config_path))
+                config_path = None
             else:
                 logging.info('Successfully loaded config from {}'.format(config_path))
                 break
     # After this loop, the config_path global should contain
     # path for config that successfully loaded
+
+    return config, config_path
+
+def init():
+    """Initialize input and output objects"""
+
+    global input_processor, screen, cm, config, config_path
+    config, config_path = load_config()
 
     if config is None:
         sys.exit('Failed to load any config files!')
@@ -113,7 +118,6 @@ def launch(name=None, **kwargs):
             splash(i, o)
         except:
             logging.exception('Failed to load the splash screen')
-            logging.exception(traceback.format_exc())
 
         # Load all apps
         app_menu = app_man.load_all_apps()
