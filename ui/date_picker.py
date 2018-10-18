@@ -44,7 +44,7 @@ class DatePicker(BaseUIElement):
 			}
 		else:
 			return None
-	
+
 	def generate_keymap(self):
 		return {
 			"KEY_RIGHT": "move_right",
@@ -52,16 +52,13 @@ class DatePicker(BaseUIElement):
 			"KEY_UP": "move_up",
 			"KEY_DOWN": "move_down",
 			"KEY_ENTER": "accept_value",
-			"KEY_PAGEUP": "next_month",
-			"KEY_PAGEDOWN": "previous_month",
-			"KEY_F1": "exit_date_picker"
+			"KEY_PAGEUP": "move_to_previous_month",
+			"KEY_PAGEDOWN": "move_to_next_month",
+			"KEY_F1": "deactivate"
 		}
 
 	def idle_loop(self):
 		sleep(0.1)
-
-	def exit_date_picker(self):
-		self.deactivate()
 
 	# Move the cursor around
 	def move_right(self):
@@ -77,7 +74,7 @@ class DatePicker(BaseUIElement):
 		self._move_cursor(0, 1)
 
 	# Switch between months - TODO
-	def next_month(self):
+	def move_to_next_month(self):
 		if self.current_month < 12:
 			self._set_month_year(self.current_month+1, self.current_year)
 		elif self.current_month == 12:
@@ -85,7 +82,7 @@ class DatePicker(BaseUIElement):
 		else:
 			self.logger.error("Weird month value: {}".format(self.current_month))
 
-	def previous_month(self):
+	def move_to_previous_month(self):
 		if self.current_month > 1:
 			self._set_month_year(self.current_month-1, self.current_year)
 		elif self.current_month == 1:
@@ -93,7 +90,6 @@ class DatePicker(BaseUIElement):
 		else:
 			self.logger.error("Weird month value: {}".format(self.current_month))
 
-	# Accept the currently selected value - TODO
 	def accept_value(self):
 		self.accepted_value = True
 		self.deactivate()
