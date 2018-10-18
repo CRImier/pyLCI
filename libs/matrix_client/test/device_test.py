@@ -1,10 +1,10 @@
 import pytest
 import responses
 
-from matrix_client.api import MATRIX_V2_API_PATH
-from matrix_client.client import MatrixClient
-from matrix_client.errors import MatrixRequestError
-from matrix_client.device import Device
+from ..matrix_client.api import MATRIX_V2_API_PATH
+from ..matrix_client.client import MatrixClient
+from ..matrix_client.errors import MatrixRequestError
+from ..matrix_client.device import Device
 
 HOSTNAME = 'http://localhost'
 

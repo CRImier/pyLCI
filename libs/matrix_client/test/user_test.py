@@ -1,9 +1,9 @@
 import pytest
 import responses
 
-from matrix_client.api import MATRIX_V2_API_PATH
-from matrix_client.client import MatrixClient
-from matrix_client.user import User
+from ..matrix_client.api import MATRIX_V2_API_PATH
+from ..matrix_client.client import MatrixClient
+from ..matrix_client.user import User
 
 HOSTNAME = "http://localhost"
 

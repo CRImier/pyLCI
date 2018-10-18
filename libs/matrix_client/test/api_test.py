@@ -1,9 +1,9 @@
 import responses
 import pytest
 import json
-from matrix_client import client, api
-from matrix_client.errors import MatrixRequestError, MatrixError, MatrixHttpLibError
-from matrix_client import __version__ as lib_version
+from ..matrix_client import client, api
+from ..matrix_client.errors import MatrixRequestError, MatrixError, MatrixHttpLibError
+from ..matrix_client import __version__ as lib_version
 
 MATRIX_V2_API_PATH = "/_matrix/client/r0"
 
