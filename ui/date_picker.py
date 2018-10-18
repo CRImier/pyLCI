@@ -78,16 +78,41 @@ class DatePicker(BaseUIElement):
 
 	# Move the cursor around
 	def move_right(self):
-		self._move_cursor(1, 0)
+		# ----------->
+		# If day is last, move to the first day of the next month
+		if self.get_current_day() == self.get_days_of_current_month()[-1]:
+			self.move_to_next_month()
+			self.set_current_day(1)
+		# If weekday is Sunday, move to the next Monday
+		elif self.selected_option['x'] == self.GRID_WIDTH-1:
+			self.set_current_day(self.get_current_day()+1)
+		else:
+			self._move_cursor(1, 0)
+		self.refresh()
 
 	def move_left(self):
-		self._move_cursor(-1, 0)
+		# <-----------
+		# If day is 1st, move to the last day of the prev. month
+		if self.get_current_day() == 1:
+			self.move_to_previous_month()
+			self.set_current_day(self.get_days_of_current_month()[-1])
+		# If weekday is Monday, move to the previous Sunday
+		elif self.selected_option['x'] == 0:
+			self.set_current_day(self.get_current_day()-1)
+		else:
+			self._move_cursor(-1, 0)
+		self.refresh()
 
 	def move_up(self):
+		# ^^^^^^^^^^
+		# TODO: If week is first, move to the last same weekday of the next month
 		self._move_cursor(0, -1)
+		self.refresh()
 
 	def move_down(self):
+		# TODO: If week is last, move to the first same weekday of the prev. month
 		self._move_cursor(0, 1)
+		self.refresh()
 
 	# Switch between months - TODO
 	def move_to_next_month(self):
@@ -172,7 +197,6 @@ class DatePicker(BaseUIElement):
 		if self._check_movable_field(self.selected_option['x']+delta_x, self.selected_option['y']+delta_y):
 			self.selected_option['x'] += delta_x
 			self.selected_option['y'] += delta_y
-			self.refresh()
 
 	# Check whether the desired movement is viable
 	def _check_movable_field(self, new_x, new_y):
@@ -229,8 +253,4 @@ class DatePicker(BaseUIElement):
 			self.calendar_grid.append(-1)
 
 		print(self.calendar_grid)
-
-		self.refresh()
-
-
 
