@@ -21,5 +21,7 @@ from scrollable_element import TextReader
 from ui.loading_indicators import ProgressBar, LoadingBar, TextProgressBar, GraphicalProgressBar, CircularProgressBar, IdleDottedMessage, Throbber
 from ui.numbered_menu import NumberedMenu
 from canvas import Canvas, MockOutput
+from date_picker import DatePicker
+from time_picker import TimePicker
 IntegerInDecrementInput = IntegerAdjustInput  # Compatibility with old ugly name
 LoadingIndicator = LoadingBar

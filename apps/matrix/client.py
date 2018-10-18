@@ -3,10 +3,13 @@ from libs.matrix_client.matrix_client.api import MatrixRequestError
 from libs.matrix_client.matrix_client.user import User
 from requests.exceptions import MissingSchema
 
+from helpers import setup_logger
+
+logger = setup_logger(__name__, 'info')
+
 class Client():
 
-	def __init__(self, username, logger, password=None, token=None):
-		self.logger = logger
+	def __init__(self, username, password=None, token=None):
 
 		self.username = username
 		self.token = None
@@ -23,14 +26,13 @@ class Client():
 
 			except MatrixRequestError as e:
 				self.logged_in = False
-				self.logger.error(e)
 				if e.code == 403:
-					self.logger.error("Wrong username or password")
+					logger.exception("Wrong username or password")
 				else:
-					self.logger.error("Check server details")
+					logger.exception("Check server details")
 
 			except MissingSchema as e:
-				self.logger.exception("Bad URL format")
+				logger.exception("Bad URL format")
 
 		else:
 			self.matrix_client = MatrixClient("https://matrix.org", token=token, user_id=username)

@@ -1,6 +1,8 @@
 from threading import Event
 
 from base_list_ui import BaseListBackgroundableUIElement, to_be_foreground, TextView, EightPtView, SixteenPtView
+from utils import clamp, clamp_list_index
+
 from helpers import setup_logger
 
 logger = setup_logger(__name__, "warning")
@@ -178,7 +180,7 @@ class MessagesMenu(Menu):
 
     def before_activate(self):
         Menu.before_activate(self)
-        self.pointer = len(self.contents) - 2
+        self.pointer = clamp(len(self.contents) - 2, 0, len(self.contents)-1)
         if self.contents: # Not empty
 		self.add_load_more_marker()
 
@@ -201,6 +203,7 @@ class MessagesMenu(Menu):
 	        after = len(self.contents)
                 logger.info("Loaded {} messages".format(after-before))
 	        self.pointer += (after-before)+1
+		self.pointer = clamp_list_index(self.pointer, self.contents)
 	else:
 		self.remove_load_more_marker()
         self.load_more_allow_refresh.set()
