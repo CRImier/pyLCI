@@ -18,7 +18,15 @@ class MatrixClientApp(ZeroApp):
 	default_config = '{"user_id":"", "token":"", "your_other_usernames":[]}'
 	config_filename = "config.json"
 
+        client = None
+
 	def on_start(self):
+		if not self.client:
+			if not self.init_and_login():
+				return False
+		self.display_rooms()
+
+	def init_and_login(self):
 		self.stored_messages = {}
 		self.messages_menu = None
 		self.active_room = ""
@@ -28,10 +36,7 @@ class MatrixClientApp(ZeroApp):
 		self.config = read_or_create_config(local_path(self.config_filename), self.default_config, self.menu_name+" app")
 		self.save_config = save_config_method_gen(self, local_path(self.config_filename))
 
-		if not self.login():
-			return False
-
-		self.display_rooms()
+		return self.login()
 
 	# Login the user
 	def login(self):
