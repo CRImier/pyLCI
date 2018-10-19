@@ -4,7 +4,7 @@ from threading import Event
 
 from apps import ZeroApp
 from ui import Listbox, PrettyPrinter as Printer, NumpadCharInput, Menu, LoadingIndicator, TextReader, UniversalInput, MessagesMenu, rfa, MenuExitException
-from helpers import setup_logger, read_or_create_config, local_path_gen, save_config_method_gen
+from helpers import setup_logger, read_or_create_config, local_path_gen, save_config_method_gen, BackgroundRunner
 
 from client import Client, MatrixRequestError
 
@@ -20,23 +20,42 @@ class MatrixClientApp(ZeroApp):
 
         client = None
 
-	def on_start(self):
-		if not self.client:
-			if not self.init_and_login():
-				return False
-		self.display_rooms()
+        def __init__(self, *args, **kwargs):
+		ZeroApp.__init__(self, *args, **kwargs)
+		self.config = read_or_create_config(local_path(self.config_filename), self.default_config, self.menu_name+" app")
+		self.save_config = save_config_method_gen(self, local_path(self.config_filename))
 
-	def init_and_login(self):
+		self.init_vars()
+		self.login_runner = BackgroundRunner(self.background_login)
+		self.login_runner.run()
+
+	def init_vars(self):
 		self.stored_messages = {}
 		self.messages_menu = None
 		self.active_room = ""
 		self.seen_events = []
 		self.has_processed_new_events = Event()
 
-		self.config = read_or_create_config(local_path(self.config_filename), self.default_config, self.menu_name+" app")
-		self.save_config = save_config_method_gen(self, local_path(self.config_filename))
+	def on_start(self):
+		if self.login_runner.running:
+			with LoadingIndicator(self.i, self.o, message="Logging in ..."):
+				while self.login_runner.running:
+					sleep(0.1)
+		if not self.client:
+			if not self.init_and_login():
+				return False
+		self.display_rooms()
 
+	def init_and_login(self):
+		self.init_vars()
 		return self.login()
+
+	def background_login(self):
+		if self.config['user_id'] and self.config['token']:
+			logger.debug("User has been logged in before, trying to log in in background")
+			if self.login_with_token():
+				self.process_rooms()
+				logger.info("Successful login in background")
 
 	# Login the user
 	def login(self):
@@ -46,45 +65,53 @@ class MatrixClientApp(ZeroApp):
 			logger.debug("User has been logged in before")
 
 			with LoadingIndicator(self.i, self.o, message="Logging in ..."):
-				try:
-					self.client = Client(self.config['user_id'], token=self.config['token'])
-				except MatrixRequestError as e:
-					logger.exception("Wrong or outdated token/username?")
-					logger.error(dir(e))
-				else:
-					logged_in_with_token = self.client.logged_in
-
+				logged_in_with_token = self.login_with_token()
 		if not logged_in_with_token:
+			self.login_with_username()
+		self.process_rooms()
+		return True
 
-			# Get the required user data
-			username = UniversalInput(self.i, self.o, message="Enter username", name="Matrix app username dialog").activate()
-			if not username:
+	def login_with_token(self):
+		try:
+			self.client = Client(self.config['user_id'], token=self.config['token'])
+		except MatrixRequestError as e:
+			logger.exception("Wrong or outdated token/username?")
+			logger.error(dir(e))
+			return False
+		else:
+			return self.client.logged_in
+
+	def login_with_username(self):
+		# Get the required user data
+		username = UniversalInput(self.i, self.o, message="Enter username", name="Matrix app username dialog").activate()
+		if not username:
+			return False
+
+		# Create a matrix user id from the username, currently only ids on matrix.org are possible
+		username = "@{}:matrix.org".format(username)
+
+		password = UniversalInput(self.i, self.o, message="Enter password", name="Matrix app password dialog").activate()
+		if not password:
+			return False
+
+		# Show a beautiful loading animation while setting everything up
+		with LoadingIndicator(self.i, self.o, message="Logging in ...") as l:
+			self.client = Client(username, password=password)
+
+			# Store username and token
+			if self.client.logged_in:
+				self.config['user_id'] = username
+				self.config['token'] = self.client.get_token()
+				self.save_config()
+
+				logger.info("Succesfully logged in")
+			else:
+				l.pause()
+				Printer("Failed to log in", self.i, self.o)
+				l.resume()
 				return False
 
-			# Create a matrix user id from the username, currently only ids on matrix.org are possible
-			username = "@{}:matrix.org".format(username)
-
-			password = UniversalInput(self.i, self.o, message="Enter password", name="Matrix app password dialog").activate()
-			if not username:
-				return False
-
-			# Show a beatiful loading animation while setting everything up
-			with LoadingIndicator(self.i, self.o, message="Logging in ...") as l:
-				self.client = Client(username, password=password)
-
-				# Store username and token
-				if self.client.logged_in:
-					self.config['user_id'] = username
-					self.config['token'] = self.client.get_token()
-					self.save_config()
-
-					logger.info("Succesfully logged in")
-				else:
-					l.pause()
-					Printer("Failed to log in", self.i, self.o)
-					l.resume()
-					return False
-
+	def process_rooms(self):
 		# Get the users rooms
 		self.rooms = self.client.get_rooms()
 
@@ -99,7 +126,6 @@ class MatrixClientApp(ZeroApp):
 		# Start a new thread for the listeners, waiting for events to happen
 		self.client.matrix_client.start_listener_thread()
 
-		return True
 
 	# Displays a list of all rooms the user is in
 	def display_rooms(self):
@@ -138,6 +164,8 @@ class MatrixClientApp(ZeroApp):
 		self.config["token"] = ''
 		self.config["username"] = ''
 		self.save_config()
+		self.init_vars()
+
 		raise MenuExitException
 
 	# Creates a new screen with an Input to write a message
