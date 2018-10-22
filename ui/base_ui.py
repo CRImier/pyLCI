@@ -1,5 +1,6 @@
 from threading import Event
 from time import sleep
+from functools import wraps
 
 import PIL
 
@@ -7,6 +8,20 @@ from helpers import setup_logger
 from ui.utils import to_be_foreground
 
 logger = setup_logger(__name__, "info")
+
+def internal_callback_in_background(method):
+    """
+      A decorator for UI elements' internal methods that need to bring the UI element
+      into the background during execution.
+    """
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        self.to_background()
+        method(self, *args, **kwargs)
+        logger.debug("{}: executed wrapped function: {}".format(self.name, method.__name__))
+        if self.in_background:
+            self.to_foreground()
+    return wrapper
 
 
 class BaseUIElement(object):
@@ -153,13 +168,13 @@ class BaseUIElement(object):
         input event processing thread. After callback's execution is finished,
         sets the keymap again and refreshes the UI element.
         """
+        @wraps(func)
         def wrapper(*args, **kwargs):
             self.to_background()
             func(*args, **kwargs)
             logger.debug("{}: executed wrapped function: {}".format(self.name, func.__name__))
             if self.in_background:
                 self.to_foreground()
-        wrapper.__name__ == func.__name__
         return wrapper
 
     def process_keymap(self, keymap):
