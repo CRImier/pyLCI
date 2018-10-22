@@ -18,6 +18,18 @@ class GridMenu(BaseListBackgroundableUIElement):
 
 		self.accepted_value = False
 
+		self._override_left = True
+
+	def generate_keymap(self):
+		return {
+			"KEY_RIGHT": "move_right",
+			"KEY_LEFT": "move_left",
+			"KEY_UP": "move_up",
+			"KEY_DOWN": "move_down",
+			"KEY_ENTER": "accept_value",
+			"KEY_F1": "exit_menu"
+		}
+
 	def idle_loop(self):
 		sleep(0.1)
 
