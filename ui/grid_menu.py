@@ -63,15 +63,22 @@ class GridMenu(BaseUIElement):
 			for y in range(1, self.GRID_HEIGHT):
 				self.c.line((0, y*step_height, self.c.width, y*step_height))
 
-		
+		selected_x = (self.selected_option['x']-1)*step_width
+		selected_y = (self.selected_option['y']-1)*step_height
+		self.c.invert_rect((selected_x, selected_y, selected_x+step_width, selected_y+step_height))
 
 		self.c.display()
 
 	def refresh(self):
 		self.draw_menu()
 
-	def _move_cursor(self, x_mov, y_mov):
-		if 1 <= self.selected_option['x'] + x_move <= 3
-			and 1 <= self.selected_option['y'] * y_move <= 3:
+	def _move_cursor(self, x_mod, y_mod):
+		new_x = self.selected_option['x'] + x_mod
+		new_y = self.selected_option['y'] + y_mod
 
-			return True
+		if new_x >= 1 and new_x <= 3:
+			if new_y >= 1 and new_y <= 3:
+				self.selected_option['x'] = new_x
+				self.selected_option['y'] = new_y
+
+		self.refresh()
