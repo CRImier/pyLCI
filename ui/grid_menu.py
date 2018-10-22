@@ -1,42 +1,22 @@
 from time import sleep
 
-from base_ui import BaseUIElement
+from base_list_ui import BaseListBackgroundableUIElement
 from canvas import Canvas
 
-class GridMenu(BaseUIElement):
+class GridMenu(BaseListBackgroundableUIElement):
 
 	GRID_WIDTH = 3
 	GRID_HEIGHT = 3
 
 	def __init__(self, i, o, contents, name="GridMenu"):
 
-		BaseUIElement.__init__(self, i, o, name)
+		BaseListBackgroundableUIElement.__init__(self, contents, i, o, name)
 
 		self.c = Canvas(self.o)
-
-		# Contains contains a 3x3x2 array
-		self.contents = contents
 
 		self.selected_option = {'x': 1, 'y': 1}
 
 		self.accepted_value = False
-
-	def get_return_value(self):
-		if self.accepted_value:
-			self.contents[self.selected_option['x']-1][self.selected_option['y']-1][1]()
-			return True
-		else:
-			return None
-
-	def generate_keymap(self):
-		return {
-			"KEY_RIGHT": "move_right",
-			"KEY_LEFT": "move_left",
-			"KEY_UP": "move_up",
-			"KEY_DOWN": "move_down",
-			"KEY_ENTER": "accept_value",
-			"KEY_F1": "exit_menu"
-		}
 
 	def idle_loop(self):
 		sleep(0.1)
@@ -75,15 +55,14 @@ class GridMenu(BaseUIElement):
 				self.c.line((0, y*step_height, self.c.width, y*step_height))
 
 		# Draw the app names
-		for x in range(len(self.contents)):
-			for y in range(len(self.contents[x])):
-				app_name = self.contents[x][y][0]
-				text_bounds = self.c.get_text_bounds(app_name)
+		for index, item in enumerate(self.contents):
+			app_name = self.contents[index][0]
+			text_bounds = self.c.get_text_bounds(app_name)
 
-				x_cord = (x*step_width)+(step_width-text_bounds[0])/2
-				y_cord = (y*step_height)+(step_height-text_bounds[1])/2
+			x_cord = (index%self.GRID_WIDTH)*step_width+(step_width-text_bounds[0])/2
+			y_cord = (index//self.GRID_HEIGHT)*step_height+(step_height-text_bounds[1])/2
 
-				self.c.text(app_name, (x_cord, y_cord))
+			self.c.text(app_name, (x_cord, y_cord))
 
 		# Invert the selected cell
 		selected_x = (self.selected_option['x']-1)*step_width
