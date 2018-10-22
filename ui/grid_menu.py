@@ -20,7 +20,7 @@ class GridMenu(BaseListBackgroundableUIElement):
 			"KEY_LEFT": "move_left",
 			"KEY_UP": "move_up",
 			"KEY_DOWN": "move_down",
-			"KEY_ENTER": "accept_value",
+			"KEY_ENTER": "select_entry",
 			"KEY_F1": "exit_menu"
 		}
 
@@ -46,10 +46,6 @@ class GridMenu(BaseListBackgroundableUIElement):
 
 	def move_down(self):
 		self._move_cursor(self.GRID_WIDTH)
-
-	def accept_value(self):
-		self.accepted_value = True
-		self.deactivate()
 
 	def draw_menu(self):
 		self.c.clear()
