@@ -14,12 +14,6 @@ class GridMenu(BaseListBackgroundableUIElement):
 
 		self.c = Canvas(self.o)
 
-		self.selected_option = {'x': 1, 'y': 1}
-
-		self.accepted_value = False
-
-		self._override_left = True
-
 	def generate_keymap(self):
 		return {
 			"KEY_RIGHT": "move_right",
@@ -33,20 +27,25 @@ class GridMenu(BaseListBackgroundableUIElement):
 	def idle_loop(self):
 		sleep(0.1)
 
+	def select_entry(self):
+		entry = self.contents[self.pointer]
+		entry[1]()
+		self.deactivate()
+
 	def exit_menu(self):
 		self.deactivate()
 
 	def move_right(self):
-		self._move_cursor(1, 0)
+		self._move_cursor(1)
 
 	def move_left(self):
-		self._move_cursor(-1, 0)
+		self._move_cursor(-1)
 
 	def move_up(self):
-		self._move_cursor(0, -1)
+		self._move_cursor(-self.GRID_WIDTH)
 
 	def move_down(self):
-		self._move_cursor(0, 1)
+		self._move_cursor(self.GRID_WIDTH)
 
 	def accept_value(self):
 		self.accepted_value = True
@@ -58,6 +57,11 @@ class GridMenu(BaseListBackgroundableUIElement):
 		# Calculate margins
 		step_width = self.c.width / self.GRID_WIDTH
 		step_height = self.c.height / self.GRID_HEIGHT
+
+		item_x = self.pointer%self.GRID_WIDTH
+		item_y = self.pointer//self.GRID_HEIGHT
+
+		print("Item_x: {} | Item_y: {}".format(item_x, item_y))
 
 		# Draw horizontal and vertical lines
 		for x in range(1, self.GRID_WIDTH):
@@ -77,8 +81,8 @@ class GridMenu(BaseListBackgroundableUIElement):
 			self.c.text(app_name, (x_cord, y_cord))
 
 		# Invert the selected cell
-		selected_x = (self.selected_option['x']-1)*step_width
-		selected_y = (self.selected_option['y']-1)*step_height
+		selected_x = (item_x)*step_width
+		selected_y = (item_y)*step_height
 		self.c.invert_rect((selected_x, selected_y, selected_x+step_width, selected_y+step_height))
 
 		self.c.display()
@@ -86,13 +90,7 @@ class GridMenu(BaseListBackgroundableUIElement):
 	def refresh(self):
 		self.draw_menu()
 
-	def _move_cursor(self, x_mod, y_mod):
-		new_x = self.selected_option['x'] + x_mod
-		new_y = self.selected_option['y'] + y_mod
-
-		if new_x >= 1 and new_x <= self.GRID_WIDTH:
-			if new_y >= 1 and new_y <= self.GRID_HEIGHT:
-				self.selected_option['x'] = new_x
-				self.selected_option['y'] = new_y
-
+	def _move_cursor(self, m):
+		self.pointer += m
+		self.pointer = self.pointer%9
 		self.refresh()
