@@ -62,8 +62,6 @@ class GridMenu(BaseListBackgroundableUIElement):
 		item_x = self.pointer%self.GRID_WIDTH
 		item_y = self.pointer//self.GRID_HEIGHT
 
-		print("Item_x: {} | Item_y: {}".format(item_x, item_y))
-
 		# Draw horizontal and vertical lines
 		for x in range(1, self.GRID_WIDTH):
 			self.c.line((x*step_width, 0, x*step_width, self.c.height))
