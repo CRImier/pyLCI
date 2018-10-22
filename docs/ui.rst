@@ -12,6 +12,7 @@ and initialising them, passing your UI element contents and parameters, as well 
 
 UI elements:
 
+   * :ref:`ui_canvas`
    * :ref:`ui_menu`
    * :ref:`ui_printer`
    * :ref:`ui_refresher`
@@ -23,6 +24,7 @@ UI elements:
    :maxdepth: 1
    :hidden:
 
+   ui/canvas.rst
    ui/menu.rst
    ui/printer.rst
    ui/refresher.rst

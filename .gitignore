@@ -33,6 +33,9 @@ var/
 pip-log.txt
 pip-delete-this-directory.txt
 
+#PyTest
+.pytest_cache
+
 # Unit test / coverage reports
 htmlcov/
 .tox/
@@ -60,7 +63,16 @@ target/
 # Apps are not supposed to ship config.json
 # Instead, they're supposed to create them on first launch
 config.json
+# ZPUI logfiles
 /zpui.log*
 # We ship do_not_load files in some directories, but do not track user-created files
 # (only user-removed ones)
 do_not_load
+# An automatically-generated log configuration file (with log level overrides)
+log_conf.ini
+# Emulator flag files
+emulator
+# Ignoring the default screenshot folder
+screenshots/
+# Nano files
+*.swp

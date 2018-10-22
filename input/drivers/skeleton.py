@@ -4,7 +4,7 @@ from copy import copy
 from helpers import setup_logger
 logger = setup_logger(__name__, "warning")
 
-class InputSkeleton():
+class InputSkeleton(object):
     """Base class for input devices. Expectations from children:
     
     * ``self.default_mapping`` variable to be set unless you're always going to pass mapping as argument in config

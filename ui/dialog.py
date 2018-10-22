@@ -1,12 +1,12 @@
 from time import sleep
 from helpers import setup_logger
 
+from base_ui import BaseUIElement
 from canvas import Canvas
-from utils import invert_rect_colors
 
 logger = setup_logger(__name__, "info")
 
-class DialogBox(object):
+class DialogBox(BaseUIElement):
     """Implements a dialog box with given values (or some default ones if chosen)."""
 
     value_selected = False
@@ -32,9 +32,7 @@ class DialogBox(object):
             * ``name``: UI element name which can be used internally and for debugging.
 
         """
-        self.i = i
-        self.o = o
-        self.name = name
+        BaseUIElement.__init__(self, i, o, name)
         if isinstance(values, basestring):
             self.values = []
             for char in values:
@@ -52,13 +50,7 @@ class DialogBox(object):
                     values[i] = self.default_options[value]
             self.values = values
         self.message = message
-        self.generate_keymap()
         self.set_view()
-
-    def to_foreground(self):
-        self.in_foreground = True
-        self.refresh()
-        self.set_keymap()
 
     def set_view(self):
         if "b&w-pixel" in self.o.type:
@@ -75,14 +67,15 @@ class DialogBox(object):
         """
         self.start_option = option_number
 
-    def activate(self):
-        logger.debug("{0} activated".format(self.name))
+    def before_activate(self):
         self.value_selected = False
         self.selected_option = self.start_option
-        self.to_foreground()
-        while self.in_foreground: #All the work is done in input callbacks
-            self.idle_loop()
-        logger.debug(self.name+" exited")
+
+    @property
+    def is_active(self):
+        return self.in_foreground
+
+    def get_return_value(self):
         if self.value_selected:
             return self.values[self.selected_option][1]
         else:
@@ -91,23 +84,12 @@ class DialogBox(object):
     def idle_loop(self):
         sleep(0.1)
 
-    def deactivate(self):
-        self.in_foreground = False
-        logger.debug("{0} deactivated".format(self.name))
-
     def generate_keymap(self):
-        self.keymap = {
-        "KEY_RIGHT":lambda: self.move_right(),
-        "KEY_LEFT":lambda: self.move_left(),
-        "KEY_KPENTER":lambda: self.accept_value(),
-        "KEY_ENTER":lambda: self.accept_value()
+        return {
+        "KEY_RIGHT": 'move_right',
+        "KEY_LEFT": 'move_left',
+        "KEY_ENTER": 'accept_value'
         }
-
-    def set_keymap(self):
-        self.i.stop_listen()
-        self.i.clear_keymap()
-        self.i.keymap = self.keymap
-        self.i.listen()
 
     def move_left(self):
         if self.selected_option == 0:
@@ -130,7 +112,7 @@ class DialogBox(object):
         self.view.refresh()
 
 
-class TextView():
+class TextView(object):
 
     def __init__(self, o, el):
         self.o = o
@@ -141,7 +123,7 @@ class TextView():
         labels = [label for label, value in self.el.values]
         label_string = " ".join(labels)
         if len(label_string) > self.o.cols:
-            raise ValueError("DialogBox {}: all values combined are longer than screen's width".format(self.name))
+            raise ValueError("DialogBox {}: all values combined are longer than screen's width".format(self.el.name))
         self.right_offset = (self.o.cols - len(label_string))/2
         self.displayed_label = " "*self.right_offset+label_string
         #Need to go through the string to mark the first places because we need to remember where to put the cursors
@@ -165,8 +147,9 @@ class GraphicalView(TextView):
 
         #Drawing text
         second_line_position = 10
-        c.text((2, 0), self.el.message, fill="white")
-        c.text((2, second_line_position), self.displayed_label, fill="white")
+        ctc = c.get_centered_text_bounds(self.el.message)
+        c.text(self.el.message, (ctc.left, 0))
+        c.text(self.displayed_label, (2, second_line_position))
 
         #Calculating the cursor dimensions
         first_char_position = self.positions[self.el.selected_option]
@@ -179,7 +162,7 @@ class GraphicalView(TextView):
         cursor_dims = ( c_x1, c_y1, c_x2 + 2, c_y2 + 2 )
 
         #Drawing the cursor
-        invert_rect_colors(cursor_dims, c)
+        c.invert_rect(cursor_dims)
 
         return c.get_image()
 

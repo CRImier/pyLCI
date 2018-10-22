@@ -4,13 +4,18 @@ from time import sleep
 import PIL
 
 from helpers import setup_logger
-from ui.utils import to_be_foreground
 from number_input import IntegerAdjustInput
+from utils import to_be_foreground
+from base_ui import BaseUIElement, internal_callback_in_background
 
 logger = setup_logger(__name__, "info")
 
 
-class Refresher(object):
+class RefresherExitException(Exception):
+    pass
+
+
+class Refresher(BaseUIElement):
     """
     A Refresher allows you to update the screen on a regular interval.
     All you need is to provide a function that'll return the text/image you want to display;
@@ -20,7 +25,7 @@ class Refresher(object):
 
     def __init__(self, refresh_function, i, o, refresh_interval=1, keymap=None, name="Refresher"):
         """Initialises the Refresher object.
-        
+
         Args:
 
             * ``refresh_function``: a function which returns data to be displayed on the screen upon being called, in the format accepted by ``screen.display_data()`` or ``screen.display_image()``. To be exact, supported return values are:
@@ -40,37 +45,17 @@ class Refresher(object):
             * ``name``: Refresher name which can be used internally and for debugging.
 
         """
-        self.i = i
-        self.o = o
-        self.name = name
+        self.custom_keymap = keymap if keymap else {}
+        BaseUIElement.__init__(self, i, o, name, input_necessary=False)
         self.set_refresh_interval(refresh_interval)
         self.refresh_function = refresh_function
         self.calculate_intervals()
-        self.set_keymap(keymap if keymap else {})
         self.in_foreground = False
         self.in_background = Event()
 
-    def to_foreground(self):
-        """ Is called when refresher's ``activate()`` method is used, sets flags and performs all the actions so that refresher can display its contents and receive keypresses."""
-        logger.debug("refresher {} in foreground".format(self.name))
-        self.in_background.set()
-        self.in_foreground = True
-        self.refresh()
-        self.activate_keymap()
-
-    def to_background(self):
-        """ Signals ``activate`` to finish executing """
-        self.in_foreground = False
-        logger.debug("refresher {} in background".format(self.name))
-
-    def activate(self):
-        """ A method which is called when refresher needs to start operating. Is blocking, sets up input&output devices, renders the refresher, periodically calls the refresh function&refreshes the screen while self.in_foreground is True, while refresher callbacks are executed from the input device thread."""
-        logger.debug("refresher {} activated".format(self.name))
-        self.to_foreground()
-        while self.in_background.isSet():
-            self.idle_loop()
-        logger.debug(self.name+" exited")
-        return True
+    @property
+    def is_active(self):
+        return self.in_background
 
     def pause(self):
         """
@@ -84,9 +69,10 @@ class Refresher(object):
         Resumes the refresher after it's been paused, allowing it to continue
         printing things on the screen. Refreshes the screen when it's called.
         """
-        self.in_foreground = True
-        self.activate_keymap()
-        self.refresh()
+        if not self.in_foreground:
+            self.in_foreground = True
+            self.activate_input()
+            self.refresh()
 
     def set_refresh_interval(self, new_interval):
         """Allows setting Refresher's refresh intervals after it's been initialized"""
@@ -119,95 +105,31 @@ class Refresher(object):
             self._counter += 1
         sleep(self.sleep_time)
 
-    def deactivate(self):
-        """ Deactivates the refresher completely, exiting it."""
-        self.in_foreground = False
-        self.in_background.clear()
-        logger.debug("refresher {} deactivated".format(self.name))
-
-    def print_name(self):
-        """ A debug method. Useful for hooking up to an input event so that you can see which refresher is currently active. """
-        logger.debug("Active refresher is {}".format(self.name))
-
+    @internal_callback_in_background
     def change_interval(self):
         """
         A helper function to adjust the Refresher's refresh interval while it's running
         """
-        new_interval = IntegerAdjustInput(self.refresh_interval, i, o, message="Refresh interval:").activate()
+        new_interval = IntegerAdjustInput(self.refresh_interval, self.i, self.o, message="Refresh interval:").activate()
         if new_interval is not None:
             self.set_refresh_interval(new_interval)
 
-    def process_callback(self, func):
-        """ Decorates a function to be used by Refresher element.
-        |Is typically used as a wrapper for a callback from input event processing thread.
-        |After callback's execution is finished, sets the keymap again and refreshes the refresher."""
-        def wrapper(*args, **kwargs):
-            self.to_background()
-            func(*args, **kwargs)
-            logger.debug("{}: executed wrapped function: {}".format(self.name, func.__name__))
-            if self.in_background.isSet():
-                self.to_foreground()
-        wrapper.__name__ == func.__name__
-        return wrapper
-
-    def process_keymap(self, keymap):
-        """
-        Processes the keymap, wrapping all callbacks with ``process_callback`` method.
-        If a string is passed as callback, replaces it with the corresponding internal method.
-        Raises ValueError if callback is not a callable or a name of a callable attribute.
-        Raises AttributeError if method name is not found.
-        """
-        logger.debug("{}: processing keymap - {}".format(self.name, keymap))
-        for key, value in keymap.items():
-            if isinstance(value, basestring):
-                # Using a string means an internal function needs to be used
-                # Not wrapping it at the moment
-                attribute = getattr(self, value)
-                if not callable(attribute): #Wait, is it really a function?
-                     raise ValueError("Unknown method string supplied for {}: method {} not found in {}!".format(key, value, self.name or type(self)))
-                else:
-                    keymap[key] = attribute
-            elif callable(value):
-                # Callback is an external function
-                # Wrapping that in to_background-to_foreground calls
-                keymap[key] = self.process_callback(value)
-            else:
-                raise ValueError("Unknown callback supplied for {}: {}".format(key, type(value)))
-        return keymap
-
-    def validate_keymap(self):
-        """
-        Checks if ``Refresher``'s keymap has all the critical callbacks set. For now,
-        the only truly critical callback is ``deactivate`` on "KEY_LEFT".
-        If the key already has a callback set, ``validate_keymap`` doesn't replace
-        the callback - relying on the developer to do the right decision and
-        provide the user with a way to exit the ``Refresher``.
-        """
-        if not "KEY_LEFT" in self.keymap:
-            self.keymap["KEY_LEFT"] = self.deactivate
-
     def set_keymap(self, keymap):
-        """Sets the refresher's keymap (filtered using ``process_keymap`` before setting)."""
-        self.keymap = self.process_keymap(keymap)
-        self.validate_keymap()
+        keymap.update(self.custom_keymap)
+        BaseUIElement.set_keymap(self, keymap)
 
-    def update_keymap(self, new_keymap):
-        """Updates the refresher's keymap with a replacement keymap (which is also
-        filtered using ``process_keymap`` before setting)."""
-        processed_keymap = self.process_keymap(new_keymap)
-        self.keymap.update(processed_keymap)
-
-    @to_be_foreground
-    def activate_keymap(self):
-        self.i.stop_listen()
-        self.i.clear_keymap()
-        self.i.set_keymap(self.keymap)
-        self.i.listen()
+    def generate_keymap(self):
+        return {}
 
     @to_be_foreground
     def refresh(self):
         logger.debug("{}: refreshed data on display".format(self.name))
-        data_to_display = self.refresh_function()
+        try:
+            data_to_display = self.refresh_function()
+        except RefresherExitException:
+            logger.info("{}: received exit exception, deactivating".format(self.name))
+            self.deactivate()
+            return
         if isinstance(data_to_display, basestring):
             #Passed a string, not a list.
             #Let's be user-friendly and wrap it in a list!

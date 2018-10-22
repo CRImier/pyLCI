@@ -14,7 +14,7 @@ class InputDevice(InputSkeleton):
     "KEY_UP",
     "KEY_DOWN",
     "KEY_RIGHT",
-    "KEY_KPENTER",
+    "KEY_ENTER",
     "KEY_0",
     "KEY_1",
     "KEY_2",

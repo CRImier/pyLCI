@@ -6,6 +6,8 @@ from mock import patch, Mock
 
 try:
     from ui import Checkbox
+    from ui.base_list_ui import Canvas
+    fonts_dir = "ui/fonts"
 except ImportError:
     print("Absolute imports failed, trying relative imports")
     os.sys.path.append(os.path.dirname(os.path.abspath('.')))
@@ -22,16 +24,21 @@ except ImportError:
 
     with patch('__builtin__.__import__', side_effect=import_mock):
         from checkbox import Checkbox
+        from base_list_ui import Canvas
+        fonts_dir = "../fonts"
 
 def get_mock_input():
     return Mock()
-
 
 def get_mock_output(rows=8, cols=21):
     m = Mock()
     m.configure_mock(rows=rows, cols=cols, type=["char"])
     return m
 
+def get_mock_graphical_output(width=128, height=64, mode="1", cw=6, ch=8):
+    m = get_mock_output(rows=width/cw, cols=height/ch)
+    m.configure_mock(width=width, height=height, device_mode=mode, char_height=ch, char_width=cw, type=["b&w-pixel"])
+    return m
 
 cb_name = "Test checkbox"
 
@@ -88,6 +95,22 @@ class TestCheckbox(unittest.TestCase):
             return_value = cb.activate()
         assert return_value is None
 
+    def test_graphical_display_redraw(self):
+        num_elements = 3
+        o = get_mock_graphical_output()
+        contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        cb = Checkbox(contents, get_mock_input(), o, name=cb_name, config={})
+        Canvas.fonts_dir = fonts_dir
+        # Exiting immediately, but we should get at least one redraw
+        def scenario():
+            cb.deactivate()  # KEY_LEFT
+            assert not cb.in_foreground
+
+        with patch.object(cb, 'idle_loop', side_effect=scenario) as p:
+            return_value = cb.activate()
+        assert o.display_image.called
+        assert o.display_image.call_count == 1 #One in to_foreground
+
     def test_enter_on_last_returns_right(self):
         num_elements = 3
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
@@ -99,6 +122,7 @@ class TestCheckbox(unittest.TestCase):
             cb.select_entry()  # KEY_ENTER
             assert cb.in_foreground  # Should still be active
             cb.deactivate()  # because is not deactivated yet and would idle loop otherwise
+            assert not cb.in_foreground  # Should no longer be active
 
         with patch.object(cb, 'idle_loop', side_effect=scenario) as p:
             return_value = cb.activate()

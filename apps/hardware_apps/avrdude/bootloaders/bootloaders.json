@@ -1,0 +1,17 @@
+{"bootloaders":
+  [
+    {"name":"A. Uno 328P", "file":"optiboot_atmega328.hex", "lfuse":"0xff", "hfuse":"0xde", "efuse":"0x5"},
+    {"name":"A. Nano 328P", "file":"ATmegaBOOT_atmega328.hex", "lfuse":"0xff", "hfuse":"0xda", "efuse":"0x5"},
+    {"name":"A. Nano 168", "file":"ATmegaBOOT_diecimila.hex", "lfuse":"0xff", "hfuse":"0xdd", "efuse":"0x0"},
+    {"name":"A. Mega 2560", "file":"stk500boot_v2_mega2560.hex", "lfuse":"0xff", "hfuse":"0xd8", "efuse":"0x5"},
+    {"name":"A. Mega 1280", "file":"ATmegaBOOT_168.hex", "lfuse":"0xff", "hfuse":"0xda", "efuse":"0x5"},
+    {"name":"A. Leonardo", "file":"Caterina-Leonardo.hex", "lfuse":"0xff", "hfuse":"0xd8", "efuse":"0xb"},
+    {"name":"A. Micro", "file":"Caterina-Micro.hex", "lfuse":"0xff", "hfuse":"0xd8", "efuse":"0xb"},
+    {"name":"A. Pro Mini 16MHz 328P", "file":"ATmegaBOOT_atmega328.hex", "lfuse":"0xff", "hfuse":"0xda", "efuse":"0x5"},
+    {"name":"A. Pro Mini 8MHz 328P", "file":"ATmegaBOOT_atmega328_pro_8MHz.hex", "lfuse":"0xff", "hfuse":"0xda", "efuse":"0x5"},
+    {"name":"ATMega328P - 8MHz internal", "file":"ATmegaBOOT_atmega328_pro_8MHz.hex", "lfuse":"0xe2", "hfuse":"0xda", "efuse":"0x5"},
+    {"name":"ATMega8 Optiboot", "file":"optiboot_atmega8.hex", "lfuse":"0xbf", "hfuse":"0xcc"}
+  ],
+"fuse_format":"m",
+"comment":"This list was constructed from hardware/arduino/avr/boards.txt"
+}

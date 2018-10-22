@@ -1,16 +1,15 @@
 import os
 
-from base_list_ui import BaseListBackgroundableUIElement, to_be_foreground
-from menu import Menu, MenuExitException
+from menu import Menu, MenuExitException, to_be_foreground
 from printer import Printer
 from helpers import setup_logger
 logger = setup_logger(__name__, "warning")
 
-class PathPicker(BaseListBackgroundableUIElement):
+class PathPicker(Menu):
 
     path_chosen = None
 
-    def __init__(self, path, i, o, callback = None, display_hidden = False, current_dot = False, prev_dot = True, scrolling=True, **kwargs):
+    def __init__(self, path, i, o, callback = None, name = None, display_hidden = False, dirs_only = False, current_dot = False, prev_dot = True, scrolling=True, **kwargs):
         """Initialises the PathPicker object.
 
         Args:
@@ -21,16 +20,19 @@ class PathPicker(BaseListBackgroundableUIElement):
         Kwargs:
 
             * ``callback``: if set, PathPicker will call the callback with path as first argument upon selecting path, instead of exiting the activate().
+            * ``dirs_only``: if True, PathPicker will only show directories.
             * ``current_dot``: if True, PathPicker will show '.' path.
             * ``prev_dot``: if True, PathPicker will show '..' path.
             * ``display_hidden``: if True, PathPicker will display hidden files.
 
         """
-        BaseListBackgroundableUIElement.__init__(self, [], i, o, entry_height=1, scrolling=True, append_exit=False)
+        Menu.__init__(self, [], i, o, entry_height=1, scrolling=True, append_exit=False, catch_exit=False, contents_hook=None, **kwargs)
         if not os.path.isdir(path):
              raise ValueError("PathPicker path has to be a directory!")
+        self.base_name = name if name else "PathPicker"
         self.display_hidden = display_hidden
         self.callback = callback
+        self.dirs_only = dirs_only
         self.current_dot = current_dot
         self.prev_dot = prev_dot
         self.menu_pointers = {}
@@ -39,6 +41,7 @@ class PathPicker(BaseListBackgroundableUIElement):
 
     def before_activate(self):
         #Clearing flags
+        Menu.before_activate(self)
         path_chosen = None
 
     def get_return_value(self):
@@ -77,7 +80,10 @@ class PathPicker(BaseListBackgroundableUIElement):
 
     def set_path(self, path):
         self.path = path
-        self.name = "PathPicker-{}".format(self.path)
+        self.name = "{}-{}".format(self.base_name, self.path)
+        self.set_contents(self.regenerate_contents())
+
+    def regenerate_contents(self):
         contents = []
         self.pointer = 0
         if self.path != '/':
@@ -91,34 +97,55 @@ class PathPicker(BaseListBackgroundableUIElement):
         for item in path_contents:
             full_path = os.path.join(self.path, item)
             if os.path.isdir(full_path):
-                if not self.display_hidden or not item.startswith('.'):
+                if not (self.display_hidden and item.startswith('.')):
                     dirs.append(item)
             else:
-                if not self.display_hidden or not item.startswith('.'):
-                    files.append(item)
+                if not (self.display_hidden and item.startswith('.')):
+                    if not self.dirs_only:
+                        files.append(item)
         dirs.sort()
         files.sort()
         for dir in dirs:
             full_path = os.path.join(self.path, dir)
-            contents.append([dir, lambda x=full_path: self.goto_dir(x)])
+            if self.dirs_only:
+                isdir = lambda x: os.path.isdir(os.path.join(full_path, x))
+                dirs_in_dir = [isdir(e) for e in os.listdir(full_path)]
+                if any(dirs_in_dir):
+                    #Directory has other directories inside
+                    contents.append([dir, lambda x=full_path: self.goto_dir(x), lambda: True])
+                else:
+                    #Directory has no other directories inside
+                    contents.append([dir, lambda x=full_path: self.select_path(x)])
+            else:
+                contents.append([dir, lambda x=full_path: self.goto_dir(x), lambda: True])
         for file in files:
             full_path = os.path.join(self.path, file)
             contents.append([file, lambda x=full_path: self.select_path(x)])
-        self.set_contents(contents)
+        return contents
 
     @to_be_foreground
     def options_menu(self):
         self.to_background()
         current_item = self.contents[self.pointer][0]
         full_path = os.path.join(self.path, current_item)
-        contents = [["Select path",lambda x=full_path: self.option_select(x)],
-                    ["See full name",lambda x=full_path: Printer(current_item, self.i, self.o)],
-                    ["See full path",lambda x=full_path: Printer(x, self.i, self.o)],
-                    ["Exit PathPicker", self.option_exit]]
-        Menu(contents, self.i, self.o, name="PathPicker context menu").activate()
-        self.o.cursor()
+        def get_contents():
+            dh_option_label = "Show .-files" if self.display_hidden else "Hide .-files"
+            contents = []
+            if self.dirs_only:
+                contents.append(["Select current dir", lambda x=self.path: self.option_select(x)])
+            contents += [["Select path",lambda x=full_path: self.option_select(x)],
+                        [dh_option_label, self.toggle_display_hidden],
+                        ["See full name",lambda x=full_path: Printer(current_item, self.i, self.o)],
+                        ["See full path",lambda x=full_path: Printer(x, self.i, self.o)],
+                        ["Exit PathPicker", self.option_exit]]
+            return contents
+        Menu([], self.i, self.o, contents_hook=get_contents, name="PathPicker context menu").activate()
         if self.in_background:
+            self.set_contents(self.regenerate_contents())
             self.to_foreground()
+
+    def toggle_display_hidden(self):
+        self.display_hidden = not self.display_hidden
 
     def option_exit(self):
         self.deactivate()

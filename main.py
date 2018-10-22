@@ -9,12 +9,13 @@ import threading
 import traceback
 from logging.handlers import RotatingFileHandler
 
-from context_manager import ContextManager
 from apps.app_manager import AppManager
+from context_manager import ContextManager
 from helpers import read_config, local_path_gen
 from input import input
 from output import output
 from ui import Printer
+import helpers.logger
 
 emulator_flag_filename = "emulator"
 local_path = local_path_gen(__name__)
@@ -36,13 +37,10 @@ screen = None
 cm = None
 config = None
 config_path = None
+app_man = None
 
-def init():
-    """Initialize input and output objects"""
-
-    global input_processor, screen, cm, config, config_path
+def load_config():
     config = None
-
     # Load config
     for config_path in config_paths:
         #Only try to load the config file if it's present
@@ -53,11 +51,20 @@ def init():
                 config = read_config(config_path)
             except:
                 logging.exception('Failed to load config from {}'.format(config_path))
+                config_path = None
             else:
                 logging.info('Successfully loaded config from {}'.format(config_path))
                 break
     # After this loop, the config_path global should contain
     # path for config that successfully loaded
+
+    return config, config_path
+
+def init():
+    """Initialize input and output objects"""
+
+    global input_processor, screen, cm, config, config_path
+    config, config_path = load_config()
 
     if config is None:
         sys.exit('Failed to load any config files!')
@@ -87,7 +94,7 @@ def init():
     if hasattr(screen, "set_backlight_callback"):
         screen.set_backlight_callback(input_processor)
     cm.init_io(input_processor, screen)
-    cm.switch_to_context("main", launch_thread=False)
+    cm.switch_to_context("main")
     i, o = cm.get_io_for_context("main")
 
     return i, o
@@ -99,6 +106,8 @@ def launch(name=None, **kwargs):
     single-app mode (if ``name`` kwarg is passed).
     """
 
+    global app_man
+
     i, o = init()
     appman_config = config.get("app_manager", {})
     app_man = AppManager('apps', cm, config=appman_config)
@@ -109,7 +118,6 @@ def launch(name=None, **kwargs):
             splash(i, o)
         except:
             logging.exception('Failed to load the splash screen')
-            logging.exception(traceback.format_exc())
 
         # Load all apps
         app_menu = app_man.load_all_apps()
@@ -123,12 +131,12 @@ def launch(name=None, **kwargs):
         # Load only single app
         try:
             app_path = app_man.get_app_path_for_cmdline(name)
-            app = app_man.load_app(app_path)
+            app = app_man.load_app(app_path, threaded=False)
         except:
             logging.exception('Failed to load the app: {0}'.format(name))
             input_processor.atexit()
             raise
-        cm.switch_to_context(app_path, launch_thread=False)
+        cm.switch_to_context(app_path)
         runner = app.on_start if hasattr(app, "on_start") else app.callback
 
     exception_wrapper(runner)
@@ -150,7 +158,6 @@ def exception_wrapper(callback):
         status = 1
     except:
         logging.exception('A wild exception appears!')
-        logging.exception(traceback.format_exc())
         Printer(["A wild exception", "appears!"], None, screen, 0)
         status = 1
     else:
@@ -181,6 +188,7 @@ if __name__ == '__main__':
 
     # Signal handler for debugging
     signal.signal(signal.SIGUSR1, dump_threads)
+    signal.signal(signal.SIGHUP, helpers.logger.on_reload)
 
     # Setup argument parsing
     parser = argparse.ArgumentParser(description='ZPUI runner')
