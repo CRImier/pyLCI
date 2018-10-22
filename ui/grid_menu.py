@@ -12,7 +12,7 @@ class GridMenu(Menu):
 
 		Menu.__init__(self, contents, i, o, name, override_left=False)
 
-		self.c = Canvas(self.o)
+		self.view = GridView(o, self, self.GRID_WIDTH, self.GRID_HEIGHT)
 
 	def generate_keymap(self):
 		return {
@@ -42,7 +42,25 @@ class GridMenu(Menu):
 	def move_down(self):
 		self._move_cursor(self.GRID_WIDTH)
 
-	def draw_menu(self):
+	def refresh(self):
+		self.view.refresh()
+
+	def _move_cursor(self, m):
+		self.pointer += m
+		self.pointer = self.pointer%(self.GRID_WIDTH*self.GRID_HEIGHT)
+		self.refresh()
+
+
+class GridView():
+
+	def __init__(self, o, ui_element, width, height):
+		self.c = Canvas(o)
+		self.el = ui_element
+
+		self.GRID_WIDTH = width
+		self.GRID_HEIGHT = height
+
+	def draw_grid(self):
 		self.c.clear()
 
 		# Calculate margins
@@ -50,8 +68,8 @@ class GridMenu(Menu):
 		step_height = self.c.height / self.GRID_HEIGHT
 
 		# Calculate grid index
-		item_x = self.pointer%self.GRID_WIDTH
-		item_y = self.pointer//self.GRID_HEIGHT
+		item_x = self.el.pointer%self.GRID_WIDTH
+		item_y = self.el.pointer//self.GRID_HEIGHT
 
 		# Draw horizontal and vertical lines
 		for x in range(1, self.GRID_WIDTH):
@@ -61,8 +79,8 @@ class GridMenu(Menu):
 				self.c.line((0, y*step_height, self.c.width, y*step_height))
 
 		# Draw the app names
-		for index, item in enumerate(self.contents):
-			app_name = self.contents[index][0]
+		for index, item in enumerate(self.el.contents):
+			app_name = self.el.contents[index][0]
 			text_bounds = self.c.get_text_bounds(app_name)
 
 			x_cord = (index%self.GRID_WIDTH)*step_width+(step_width-text_bounds[0])/2
@@ -78,9 +96,4 @@ class GridMenu(Menu):
 		self.c.display()
 
 	def refresh(self):
-		self.draw_menu()
-
-	def _move_cursor(self, m):
-		self.pointer += m
-		self.pointer = self.pointer%9
-		self.refresh()
+		self.draw_grid()
