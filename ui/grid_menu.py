@@ -58,6 +58,7 @@ class GridMenu(BaseListBackgroundableUIElement):
 		step_width = self.c.width / self.GRID_WIDTH
 		step_height = self.c.height / self.GRID_HEIGHT
 
+		# Calculate grid index
 		item_x = self.pointer%self.GRID_WIDTH
 		item_y = self.pointer//self.GRID_HEIGHT
 
