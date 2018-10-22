@@ -74,3 +74,5 @@ log_conf.ini
 emulator
 # Ignoring the default screenshot folder
 screenshots/
+# Nano files
+*.swp

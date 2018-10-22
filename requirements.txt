@@ -9,3 +9,9 @@ mock
 pydbus
 pyotp
 jsonrpclib
+unidecode
+canonicaljson
+appdirs
+unpaddedbase64
+requests
+responses

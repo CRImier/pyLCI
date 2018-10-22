@@ -2,14 +2,17 @@ import os
 import signal
 from subprocess import check_output, STDOUT, CalledProcessError
 from time import sleep
+import json
 
 try:
     import httplib
 except:
     import http.client as httplib
 
-from ui import Menu, PrettyPrinter, DialogBox, ProgressBar, Listbox
-from helpers.logger import setup_logger
+from ui import Menu, PrettyPrinter, DialogBox, ProgressBar, Listbox, UniversalInput
+from helpers import setup_logger, read_or_create_config, save_config_method_gen, local_path_gen
+
+local_path = local_path_gen(__name__)
 
 import logging_ui
 import about
@@ -38,6 +41,17 @@ class GitInterface(object):
     def get_head_for_branch(cls, branch):
         output = cls.command("rev-parse {}".format(branch)).strip()
         return output
+
+    @classmethod
+    def get_origin_url(cls):
+        try:
+            return cls.command("remote get-url origin").strip()
+        except CalledProcessError: #Git v2.1 does not support get-url
+            return cls.command("config remote.origin.url").strip()
+
+    @classmethod
+    def set_origin_url(cls, url):
+        return cls.command("remote set-url origin {}".format(url)).strip()
 
     @classmethod
     def get_current_branch(cls):
@@ -161,10 +175,11 @@ class GenericUpdater(object):
 class GitUpdater(GenericUpdater):
     branch = "master"
 
-    steps = ["check_connection", "check_git", "check_revisions", "pull", "install_requirements", "pretest_migrations", "tests"]
+    steps = ["check_connection", "check_git", "set_url", "check_revisions", "pull", "install_requirements", "pretest_migrations", "tests"]
     progressbar_messages = {
         "check_connection": "Connection check",
         "check_git": "Running git",
+        "set_url": "Setting URL",
         "check_revisions": "Comparing code",
         "pull": "Fetching code",
         "install_requirements": "Installing packages",
@@ -175,11 +190,26 @@ class GitUpdater(GenericUpdater):
         "check_connection": "No Internet connection!",
         "check_git": "Git binary not found!",
         "check_revisions": "Exception while comparing revisions!",
+        "set_url": "Can't set URL!",
         "pull": "Couldn't get new code!",
         "install_requirements": "Failed to install new packages!",
         "pretest_migrations": "Failed to run migrations!",
         "tests": "Tests failed!"
     }
+
+    config_filename = "git_updater.json"
+    safe_branches = ["master", "staging", "devel"]
+    # Forming the default config
+    default_config = '{"url":"https://github.com/ZeroPhone/ZPUI", "branches":[]}'
+    json_config = json.loads(default_config)
+    json_config["branches"] = safe_branches
+    default_config = json.dumps(json_config)
+
+    def __init__(self, check_revisions=True):
+        GenericUpdater.__init__(self)
+        self.check_revisions = check_revisions
+        self.config = read_or_create_config(local_path(self.config_filename), self.default_config, "Git updater")
+        self.save_config = save_config_method_gen(self, local_path(self.config_filename))
 
     def do_check_git(self):
         if not GitInterface.git_available():
@@ -191,10 +221,14 @@ class GitUpdater(GenericUpdater):
         current_branch_name = GitInterface.get_current_branch()
         current_revision = GitInterface.get_head_for_branch(current_branch_name)
         remote_revision = GitInterface.get_head_for_branch("origin/"+current_branch_name)
-        if current_revision == remote_revision:
+        if self.check_revisions and current_revision == remote_revision:
             raise UpdateUnnecessary
         else:
             self.previous_revision = current_revision
+
+    def do_set_url(self):
+        self.previous_url = GitInterface.get_origin_url()
+        GitInterface.set_origin_url(self.config["url"])
 
     def do_check_connection(self):
         conn = httplib.HTTPConnection("github.com", timeout=10)
@@ -213,6 +247,20 @@ class GitUpdater(GenericUpdater):
     def do_pull(self):
         current_branch_name = GitInterface.get_current_branch()
         GitInterface.pull(branch = current_branch_name)
+
+    def change_origin_url(self):
+        original_url = self.config["url"]
+        url = UniversalInput(i, o, message="URL:", value=original_url).activate()
+        if url:
+            self.config["url"] = url
+            self.save_config()
+            PrettyPrinter("Saved new URL!", i, o)
+
+    def settings(self):
+        mc = [
+        ["Select branch", self.pick_branch],
+        ["Change URL", self.change_origin_url]]
+        Menu(mc, i, o, name="Git updater settings menu").activate()
 
     def do_pretest_migrations(self):
         import pretest_migration
@@ -237,19 +285,27 @@ class GitUpdater(GenericUpdater):
         # requirements.txt now contains old requirements, let's install them back
         self.do_install_requirements()
 
+    def revert_set_url(self):
+        # do_set_url already ran, we now have the previous URL in self.previous_url
+        # or do we?
+        if hasattr(self, 'previous_url'):
+            GitInterface.set_origin_url(self.previous_url)
+
     def pick_branch(self):
-        #TODO: add branches dynamically instead of having a whitelist
-        available_branches = [["master"], ["devel"]]
-        branch = Listbox(available_branches, i, o, name="Git updater listbox").activate()
+        #TODO: allow adding branches dynamically instead of having a whitelist
+        lc = [[branch_name] for branch_name in self.config["branches"]]
+        branch = Listbox(lc, i, o, name="Git updater branch selection listbox").activate()
         if branch:
             try:
                 GitInterface.checkout(branch)
+                self.check_revisions = False
+                updated = self.update()
+                self.check_revisions = True
             except:
                 PrettyPrinter("Couldn't check out the {} branch! Try resolving the conflict through the command-line.".format(branch), i, o, 3)
             else:
                 PrettyPrinter("Now on {} branch!".format(branch), i, o, 2)
                 self.suggest_restart()
-                #TODO: run tests?
 
 
 i = None  # Input device
@@ -267,8 +323,7 @@ def init_app(input, output):
 
 def callback():
     git_updater = GitUpdater()
-    c = [["Update ZPUI", git_updater.update],
-         ["Select branch", git_updater.pick_branch],
+    c = [["Update ZPUI", git_updater.update, git_updater.settings],
          #["Submit logs", logging_ui.submit_logs],
          ["Logging settings", logging_ui.config_logging],
          ["About", about.about]]

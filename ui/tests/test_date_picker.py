@@ -73,5 +73,43 @@ class TestDatePicker(unittest.TestCase):
 			return_value = dp.activate()
 		assert return_value is None
 
+	def test_set_current_day(self):
+		grid = [30,  31, -1, -1, -1, -1,  1,
+			 2,   3,  4,  5,  6,  7,  8,
+			 9,  10, 11, 12, 13, 14, 15,
+			 16, 17, 18, 19, 20, 21, 22,
+			 23, 24, 25, 26, 27, 28, 29]
+		dp = DatePicker(get_mock_input(), get_mock_output(), name=dp_name)
+		dp.refresh = lambda *args, **kwargs: None
+		dp._set_month_year(7, 2018)
+		assert(dp.calendar_grid == grid)
+		dp.set_current_day(1)
+		assert(dp.selected_option == {"x":6, "y":0})
+
+	def test_moving_right_left(self):
+		dp = DatePicker(get_mock_input(), get_mock_output(), name=dp_name)
+		dp.refresh = lambda *args, **kwargs: None
+		dp._set_month_year(7, 2018)
+		dp.set_current_day(1)
+		dp.move_right()
+		assert(dp.get_current_day() == 2)
+		assert(dp.selected_option == {"x":0, "y":1})
+		dp.set_current_day(1)
+		assert(dp.selected_option == {"x":6, "y":0})
+		dp.move_left()
+		assert(dp.current_month == 6)
+		assert(dp.current_year == 2018)
+		assert(dp.selected_option == {"x":5, "y":4})
+
+	def test_moving_up_down(self):
+		dp = DatePicker(get_mock_input(), get_mock_output(), name=dp_name)
+		dp.refresh = lambda *args, **kwargs: None
+		dp._set_month_year(7, 2018)
+		dp.set_current_day(1)
+		dp.move_down()
+		assert(dp.get_current_day() == 8)
+		dp.move_up()
+		assert(dp.get_current_day() == 1)
+
 if __name__ == '__main__':
 	unittest.main()

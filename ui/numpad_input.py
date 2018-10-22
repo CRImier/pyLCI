@@ -3,7 +3,7 @@ from time import sleep
 from threading import Lock
 from functools import wraps
 
-from helpers import setup_logger
+from helpers import setup_logger, remove_left_failsafe
 from utils import to_be_foreground, check_value_lock
 from base_ui import BaseUIElement
 
@@ -67,8 +67,7 @@ class NumpadCharInput(BaseUIElement):
               }
 
     bottom_row_buttons = ["Cancel", "OK", "Erase"]
-
-    in_foreground = False
+    spacer_character = ' '
 
     value = ""
     position = 0
@@ -221,7 +220,10 @@ class NumpadCharInput(BaseUIElement):
         elif self.position == len(self.value): #Right on the last character
             self.value += letter
         else:
-            import pdb;pdb.set_trace()
+            #Inserting afterwards?
+            for _ in range(self.position-len(self.value)):
+                self.value += self.spacer_character
+            self.value += letter
 
     @check_position_overflow(">=")
     def update_letter_in_value(self, letter):
@@ -275,6 +277,7 @@ class NumpadCharInput(BaseUIElement):
     @to_be_foreground
     def configure_input(self):
         self.i.clear_keymap()
+        remove_left_failsafe(self.i)
         self.i.set_streaming(self.process_streaming_keycode)
 
     #Functions that are responsible for input to display
@@ -336,6 +339,7 @@ class NumpadNumberInput(NumpadCharInput):
 class NumpadHexInput(NumpadCharInput):
     """Implements a hexadecimal number input UI element for a numeric keypad, allowing to translate number keys into hexadecimal numbers."""
 
+    spacer_character = 'x'
     default_mapping = {"1":"1",
                "2" :"2",
                "3" :"3",
@@ -352,3 +356,24 @@ class NumpadHexInput(NumpadCharInput):
                "#" :"Dx",
                "F5":"E",
                "F6":"F"}
+
+class NumpadKeyboardInput(NumpadCharInput):
+    """Implements a normal keyboard input"""
+
+    default_mapping = {}
+    keys = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+
+    action_keys = {
+       "ENTER":"accept_value",
+       "F1":"deactivate",
+       "LEFT":"deactivate_if_first",
+       "RIGHT":"skip",
+       "F2":"backspace",
+       "BACKSPACE": "backspace"
+    }
+
+    for c in keys:
+        default_mapping[c] = c.lower()
+        default_mapping[c] += c
+
+    default_mapping["SPACE"] = " "

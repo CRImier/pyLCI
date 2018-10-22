@@ -581,7 +581,7 @@ To save the config, use ``save_config(config)`` from anywhere in your app.
         def __init__(self, *args, **kwargs):
             ZeroApp.__init__(self, *args, **kwargs)
             self.config = read_or_create_config(local_path(self.config_filename), self.default_config, self.menu_name+" app")
-            self.save_config = save_config_method_gen(local_path(self.config_filename))
+            self.save_config = save_config_method_gen(self, local_path(self.config_filename))
 
 To save the config, use ``self.save_config()`` from anywhere in your app class.
 

@@ -57,6 +57,9 @@ class IntegerAdjustInput(BaseUIElement):
     def get_return_value(self):
         return self.selected_number
 
+    def idle_loop(self):
+        sleep(0.1)
+
     def print_number(self):
         """ A debug method. Useful for hooking up to an input event so that you can see current number value. """
         logger.info(self.number)

@@ -4,8 +4,9 @@ from time import sleep
 import PIL
 
 from helpers import setup_logger
+from number_input import IntegerAdjustInput
 from utils import to_be_foreground
-from base_ui import BaseUIElement
+from base_ui import BaseUIElement, internal_callback_in_background
 
 logger = setup_logger(__name__, "info")
 
@@ -38,7 +39,9 @@ class Refresher(BaseUIElement):
         Kwargs:
 
             * ``refresh_interval``: Time between display refreshes (and, accordingly, ``refresh_function`` calls).
-            * ``keymap``: Keymap entries you want to set while Refresher is active. By default, KEY_LEFT deactivates the Refresher, if you wan tto override it, do it carefully.
+            * ``keymap``: Keymap entries you want to set while Refresher is active.
+              * If set to a string
+              * By default, KEY_LEFT deactivates the Refresher, if you want to override it, make sure that user can still exit the Refresher.
             * ``name``: Refresher name which can be used internally and for debugging.
 
         """
@@ -101,6 +104,15 @@ class Refresher(BaseUIElement):
                 self.refresh()
             self._counter += 1
         sleep(self.sleep_time)
+
+    @internal_callback_in_background
+    def change_interval(self):
+        """
+        A helper function to adjust the Refresher's refresh interval while it's running
+        """
+        new_interval = IntegerAdjustInput(self.refresh_interval, self.i, self.o, message="Refresh interval:").activate()
+        if new_interval is not None:
+            self.set_refresh_interval(new_interval)
 
     def set_keymap(self, keymap):
         keymap.update(self.custom_keymap)

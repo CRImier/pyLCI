@@ -78,7 +78,7 @@ def callback():
         else:
             logger.debug("Module loaded")
     else:
-        logger.debug()
+        logger.debug("Module load check - problem not found yet and kmodpy not available")
     # Next things:
     # Check dmesg
     # Check config.txt, edit if necessary

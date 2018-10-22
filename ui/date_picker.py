@@ -22,10 +22,10 @@ class DatePicker(BaseUIElement):
 		# Attributes to store the current values
 		self.current_month = 1
 		self.current_year = 2018
-		self.starting_weekday = 1
+		self.starting_weekday = 0
 
-		# Top-left cell is (1, 1)
-		self.selected_option = {'x': 1, 'y': 1}
+		# Top-left cell is (0, 0)
+		self.selected_option = {'x': 0, 'y': 0}
 		self.calendar_grid = []
 
 		self.accepted_value = False
@@ -33,18 +33,34 @@ class DatePicker(BaseUIElement):
 		self.cal = calendar.Calendar()
 
 		# Set month and year to current month/year
-		self._set_month_year(datetime.now().month, datetime.now().year)
+		self._set_month_year(datetime.now().month+1, datetime.now().year)
+		self.set_current_day(datetime.now().day)
+
+	def get_current_day(self):
+		return self.calendar_grid[
+			(self.selected_option['y'])*self.GRID_WIDTH +
+			self.selected_option['x']]
+
+	def get_days_of_current_month(self):
+		days = filter(None, list(self.cal.itermonthdays(self.current_year, self.current_month)))
+		return list(sorted(days))
+
+	def set_current_day(self, day):
+		index = self.calendar_grid.index(day)
+		x = int(index % self.GRID_WIDTH)
+		y = int(index / self.GRID_WIDTH)
+		self.selected_option = {'x': x, 'y': y}
 
 	def get_return_value(self):
 		if self.accepted_value:
 			return {
 				'month': self.current_month,
 				'year': self.current_year,
-				'date': self.calendar_grid[self.selected_option['x']-1+(self.selected_option['y']-1)*self.GRID_WIDTH]
+				'date': self.get_current_day()
 			}
 		else:
 			return None
-	
+
 	def generate_keymap(self):
 		return {
 			"KEY_RIGHT": "move_right",
@@ -52,48 +68,81 @@ class DatePicker(BaseUIElement):
 			"KEY_UP": "move_up",
 			"KEY_DOWN": "move_down",
 			"KEY_ENTER": "accept_value",
-			"KEY_PAGEUP": "next_month",
-			"KEY_PAGEDOWN": "previous_month",
-			"KEY_F1": "exit_date_picker"
+			"KEY_PAGEUP": "move_to_previous_month",
+			"KEY_PAGEDOWN": "move_to_next_month",
+			"KEY_F1": "deactivate"
 		}
 
 	def idle_loop(self):
 		sleep(0.1)
 
-	def exit_date_picker(self):
-		self.deactivate()
-
 	# Move the cursor around
 	def move_right(self):
-		self._move_cursor(1, 0)
+		# ----------->
+		# If day is last, move to the first day of the next month
+		if self.get_current_day() == self.get_days_of_current_month()[-1]:
+			self._move_to_next_month()
+			self.set_current_day(1)
+		# If weekday is Sunday, move to the next Monday
+		elif self.selected_option['x'] == self.GRID_WIDTH-1:
+			self.set_current_day(self.get_current_day()+1)
+		else:
+			self._move_cursor(1, 0)
+		self.refresh()
 
 	def move_left(self):
-		self._move_cursor(-1, 0)
+		# <-----------
+		# If day is 1st, move to the last day of the prev. month
+		if self.get_current_day() == 1:
+			self._move_to_previous_month()
+			self.set_current_day(self.get_days_of_current_month()[-1])
+		# If weekday is Monday, move to the previous Sunday
+		elif self.selected_option['x'] == 0:
+			self.set_current_day(self.get_current_day()-1)
+		else:
+			self._move_cursor(-1, 0)
+		self.refresh()
 
 	def move_up(self):
+		# ^^^^^^^^^^
+		# TODO: If week is first, move to the last same weekday of the next month
 		self._move_cursor(0, -1)
+		self.refresh()
 
 	def move_down(self):
+		# TODO: If week is last, move to the first same weekday of the prev. month
 		self._move_cursor(0, 1)
+		self.refresh()
 
 	# Switch between months - TODO
-	def next_month(self):
+	def _move_to_next_month(self):
+		"""Moving to the next month - without refresh() (for internal use)"""
 		if self.current_month < 12:
 			self._set_month_year(self.current_month+1, self.current_year)
 		elif self.current_month == 12:
 			self._set_month_year(1, self.current_year+1)
 		else:
-			self.logger.error("Weird month value: {}".format(self.current_month))
+			raise ValueError("Weird month value: {}".format(self.current_month))
 
-	def previous_month(self):
+	def move_to_next_month(self):
+		"""Moving to the next month - with refresh() (key callback)"""
+		self._move_to_next_month()
+		self.refresh()
+
+	def _move_to_previous_month(self):
+		"""Moving to the previous month - without refresh() (for internal use)"""
 		if self.current_month > 1:
 			self._set_month_year(self.current_month-1, self.current_year)
 		elif self.current_month == 1:
 			self._set_month_year(12, self.current_year-1)
 		else:
-			self.logger.error("Weird month value: {}".format(self.current_month))
+			raise ValueError("Weird month value: {}".format(self.current_month))
 
-	# Accept the currently selected value - TODO
+	def move_to_previous_month(self):
+		"""Moving to the previous month - with refresh() (key callback)"""
+		self._move_to_previous_month()
+		self.refresh()
+
 	def accept_value(self):
 		self.accepted_value = True
 		self.deactivate()
@@ -130,24 +179,24 @@ class DatePicker(BaseUIElement):
 				continue
 
 			# Jump to the first line if it's reached the last cell
-			if i >= self.GRID_WIDTH * self.GRID_HEIGHT:
+			if i >= (self.GRID_WIDTH * self.GRID_HEIGHT):
 				i = 0
 
 			date_text_bounds = self.c.get_text_bounds(str(date))
-
 			# Calculate the coordinates for the date string
-			x_cord = (i%self.GRID_WIDTH)*step_width+((step_width-date_text_bounds[0])/2)
-			y_cord = (i//self.GRID_WIDTH)*step_height+step_height+((step_height-date_text_bounds[1])/2)
-
-
+			x_cord = ( i%self.GRID_WIDTH)*step_width + \
+					( (step_width-date_text_bounds[0])/2 )
+			y_cord = ( i//self.GRID_WIDTH)*step_height + \
+					step_height+ \
+					( (step_height-date_text_bounds[1])/2 )
 			self.c.text(str(date), (x_cord+1, y_cord+1))
 
 			# Increase the counter and continue to the next date, import for positioning
 			i += 1
 
 		# Highlight selected option
-		selected_x = (self.selected_option['x']-1)*step_width
-		selected_y = (self.selected_option['y']-1)*step_height+step_height
+		selected_x = (self.selected_option['x'])*step_width
+		selected_y = (self.selected_option['y'])*step_height+step_height
 		self.c.invert_rect((selected_x+1, selected_y+1, selected_x+step_width+1, selected_y+step_height))
 
 		self.c.display()
@@ -160,19 +209,19 @@ class DatePicker(BaseUIElement):
 		if self._check_movable_field(self.selected_option['x']+delta_x, self.selected_option['y']+delta_y):
 			self.selected_option['x'] += delta_x
 			self.selected_option['y'] += delta_y
-			self.refresh()
 
 	# Check whether the desired movement is viable
 	def _check_movable_field(self, new_x, new_y):
 		# New movement would definitely be out of grid
-		if (new_x-1)+(new_y-1)*self.GRID_WIDTH >= len(self.calendar_grid):
+		limit = (new_x)+(new_y)*self.GRID_WIDTH
+		if limit >= len(self.calendar_grid):
 			return False
 
-		if (	 self.calendar_grid[(new_x-1)+(new_y-1)*self.GRID_WIDTH] != -1
-			 and new_x <= self.GRID_WIDTH
-			 and new_x >= 1
-			 and new_y <= self.GRID_HEIGHT
-			 and new_y >= 1):
+		if (	 self.calendar_grid[(new_x)+(new_y)*self.GRID_WIDTH] != -1
+			 and new_x < self.GRID_WIDTH
+			 and new_x >= 0
+			 and new_y < self.GRID_HEIGHT
+			 and new_y >= 0):
 
 			return True
 		else:
@@ -197,7 +246,7 @@ class DatePicker(BaseUIElement):
 			self.calendar_grid.append(-1)
 
 		# Set the cursor to the first viable cell
-		self.selected_option['x'] = i+2
+		self.selected_option['x'] = i+1
 
 		i = first_day
 		for date in self.cal.itermonthdays(self.current_year, self.current_month):
@@ -205,19 +254,12 @@ class DatePicker(BaseUIElement):
 				continue
 
 			if i >= self.GRID_WIDTH*self.GRID_HEIGHT:
-				self.calendar_grid[i%self.GRID_WIDTH*self.GRID_HEIGHT] = date
+				self.calendar_grid[i%(self.GRID_WIDTH*self.GRID_HEIGHT)] = date
 			else:
 				self.calendar_grid.append(date)
 
 			i += 1
-
 		# Assign -1 to empty cells
 		for i in range(self.GRID_WIDTH*self.GRID_HEIGHT-i):
 			self.calendar_grid.append(-1)
-
-		print(self.calendar_grid)
-
-		self.refresh()
-
-
 

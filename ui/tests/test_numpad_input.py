@@ -24,7 +24,7 @@ except ImportError:
         from numpad_input import NumpadCharInput
 
 def get_mock_input():
-    return Mock()
+    return Mock(maskable_keymap=["KEY_LEFT"])
 
 
 def get_mock_output(rows=8, cols=21):
