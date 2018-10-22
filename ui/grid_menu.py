@@ -19,8 +19,14 @@ class GridMenu(BaseUIElement):
 
 		self.selected_option = {'x': 1, 'y': 1}
 
+		self.accepted_value = False
+
 	def get_return_value(self):
-		pass
+		if self.accepted_value:
+			self.contents[self.selected_option['x']-1][self.selected_option['y']-1][1]()
+			return True
+		else:
+			return None
 
 	def generate_keymap(self):
 		return {
@@ -51,7 +57,8 @@ class GridMenu(BaseUIElement):
 		self._move_cursor(0, 1)
 
 	def accept_value(self):
-		pass
+		self.accepted_value = True
+		self.deactivate()
 
 	def draw_menu(self):
 		self.c.clear()
@@ -70,7 +77,7 @@ class GridMenu(BaseUIElement):
 		# Draw the app names
 		for x in range(len(self.contents)):
 			for y in range(len(self.contents[x])):
-				app_name = self.contents[x][y]
+				app_name = self.contents[x][y][0]
 				text_bounds = self.c.get_text_bounds(app_name)
 
 				x_cord = (x*step_width)+(step_width-text_bounds[0])/2
