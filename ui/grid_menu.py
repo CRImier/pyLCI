@@ -14,7 +14,9 @@ class GridMenu(BaseUIElement):
 
 		self.c = Canvas(self.o)
 
+		# Contains contains a 3x3x2 array
 		self.contents = contents
+
 		self.selected_option = {'x': 1, 'y': 1}
 
 	def get_return_value(self):
