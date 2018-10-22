@@ -1,16 +1,16 @@
 from time import sleep
 
-from base_list_ui import BaseListBackgroundableUIElement
+from menu import Menu
 from canvas import Canvas
 
-class GridMenu(BaseListBackgroundableUIElement):
+class GridMenu(Menu):
 
 	GRID_WIDTH = 3
 	GRID_HEIGHT = 3
 
 	def __init__(self, i, o, contents, name="GridMenu"):
 
-		BaseListBackgroundableUIElement.__init__(self, contents, i, o, name, override_left=False)
+		Menu.__init__(self, contents, i, o, name, override_left=False)
 
 		self.c = Canvas(self.o)
 
@@ -26,11 +26,6 @@ class GridMenu(BaseListBackgroundableUIElement):
 
 	def idle_loop(self):
 		sleep(0.1)
-
-	def select_entry(self):
-		entry = self.contents[self.pointer]
-		entry[1]()
-		self.deactivate()
 
 	def exit_menu(self):
 		self.deactivate()
