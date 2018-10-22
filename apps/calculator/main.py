@@ -26,17 +26,6 @@ def get_numbers():
   
   return [Decimal(inputA), Decimal(inputB)]
 
-def do_add():
-    do_operation('+')
-
-def do_subtract():
-    do_operation('-')
-
-def do_multiply():
-    do_operation('*')
-
-def do_divide():
-    do_operation('/')
 
 def do_operation(operation):
     values = get_numbers()
@@ -60,21 +49,19 @@ def do_operation(operation):
 
     Printer((str(values[0]) + ' ' + operation + ' ' + str(values[1]) + ' = ' + str(result)), i, o, 15)
 
-callback = None
+
+def callback():
+    main_menu_contents = [
+    ["Add", lambda: do_operation('+')],
+    ["Subtract", lambda: do_operation('-')],
+    ["Multiply", lambda: do_operation('*')],
+    ["Divide", lambda: do_operation('/')]]
+    Menu(main_menu_contents, i, o, "Calculator app menu").activate()
 
 i = None #Input device
 o = None #Output device
 
 def init_app(input, output):
-    global callback, i, o
-    i = input;
-    o = output  
-    main_menu_contents = [
-    ["Add", do_add],
-    ["Subtract", do_subtract],
-    ["Multiply", do_multiply],
-    ["Divide", do_divide],
-    ["Exit", 'exit']]
-    main_menu = Menu(main_menu_contents, i, o, "Calculator app menu")
-    callback = main_menu.activate
-
+    global i, o
+    i = input
+    o = output
