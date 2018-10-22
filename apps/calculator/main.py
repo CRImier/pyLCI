@@ -1,31 +1,24 @@
-
-
-from helpers import setup_logger
-from ui import IntegerAdjustInput
-from decimal import Decimal, ROUND_HALF_UP
-
 menu_name = "Calculator"
 
 from subprocess import call
 from time import sleep
+from decimal import Decimal, ROUND_HALF_UP
 
-from ui import Menu, Printer
-
-logger = setup_logger(__name__, "info")
+from helpers import setup_logger
+from ui import IntegerAdjustInput, Menu, PrettyPrinter as Printer
 
 def get_numbers():
-  inputA = IntegerAdjustInput(0, i, o, message="Pick first number", name="CalculatorAInput").activate()
-  if inputA is None:
-    Printer("Operation canceled.", i, o, 2)
-    return;
+    inputA = IntegerAdjustInput(0, i, o, message="Pick first number", name="CalculatorAInput").activate()
+    if inputA is None:
+        Printer("Operation cancelled.", i, o, 2)
+        return;
 
-  inputB = IntegerAdjustInput(0, i, o, message="Pick second number", name="CalculatorBInput").activate()
-  if inputB is None:
-    Printer("Operation canceled.", i, o, 2)
-    return;
-  
-  return [Decimal(inputA), Decimal(inputB)]
+    inputB = IntegerAdjustInput(0, i, o, message="Pick second number", name="CalculatorBInput").activate()
+    if inputB is None:
+        Printer("Operation cancelled.", i, o, 2)
+        return;
 
+    return [Decimal(inputA), Decimal(inputB)]
 
 def do_operation(operation):
     values = get_numbers()
@@ -43,7 +36,7 @@ def do_operation(operation):
         else:
             #TODO make decimal places a config item along with rounding options
             result = ( values[0] / values[1] ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-    
+
     if result == -0:
         result = 0
 
