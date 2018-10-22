@@ -99,8 +99,8 @@ class GridMenu(BaseUIElement):
 		new_x = self.selected_option['x'] + x_mod
 		new_y = self.selected_option['y'] + y_mod
 
-		if new_x >= 1 and new_x <= 3:
-			if new_y >= 1 and new_y <= 3:
+		if new_x >= 1 and new_x <= self.GRID_WIDTH:
+			if new_y >= 1 and new_y <= self.GRID_HEIGHT:
 				self.selected_option['x'] = new_x
 				self.selected_option['y'] = new_y
 
