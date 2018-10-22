@@ -44,10 +44,10 @@ class BaseListUIElement(BaseUIElement):
     config_key = "base_list_ui"
 
     def __init__(self, contents, i, o, name=None, entry_height=1, append_exit=True, exitable=True, scrolling=True,
-                 config=None, keymap=None):
+                 config=None, keymap=None, override_left=True):
         self.exitable = exitable
         self.custom_keymap = keymap if keymap else {}
-        BaseUIElement.__init__(self, i, o, name, input_necessary=True)
+        BaseUIElement.__init__(self, i, o, name, input_necessary=True, override_left=override_left)
         self.entry_height = entry_height
         self.append_exit = append_exit
         self.scrolling = {
