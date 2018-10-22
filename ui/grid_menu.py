@@ -10,7 +10,7 @@ class GridMenu(BaseListBackgroundableUIElement):
 
 	def __init__(self, i, o, contents, name="GridMenu"):
 
-		BaseListBackgroundableUIElement.__init__(self, contents, i, o, name)
+		BaseListBackgroundableUIElement.__init__(self, contents, i, o, name, override_left=False)
 
 		self.c = Canvas(self.o)
 
