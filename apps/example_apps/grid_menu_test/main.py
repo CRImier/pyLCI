@@ -6,7 +6,7 @@ def test_func():
 
 class MainMenu(ZeroApp):
 
-	menu_name = "Main Menu"
+	menu_name = "Grid menu test"
 
 	def on_start(self):
 		grid_contents = [
