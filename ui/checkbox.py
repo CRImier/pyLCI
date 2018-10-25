@@ -50,14 +50,6 @@ class Checkbox(BaseListUIElement):
             self.exit_entry[0] = final_button_name
         BaseListUIElement.__init__(self, *args, **kwargs)
 
-    def set_views_dict(self):
-        self.views = {
-            "PrettyGraphicalView": ChSixteenPtView,  # Left for compatibility
-            "SimpleGraphicalView": ChEightPtView,  # Left for compatibility
-            "SixteenPtView": ChSixteenPtView,
-            "EightPtView": ChEightPtView,
-            "TextView": ChTextView}
-
     def get_return_value(self):
         if self.accepted:
             return {self.contents[index][1]: self.states[index] for index, element in enumerate(self.contents) if
@@ -161,13 +153,4 @@ class CheckboxRenderingMixin(object):
         return rendered_entry
 
 
-class ChEightPtView(CheckboxRenderingMixin, EightPtView):
-    pass
-
-
-class ChTextView(CheckboxRenderingMixin, TextView):
-    pass
-
-
-class ChSixteenPtView(CheckboxRenderingMixin, SixteenPtView):
-    pass
+Checkbox.view_mixin = CheckboxRenderingMixin

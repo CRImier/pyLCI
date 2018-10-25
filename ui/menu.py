@@ -57,14 +57,6 @@ class Menu(BaseListBackgroundableUIElement):
         self.contents_hook = kwargs.pop("contents_hook", None)
         BaseListBackgroundableUIElement.__init__(self, *args, **kwargs)
 
-    def set_views_dict(self):
-        self.views = {
-            "PrettyGraphicalView": MeSixteenPtView,  # Left for compatibility
-            "SimpleGraphicalView": MeEightPtView,  # Left for compatibility
-            "SixteenPtView": MeSixteenPtView,
-            "EightPtView": MeEightPtView,
-            "TextView": MeTextView}
-
     def before_activate(self):
         # Clearing flags before the menu is activated
         self.exit_exception = False
@@ -140,29 +132,16 @@ class MenuRenderingMixin(object):
             )
             c.polygon(coords, fill=c.default_color)
 
-
-class MeEightPtView(MenuRenderingMixin, EightPtView):
-
     def draw_menu_text(self, c, menu_text, left_offset):
         for i, line in enumerate(menu_text):
             y = (i * self.charheight - 1) if i != 0 else 0
-            c.text(line, (left_offset, y))
-            self.draw_triangle(c, i)
+            c.text(line, (left_offset, y), font=self.font)
+            if "b&w-pixel" in self.o.type:
+                self.draw_triangle(c, i)
 
 
-class MeTextView(MenuRenderingMixin, TextView):
-    # Arrow rendering not yet done for text-based displays =(
-    pass
+Menu.view_mixin = MenuRenderingMixin
 
-
-class MeSixteenPtView(MenuRenderingMixin, SixteenPtView):
-
-    def draw_menu_text(self, c, menu_text, left_offset):
-        font = c.load_font(self.font, self.charheight)
-        for i, line in enumerate(menu_text):
-            y = (i * self.charheight - 1) if i != 0 else 0
-            c.text(line, (left_offset, y), font=font)
-            self.draw_triangle(c, i)
 
 class MessagesMenu(Menu):
     """A modified version of the Menu class for displaying a list of messages and loading new ones"""

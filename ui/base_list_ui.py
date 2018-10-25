@@ -42,6 +42,7 @@ class BaseListUIElement(BaseUIElement):
     exit_entry = ["Back", "exit"]
 
     config_key = "base_list_ui"
+    view_mixin = None
 
     def __init__(self, contents, i, o, name=None, entry_height=1, append_exit=True, exitable=True, scrolling=True,
                  config=None, keymap=None, override_left=True):
@@ -74,6 +75,13 @@ class BaseListUIElement(BaseUIElement):
             "PrettyGraphicalView": SixteenPtView,  # Not a descriptive name - left for compatibility
             "SimpleGraphicalView": EightPtView  # Not a descriptive name - left for compatibility
         }
+        if self.view_mixin:
+            class_name = self.__class__.__name__
+            for view_name, view_class in self.views.items():
+                if view_class.use_mixin:
+                    name = "{}-{}".format(view_name, class_name)
+                    logger.debug("Subclassing {} into {}".format(view_name, name))
+                    self.views[view_name] = type(name, (self.view_mixin, view_class), {})
 
     def set_view(self, config):
         view = None
@@ -315,6 +323,7 @@ class BaseListBackgroundableUIElement(BaseListUIElement):
 # Views.
 
 class TextView(object):
+    use_mixin = True
     first_displayed_entry = 0
     scrolling_speed_divisor = 4
 
@@ -461,6 +470,7 @@ class EightPtView(TextView):
     x_offset = 2
     x_scrollbar_offset = 5
     scrollbar_y_offset = 1
+    font = None
 
     def __init__(self, *args, **kwargs):
         self.full_width_cursor = kwargs.pop("full_width_cursor", False)
@@ -514,7 +524,7 @@ class EightPtView(TextView):
     def draw_menu_text(self, c, menu_text, left_offset):
         for i, line in enumerate(menu_text):
             y = (i * self.charheight - 1) if i != 0 else 0
-            c.text(line, (left_offset, y))
+            c.text(line, (left_offset, y), font=self.font)
 
     def draw_cursor(self, c, menu_text, left_offset):
         cursor_y = self.get_active_line_num()
@@ -555,18 +565,13 @@ class EightPtView(TextView):
 class SixteenPtView(EightPtView):
     charwidth = 8
     charheight = 16
-    font = "Fixedsys62.ttf"
-
-    def draw_menu_text(self, c, menu_text, left_offset):
-        font = c.load_font(self.font, self.charheight)
-        for i, line in enumerate(menu_text):
-            y = (i * self.charheight - 1) if i != 0 else 0
-            c.text(line, (left_offset, y), font=font)
+    font = ("Fixedsys62.ttf", 16)
 
 
 class MainMenuTripletView(SixteenPtView):
     # TODO: enable scrolling
 
+    use_mixin = False
     charwidth = 8
     charheight = 16
 
