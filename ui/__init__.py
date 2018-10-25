@@ -23,5 +23,7 @@ from ui.numbered_menu import NumberedMenu
 from canvas import Canvas, MockOutput
 from date_picker import DatePicker
 from time_picker import TimePicker
+from order_adjust import OrderAdjust
+
 IntegerInDecrementInput = IntegerAdjustInput  # Compatibility with old ugly name
 LoadingIndicator = LoadingBar
