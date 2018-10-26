@@ -1,4 +1,5 @@
 from time import sleep
+from math import ceil
 
 from menu import Menu
 from canvas import Canvas
@@ -13,6 +14,8 @@ class GridMenu(Menu):
 		Menu.__init__(self, contents, i, o, name, override_left=False)
 
 		self.view = GridView(o, self, self.GRID_WIDTH, self.GRID_HEIGHT)
+
+		self.y_index = 0;
 
 	def generate_keymap(self):
 		return {
@@ -47,6 +50,12 @@ class GridMenu(Menu):
 
 	def _move_cursor(self, m):
 		self.pointer += m
+
+		# Scroll down if the pointer has reached the end and there are cells left
+		if self.pointer//self.GRID_WIDTH >= self.GRID_HEIGHT:
+			if self.y_index + self.GRID_HEIGHT < ceil(len(self.contents)/float(self.GRID_WIDTH)):
+				self.y_index += 1
+
 		self.pointer = self.pointer%(self.GRID_WIDTH*self.GRID_HEIGHT)
 		self.refresh()
 
