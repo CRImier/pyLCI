@@ -5,7 +5,9 @@ from time import sleep
 from ui import LoadingBar, PrettyPrinter as Printer, TextReader
 from helpers import setup_logger
 
-from libs import dkms_debug
+from libs import dmesg, dkms_debug
+
+import sdio_debug
 
 logger = setup_logger(__name__, "debug")
 
@@ -79,8 +81,19 @@ def callback():
             logger.debug("Module loaded")
     else:
         logger.debug("Module load check - problem not found yet and kmodpy not available")
-    # Next things:
     # Check dmesg
+    if not problem_found:
+        li.message = "Checking dmesg"
+        sleep(0.5)
+        logger.info("Parsing dmesg output")
+        #dmesg_msgs = dmesg.parse_dmesg_output(open("libs/tests/esp_broken_trace.txt", 'r').read())
+        dmesg_msgs = dmesg.get_dmesg()
+        if sdio_debug.check_lowlevel_mmc_errors(dmesg_msgs):
+            li.stop()
+            logger.exception("Low-level MMC errors!")
+            Printer("Low-level MMC errors!", i, o)
+            problem_found = True
+    # Next things:
     # Check config.txt, edit if necessary
     li.stop()
     if problem_found:
