@@ -31,7 +31,7 @@ def otp_dump(bin_path = None):
             if line.count(":") == 1:
                 addr, value = line.split(":")
                 if addr.isdigit() and value.isdigit():
-                    result[int(addr)] = int(value)
+                    result[int(addr)] = int(value, 16)
         return result
     else:
         raise ValueError("vcgencmd command problem")
