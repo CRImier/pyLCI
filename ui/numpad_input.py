@@ -282,6 +282,13 @@ class NumpadCharInput(BaseUIElement):
 
     #Functions that are responsible for input to display
 
+    def get_displayed_value(self):
+        """
+        A simple function to get the actually displayed value;
+        might be overridden by child elements (like NumpadPasswordInput)
+        """
+        return self.value
+
     def get_displayed_data(self):
         """Experimental: not meant for 2x16 displays
 
@@ -290,9 +297,10 @@ class NumpadCharInput(BaseUIElement):
         screen_rows = self.o.rows
         screen_cols = self.o.cols
         static_line_count = 2 #One for message, another for context key labels
-        lines_taken_by_value = (len(self.value) / (screen_cols)) + 1
+        value = self.get_displayed_value()
+        lines_taken_by_value = (len(value) / (screen_cols)) + 1
         for line_i in range(lines_taken_by_value):
-            displayed_data.append(self.value[(line_i*screen_cols):][:screen_cols])
+            displayed_data.append(value[(line_i*screen_cols):][:screen_cols])
         empty_line_count = screen_rows - (static_line_count + lines_taken_by_value)
         for _ in range(empty_line_count):
             displayed_data.append("") #Just empty line
@@ -316,6 +324,22 @@ class NumpadCharInput(BaseUIElement):
     def print_value(self):
         """ A debug method. Useful for hooking up to an input event so that you can see current value. """
         logger.info(self.value)
+
+
+class NumpadPasswordInput(NumpadCharInput):
+    """
+    Implements a password input UI element for a numeric keypad, with the same mapping
+    as NumpadCharInput, but hiding all characters except the one that's currently being typed.
+    """
+
+    def get_displayed_value(self):
+        if self.value:
+            masked_string = "*"*len(self.value)
+            if self.pending_character:
+                masked_string = masked_string[:-1] + self.value[-1] # unmask the last character
+            return masked_string
+        else:
+            return ""
 
 
 class NumpadNumberInput(NumpadCharInput):

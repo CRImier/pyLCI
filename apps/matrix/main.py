@@ -90,7 +90,7 @@ class MatrixClientApp(ZeroApp):
 		# Create a matrix user id from the username, currently only ids on matrix.org are possible
 		username = "@{}:matrix.org".format(username)
 
-		password = UniversalInput(self.i, self.o, message="Enter password", name="Matrix app password dialog").activate()
+		password = UniversalInput(self.i, self.o, message="Enter password", name="Matrix app password dialog", charmap="password").activate()
 		if not password:
 			return False
 
