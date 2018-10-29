@@ -27,6 +27,10 @@ class GridMenu(Menu):
 			"KEY_F1": "exit_menu"
 		}
 
+	def select_entry(self, callback_number=1):
+		entry_index = self.pointer+self.y_index*self.GRID_WIDTH
+		Menu.select_entry(self, callback_number=callback_number, entry_index=entry_index)
+
 	def idle_loop(self):
 		sleep(0.1)
 
@@ -50,6 +54,10 @@ class GridMenu(Menu):
 
 	def _move_cursor(self, m):
 		self.pointer += m
+
+		# Scroll up if y_index is larger than 0
+		if self.y_index > 0 and self.pointer < 0:
+			self.y_index += -1
 
 		# Scroll down if the pointer has reached the end and there are cells left
 		if self.pointer//self.GRID_WIDTH >= self.GRID_HEIGHT:

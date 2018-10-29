@@ -80,14 +80,17 @@ class Menu(BaseListBackgroundableUIElement):
                 raise MenuExitException
 
     @to_be_foreground
-    def select_entry(self, callback_number=1):
+    def select_entry(self, callback_number=1, entry_index=None):
         """ Gets the currently specified entry's description from self.contents and executes the callback, if set.
         |Is typically used as a callback from input event processing thread.
         |After callback's execution is finished, sets the keymap again and refreshes the screen.
         |If MenuExitException is returned from the callback, exits menu."""
         logger.debug("entry selected")
         self.to_background()
-        entry = self.contents[self.pointer]
+        if entry_index != None:
+            entry = self.contents[entry_index]
+        else:
+            entry = self.contents[self.pointer]
         if len(entry) > callback_number:
             # Current menu entry has a callback
             if entry == self.exit_entry:
