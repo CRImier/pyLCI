@@ -56,6 +56,10 @@ class GridMenu(Menu):
 			if self.y_index + self.GRID_HEIGHT < ceil(len(self.contents)/float(self.GRID_WIDTH)):
 				self.y_index += 1
 
+		# Check whether the new cell is empty
+		if self.pointer + self.y_index*self.GRID_WIDTH >= len(self.contents):
+			self.pointer -= m
+
 		self.pointer = self.pointer%(self.GRID_WIDTH*self.GRID_HEIGHT)
 		self.refresh()
 
@@ -88,8 +92,8 @@ class GridView():
 				self.c.line((0, y*step_height, self.c.width, y*step_height))
 
 		# Draw the app names
-		for index, item in enumerate(self.el.contents):
-			app_name = self.el.contents[index][0]
+		for index, item in enumerate(self.el.contents[self.el.y_index*self.GRID_WIDTH:]):
+			app_name = self.el.contents[index+self.el.y_index*self.GRID_WIDTH][0]
 			text_bounds = self.c.get_text_bounds(app_name)
 
 			x_cord = (index%self.GRID_WIDTH)*step_width+(step_width-text_bounds[0])/2
