@@ -169,8 +169,9 @@ class Canvas(object):
         font = kwargs.pop("font", self.default_font)
         font = self.decypher_font_reference(font)
         coords = self.check_coordinates(coords)
-        self.draw.text(coords, text, fill=fill, font=font, **kwargs)
-        self.display_if_interactive()
+        if text: # Errors out on empty text
+            self.draw.text(coords, text, fill=fill, font=font, **kwargs)
+            self.display_if_interactive()
 
     def rectangle(self, coords, **kwargs):
         """
