@@ -63,6 +63,7 @@ class GridMenu(Menu):
 		if self.pointer//self.GRID_WIDTH >= self.GRID_HEIGHT:
 			if self.y_index + self.GRID_HEIGHT < ceil(len(self.contents)/float(self.GRID_WIDTH)):
 				self.y_index += 1
+				self.pointer += -3
 
 		# Check whether the new cell is empty
 		if self.pointer + self.y_index*self.GRID_WIDTH >= len(self.contents):
