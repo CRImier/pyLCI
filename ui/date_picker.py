@@ -13,7 +13,7 @@ class DatePicker(BaseUIElement):
 
 	MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-	def __init__(self, i, o, name="DatePicker"):
+	def __init__(self, i, o, name="DatePicker", s_year=None, s_month=None, s_day=None):
 
 		BaseUIElement.__init__(self, i, o, name)
 
@@ -32,9 +32,23 @@ class DatePicker(BaseUIElement):
 
 		self.cal = calendar.Calendar()
 
-		# Set month and year to current month/year
-		self._set_month_year(datetime.now().month+1, datetime.now().year)
-		self.set_current_day(datetime.now().day)
+		# Set the month and year to either the current month/year or a given argument
+		temp_month = datetime.now().month
+		temp_year = datetime.now().year
+
+		if s_month != None:
+			temp_month = s_month
+
+		if s_year != None:
+			temp_year = s_year
+
+		self._set_month_year(temp_month, temp_year)
+
+		# Set the day to either the current day or a given argument
+		if s_day != None:
+			self.set_current_day(s_day)
+		else:
+			self.set_current_day(datetime.now().day)
 
 	def get_current_day(self):
 		return self.calendar_grid[
@@ -46,6 +60,8 @@ class DatePicker(BaseUIElement):
 		return list(sorted(days))
 
 	def set_current_day(self, day):
+		print(day)
+		print(self.calendar_grid)
 		index = self.calendar_grid.index(day)
 		x = int(index % self.GRID_WIDTH)
 		y = int(index / self.GRID_WIDTH)
