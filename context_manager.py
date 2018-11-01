@@ -463,12 +463,16 @@ class ContextManager(object):
             self.am.register_action(**d)
         elif event == "request_exclusive":
             if self.exclusive_context and self.exclusive_context != context_alias:
+                logger.warning("Context {} requested exclusive switch but {} already got it".format(context_alias, self.exclusive_context))
                 return False
             if context_alias in self.allowed_exclusive_contexts:
+                logger.warning("Context {} requested exclusive switch, allowing".format(context_alias))
                 self.exclusive_context = context_alias
-                return self.switch_to_context(context_alias)
+                self.switch_to_context(context_alias)
+                return True
             else:
-                return False # not allowed
+                logger.warning("Context {} requested exclusive switch - not allowed!".format(context_alias))
+                return False
         elif event == "rescind_exclusive":
             if self.exclusive_context == context_alias:
                 self.exclusive_context = None
