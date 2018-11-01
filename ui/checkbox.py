@@ -1,6 +1,6 @@
 from copy import copy
 
-from base_list_ui import BaseListUIElement, TextView, EightPtView, SixteenPtView, to_be_foreground
+from base_list_ui import BaseListUIElement, to_be_foreground
 from helpers import setup_logger
 
 logger = setup_logger(__name__, "warning")

@@ -1,7 +1,7 @@
 from threading import Event
 from time import sleep
 
-from base_list_ui import BaseListBackgroundableUIElement, to_be_foreground, TextView, EightPtView, SixteenPtView
+from base_list_ui import BaseListBackgroundableUIElement, to_be_foreground
 from loading_indicators import LoadingBar
 from utils import clamp, clamp_list_index
 
