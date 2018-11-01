@@ -119,6 +119,14 @@ class Context(object):
         self.o._clear()
         return self.event_cb(self.name, "finished")
 
+    def signal_background(self):
+        """
+        Signals to the ContextManager that the application wants to go into background.
+        Currently, has the same effect as ``signal_finished`` - except it doesn't
+        clear the screen.
+        """
+        return self.event_cb(self.name, "background")
+
     def list_contexts(self):
         """
         Returns a list of all available contexts, containing:
@@ -130,12 +138,26 @@ class Context(object):
         """
         return self.event_cb(self.name, "list_contexts")
 
-    def signal_background(self):
+    def request_exclusive(self):
         """
-        Signals to the ContextManager that the application wants to go into background.
-        Currently, has the same effect as ``signal_finished``.
+        Request exclusive context switch for an app. You can't switch away from it until
+        the switch is rescinded.
         """
-        return self.event_cb(self.name, "background")
+        return self.event_cb(self.name, "request_exclusive")
+
+    def rescind_exclusive(self):
+        """
+        Rescind exclusive context switch from the app. Will only work if such a context is
+        already requested.
+        """
+        return self.event_cb(self.name, "rescind_exclusive")
+
+    def exclusive_status(self):
+        """
+        Rescind exclusive context switch from the app. Will only work if such a context is
+        already requested.
+        """
+        return self.event_cb(self.name, "exclusive_status")
 
     def request_switch(self, requested_context=None):
         """
@@ -198,8 +220,10 @@ class Context(object):
 class ContextManager(object):
 
     current_context = None
+    exclusive_context = None
     fallback_context = "main"
     initial_contexts = ["main"]
+    allowed_exclusive_contexts = ["apps.lockscreen"]
 
     def __init__(self):
         self.contexts = {}
@@ -437,6 +461,22 @@ class ContextManager(object):
             d["app_name"] = context_alias
             d["full_name"] = "{}-{}".format(context_alias, d["name"])
             self.am.register_action(**d)
+        elif event == "request_exclusive":
+            if self.exclusive_context and self.exclusive_context != context_alias:
+                return False
+            if context_alias in self.allowed_exclusive_contexts:
+                self.exclusive_context = context_alias
+                return self.switch_to_context(context_alias)
+            else:
+                return False # not allowed
+        elif event == "rescind_exclusive":
+            if self.exclusive_context == context_alias:
+                self.exclusive_context = None
+                return self.signal_event("finished", context_alias)
+            else:
+                return False
+        elif event == "exclusive_status":
+            return True if self.exclusive_context else False
         elif event ==  "get_actions":
             return self.am.get_actions()
         elif event == "list_contexts":
@@ -457,11 +497,15 @@ class ContextManager(object):
         elif event == "request_switch":
             # As usecases appear, we will likely want to do some checks here
             logger.info("Context switch requested by {} app".format(context_alias))
+            if self.exclusive_context:
+                return False
             return self.switch_to_context(context_alias)
         elif event == "request_switch_to":
             # If app is not the one active, should we honor its request?
             # probably not, but we might want to do something about it
             # to be considered
+            if self.exclusive_context:
+                return False
             new_context = args[0]
             logger.info("Context switch to {} requested by {} app".format(new_context, context_alias))
             return self.switch_to_context(new_context)

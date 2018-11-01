@@ -18,6 +18,7 @@ class LockApp(ZeroApp):
         c.register_action("lock_screen", c.request_switch, "Lock screen", description="Switches to the lockscreen app")
 
     def activate_lockscreen(self):
+        self.context.request_exclusive()
         self.locked = True
         c = Canvas(self.o)
         c.centered_text("Locked")
@@ -30,7 +31,7 @@ class LockApp(ZeroApp):
             logger.info("Entering password")
             self.locked = lockscreen.activate()
             logger.info("Finished, restarting loop")
-
+        self.context.rescind_exclusive()
 
 class KeyScreen(BaseUIElement):
     sleep_time = 0.1
