@@ -33,7 +33,7 @@ class DatePicker(BaseUIElement):
 		self.cal = calendar.Calendar()
 
 		# Set month and year to current month/year
-		self._set_month_year(datetime.now().month+1, datetime.now().year)
+		self._set_month_year(datetime.now().month, datetime.now().year)
 		self.set_current_day(datetime.now().day)
 
 	def get_current_day(self):
