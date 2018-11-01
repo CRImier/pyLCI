@@ -6,7 +6,7 @@ from ui import LoadingBar, PrettyPrinter as Printer, TextReader, Listbox, Dialog
 from helpers import setup_logger
 
 from libs import dmesg, dkms_debug
-from libs.rpi import vcgencmd, rpiinfo
+from libs.rpi import vcgencmd, rpiinfo, config as rpi_config
 
 import sdio_debug
 
@@ -110,6 +110,38 @@ def check_dmesg(li):
     # problem not found
     return False
 
+def check_zero_config_txt(li):
+    li.message = "Checking config.txt"
+    sleep(0.5)
+    logger.info("Checking config.txt (Zero)")
+    entries = rpi_config.get_config()
+    miniuart_was_on = rpi_config.make_sure_is_commented_out("dtoverlay", "pi3-miniuart-bt", entries, reason="Auto-commented out by Fix WiFi app")
+    sdio_was_off = rpi_config.make_sure_is_uncommented("dtoverlay", "sdio,poll_once=off", entries, reason="Auto-uncommented by Fix WiFi app")
+    if sdio_was_off or miniuart_was_on:
+        if sdio_was_off:
+            logger.info("Found a problem: SDIO was off")
+        if miniuart_was_on:
+            logger.info("Found a problem: MiniUART BT overlay was on")
+        rpi_config.write_config(rpi_config.recreate_config(entries))
+        return True
+    return False
+
+def check_zerow_config_txt(li):
+    li.message = "Checking config.txt"
+    sleep(0.5)
+    logger.info("Checking config.txt (Zero W)")
+    entries = rpi_config.get_config()
+    sdio_was_on = rpi_config.make_sure_is_commented_out("dtoverlay", "sdio,poll_once=off", entries, reason="Auto-commented out by Fix WiFi app")
+    miniuart_was_off = rpi_config.make_sure_is_uncommented("dtoverlay", "pi3-miniuart-bt", entries, reason="Auto-uncommented by Fix WiFi app")
+    if sdio_was_on or miniuart_was_off:
+        if sdio_was_on:
+            logger.info("Found a problem: SDIO was on")
+        if miniuart_was_off:
+            logger.info("Found a problem: MiniUART BT overlay was off")
+        rpi_config.write_config(rpi_config.recreate_config(entries))
+        return True
+    return False
+
 def init_app(input, output):
     global i, o
     i = input
@@ -144,6 +176,12 @@ def callback():
         # Check dmesg
         if not problem_found:
             problem_found = check_dmesg(li)
+        # Check config.txt
+        if not problem_found:
+            problem_found = problem_fixed = check_zero_config_txt(li)
+    elif hw_version == "zerow":
+        # Check config.txt
+        problem_found = problem_fixed = check_zerow_config_txt(li)
     # Next things:
     # Check config.txt (for both Pi Zero and Pi Zero W), edit if necessary
     li.stop()
