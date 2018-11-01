@@ -4,9 +4,12 @@ from threading import Event
 from ui import Canvas
 from ui.base_ui import BaseUIElement
 from apps import ZeroApp
-from helpers import ExitHelper, setup_logger, remove_left_failsafe #, read_create_config
+from helpers import ExitHelper, setup_logger, remove_left_failsafe, read_or_create_config, local_path_gen, save_config_method_gen
 
+local_path = local_path_gen(__name__)
 logger = setup_logger(__name__, "info")
+
+settings = {"name":"KeyScreen"}
 
 class LockApp(ZeroApp):
     locked = False
@@ -17,18 +20,27 @@ class LockApp(ZeroApp):
         c.set_target(self.activate_lockscreen)
         c.register_action("lock_screen", c.request_switch, "Lock screen", description="Switches to the lockscreen app")
 
+    def get_screens(self):
+        return {"KeyScreen": KeyScreen,
+                "PinScreen": PinScreen}
+
     def activate_lockscreen(self):
-        self.context.request_exclusive()
+        if not self.context.request_exclusive():
+            logger.info("Can't get exclusive access!")
+            return False #Couldn't get exclusive access!
+        screens = self.get_screens()
         self.locked = True
         c = Canvas(self.o)
         c.centered_text("Locked")
         remove_left_failsafe(self.i)
         while self.locked:
             c.display()
-            lockscreen = PinScreen("000000", self.i, self.o)
-            #lockscreen = KeyScreen(self.i, self.o)
+            lockscreen_obj = screens.get(settings["name"], KeyScreen)
+            args = settings.get("args", [])
+            kwargs = settings.get("kwargs", {})
+            lockscreen = lockscreen_obj(self.i, self.o, *args, **kwargs)
             lockscreen.wait_loop()
-            logger.info("Entering password")
+            logger.info("Lockscreen triggered")
             self.locked = lockscreen.activate()
             logger.info("Finished, restarting loop")
         self.context.rescind_exclusive()
@@ -108,7 +120,7 @@ class PinScreen(object):
     accepted_keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "*", "#"]
     sleep_time = 0.1
 
-    def __init__(self, pin, i, o, timeout=3):
+    def __init__(self, i, o, pin, timeout=3):
         self.pin = pin
         self.i = i
         self.o = o
@@ -204,13 +216,27 @@ class PinScreen(object):
 
 
 class LockscreenSettings(object):
-    def __init__(self):
-        pass
+    menu_name = "Lockscreen"
+
+    def __init__(self, i, o):
+        self.i = i
+        self.o = o
+        self.config = read_or_create_config(local_path("ls_config.json"), '{"lockscreen_type":"KeyScreen"}', "Lockscreen app config")
+        self.save_config = save_config_method_gen(self, local_path("ls_config.json"))
+        self.current_screen = None # Need to continue writing this
+
+    def update_settings(self):
+        settings["name"] = self.config.get("lockscreen_type", "KeyScreen")
+        settings["args"] = self.config.get("lockscreen_args", [])
+        settings["kwargs"] = self.config.get("lockscreen_kwargs", {})
 
     def get_settings(self):
         contents = [["Type", self.change_type]]
-        #try:
-        #    contents +=
+
+        # TODO: append settings for each screen
 
     def activate(self):
-        pass #self.
+        Menu([], self.i, self.o, name="Lockscreen settings menu", contents_hook=self.get_settings).activate()
+
+
+LockscreenSettings(None, None).update_settings()
