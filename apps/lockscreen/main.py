@@ -221,7 +221,7 @@ class LockscreenSettings(object):
     def __init__(self, i, o):
         self.i = i
         self.o = o
-        self.config = read_or_create_config(local_path("ls_config.json"), '{"lockscreen_type":"KeyScreen"}', "Lockscreen app config")
+        self.config = read_or_create_config(local_path("config.json"), '{"lockscreen_type":"KeyScreen"}', "Lockscreen app config")
         self.save_config = save_config_method_gen(self, local_path("ls_config.json"))
         self.current_screen = None # Need to continue writing this
 
