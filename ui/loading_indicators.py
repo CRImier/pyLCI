@@ -5,8 +5,8 @@ from time import time
 
 from canvas import Canvas
 
-from ui import Refresher
-from ui.utils import clamp, Chronometer, to_be_foreground, Rect
+from refresher import Refresher
+from utils import clamp, Chronometer, to_be_foreground, Rect
 
 """
 These UI elements are used to show the user that something is happening in the background.
