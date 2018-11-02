@@ -1,19 +1,19 @@
 from apps import ZeroApp
 from ui import GridMenu
 
-def test_func():
-	print("Hello world")
+def test_func(x):
+	print(x)
 
 class MainMenu(ZeroApp):
 
-	menu_name = "Grid menu test"
+	menu_name = "Main Menu"
 
 	def on_start(self):
 		grid_contents = [
-			["111", test_func], ["222", test_func], ["333", test_func],
-			["444", test_func], ["555", test_func], ["666", test_func],
-			["777", test_func], ["888", test_func], ["999", test_func],
-			["211", test_func]
+			["111", lambda x=111: test_func(x)], ["222", lambda x=222: test_func(x)], ["333", lambda x=333: test_func(x)],
+			["444", lambda x=444: test_func(x)], ["555", lambda x=555: test_func(x)], ["666", lambda x=666: test_func(x)],
+			["777", lambda x=777: test_func(x)], ["888", lambda x=888: test_func(x)], ["999", lambda x=999: test_func(x)],
+			["211", lambda x=211: test_func(x)]
 		]
 
 		self.gm = GridMenu(self.i, self.o, contents=grid_contents)
