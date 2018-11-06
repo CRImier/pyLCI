@@ -22,6 +22,22 @@ These classes are based on `Refresher`.
 # ========================= abstract classes =========================
 
 
+class Paused(object):
+
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __call__(self):
+        return self
+
+    def __enter__(self):
+        self.obj.pause()
+        return self
+
+    def __exit__(self, *args):
+        self.obj.resume()
+
+
 class BaseLoadingIndicator(Refresher):
     """Abstract class for "loading indicator" elements."""
 
@@ -29,6 +45,7 @@ class BaseLoadingIndicator(Refresher):
         self._progress = 0
         Refresher.__init__(self, self.on_refresh, i, o, *args, **kwargs)
         self.t = None
+        self.paused = Paused(self)
 
     def on_refresh(self):
         pass
