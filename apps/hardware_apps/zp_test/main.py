@@ -1,8 +1,6 @@
-
-
 from helpers import setup_logger
 
-menu_name = "Hardware test"
+menu_name = "Test ZeroPhone"
 
 from threading import Event, Thread
 from traceback import format_exc
