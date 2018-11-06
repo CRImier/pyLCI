@@ -9,7 +9,7 @@ from time import sleep
 import sys
 import os
 
-from ui import Menu, Printer, PrettyPrinter, GraphicsPrinter
+from ui import Menu, Printer, PrettyPrinter, Canvas
 from helpers import ExitHelper, local_path_gen
 
 logger = setup_logger(__name__, "warning")
@@ -63,8 +63,36 @@ def callback():
                 PrettyPrinter("IO expander not found!", i, o)
         else:
             PrettyPrinter("IO expander driver not loaded!", i, o)
-        #Launching splashscreen
-        GraphicsPrinter("splash.png", i, o, 2)
+        # Testing the screen - drawing a "crosshair" to test screen edges and lines
+        c = Canvas(o)
+        c.line((0, 0, 10, 0))
+        c.line(("-1", 0, "-10", 0))
+        c.line((0, "-1", 10, "-1"))
+        c.line(("-1", "-1", "-10", "-1"))
+        c.line((0, 0, 0, 10))
+        c.line((0, "-1", 0, "-10"))
+        c.line(("-1", 10, "-1", 0))
+        c.line(("-1", "-1", "-1", "-10"))
+        c.line((0, 0, "-1", "-1"))
+        c.line((0, "-1", "-1", 0))
+        eh = ExitHelper(i, ["KEY_ENTER"]).start()
+        c.display(); sleep(1)
+        for x in range(30):
+            if eh.do_run():
+                if x % 10 == 0:
+                    c.invert(); c.display()
+                sleep(0.1)
+            else:
+                break
+        # Filling the screen (still using the same ExitHelper)
+        c = Canvas(o)
+        for x in range(60):
+            if eh.do_run():
+                if x % 20 == 0:
+                    c.invert(); c.display()
+                sleep(0.1)
+            else:
+                break
         #Launching key_test app from app folder, that's symlinked from example app folder
         PrettyPrinter("Testing keypad", i, o, 1)
         import key_test
