@@ -134,6 +134,13 @@ class TestCanvas(unittest.TestCase):
         c.invert_rect((35, 5, 80, 17))
         assert(imgs_are_equal(c.get_image(), test_image))
 
+    def test_invert(self):
+        """tests the canvas invert function"""
+        o = get_mock_output()
+        c = Canvas(o, name=c_name)
+        c.text("Hello world", (5, 5))
+        c.invert()
+
 
 def imgs_are_equal(i1, i2):
     return ImageChops.difference(i1, i2).getbbox() is None

@@ -264,7 +264,7 @@ class Canvas(object):
         """
         Inverts the image that ``Canvas`` is currently operating on.
         """
-        self.image = ImageOps.invert(self.image).convert(o.device_mode)
+        self.image = ImageOps.invert(self.image.convert('L')).convert(self.o.device_mode)
         self.display_if_interactive()
 
     def display(self):
