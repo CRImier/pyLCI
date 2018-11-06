@@ -23,12 +23,13 @@ These classes are based on `Refresher`.
 
 
 class Paused(object):
+    """Wrapping for a `paused` context manager for loading indicators. Allows for:
 
+    with li.paused:
+        do some stuff
+    """
     def __init__(self, obj):
         self.obj = obj
-
-    def __call__(self):
-        return self
 
     def __enter__(self):
         self.obj.pause()
