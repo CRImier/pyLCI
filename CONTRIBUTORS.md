@@ -9,6 +9,7 @@
  - Gnu-Bricoleur
  - Brian Dunlay
  - KyleMoran138
+ - Patrick Schneeweis
  - Beauregard Slim
  - Sam Kaufman
  - i5heu
