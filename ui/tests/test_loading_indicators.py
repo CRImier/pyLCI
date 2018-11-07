@@ -21,7 +21,7 @@ except ImportError:
         return orig_import(name, *args)
 
     with patch('__builtin__.__import__', side_effect=import_mock):
-        from ui.loading_indicators import BaseLoadingIndicator
+        from loading_indicators import BaseLoadingIndicator
 
 def get_mock_input():
     return Mock()
@@ -34,18 +34,18 @@ def get_mock_output(rows=8, cols=21):
 
 class TestBaseLoadingIndicator(unittest.TestCase):
 
-    @patch("ui.loading_indicators.BaseLoadingIndicator.pause")
-    @patch("ui.loading_indicators.BaseLoadingIndicator.resume")
-    def test_with_loading_indicator_paused_construct(self, resume, pause):
+    def test_with_loading_indicator_paused_construct(self):
         i = get_mock_input()
         o = get_mock_output()
         li = BaseLoadingIndicator(i, o)
-        self.assertFalse(pause.called)
-        self.assertFalse(resume.called)
+        li.pause = Mock()
+        li.resume = Mock()
+        self.assertFalse(li.pause.called)
+        self.assertFalse(li.resume.called)
         with li.paused:
-            self.assertTrue(pause.called)
-            self.assertFalse(resume.called)
-        self.assertTrue(resume.called)
+            self.assertTrue(li.pause.called)
+            self.assertFalse(li.resume.called)
+        self.assertTrue(li.resume.called)
 
 
 if __name__ == "__main__":
