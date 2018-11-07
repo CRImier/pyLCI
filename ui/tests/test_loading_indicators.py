@@ -23,10 +23,8 @@ except ImportError:
     with patch('__builtin__.__import__', side_effect=import_mock):
         from ui.loading_indicators import BaseLoadingIndicator
 
-
 def get_mock_input():
     return Mock()
-
 
 def get_mock_output(rows=8, cols=21):
     m = Mock()
