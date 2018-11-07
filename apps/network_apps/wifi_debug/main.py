@@ -36,14 +36,13 @@ def get_hw_version(li):
        else:
            return "zero"
     else:
-        li.pause()
-        if vcgencmd.otp_problem_detected(vcgencmd.otp_dump()):
-            TextReader(otp_fail_text, i, o, h_scroll=False).activate()
-        else:
-            Printer("Hardware detect failed! Pick your hardware:", i, o, 5)
-        lc = [["Pi Zero", "zero"], ["Pi Zero W", "zerow"], ["Other", "other"]]
-        choice = Listbox(lc, i, o, name="WiFi repair - hw revision picker").activate()
-        li.resume()
+        with li.paused:
+            if vcgencmd.otp_problem_detected(vcgencmd.otp_dump()):
+                TextReader(otp_fail_text, i, o, h_scroll=False).activate()
+            else:
+                Printer("Hardware detect failed! Pick your hardware:", i, o, 5)
+            lc = [["Pi Zero", "zero"], ["Pi Zero W", "zerow"], ["Other", "other"]]
+            choice = Listbox(lc, i, o, name="WiFi repair - hw revision picker").activate()
         return choice
 
 def check_esp8089_dkms(li):
@@ -53,9 +52,8 @@ def check_esp8089_dkms(li):
     logger.debug(info)
     if not dkms_debug.dkms_driver_is_installed("esp8089", dkms_info=info):
         logger.debug("DKMS driver not found!")
-        li.pause()
-        TextReader(dkms_fail_text, i, o, h_scroll=False).activate()
-        li.resume()
+        with li.paused:
+            TextReader(dkms_fail_text, i, o, h_scroll=False).activate()
         return True
     logger.debug("DKMS driver was found!")
     return False
@@ -83,13 +81,11 @@ def check_esp8089_module(li):
                 logger.error("Unknown error!")
         except:
             logger.exception("Yet-unknown ESP8089 module loading error")
-            li.pause()
-            Printer("Unknown ESP8089 module loading error!", i, o)
-            li.resume()
+            with li.paused:
+                Printer("Unknown ESP8089 module loading error!", i, o)
         else:
-            li.pause()
-            Printer("Loaded ESP8089 module!", i, o)
-            li.resume()
+            with li.paused:
+                Printer("Loaded ESP8089 module!", i, o)
             return True, True
     else:
         logger.debug("ESP8089 module already loaded")
@@ -101,10 +97,9 @@ def check_dmesg(li):
     logger.info("Parsing dmesg output")
     dmesg_msgs = dmesg.get_dmesg()
     if sdio_debug.check_lowlevel_mmc_errors(dmesg_msgs):
-        li.pause()
         logger.exception("Low-level MMC errors!")
-        Printer("Low-level MMC errors!", i, o)
-        li.resume()
+        with li.paused:
+            Printer("Low-level MMC errors!", i, o)
         # problem found
         return True
     # problem not found
