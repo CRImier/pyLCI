@@ -360,8 +360,8 @@ class AvrdudeApp(ZeroApp):
                     pass # Is going to fail/succeed anyway once it goes through all the lines
                 previous_s = s
         # Process is over, showing the result
-        self.read_write_bar.pause()
-        self.erase_restore_indicator.pause()
+        self.read_write_bar.stop()
+        self.erase_restore_indicator.stop()
         status = self.p.get_status()
         hrs = heuristics.get_human_readable_status(status)
         self.display_status(hrs, success_message = "Done!", delay=1)
