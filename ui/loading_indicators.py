@@ -4,7 +4,6 @@ from threading import Thread
 from time import time
 
 from canvas import Canvas
-
 from refresher import Refresher
 from utils import clamp, Chronometer, to_be_foreground, Rect
 
