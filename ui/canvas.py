@@ -412,6 +412,8 @@ class Canvas(object):
         elif image_subset.mode == "RGB": # PIL can't invert "RGBA" mode - need to use "RGB"
             image_subset = ImageOps.invert(image_subset)
             image_subset = image_subset.convert("RGBA")
+        else: #Unknown mode - try and invert it anyway
+            image_subset = ImageOps.invert(image_subset)
 
         self.clear(coords)
         self.draw.bitmap((coords[0], coords[1]), image_subset, fill=self.default_color)
