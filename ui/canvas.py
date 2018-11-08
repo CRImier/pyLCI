@@ -401,15 +401,22 @@ class Canvas(object):
 
         coords = self.check_coordinates(coords)
         image_subset = self.image.crop(coords)
+        if self.image.mode == "RGB":
+            self.image = self.image.convert("RGBA")
 
-        if image_subset.mode != "L": # PIL can only invert "L" and "RGBA" images
-            # We only support "L" for now
+        if image_subset.mode == "1": # PIL can't invert "1" mode - need to use "L"
             image_subset = image_subset.convert("L")
-        image_subset = ImageOps.invert(image_subset)
-        image_subset = image_subset.convert(self.o.device_mode)
+            image_subset = ImageOps.invert(image_subset)
+            image_subset = image_subset.convert(self.o.device_mode)
+        elif image_subset.mode == "RGB": # PIL can't invert "1" mode - need to use "L"
+            image_subset = ImageOps.invert(image_subset)
+            image_subset = image_subset.convert("RGBA")
 
         self.clear(coords)
         self.draw.bitmap((coords[0], coords[1]), image_subset, fill=self.default_color)
+        if self.image.mode == "RGBA":
+            self.image = self.image.convert("RGB")
+
         self.display_if_interactive()
 
     def display_if_interactive(self):
