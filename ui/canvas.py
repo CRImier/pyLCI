@@ -417,7 +417,8 @@ class Canvas(object):
 
         self.clear(coords)
         self.draw.bitmap((coords[0], coords[1]), image_subset, fill=self.default_color)
-        if self.image.mode == "RGBA":
+        if self.image.mode == "RGBA" and self.o.device_mode == "RGB":
+            #Convert back if it was previously converted from RGB to RGBA
             self.image = self.image.convert("RGB")
 
         self.display_if_interactive()
