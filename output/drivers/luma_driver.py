@@ -24,7 +24,7 @@ class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager)
 
     __base_classes__ = (GraphicalOutputDevice, CharacterOutputDevice)
 
-    type = ["char", "b&w-pixel"] 
+    type = ["char", "b&w-pixel"]
     cursor_enabled = False
     cursor_pos = (0, 0) #x, y
 
@@ -51,6 +51,7 @@ class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager)
         self.cols = self.width / self.char_width
         self.rows = self.height / self.char_height
         self.init_display(**kwargs)
+        self.device_mode = self.device.mode
         BacklightManager.init_backlight(self, **kwargs)
 
     @enable_backlight_wrapper
@@ -141,7 +142,7 @@ class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager)
     def noBlink(self):
         """ Turn the blinking cursor off """
         pass
-	
+
     def blink(self):
         """ Turn the blinking cursor on """
         pass
