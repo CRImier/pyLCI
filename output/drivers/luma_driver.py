@@ -28,29 +28,55 @@ class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager)
     cursor_enabled = False
     cursor_pos = (0, 0) #x, y
 
-    def __init__(self, hw = "spi", port=None, address = 0, buffering = True, **kwargs):
-        if hw == "spi":
-            if port is None: port = 0
+    hw = None
+    port = None
+    address = None
+    gpio_dc = None
+    gpio_rst = None
+    width = None
+    height = None
+    rotate = None
+
+    default_i2c_port = 1
+    default_spi_port = 0
+    default_spi_address = 0
+    default_gpio_dc = None
+    default_gpio_rst = None
+
+    default_width = 128
+    default_height = 64
+    default_rotate = 0
+
+    def __init__(self, hw="spi", port=None, address=None, gpio_dc=None, gpio_rst=None, \
+                      width=None, height=None, rotate=None, **kwargs):
+        self.hw = hw
+        assert hw in ("spi", "i2c"), "Wrong hardware suggested: '{}'!".format(hw)
+        if self.hw == "spi":
+            self.port = port if port else self.default_spi_port
+            self.address = address if address else self.default_spi_address
+            self.gpio_dc = gpio_dc if gpio_dc else self.default_gpio_dc
+            self.gpio_rst = gpio_rst if gpio_rst else self.default_gpio_rst
             try:
-                self.serial = spi(port=port, device=address, gpio_DC=6, gpio_RST=5)
+                self.serial = spi(port=self.port, device=self.address, gpio_DC=self.gpio_dc, gpio_RST=self.gpio_rst)
             except TypeError:
                 #Compatibility with older luma.oled versions
-                self.serial = spi(port=port, device=address, bcm_DC=6, bcm_RST=5)
+                self.serial = spi(port=self.port, device=self.address, bcm_DC=self.gpio_dc, bcm_RST=self.gpio_rst)
         elif hw == "i2c":
-            if port is None: port = 1
+            self.port = port if port else default_i2c_port
             if isinstance(address, basestring): address = int(address, 16)
-            self.serial = i2c(port=port, address=address)
+            self.address = address
+            self.serial = i2c(port=self.port, address=self.address)
         else:
             raise ValueError("Unknown interface type: {}".format(hw))
-        self.address = address
         self.busy_flag = Lock()
-        self.width = 128
-        self.height = 64
+        self.width = width if width else self.default_width
+        self.height = height if height else self.default_height
         self.char_width = 6
         self.char_height = 8
         self.cols = self.width / self.char_width
         self.rows = self.height / self.char_height
-        self.init_display(**kwargs)
+        self.rotate = rotate if rotate else self.default_rotate
+        self.init_display(rotate=self.rotate)
         self.device_mode = self.device.mode
         BacklightManager.init_backlight(self, **kwargs)
 
