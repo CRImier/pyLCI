@@ -400,18 +400,23 @@ class Canvas(object):
         """
 
         coords = self.check_coordinates(coords)
-        image_subset = self.image.crop(coords)
         # draw.bitmap seems to need RGBA instead of RGB
         if self.image.mode == "RGB":
             self.image = self.image.convert("RGBA")
+        image_subset = self.image.crop(coords)
 
-        if image_subset.mode == "1": # PIL can't invert "1" mode - need to use "L"
+        if image_subset.mode == "1":
+            # PIL can't invert "1" mode - need to use "L"
             image_subset = image_subset.convert("L")
             image_subset = ImageOps.invert(image_subset)
             image_subset = image_subset.convert(self.o.device_mode)
-        elif image_subset.mode == "RGB": # PIL can't invert "RGBA" mode - need to use "RGB"
-            image_subset = ImageOps.invert(image_subset)
-            image_subset = image_subset.convert("RGBA")
+        elif image_subset.mode == "RGBA":
+            # PIL can't invert "RGBA" mode - need to use "RGB"
+            r, g, b, a = image_subset.split()
+            rgb_image_subset = ImageOps.invert(Image.merge("RGB", (r, g, b)))
+            rn, gn, bn = rgb_image_subset.split()
+            image_subset = Image.merge('RGBA', (rn,gn,bn,a))
+            #image_subset = image_subset.convert("RGBA")
         else: #Unknown mode - try and invert it anyway
             image_subset = ImageOps.invert(image_subset)
 
