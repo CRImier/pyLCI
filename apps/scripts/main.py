@@ -8,8 +8,9 @@ menu_name = "Scripts"  # App name as seen in main menu while using the system
 
 scripts_dir = "s/"
 config_filename = "config.json"
-default_config = """
-[
+default_config = """{
+"output_dir":"/home/pi",
+"scripts":[
  {"path":"./s/login.sh",
   "name":"Hotspot login"},
  {"path":"./s/dmesg.sh",
@@ -23,7 +24,7 @@ default_config = """
  {"path":"wget",
   "name":"wget google main page",
   "args":["http://www.google.com"]}
-]"""
+]}"""
 
 local_path = local_path_gen(__name__)
 config_path = local_path(config_filename)
@@ -85,7 +86,7 @@ def callback():
     script_menu_contents = [["Script by path", call_by_path],
                             ["Custom command", call_command]]
     scripts_in_config = []
-    for script_def in config:
+    for script_def in config["scripts"]:
         script_path = script_def["path"]
         if script_path.startswith('./'):
             script_path = script_path.lstrip('.').lstrip('/')
