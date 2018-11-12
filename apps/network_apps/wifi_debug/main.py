@@ -65,12 +65,12 @@ def check_esp8089_dkms(li):
 
 def check_esp8089_module(li):
     li.message = "Checking module"
-    logger.debug("Checking module")
+    logger.debug("Checking ESP8089 module")
     sleep(1)
     modules = dict(kmodpy.kmod.Kmod().list())
     logger.debug(modules)
     if "esp8089" not in modules:
-        logger.debug("Module not loaded")
+        logger.debug("ESP8089 module not loaded")
         li.message = "Loading module"
         try:
             kmodpy.kmod.Kmod().modprobe("esp8089")
@@ -94,6 +94,76 @@ def check_esp8089_module(li):
             return True, True
     else:
         logger.debug("ESP8089 module already loaded")
+    return False, False
+
+def check_brcmfmac_module(li, try_load=False):
+    li.message = "Checking module"
+    logger.debug("Checking brcmfmac module")
+    sleep(1)
+    modules = dict(kmodpy.kmod.Kmod().list())
+    logger.debug(modules)
+    if "brcmfmac" not in modules:
+        # brcmfmac not loaded, let's try and load it
+        logger.debug("brcmfmac module not loaded")
+        li.message = "Loading module"
+        try:
+            kmodpy.kmod.Kmod().modprobe("brcmfmac")
+        except kmodpy.kmod.KmodError as e:
+            logger.exception("Error while loading module!")
+            message = e.message.strip()
+            logger.error(message)
+            if message == 'Module already loaded':
+                logger.error("That's weird, brcmfmac module detect fail but modprobe says it's already loaded!")
+            elif message == "Could not modprobe 'brcmfmac'":
+                logger.info("SDIO not accessible?")
+            else:
+                logger.error("Unknown error!")
+        except:
+            logger.exception("Yet-unknown brcmfmac module loading error")
+            with li.paused:
+                Printer("Unknown brcmfmac module loading error!", i, o)
+        else:
+            with li.paused:
+                Printer("Loaded brcmfmac module!", i, o)
+            return True, True
+    else:
+        # brcmfmac loaded, let's try and reload it
+        if try_load:
+            # we already tried, seems like it hasn't unloaded and we couldn't/didn't load it
+            # so, let's not repeat ourselves
+            logger.debug("brcmfmac module still loaded?")
+            return False, False
+        unloaded = False
+        li.message = "Unloading module"
+        try:
+            kmodpy.kmod.Kmod().rmmod("brcmfmac")
+        except kmodpy.kmod.KmodError as e:
+            logger.exception("Error while unloading module!")
+            message = e.message.strip()
+            logger.error(message)
+        except:
+            logger.exception("Yet-unknown brcmfmac module unloading error")
+            with li.paused:
+                Printer("Unknown brcmfmac module unloading error!", i, o)
+        else:
+            with li.paused:
+                Printer("Unloaded brcmfmac module! Will try and load it back now", i, o)
+                unloaded = True
+        # A single call to itself to try and reload the module
+        # Maybe ESP8089 could benefit from that too?
+        # Will try to load regardless of whether it was actually unloaded
+        problem_found, problem_fixed = check_brcmfmac_module(li, try_load=True)
+        if not problem_found or problem_fixed:
+            with li.paused:
+                if unloaded:
+                    logger.debug("Couldn't load the module back!")
+                    Printer("Couldn't load the module back!", i, o)
+                else:
+                    logger.debug("Couldn't load the module!")
+                    Printer("Couldn't load the module!", i, o)
+            return False, False
+        elif problem_fixed:
+            return True, True
     return False, False
 
 def check_dmesg(li):
@@ -180,10 +250,11 @@ def callback():
         if not problem_found:
             problem_found = problem_fixed = check_zero_config_txt(li)
     elif hw_version == "zerow":
+        # Check brcmfmac module
+        problem_found, problem_fixed = check_brcmfmac_module(li)
         # Check config.txt
-        problem_found = problem_fixed = check_zerow_config_txt(li)
-    # Next things:
-    # Check config.txt (for both Pi Zero and Pi Zero W), edit if necessary
+        if not problem_found:
+            problem_found = problem_fixed = check_zerow_config_txt(li)
     li.stop()
     if problem_found:
         if problem_fixed:
