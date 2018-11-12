@@ -9,7 +9,7 @@ class PathPicker(Menu):
 
     path_chosen = None
 
-    def __init__(self, path, i, o, callback = None, name = None, display_hidden = False, dirs_only = False, current_dot = False, prev_dot = True, scrolling=True, **kwargs):
+    def __init__(self, path, i, o, callback = None, name = None, display_hidden = False, dirs_only = False, append_current_dir = True, current_dot = False, prev_dot = True, scrolling=True, **kwargs):
         """Initialises the PathPicker object.
 
         Args:
@@ -21,6 +21,7 @@ class PathPicker(Menu):
 
             * ``callback``: if set, PathPicker will call the callback with path as first argument upon selecting path, instead of exiting the activate().
             * ``dirs_only``: if True, PathPicker will only show directories.
+            * ``append_current_dir``: if False, PathPicker won't add "Dir: %/current/dir%" first entry when `dirs_only` is enabled
             * ``current_dot``: if True, PathPicker will show '.' path.
             * ``prev_dot``: if True, PathPicker will show '..' path.
             * ``display_hidden``: if True, PathPicker will display hidden files.
@@ -33,6 +34,7 @@ class PathPicker(Menu):
         self.display_hidden = display_hidden
         self.callback = callback
         self.dirs_only = dirs_only
+        self.append_current_dir = append_current_dir
         self.current_dot = current_dot
         self.prev_dot = prev_dot
         self.menu_pointers = {}
@@ -85,6 +87,8 @@ class PathPicker(Menu):
 
     def regenerate_contents(self):
         contents = []
+        if self.dirs_only and self.append_current_dir:
+            contents.append(["Dir: {}".format(self.path), lambda x=self.path: self.select_path(x)])
         self.pointer = 0
         if self.path != '/':
             if self.current_dot or self.prev_dot:
