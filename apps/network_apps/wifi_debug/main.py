@@ -29,6 +29,11 @@ otp_fail_text = """Your Pi has an OTP fault!
 Visit bit.ly/pi_bad_otp for more info.
 Press LEFT to pick your hardware."""
 
+lowlevel_mmc_text = """Low-level MMC errors!
+Either your ZP was rebooted (for now, that results in ESP failing), or the ESP itself is faulty.
+If a reboot does not fix the situation, consider replacing the ESP with a different version."""
+
+
 def get_hw_version(li):
     if rpiinfo.is_pi_zero():
        if rpiinfo.is_pi_zero_w():
@@ -97,9 +102,9 @@ def check_dmesg(li):
     logger.info("Parsing dmesg output")
     dmesg_msgs = dmesg.get_dmesg()
     if sdio_debug.check_lowlevel_mmc_errors(dmesg_msgs):
-        logger.exception("Low-level MMC errors!")
+        logger.exception("Low-level MMC errors! Either ESP is not compatible or a reboot is needed")
         with li.paused:
-            Printer("Low-level MMC errors!", i, o)
+            TextReader(lowlevel_mmc_text, i, o, h_scroll=False).activate()
         # problem found
         return True
     # problem not found
