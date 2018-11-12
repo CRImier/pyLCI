@@ -18,6 +18,15 @@ def write_config(config_dict, config_path):
     with open(config_path, 'w') as f:
         json.dump(config_dict, f)
 
+def move_faulty_config_to_new_path(config_path, suffix="failed"):
+    counter = 1
+    new_path = config_path + ".{}".format(suffix)
+    while os.path.exists(new_path):
+        new_path = config_path + ".{}_{}".format(suffix, counter)
+        counter += 1
+    shutil.move(config_path, new_path)
+    return new_path
+
 def read_or_create_config(config_path, default_config, app_name):
     # type: (str, str, str) -> dict
     """
@@ -45,31 +54,33 @@ def read_or_create_config(config_path, default_config, app_name):
     True
     """
     try:
-        config_dict = read_config(config_path)
+        config_obj = read_config(config_path)
     except (ValueError, IOError):
         logger.warning("{}: broken/nonexistent config, restoring with defaults...".format(app_name))
         if os.path.exists(config_path):
-            counter = 1
-            new_path = config_path + ".failed"
-            while os.path.exists(new_path):
-                new_path = config_path + ".failed_{}".format(counter)
-                counter += 1
-            logger.warning("Moving the faulty config file into {}".format(new_path))
-            shutil.move(config_path, new_path)
+            new_path = move_faulty_config_to_new_path(config_path)
+            logger.warning("Moved the faulty config file into {}".format(new_path))
         with open(config_path, 'w') as f:
             f.write(default_config)
-        config_dict = read_config(config_path)
+        config_obj = read_config(config_path)
     default_config_obj = json.loads(default_config)
+    if isinstance(default_config_obj, list) == isinstance(config_obj, dict):
+        # Config and default config are different kinds of objects!
+        # That probably means we need to deprecate the old config
+        logger.warning("{}: config high-level type changed, backing up and upgrading...".format(app_name))
+        new_path = move_faulty_config_to_new_path(config_path, suffix="old")
+        logger.warning("Moved the outdated config file into {}".format(new_path))
+        config_obj = default_config_obj
     keys_added = False
     if isinstance(default_config_obj, dict):
         for key, value in default_config_obj.items():
-            if key not in config_dict.keys():
-                config_dict[key] = value
+            if key not in config_obj.keys():
+                config_obj[key] = value
                 keys_added = True
                 logger.debug("Adding key {} (from the default config) to the config for {}!".format(key, app_name))
         if keys_added:
             logger.warning("Added keys from default config to app {} - changes will not be preserved until the next time config is saved!".format(app_name))
-    return config_dict
+    return config_obj
 
 def save_config_gen(path):
     """
