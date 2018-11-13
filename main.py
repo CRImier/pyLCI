@@ -54,12 +54,20 @@ def load_config():
 
     return config, config_path
 
-default_log_config = """{"path":"logs/zpui.log", "format":
+default_log_config = """{"dir":"logs/", "filename":"zpui.log", "format":
 ["[%(levelname)s] %(asctime)s %(name)s: %(message)s","%Y-%m-%d %H:%M:%S"],
 "file_size":1048576, "files_to_store":5}
 """
 log_config = read_or_create_config("log_config.json", default_log_config, "ZPUI logging")
-logging_path = log_config["path"]
+logging_dir = log_config["dir"]
+log_filename = log_config["filename"]
+# Making sure the log dir exists - create it if it's not
+try:
+    os.makedirs(logging_dir)
+except OSError:
+    pass
+#Set all the logging parameter variables
+logging_path = os.path.join(logging_dir, log_filename)
 logging_format = log_config["format"]
 logfile_size = log_config["file_size"]
 files_to_store = log_config["files_to_store"]
