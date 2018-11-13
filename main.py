@@ -11,7 +11,7 @@ from logging.handlers import RotatingFileHandler
 
 from apps.app_manager import AppManager
 from context_manager import ContextManager
-from helpers import read_config, local_path_gen
+from helpers import read_config, local_path_gen, read_or_create_config
 from input import input
 from output import output
 from ui import Printer
@@ -20,12 +20,6 @@ import helpers.logger
 emulator_flag_filename = "emulator"
 local_path = local_path_gen(__name__)
 is_emulator = emulator_flag_filename in os.listdir(".")
-
-logging_path = local_path('zpui.log')
-logging_format = (
-    '[%(levelname)s] %(asctime)s %(name)s: %(message)s',
-    '%Y-%m-%d %H:%M:%S'
-)
 
 config_paths = ['/boot/zpui_config.json', '/boot/pylci_config.json'] if not is_emulator else []
 config_paths.append(local_path('config.json'))
@@ -59,6 +53,18 @@ def load_config():
     # path for config that successfully loaded
 
     return config, config_path
+
+default_log_config = """{"path":"logs/zpui.log", "format":
+["[%(levelname)s] %(asctime)s %(name)s: %(message)s","%Y-%m-%d %H:%M:%S"],
+"file_size":1048576, "files_to_store":5}
+"""
+log_config = read_or_create_config("log_config.json", default_log_config, "ZPUI logging")
+logging_path = log_config["path"]
+logging_format = log_config["format"]
+logfile_size = log_config["file_size"]
+files_to_store = log_config["files_to_store"]
+
+
 
 def init():
     """Initialize input and output objects"""
@@ -213,8 +219,8 @@ if __name__ == '__main__':
     # Rotating file logs (for debugging crashes)
     rotating_handler = RotatingFileHandler(
         logging_path,
-        maxBytes=10000,
-        backupCount=5)
+        maxBytes=logfile_size,
+        backupCount=files_to_store)
     rotating_handler.setFormatter(formatter)
     logger.addHandler(rotating_handler)
 
