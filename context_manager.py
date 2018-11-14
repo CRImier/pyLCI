@@ -405,6 +405,13 @@ class ContextManager(object):
         Returns name of the previous context for a given context. If ``pop``
         is set to True, also removes the name from the internal dictionary.
         """
+        # WORKAROUND, future self - TODO please reconsider
+        # (after you move between different contexts a lot and trigger something,
+        # say, use ZeroMenu to switch to main context,
+        # pressing LEFT in main context can move you to another context,
+        # probably because of context switcing mechanics and previous context stuff.
+        if context_alias == self.fallback_context:
+            return context_alias
         if pop:
             prev_context = self.previous_contexts.pop(context_alias, self.fallback_context)
         else:
