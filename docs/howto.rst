@@ -519,7 +519,7 @@ For example:
 
     from ui import Menu
     ...
-    Menu(contents, i, o, name="Main menu of Frobulator app".activate()
+    Menu(contents, i, o, name="Main menu of Frobulator app").activate()
 
 .. note:: The only UI elements that don't support the ``name`` attribute are Printers:
           ``Printer``, ``GraphicsPrinter`` and ``PrettyPrinter``
