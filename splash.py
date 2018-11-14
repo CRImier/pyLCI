@@ -3,7 +3,7 @@ from PIL import ImageOps
 import PIL
 
 def splash(i, o):
-    if o.size == (128, 64):
+    if (o.width, o.height) == (128, 64):
 	image = PIL.Image.open("splash.png").convert('L')
     elif (o.width, o.height) == (128, 128):
 	image = PIL.Image.open("splash_128x128.png").convert('L')
