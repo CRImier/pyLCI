@@ -36,19 +36,23 @@ class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager)
     width = None
     height = None
     rotate = None
+    h_offset = None
+    v_offset = None
 
     default_i2c_port = 1
     default_spi_port = 0
     default_spi_address = 0
-    default_gpio_dc = None
-    default_gpio_rst = None
+    default_gpio_dc = 6
+    default_gpio_rst = 5
 
     default_width = 128
     default_height = 64
     default_rotate = 0
+    default_h_offset = 0
+    default_v_offset = 0
 
     def __init__(self, hw="spi", port=None, address=None, gpio_dc=None, gpio_rst=None, \
-                      width=None, height=None, rotate=None, **kwargs):
+                      width=None, height=None, rotate=None, h_offset=None, v_offset=None, **kwargs):
         self.hw = hw
         assert hw in ("spi", "i2c"), "Wrong hardware suggested: '{}'!".format(hw)
         if self.hw == "spi":
@@ -76,7 +80,9 @@ class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager)
         self.cols = self.width / self.char_width
         self.rows = self.height / self.char_height
         self.rotate = rotate if rotate else self.default_rotate
-        self.init_display(rotate=self.rotate)
+        self.h_offset = h_offset if h_offset else self.default_h_offset
+        self.v_offset = v_offset if v_offset else self.default_v_offset
+        self.init_display(rotate=self.rotate, h_offset=self.h_offset, v_offset=self.v_offset)
         self.device_mode = self.device.mode
         BacklightManager.init_backlight(self, **kwargs)
 
