@@ -7,7 +7,7 @@
  - Björn Pettersson
  - Jon Maier
  - Gnu-Bricoleur
- - Louis Pi
+ - Louis Parkerson
  - Brian Dunlay
  - KyleMoran138
  - Patrick Schneeweis
