@@ -15,3 +15,4 @@ appdirs
 unpaddedbase64
 requests
 responses
+kmodpy
