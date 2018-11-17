@@ -1,14 +1,26 @@
-from time import sleep
-from PIL import ImageOps
-import PIL
+from PIL import ImageOps, Image
 
 def splash(i, o):
     if (o.width, o.height) == (128, 64):
-	image = PIL.Image.open("splash.png").convert('L')
-    elif (o.width, o.height) == (128, 128):
-	image = PIL.Image.open("splash_128x128.png").convert('L')
+	image = Image.open("splash.png").convert('L')
+	image = ImageOps.invert(image)
     else:
-	o.display_data("Welcome to", "ZPUI")
-    image = ImageOps.invert(image)
+	image = Image.open("splash_big.png").convert('L')
+	image = ImageOps.invert(image)
+	size = o.width, o.height
+	image.thumbnail(size, Image.ANTIALIAS)
+	left = top = right = bottom = 0
+        width, height = image.size
+	if o.width > width:
+	    delta = o.width - width
+	    left = delta // 2
+	    right = delta - left
+	if o.height > height:
+	    delta = o.height - height
+	    top = delta // 2
+	    bottom = delta - top
+        image = ImageOps.expand(image, border=(left, top, right, bottom), fill="black")
     image = image.convert(o.device_mode)
     o.display_image(image)
+
+
