@@ -71,14 +71,16 @@ class DatePicker(BaseUIElement):
 
 	def get_return_value(self):
 		if self.accepted_value:
-			if self.callback != None:
-				self.callback()
-			else:
-				return {
+			date_dict = {
 					'month': self.current_month,
 					'year': self.current_year,
 					'date': self.get_current_day()
 				}
+
+			if self.callback != None:
+				self.callback(date_dict)
+			else:
+				return date_dict
 		else:
 			return None
 

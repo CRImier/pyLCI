@@ -1,8 +1,8 @@
 from apps import ZeroApp
 from ui import DatePicker, TimePicker
 
-def test_callback():
-	print("hello world")
+def test_callback(ul):
+	print(ul)
 
 class CalendarApp(ZeroApp):
 
