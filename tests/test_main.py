@@ -1,4 +1,4 @@
-"""tests for Context and ContextManager objects"""
+"""tests for the main.py launcher"""
 import os
 import unittest
 import traceback
