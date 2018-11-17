@@ -13,7 +13,7 @@ class DatePicker(BaseUIElement):
 
 	MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-	def __init__(self, i, o, name="DatePicker", s_year=None, s_month=None, s_day=None):
+	def __init__(self, i, o, name="DatePicker", s_year=None, s_month=None, s_day=None, callback=None):
 
 		BaseUIElement.__init__(self, i, o, name)
 
@@ -31,6 +31,8 @@ class DatePicker(BaseUIElement):
 		self.accepted_value = False
 
 		self.cal = calendar.Calendar()
+
+		self.callback = callback
 
 		# Set the month and year to either the current month/year or a given argument
 		temp_month = datetime.now().month
@@ -69,11 +71,14 @@ class DatePicker(BaseUIElement):
 
 	def get_return_value(self):
 		if self.accepted_value:
-			return {
-				'month': self.current_month,
-				'year': self.current_year,
-				'date': self.get_current_day()
-			}
+			if self.callback != None:
+				self.callback()
+			else:
+				return {
+					'month': self.current_month,
+					'year': self.current_year,
+					'date': self.get_current_day()
+				}
 		else:
 			return None
 
