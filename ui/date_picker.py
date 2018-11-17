@@ -13,7 +13,7 @@ class DatePicker(BaseUIElement):
 
 	MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-	def __init__(self, i, o, name="DatePicker", s_year=None, s_month=None, s_day=None, callback=None):
+	def __init__(self, i, o, name="DatePicker", year=None, month=None, day=None, callback=None):
 
 		BaseUIElement.__init__(self, i, o, name)
 
@@ -38,17 +38,17 @@ class DatePicker(BaseUIElement):
 		temp_month = datetime.now().month
 		temp_year = datetime.now().year
 
-		if s_month != None:
-			temp_month = s_month
+		if month != None:
+			temp_month = month
 
-		if s_year != None:
-			temp_year = s_year
+		if year != None:
+			temp_year = year
 
 		self._set_month_year(temp_month, temp_year)
 
 		# Set the day to either the current day or a given argument
-		if s_day != None:
-			self.set_current_day(s_day)
+		if day != None:
+			self.set_current_day(day)
 		else:
 			self.set_current_day(datetime.now().day)
 

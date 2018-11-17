@@ -9,5 +9,5 @@ class CalendarApp(ZeroApp):
 	menu_name = "Calendar"
 
 	def on_start(self):
-		self.dp = DatePicker(self.i, self.o, s_year=2015, callback=test_callback)
+		self.dp = DatePicker(self.i, self.o, year=2015, callback=test_callback)
 		print(self.dp.activate())
