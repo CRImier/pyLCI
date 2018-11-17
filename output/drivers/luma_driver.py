@@ -2,10 +2,13 @@
 
 #luma.oled library used: https://github.com/rm-hull/luma.oled
 
+from mock import Mock
+
 try:
     from luma.core.interface.serial import spi, i2c
 except ImportError:
-    from luma.core.serial import spi, i2c #Compatilibity with older luma.oled version
+    #Compatilibity with older luma.oled version
+    from luma.core.serial import spi, i2c
 from luma.core.render import canvas
 
 from threading import Lock
@@ -48,7 +51,7 @@ class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager)
     def __init__(self, hw="spi", port=None, address=None, gpio_dc=None, gpio_rst=None, \
                       width=None, height=None, **kwargs):
         self.hw = hw
-        assert hw in ("spi", "i2c"), "Wrong hardware suggested: '{}'!".format(hw)
+        assert hw in ("spi", "i2c", "dummy"), "Wrong hardware suggested: '{}'!".format(hw)
         if self.hw == "spi":
             self.port = port if port else self.default_spi_port
             self.address = address if address else self.default_spi_address
@@ -64,6 +67,10 @@ class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager)
             if isinstance(address, basestring): address = int(address, 16)
             self.address = address
             self.serial = i2c(port=self.port, address=self.address)
+        elif hw == "dummy":
+            self.port = port
+            self.address = address
+            self.serial = Mock(unsafe=True)
         else:
             raise ValueError("Unknown interface type: {}".format(hw))
         self.busy_flag = Lock()
