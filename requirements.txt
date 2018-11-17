@@ -1,4 +1,5 @@
 luma.oled
+luma.lcd
 python-nmap
 smspdu
 zerophone_hw>=0.3.0
