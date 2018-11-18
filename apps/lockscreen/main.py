@@ -47,9 +47,11 @@ class LockApp(ZeroApp):
 
 class KeyScreen(BaseUIElement):
     sleep_time = 0.1
+    default_key_sequence = ["KEY_ENTER", "KEY_*"]
 
     def __init__(self, i, o, timeout=3, key_sequence=None):
-        self.key_sequence = key_sequence if key_sequence else ["KEY_ENTER", "KEY_*"]
+        self.key_sequence = key_sequence if key_sequence else self.default_key_sequence
+        self.key_sequence_position = 0
         self._locked = Event()
         self.timeout = timeout
         self.reset_timeout()
@@ -61,8 +63,22 @@ class KeyScreen(BaseUIElement):
             sleep(self.sleep_time)
 
     def before_activate(self):
-        self.first_key_pressed = self.eh.last_key == self.key_sequence[0]
         self.locked = True
+        self.key_sequence_position = 0
+        if self.eh.last_key == self.key_sequence[0]:
+            self.key_sequence_position += 1
+            self.check_locked()
+
+    def check_locked(self):
+        if len(self.key_sequence) == self.key_sequence_position:
+            self.unlock()
+
+    def receive_key(self, key):
+        if key == self.key_sequence[self.key_sequence_position]:
+            self.key_sequence_position += 1
+            self.check_locked()
+        else:
+            self.deactivate()
 
     def get_return_value(self):
         return self.locked
@@ -100,18 +116,16 @@ class KeyScreen(BaseUIElement):
         self.refresh()
 
     def generate_keymap(self):
-        return {self.key_sequence[1]: "unlock", self.key_sequence[0]: "set_first_key_press"}
+        return {}
 
     def configure_input(self):
-        self.i.set_keymap(self.keymap)
-        self.i.set_streaming(lambda *a: self.deactivate())
+        self.i.set_streaming(self.receive_key)
 
     def refresh(self):
         c = Canvas(self.o)
         charheight = 16
         font = c.load_font("Fixedsys62.ttf", charheight)
-        key_number = 1 if self.first_key_pressed else 0
-        key_name = self.key_sequence[key_number][len("KEY_"):]
+        key_name = self.key_sequence[self.key_sequence_position][len("KEY_"):]
         c.centered_text("Press {}".format(key_name.lower().capitalize()), font=font)
         self.o.display_image(c.get_image())
 
