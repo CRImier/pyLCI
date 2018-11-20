@@ -17,4 +17,3 @@ unpaddedbase64
 requests
 responses
 kmodpy
-pip >= 9.0.0
