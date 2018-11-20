@@ -77,7 +77,7 @@ class DatePicker(BaseUIElement):
 					'date': self.get_current_day()
 				}
 
-			if self.callback != None:
+			if callable(self.callback):
 				self.callback(date_dict)
 			else:
 				return date_dict
