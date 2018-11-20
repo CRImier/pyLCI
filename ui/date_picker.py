@@ -13,7 +13,7 @@ class DatePicker(BaseUIElement):
 
 	MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-	def __init__(self, i, o, name="DatePicker", year=None, month=None, day=None, callback=None):
+	def __init__(self, i, o, name="DatePicker", year=None, month=None, day=None, callback=None, starting_sunday=False):
 
 		BaseUIElement.__init__(self, i, o, name)
 
@@ -23,6 +23,8 @@ class DatePicker(BaseUIElement):
 		self.current_month = 1
 		self.current_year = 2018
 		self.starting_weekday = 0
+
+		self.starting_sunday = starting_sunday
 
 		# Top-left cell is (0, 0)
 		self.selected_option = {'x': 0, 'y': 0}
@@ -261,6 +263,9 @@ class DatePicker(BaseUIElement):
 
 		# Get the weekday of the first day of the month
 		first_day, _ = calendar.monthrange(self.current_year, self.current_month)
+		if self.starting_sunday:
+			first_day += 1
+
 		self.starting_weekday = first_day
 
 		i = 0
