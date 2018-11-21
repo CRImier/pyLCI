@@ -3,7 +3,7 @@ import os
 import json
 import unittest
 import traceback
-from copy import copy
+from copy import deepcopy
 from threading import Event
 from mock import patch, Mock
 
@@ -29,8 +29,9 @@ class TestDrivers(unittest.TestCase):
 
     def test_sh1106(self):
         output_config = {"driver":"sh1106", "kwargs":{"hw":"dummy"}}
-        config = copy(base_config)
+        config = deepcopy(base_config)
         config["output"][0] = output_config
+        assert(config["input"][0]["driver"] == "test_input")
         with patch.object(main_py, 'load_config') as mocked:
             mocked.return_value = (config, "test_config.json")
             i, o = main_py.init()
@@ -39,8 +40,9 @@ class TestDrivers(unittest.TestCase):
 
     def test_ssd1306(self):
         output_config = {"driver":"ssd1306", "kwargs":{"hw":"dummy"}}
-        config = copy(base_config)
+        config = deepcopy(base_config)
         config["output"][0] = output_config
+        assert(config["input"][0]["driver"] == "test_input")
         with patch.object(main_py, 'load_config') as mocked:
             mocked.return_value = (config, "test_config.json")
             i, o = main_py.init()
@@ -49,8 +51,9 @@ class TestDrivers(unittest.TestCase):
 
     def test_st7735(self):
         output_config = {"driver":"st7735", "kwargs":{"hw":"dummy"}}
-        config = copy(base_config)
+        config = deepcopy(base_config)
         config["output"][0] = output_config
+        assert(config["input"][0]["driver"] == "test_input")
         with patch.object(main_py, 'load_config') as mocked:
             mocked.return_value = (config, "test_config.json")
             i, o = main_py.init()
@@ -60,8 +63,9 @@ class TestDrivers(unittest.TestCase):
     def test_st7735_with_params(self):
         output_config = {"driver":"st7735", "kwargs":{"hw":"dummy", "rotate":1, \
                          "h_offset":1, "v_offset":2, "height":160}}
-        config = copy(base_config)
+        config = deepcopy(base_config)
         config["output"][0] = output_config
+        assert(config["input"][0]["driver"] == "test_input")
         with patch.object(main_py, 'load_config') as mocked:
             mocked.return_value = (config, "test_config.json")
             i, o = main_py.init()
@@ -71,8 +75,9 @@ class TestDrivers(unittest.TestCase):
 
     def test_sh1106_with_backlight(self):
         output_config = {"driver":"sh1106", "kwargs":{"hw":"dummy", "backlight_interval":10}}
-        config = copy(base_config)
+        config = deepcopy(base_config)
         config["output"][0] = output_config
+        assert(config["input"][0]["driver"] == "test_input")
         with patch.object(main_py, 'load_config') as mocked:
             mocked.return_value = (config, "test_config.json")
             i, o = main_py.init()
@@ -82,8 +87,9 @@ class TestDrivers(unittest.TestCase):
     @unittest.skip("broken test, can't properly patch the imports =(")
     def test_pygame_driver(self):
         input_config = {"driver":"pygame_input"}
-        config = copy(base_config)
+        config = deepcopy(base_config)
         config["input"][0] = input_config
+        assert(config["output"][0]["driver"] == "test_output")
         module_patch = patch.dict('sys.modules', {"luma.emulator.device":Mock(), \
                                                   "luma.emulator":Mock()})
         module_patch.start()
@@ -108,8 +114,9 @@ class TestDrivers(unittest.TestCase):
     @unittest.skip("broken test, can't properly patch the imports =(")
     def test_pi_gpio_driver(self):
         input_config = {"driver":"pi_gpio"}
-        config = copy(base_config)
+        config = deepcopy(base_config)
         config["input"][0] = input_config
+        assert(config["output"][0]["driver"] == "test_output")
         with patch.object(pi_gpio.InputDevice, 'init_hw') as init_hw, \
           patch.object(pi_gpio.InputDevice, 'runner') as runner:
             with patch.object(main_py, 'load_config') as mocked:
@@ -124,8 +131,9 @@ class TestDrivers(unittest.TestCase):
     @unittest.skip("broken test, can't properly patch the imports =(")
     def test_pi_gpio_matrix_driver(self):
         input_config = {"driver":"pi_gpio_matrix"}
-        config = copy(base_config)
+        config = deepcopy(base_config)
         config["input"][0] = input_config
+        assert(config["output"][0]["driver"] == "test_output")
         with patch.object(pi_gpio_matrix.InputDevice, 'init_hw') as init_hw, \
           patch.object(pi_gpio_matrix.InputDevice, 'runner') as runner:
             with patch.object(main_py, 'load_config') as mocked:
@@ -139,8 +147,9 @@ class TestDrivers(unittest.TestCase):
 
     def test_custom_i2c_driver(self):
         input_config = {"driver":"custom_i2c"}
-        config = copy(base_config)
+        config = deepcopy(base_config)
         config["input"][0] = input_config
+        assert(config["output"][0]["driver"] == "test_output")
         module_patch = patch.dict('sys.modules', {"smbus":Mock()})
         module_patch.start()
         from input.drivers import custom_i2c
@@ -157,7 +166,9 @@ class TestDrivers(unittest.TestCase):
         module_patch.stop()
 
     def test_input_driver_attach_detach(self):
-        config = copy(base_config)
+        config = deepcopy(base_config)
+        assert(config["output"][0]["driver"] == "test_output")
+        assert(config["input"][0]["driver"] == "test_input")
         with patch.object(main_py, 'load_config') as mocked:
             mocked.return_value = (config, "test_config.json")
             i, o = main_py.init()
