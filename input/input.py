@@ -37,13 +37,7 @@ class InputProcessor(object):
         self.queue = Queue.Queue()
         self.available_keys = {}
         self.drivers = {}
-        for driver_name, driver in self.initial_drivers.items():
-            # Generating an unique yet human-readable name
-            counter = 0
-            name = "{}-{}".format(driver_name, counter)
-            while name in self.drivers:
-                counter += 1
-                name = "{}-{}".format(driver_name, counter)
+        for name, driver in self.initial_drivers.items():
             self.attach_driver(driver, name)
         atexit.register(self.atexit)
 
@@ -64,7 +58,8 @@ class InputProcessor(object):
         logger.info("Attaching driver: {}".format(name))
         self.drivers[name] = driver
         driver._old_send_key = driver.send_key
-        driver.send_key = self.receive_key #Overriding the send_key method so that keycodes get sent to InputListener
+        # Overriding the send_key method so that keycodes get sent to InputListener
+        driver.send_key = self.receive_key
         self.available_keys[name] = driver.available_keys
         self.update_all_proxy_attrs()
         driver.start()
@@ -74,10 +69,10 @@ class InputProcessor(object):
         Detaches a driver from the ``InputProcessor``.
         """
         logger.info("Detaching driver: {}".format(name))
-        if driver in self.initial_drivers.values():
+        if name in self.initial_drivers.values():
             raise ValueError("Driver {} is from config.json, not removing for safety purposes".format(name))
-        driver.send_key = driver._old_send_key
         driver = self.drivers.pop(name)
+        driver.send_key = driver._old_send_key
         driver.stop()
         self.available_keys.pop(name)
         self.update_all_proxy_attrs()
@@ -446,7 +441,13 @@ def init(driver_configs, context_manager):
         args = driver_config.get("args", [])
         kwargs = driver_config.get("kwargs", {})
         driver = driver_module.InputDevice(*args, **kwargs)
-        drivers[driver_name] = driver
+        # Generating an unique yet human-readable name
+        counter = 0
+        name = "{}-{}".format(driver_name, counter)
+        while name in drivers:
+            counter += 1
+            name = "{}-{}".format(driver_name, counter)
+        drivers[name] = driver
     return InputProcessor(drivers, context_manager)
 
 if __name__ == "__main__":

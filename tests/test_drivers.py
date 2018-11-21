@@ -9,11 +9,13 @@ from mock import patch, Mock
 
 try:
     import main as main_py
+    from input.drivers import test_input
     config_path = "tests/test_config.json"
 except (ValueError, ImportError) as e:
     print("Absolute imports failed, trying relative imports")
     os.sys.path.append(os.path.dirname(os.path.abspath('.')))
     import main as main_py
+    from input.drivers import test_input
     config_path = "test_config.json"
 
 
@@ -77,6 +79,33 @@ class TestDrivers(unittest.TestCase):
         assert(isinstance(i, main_py.input.InputProxy))
         assert(isinstance(o, main_py.output.OutputProxy))
 
+    def test_two_input_drivers(self):
+        config = copy(base_config)
+        config["input"].append(config["input"][0])
+        with patch.object(main_py, 'load_config') as mocked:
+            mocked.return_value = (config, "test_config.json")
+            i, o = main_py.init()
+        assert(isinstance(i, main_py.input.InputProxy))
+        assert(isinstance(o, main_py.output.OutputProxy))
+        # there was a problem with input.init() not registering multiple drivers
+        # when they're made from the same driver (and have the same name)
+        assert(len(main_py.input_processor.drivers) == 2)
+        # so that no ugly exception is raised when the test finishes
+        main_py.input_processor.atexit()
+
+    def test_input_driver_attach_detach(self):
+        config = copy(base_config)
+        with patch.object(main_py, 'load_config') as mocked:
+            mocked.return_value = (config, "test_config.json")
+            i, o = main_py.init()
+        name = "test_input-1"
+        assert(len(main_py.input_processor.drivers) == 1)
+        main_py.input_processor.attach_driver(test_input.InputDevice(), name)
+        assert(len(main_py.input_processor.drivers) == 2)
+        main_py.input_processor.detach_driver(name)
+        assert(len(main_py.input_processor.drivers) == 1)
+        # so that no ugly exception is raised when the test finishes
+        main_py.input_processor.atexit()
 
 if __name__ == '__main__':
     unittest.main()
