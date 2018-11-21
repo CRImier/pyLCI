@@ -82,10 +82,12 @@ class DatePicker(BaseUIElement):
 	def get_return_value(self):
 		if self.accepted_value:
 			# Needs to be updated for python3 to use str instead of basestring
+			# Return either a strftime string or a dict containing the date
 			if isinstance(self.strftime_return_format, basestring):
 				selected_date = datetime.date(self.current_year, self.current_month, self.get_current_day())
 				date = selected_date.strftime(self.strftime_return_format)
 
+				# Check for a provided callback
 				if callable(self.callback):
 					self.callback(date)
 				else:
@@ -98,6 +100,7 @@ class DatePicker(BaseUIElement):
 						'date': self.get_current_day()
 					}
 
+				# Check for a provided callback
 				if callable(self.callback):
 					self.callback(date_dict)
 				else:
@@ -150,12 +153,20 @@ class DatePicker(BaseUIElement):
 	def move_up(self):
 		# ^^^^^^^^^^
 		# TODO: If week is first, move to the last same weekday of the next month
-		self._move_cursor(0, -1)
+		if self.selected_option['y'] == 0:
+			self.selected_option['y'] = self.GRID_HEIGHT-1
+			self._move_to_previous_month()
+		else:
+			self._move_cursor(0, -1)
 		self.refresh()
 
 	def move_down(self):
 		# TODO: If week is last, move to the first same weekday of the prev. month
-		self._move_cursor(0, 1)
+		if self.selected_option['y'] == self.GRID_HEIGHT-1:
+			self.selected_option['y'] = 0
+			self._move_to_next_month()
+		else:
+			self._move_cursor(0, 1)
 		self.refresh()
 
 	# Switch between months - TODO
