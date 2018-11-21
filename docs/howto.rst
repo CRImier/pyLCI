@@ -535,6 +535,7 @@ It will throw ``KeyError``, of course, stopping your code from reaching the goal
 Here's how to fetch items from untrusted dictionaries:
 
 .. code-block:: python
+
      value = my_dict.get("key1", "default_value")
 
 Of course, it's not needed everywhere, but it does make sense to do it when, say,
