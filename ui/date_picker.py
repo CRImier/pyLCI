@@ -1,6 +1,6 @@
 import calendar
-from datetime import datetime
-from time import sleep
+import datetime
+from time import sleep, strftime, struct_time
 
 from base_ui import BaseUIElement
 from canvas import Canvas
@@ -13,7 +13,7 @@ class DatePicker(BaseUIElement):
 
 	MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-	def __init__(self, i, o, name="DatePicker", year=None, month=None, day=None, callback=None, starting_sunday=False):
+	def __init__(self, i, o, name="DatePicker", year=None, month=None, day=None, callback=None, starting_sunday=False, strftime_format=None):
 
 		BaseUIElement.__init__(self, i, o, name)
 
@@ -25,6 +25,7 @@ class DatePicker(BaseUIElement):
 		self.starting_weekday = 0
 
 		self.starting_sunday = starting_sunday
+		self.strftime_format = strftime_format
 
 		# Top-left cell is (0, 0)
 		self.selected_option = {'x': 0, 'y': 0}
@@ -37,8 +38,8 @@ class DatePicker(BaseUIElement):
 		self.callback = callback
 
 		# Set the month and year to either the current month/year or a given argument
-		temp_month = datetime.now().month
-		temp_year = datetime.now().year
+		temp_month = datetime.datetime.now().month
+		temp_year = datetime.datetime.now().year
 
 		if month != None:
 			temp_month = month
@@ -52,7 +53,7 @@ class DatePicker(BaseUIElement):
 		if day != None:
 			self.set_current_day(day)
 		else:
-			self.set_current_day(datetime.now().day)
+			self.set_current_day(datetime.datetime.now().day)
 
 	def get_current_day(self):
 		return self.calendar_grid[
@@ -73,16 +74,27 @@ class DatePicker(BaseUIElement):
 
 	def get_return_value(self):
 		if self.accepted_value:
-			date_dict = {
-					'month': self.current_month,
-					'year': self.current_year,
-					'date': self.get_current_day()
-				}
+			# Needs to be updated for python3 to use str instead of basestring
+			if isinstance(self.strftime_format, basestring):
+				selected_date = datetime.date(self.current_year, self.current_month, self.get_current_day())
+				date = selected_date.strftime(self.strftime_format)
 
-			if callable(self.callback):
-				self.callback(date_dict)
+				if callable(self.callback):
+					self.callback(date)
+				else:
+					return date
+
 			else:
-				return date_dict
+				date_dict = {
+						'month': self.current_month,
+						'year': self.current_year,
+						'date': self.get_current_day()
+					}
+
+				if callable(self.callback):
+					self.callback(date_dict)
+				else:
+					return date_dict
 		else:
 			return None
 
