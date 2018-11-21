@@ -9,13 +9,15 @@ from mock import patch, Mock
 
 try:
     import main as main_py
-    from input.drivers import test_input
+    from input.drivers import test_input, pi_gpio, pi_gpio_matrix, custom_i2c
+    import emulator as emulator_py
     config_path = "tests/test_config.json"
 except (ValueError, ImportError) as e:
     print("Absolute imports failed, trying relative imports")
     os.sys.path.append(os.path.dirname(os.path.abspath('.')))
     import main as main_py
-    from input.drivers import test_input
+    from input.drivers import test_input, pi_gpio, pi_gpio_matrix, custom_i2c
+    import emulator as emulator_py
     config_path = "test_config.json"
 
 
@@ -79,17 +81,62 @@ class TestDrivers(unittest.TestCase):
         assert(isinstance(i, main_py.input.InputProxy))
         assert(isinstance(o, main_py.output.OutputProxy))
 
-    def test_two_input_drivers(self):
+    def test_pygame_driver(self):
+        input_config = {"driver":"pygame_input"}
         config = copy(base_config)
-        config["input"].append(config["input"][0])
-        with patch.object(main_py, 'load_config') as mocked:
-            mocked.return_value = (config, "test_config.json")
-            i, o = main_py.init()
+        config["input"][0] = input_config
+        with patch.object(emulator_py.Emulator, 'init_hw') as init_hw, \
+            patch.object(emulator_py.Emulator, 'runner') as runner:
+            with patch.object(main_py, 'load_config') as mocked:
+                mocked.return_value = (config, "test_config.json")
+                i, o = main_py.init()
         assert(isinstance(i, main_py.input.InputProxy))
         assert(isinstance(o, main_py.output.OutputProxy))
-        # there was a problem with input.init() not registering multiple drivers
-        # when they're made from the same driver (and have the same name)
-        assert(len(main_py.input_processor.drivers) == 2)
+        # so that no ugly exception is raised when the test finishes
+        main_py.input_processor.atexit()
+
+    def test_pi_gpio_driver(self):
+        input_config = {"driver":"pi_gpio"}
+        config = copy(base_config)
+        config["input"][0] = input_config
+        with patch.object(pi_gpio.InputDevice, 'init_hw') as init_hw, \
+            patch.object(pi_gpio.InputDevice, 'runner') as runner:
+            with patch.object(main_py, 'load_config') as mocked:
+                mocked.return_value = (config, "test_config.json")
+                i, o = main_py.init()
+            assert(init_hw.called_once())
+        assert(isinstance(i, main_py.input.InputProxy))
+        assert(isinstance(o, main_py.output.OutputProxy))
+        # so that no ugly exception is raised when the test finishes
+        main_py.input_processor.atexit()
+
+    def test_pi_gpio_matrix_driver(self):
+        input_config = {"driver":"pi_gpio_matrix"}
+        config = copy(base_config)
+        config["input"][0] = input_config
+        with patch.object(pi_gpio_matrix.InputDevice, 'init_hw') as init_hw, \
+            patch.object(pi_gpio_matrix.InputDevice, 'runner') as runner:
+            with patch.object(main_py, 'load_config') as mocked:
+                mocked.return_value = (config, "test_config.json")
+                i, o = main_py.init()
+            assert(init_hw.called_once())
+        assert(isinstance(i, main_py.input.InputProxy))
+        assert(isinstance(o, main_py.output.OutputProxy))
+        # so that no ugly exception is raised when the test finishes
+        main_py.input_processor.atexit()
+
+    def test_custom_i2c_driver(self):
+        input_config = {"driver":"custom_i2c"}
+        config = copy(base_config)
+        config["input"][0] = input_config
+        with patch.object(custom_i2c.InputDevice, 'init_hw') as init_hw, \
+            patch.object(custom_i2c.InputDevice, 'runner') as runner:
+            with patch.object(main_py, 'load_config') as mocked:
+                mocked.return_value = (config, "test_config.json")
+                i, o = main_py.init()
+            assert(init_hw.called_once())
+        assert(isinstance(i, main_py.input.InputProxy))
+        assert(isinstance(o, main_py.output.OutputProxy))
         # so that no ugly exception is raised when the test finishes
         main_py.input_processor.atexit()
 
