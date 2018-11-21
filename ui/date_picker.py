@@ -208,6 +208,10 @@ class DatePicker(BaseUIElement):
 		# Create the year - month header string
 		year_month = "{} - {}".format(self.MONTH_NAMES[self.current_month-1], self.current_year)
 
+		# Display the week number in the top left corner
+		week_num = datetime.date(self.current_year, self.current_month, self.get_current_day()).isocalendar()[1]
+		self.c.text(str(week_num), (4, 0))
+
 		# Draw 'year - month' centered at the top of the screen
 		month_year_text_bounds = self.c.get_text_bounds(year_month)
 		centered_cords = self.c.get_centered_text_bounds(year_month)
@@ -282,7 +286,7 @@ class DatePicker(BaseUIElement):
 		else:
 			return False
 
-	# Set the current mont/year to display
+	# Set the current month/year to display
 	def _set_month_year(self, month, year):
 		# Set new month and year
 		self.current_month = month
