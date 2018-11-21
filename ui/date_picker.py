@@ -1,7 +1,7 @@
 import calendar
 import datetime
-from time import sleep, strftime, struct_time
 
+from time import sleep, strftime, struct_time
 from base_ui import BaseUIElement
 from canvas import Canvas
 
@@ -15,8 +15,8 @@ class DatePicker(BaseUIElement):
 
 	def __init__(self, i, o, name="DatePicker", year=None, month=None, day=None, callback=None, starting_sunday=False, init_strftime=None, strftime_return_format=None):
 
+		# Init BaseUIElement and canvas
 		BaseUIElement.__init__(self, i, o, name)
-
 		self.c = Canvas(self.o)
 
 		# Attributes to store the current values
@@ -24,18 +24,20 @@ class DatePicker(BaseUIElement):
 		self.current_year = 2018
 		self.starting_weekday = 0
 
+		# Store values of optional parameters
 		self.starting_sunday = starting_sunday
 		self.strftime_return_format = strftime_return_format
+		self.callback = callback
 
 		# Top-left cell is (0, 0)
 		self.selected_option = {'x': 0, 'y': 0}
 		self.calendar_grid = []
 
+		# Keep track whether Enter has been pressed
 		self.accepted_value = False
 
+		# Instance of calendar class for generating the calendar
 		self.cal = calendar.Calendar()
-
-		self.callback = callback
 
 		# If an init_strftime has been provided set the starting date to it
 		if isinstance(init_strftime, basestring):
@@ -63,23 +65,25 @@ class DatePicker(BaseUIElement):
 				self.set_current_day(datetime.datetime.now().day)
 
 	def get_current_day(self):
+		"""Return the currently selected day of the month"""
 		return self.calendar_grid[
 			(self.selected_option['y'])*self.GRID_WIDTH +
 			self.selected_option['x']]
 
 	def get_days_of_current_month(self):
+		"""Return a list of the days of the month"""
 		days = filter(None, list(self.cal.itermonthdays(self.current_year, self.current_month)))
 		return list(sorted(days))
 
 	def set_current_day(self, day):
-		print(day)
-		print(self.calendar_grid)
+		"""Set the currently selected day"""
 		index = self.calendar_grid.index(day)
 		x = int(index % self.GRID_WIDTH)
 		y = int(index / self.GRID_WIDTH)
 		self.selected_option = {'x': x, 'y': y}
 
 	def get_return_value(self):
+		"""Calculate the value to be returned or given as a parameter to the callback"""
 		if self.accepted_value:
 			# Needs to be updated for python3 to use str instead of basestring
 			# Return either a strftime string or a dict containing the date
@@ -203,6 +207,7 @@ class DatePicker(BaseUIElement):
 		self.deactivate()
 
 	def draw_calendar(self):
+		"""Draw the calendar view"""
 		self.c.clear()
 
 		# Create the year - month header string
