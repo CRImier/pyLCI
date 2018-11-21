@@ -9,14 +9,14 @@ from mock import patch, Mock
 
 try:
     import main as main_py
-    from input.drivers import test_input, pi_gpio, pi_gpio_matrix, custom_i2c
+    from input.drivers import test_input, pi_gpio, pi_gpio_matrix
     import emulator as emulator_py
     config_path = "tests/test_config.json"
 except (ValueError, ImportError) as e:
     print("Absolute imports failed, trying relative imports")
     os.sys.path.append(os.path.dirname(os.path.abspath('.')))
     import main as main_py
-    from input.drivers import test_input, pi_gpio, pi_gpio_matrix, custom_i2c
+    from input.drivers import test_input, pi_gpio, pi_gpio_matrix
     import emulator as emulator_py
     config_path = "test_config.json"
 
@@ -129,8 +129,12 @@ class TestDrivers(unittest.TestCase):
         input_config = {"driver":"custom_i2c"}
         config = copy(base_config)
         config["input"][0] = input_config
-        with patch.object(custom_i2c.InputDevice, 'init_hw') as init_hw, \
-            patch.object(custom_i2c.InputDevice, 'runner') as runner:
+        module_patch = patch.dict('sys.modules', {"smbus":Mock})
+        module_patch.start()
+        from input.drivers import custom_i2c
+        self.custom_i2c = custom_i2c
+        with patch.object(self.custom_i2c.InputDevice, 'init_hw') as init_hw, \
+            patch.object(self.custom_i2c.InputDevice, 'runner') as runner:
             with patch.object(main_py, 'load_config') as mocked:
                 mocked.return_value = (config, "test_config.json")
                 i, o = main_py.init()
@@ -139,6 +143,7 @@ class TestDrivers(unittest.TestCase):
         assert(isinstance(o, main_py.output.OutputProxy))
         # so that no ugly exception is raised when the test finishes
         main_py.input_processor.atexit()
+        module_patch.stop()
 
     def test_input_driver_attach_detach(self):
         config = copy(base_config)
