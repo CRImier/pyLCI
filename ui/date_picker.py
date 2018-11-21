@@ -13,7 +13,7 @@ class DatePicker(BaseUIElement):
 
 	MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-	def __init__(self, i, o, name="DatePicker", year=None, month=None, day=None, callback=None, starting_sunday=False, strftime_format=None):
+	def __init__(self, i, o, name="DatePicker", year=None, month=None, day=None, callback=None, starting_sunday=False, init_strftime=None, strftime_return_format=None):
 
 		BaseUIElement.__init__(self, i, o, name)
 
@@ -25,7 +25,7 @@ class DatePicker(BaseUIElement):
 		self.starting_weekday = 0
 
 		self.starting_sunday = starting_sunday
-		self.strftime_format = strftime_format
+		self.strftime_return_format = strftime_return_format
 
 		# Top-left cell is (0, 0)
 		self.selected_option = {'x': 0, 'y': 0}
@@ -37,23 +37,30 @@ class DatePicker(BaseUIElement):
 
 		self.callback = callback
 
-		# Set the month and year to either the current month/year or a given argument
-		temp_month = datetime.datetime.now().month
-		temp_year = datetime.datetime.now().year
+		# If an init_strftime has been provided set the starting date to it
+		if isinstance(init_strftime, basestring):
+			time_object = datetime.datetime.strptime(init_strftime, '%Y-%m-%d')
+			self._set_month_year(time_object.month, time_object.year)
+			self.set_current_day(time_object.day)
 
-		if month != None:
-			temp_month = month
-
-		if year != None:
-			temp_year = year
-
-		self._set_month_year(temp_month, temp_year)
-
-		# Set the day to either the current day or a given argument
-		if day != None:
-			self.set_current_day(day)
 		else:
-			self.set_current_day(datetime.datetime.now().day)
+			# Set the month and year to either the current month/year or a given argument
+			temp_month = datetime.datetime.now().month
+			temp_year = datetime.datetime.now().year
+
+			if month != None:
+				temp_month = month
+
+			if year != None:
+				temp_year = year
+
+			self._set_month_year(temp_month, temp_year)
+
+			# Set the day to either the current day or a given argument
+			if day != None:
+				self.set_current_day(day)
+			else:
+				self.set_current_day(datetime.datetime.now().day)
 
 	def get_current_day(self):
 		return self.calendar_grid[
@@ -75,9 +82,9 @@ class DatePicker(BaseUIElement):
 	def get_return_value(self):
 		if self.accepted_value:
 			# Needs to be updated for python3 to use str instead of basestring
-			if isinstance(self.strftime_format, basestring):
+			if isinstance(self.strftime_return_format, basestring):
 				selected_date = datetime.date(self.current_year, self.current_month, self.get_current_day())
-				date = selected_date.strftime(self.strftime_format)
+				date = selected_date.strftime(self.strftime_return_format)
 
 				if callable(self.callback):
 					self.callback(date)
