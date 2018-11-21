@@ -549,6 +549,28 @@ Config (and other) files
 Read JSON from a config file located in the app directory
 ---------------------------------------------------------
 
+You'll want to configure your application from time to time - typically,
+to allow users to change your app's configuration, but it's also useful for storing
+user-specific data, allow other software to change your app's configuration, or
+simply a way to hide all those magic numbers in your code out of plain sight.
+
+JSON dictionaries are a good fit in that they convert to Python objects pretty easily
+- you can store strings, numbers, dictionaries and lists. A suggested config file for
+an app would be a dictionary (an "object" in JSON terms), here's an example of how
+that could look like for a music player app, one to needs to store a few settings that
+were set by the user:
+
+.. code-block:: json
+
+    {
+     "shuffle":true,
+     "repeat":true,
+     "last_directory":"/home/pi/music",
+     "disabled_plugins":["lyrics", "thumbnails"]
+    }
+
+Here's the simplest way to read data from a config file located in an app's directory:
+
 .. code-block:: python
 
     from helpers import read_config, local_path_gen
@@ -557,10 +579,18 @@ Read JSON from a config file located in the app directory
     local_path = local_path_gen(__name__)
     config = read_config(local_path(config_filename))
 
+Do you have more requirements for your config file = like, easily saving it, restoring
+it on failure, as well as some primitive migrations as you update your app? The next
+example will probably work for your needs.
+
 ------------
 
-Read a config file with an easy "save" function and "restore to defaults on error" check
-----------------------------------------------------------------------------------------
+Read a config file with "restore to defaults on error", migrations and save_config() method
+-------------------------------------------------------------------------------------------
+
+There's, however, a way to work with config files that you're the most likely to use.
+It allows you to read an app-specific config, restore it to defaults if the reading/parsing
+fails for some reason and get a convenient ``save_config()`` method to save it.
 
 .. code-block:: python
 
@@ -580,6 +610,38 @@ To save the config, use ``save_config(config)`` from anywhere in your app.
 .. warning:: If you're reassigning contents of the ``config`` variable from inside a
              function, you will likely want to use Python ``global`` keyword in order
              to make sure your reassignment will actually work.
+
+In addition
+to that, if the highest level of your config is a dictionary, it allows you to perform small
+migrations - specifically, auto-adding new keys with default values to the config as your
+app is updated to rely on those. 
+
+Say, here's a config you have, created from the default config and then changed
+by the user:
+
+.. code-block:: json
+
+    {
+      "your":"non-default",
+      "config":"to_use"
+    }
+
+And here's a new default config, with additional ``"but_now"`` key that you roll out through
+an app upgrade:
+
+.. code-block:: python
+
+    default_config = '{"your":"default", "config":"to_use", "but_now":"its_updated"}'
+
+The resulting config received from ``read_or_create_config`` will look like this:
+
+.. code-block:: json
+
+    {
+      "your":"non-default",
+      "config":"to_use",
+      "but_now":"its_updated"
+    }
 
 ------------
 
