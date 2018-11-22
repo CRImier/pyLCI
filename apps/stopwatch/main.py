@@ -14,7 +14,6 @@ class StopwatchApp(ZeroApp):
         self.__instructions = ["", "UP/ENTER to start/pause", "RIGHT : restart", "DOWN : reset"]
 
     def on_start(self):
-        super(StopwatchApp, self).on_start()
         self.refresher = Refresher(self.refresh_function, self.i, self.o, .1, {
             "KEY_UP": self.counter.toggle,
             "KEY_RIGHT": self.counter.start,

@@ -11,7 +11,7 @@ from logging.handlers import RotatingFileHandler
 
 from apps.app_manager import AppManager
 from context_manager import ContextManager
-from helpers import read_config, local_path_gen
+from helpers import read_config, local_path_gen, read_or_create_config
 from input import input
 from output import output
 from ui import Printer
@@ -20,12 +20,6 @@ import helpers.logger
 emulator_flag_filename = "emulator"
 local_path = local_path_gen(__name__)
 is_emulator = emulator_flag_filename in os.listdir(".")
-
-logging_path = local_path('zpui.log')
-logging_format = (
-    '[%(levelname)s] %(asctime)s %(name)s: %(message)s',
-    '%Y-%m-%d %H:%M:%S'
-)
 
 config_paths = ['/boot/zpui_config.json', '/boot/pylci_config.json'] if not is_emulator else []
 config_paths.append(local_path('config.json'))
@@ -39,12 +33,8 @@ config = None
 config_path = None
 app_man = None
 
-def init():
-    """Initialize input and output objects"""
-
-    global input_processor, screen, cm, config, config_path
+def load_config():
     config = None
-
     # Load config
     for config_path in config_paths:
         #Only try to load the config file if it's present
@@ -55,11 +45,40 @@ def init():
                 config = read_config(config_path)
             except:
                 logging.exception('Failed to load config from {}'.format(config_path))
+                config_path = None
             else:
                 logging.info('Successfully loaded config from {}'.format(config_path))
                 break
     # After this loop, the config_path global should contain
     # path for config that successfully loaded
+
+    return config, config_path
+
+default_log_config = """{"dir":"logs/", "filename":"zpui.log", "format":
+["[%(levelname)s] %(asctime)s %(name)s: %(message)s","%Y-%m-%d %H:%M:%S"],
+"file_size":1048576, "files_to_store":5}
+"""
+log_config = read_or_create_config("log_config.json", default_log_config, "ZPUI logging")
+logging_dir = log_config["dir"]
+log_filename = log_config["filename"]
+# Making sure the log dir exists - create it if it's not
+try:
+    os.makedirs(logging_dir)
+except OSError:
+    pass
+#Set all the logging parameter variables
+logging_path = os.path.join(logging_dir, log_filename)
+logging_format = log_config["format"]
+logfile_size = log_config["file_size"]
+files_to_store = log_config["files_to_store"]
+
+
+
+def init():
+    """Initialize input and output objects"""
+
+    global input_processor, screen, cm, config, config_path
+    config, config_path = load_config()
 
     if config is None:
         sys.exit('Failed to load any config files!')
@@ -89,7 +108,7 @@ def init():
     if hasattr(screen, "set_backlight_callback"):
         screen.set_backlight_callback(input_processor)
     cm.init_io(input_processor, screen)
-    cm.switch_to_context("main", launch_thread=False)
+    cm.switch_to_context("main")
     i, o = cm.get_io_for_context("main")
 
     return i, o
@@ -113,7 +132,6 @@ def launch(name=None, **kwargs):
             splash(i, o)
         except:
             logging.exception('Failed to load the splash screen')
-            logging.exception(traceback.format_exc())
 
         # Load all apps
         app_menu = app_man.load_all_apps()
@@ -127,12 +145,12 @@ def launch(name=None, **kwargs):
         # Load only single app
         try:
             app_path = app_man.get_app_path_for_cmdline(name)
-            app = app_man.load_app(app_path)
+            app = app_man.load_app(app_path, threaded=False)
         except:
             logging.exception('Failed to load the app: {0}'.format(name))
             input_processor.atexit()
             raise
-        cm.switch_to_context(app_path, launch_thread=False)
+        cm.switch_to_context(app_path)
         runner = app.on_start if hasattr(app, "on_start") else app.callback
 
     exception_wrapper(runner)
@@ -154,7 +172,6 @@ def exception_wrapper(callback):
         status = 1
     except:
         logging.exception('A wild exception appears!')
-        logging.exception(traceback.format_exc())
         Printer(["A wild exception", "appears!"], None, screen, 0)
         status = 1
     else:
@@ -210,8 +227,8 @@ if __name__ == '__main__':
     # Rotating file logs (for debugging crashes)
     rotating_handler = RotatingFileHandler(
         logging_path,
-        maxBytes=10000,
-        backupCount=5)
+        maxBytes=logfile_size,
+        backupCount=files_to_store)
     rotating_handler.setFormatter(formatter)
     logger.addHandler(rotating_handler)
 

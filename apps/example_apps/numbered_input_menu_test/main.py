@@ -23,7 +23,6 @@ class NumberedInputTestApp(ZeroApp):
         logger.info("{} {}".format(index, hello))
 
     def on_start(self):
-        super(NumberedInputTestApp, self).on_start()
         self.n_menu = NumberedMenu(
             self.main_menu_contents,
             self.i,

@@ -1,0 +1,23 @@
+{
+ "input":
+ [
+  {
+   "driver":"custom_i2c"
+  }
+ ],
+ "output":
+ [
+  {
+   "driver":"st7735",
+   "kwargs":
+   {
+    "address":1,
+    "gpio_dc":18,
+    "gpio_rst":20,
+    "height":160,
+    "rotate":1,
+    "backlight_interval":10
+   }
+  }
+ ]
+}

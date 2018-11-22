@@ -57,7 +57,7 @@ def connect_to_network(network_info):
         raise MenuExitException
     #Offering to enter a password
     else:
-        input = UniversalInput(i, o, message="Password:", name="WiFi password enter UI element")
+        input = UniversalInput(i, o, message="Password:", name="WiFi password enter UI element", charmap="password")
         password = input.activate()
         if password is None:
             return False
@@ -94,20 +94,41 @@ def etdn_runner():
                 logger.exception(e)
     etdn_thread = None
 
-def scan(delay = True):
+def scan(delay = True, silent = False):
     delay = 1 if delay else 0
     try:
         wpa_cli.initiate_scan()
         enable_temp_disabled_networks()
     except wpa_cli.WPAException as e:
         if e.code=="FAIL-BUSY":
-            Printer("Still scanning...", i, o, 1)
+            if not silent:
+                Printer("Still scanning...", i, o, 1)
         else:
             raise
     else:
-        Printer("Scanning...", i, o, 1)
+        if not silent:
+            Printer("Scanning...", i, o, 1)
     finally:
         sleep(delay)
+
+def reconnect():
+    try:
+        w_status = wpa_cli.connection_status()
+    except:
+        return ["wpa_cli fail".center(o.cols)]
+    ip = w_status.get('ip_address', None)
+    ap = w_status.get('ssid', None)
+    if not ap:
+        Printer("Not connected!", i, o, 1)
+        return False
+    id = w_status.get('id', None)
+    if not id:
+        logger.error("Current network {} is not in configured network list!".format(ap))
+        return False
+    disable_network(id)
+    scan()
+    enable_network(id)
+    return True
 
 def status_refresher_data():
     try:
@@ -116,8 +137,8 @@ def status_refresher_data():
         return ["wpa_cli fail".center(o.cols)]
     #Getting data
     state = w_status['wpa_state']
-    ip = w_status['ip_address'] if 'ip_address' in w_status else 'None'
-    ap = w_status['ssid'] if 'ssid' in w_status else 'None'
+    ip = w_status.get('ip_address', 'None')
+    ap = w_status.get('ssid', 'None')
 
     #Formatting strings for screen width
     if len(ap) > o.cols: #AP doesn't fit on the screen
@@ -133,17 +154,18 @@ def status_refresher_data():
     #Additional state info
     if o.rows > 2:
        data.append(("St: "+state).center(o.cols))
-    #Button usage tips - we could have 3 rows by now, can we add at least two more?
-    if o.rows >= 5:
-       empty_rows = o.rows-5 #ip, ap, state and two rows we'll add
+    #Button usage tips - we could have 3 rows by now, can we add at least 3 more?
+    if o.rows >= 6:
+       empty_rows = o.rows-6 #ip, ap, state and two rows we'll add
        for i in range(empty_rows): data.append("") #Padding
        data.append("ENTER: more info".center(o.cols))
+       data.append("UP: reconnect".center(o.cols))
        data.append("RIGHT: rescan".center(o.cols))
 
     return data
 
 def status_monitor():
-    keymap = {"KEY_ENTER":wireless_status, "KEY_RIGHT":lambda: scan(False)}
+    keymap = {"KEY_ENTER":wireless_status, "KEY_RIGHT":lambda: scan(False), "KEY_UP":lambda: reconnect()}
     refresher = Refresher(status_refresher_data, i, o, 0.5, keymap, "Wireless monitor")
     refresher.activate()
 

@@ -29,15 +29,14 @@ class LoadingBarExampleApp(ZeroApp):
         self.bar_choice_listbox = Listbox(lb_contents, self.i, self.o)
 
     def on_start(self):
-        super(LoadingBarExampleApp, self).on_start()
         with self.bar_choice_listbox.activate() as chosen_loading_bar:
             if hasattr(chosen_loading_bar, "progress"):
                 for i in range(101):
-                    chosen_loading_bar.progress = float(i) / 100
+                    chosen_loading_bar.progress = i
                     sleep(0.01)
                 sleep(1)
                 for i in range(101)[::-1]:
-                    chosen_loading_bar.progress = float(i) / 100
+                    chosen_loading_bar.progress = i
                     sleep(0.1)
             else:
                 sleep(3)

@@ -1,14 +1,11 @@
-from __future__ import division
-
 import math
 from math import cos
 from threading import Thread
 from time import time
 
 from canvas import Canvas
-
-from ui import Refresher
-from ui.utils import clamp, Chronometer, to_be_foreground, Rect
+from refresher import Refresher
+from utils import clamp, Chronometer, to_be_foreground, Rect
 
 """
 These UI elements are used to show the user that something is happening in the background.
@@ -21,29 +18,24 @@ There are two types of loading indicator elements:
 These classes are based on `Refresher`.
 """
 
-# ========================= helpers =========================
-
-
-class CenteredTextRenderer(object):
-    # TODO: refactor into ui.Canvas methods
-    def draw_centered_text(self, c, content):
-        """Draws a centered text on the canvas and returns a 4-tuple of the coordinates taken by the text"""
-        # type: (Canvas, str) -> None
-        coords = self.get_centered_text_bounds(c, content)
-        c.text((coords.left, coords.top), content, fill=True)
-
-    @staticmethod
-    def get_centered_text_bounds(c, content):
-        """Returns the coordinates of the centered text (min_x, min_y, max_x, max_y)"""
-        # type: (Canvas, str) -> Rect
-        w, h = c.textsize(content)
-        tcw = w / 2
-        tch = h / 2
-        cw, ch = c.get_center()
-        return Rect(cw - tcw, ch - tch, cw + tcw, ch + tch)
-
-
 # ========================= abstract classes =========================
+
+
+class Paused(object):
+    """Wrapping for a `paused` context manager for loading indicators. Allows for:
+
+    with li.paused:
+        do some stuff
+    """
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __enter__(self):
+        self.obj.pause()
+        return self
+
+    def __exit__(self, *args):
+        self.obj.resume()
 
 
 class BaseLoadingIndicator(Refresher):
@@ -53,9 +45,14 @@ class BaseLoadingIndicator(Refresher):
         self._progress = 0
         Refresher.__init__(self, self.on_refresh, i, o, *args, **kwargs)
         self.t = None
+        self.paused = Paused(self)
 
     def on_refresh(self):
         pass
+
+    def set_message(self, new_message):
+        self.message = new_message
+        self.refresh()
 
     def run_in_background(self):
         if self.t is not None or self.in_foreground:
@@ -83,17 +80,17 @@ class ProgressIndicator(BaseLoadingIndicator):
 
     @property
     def progress(self):
-        return float(self._progress)
+        return self._progress
 
     @progress.setter
     def progress(self, value):
-        self._progress = clamp(value, 0, 1)
+        self._progress = clamp(value, 0, 100)
         self.refresh()
 
 
 # ========================= concrete classes =========================
 
-class Throbber(BaseLoadingIndicator, CenteredTextRenderer):
+class Throbber(BaseLoadingIndicator):
     """A throbber is a circular BaseLoadingIndicator, similar to those used on websites
     or in smartphones. Suitable for graphical displays and looks great on them!"""
 
@@ -123,9 +120,9 @@ class Throbber(BaseLoadingIndicator, CenteredTextRenderer):
 
     def draw_message(self, c):
         # type: (Canvas) -> None
-        bounds = self.get_centered_text_bounds(c, self.message)
+        bounds = c.get_centered_text_bounds(self.message)
         # Drawn top-centered
-        c.text((bounds.left, 0), self.message, fill=True)
+        c.text(self.message, (bounds.left, 0), fill=True)
 
     def draw_throbber(self, c):
         x, y = c.size
@@ -165,7 +162,7 @@ class IdleDottedMessage(BaseLoadingIndicator):
         return self.message + '.' * self.dot_count
 
 
-class CircularProgressBar(ProgressIndicator, CenteredTextRenderer):
+class CircularProgressBar(ProgressIndicator):
     """CircularProgressBar is half Throbber, half ProgressBar.
     Makes your app look all sci-fi!
 
@@ -181,9 +178,9 @@ class CircularProgressBar(ProgressIndicator, CenteredTextRenderer):
         x, y = c.size
         radius = min(x, y) / 4
         center_coordinates = (x / 2 - radius, y / 2 - radius, x / 2 + radius, y / 2 + radius)
-        c.arc(center_coordinates, start=0, end=360 * self.progress, fill=True)
+        c.arc(center_coordinates, start=0, end=360 * (self.progress / 100.0), fill=True)
         if self.show_percentage:
-            self.draw_centered_text(c, "{:.0%}".format(self.progress))
+            c.centered_text(str(self.progress)+"%")
 
         self.o.display_image(c.get_image())
 
@@ -204,28 +201,25 @@ class TextProgressBar(ProgressIndicator):
         self.show_percentage = kwargs.pop("show_percentage", False)
         self.percentage_offset = kwargs.pop("percentage_offset", 4)
         BaseLoadingIndicator.__init__(self, i, o, *args, **kwargs)
-        self._progress = 0  # 0-1 range
+        self._progress = 0  # 0-100 range
 
     def set_message(self, new_message):
         self.message = new_message
         self.refresh()
 
     def get_progress_percentage(self):
-        return '{}%'.format(self.progress * 100)
-
-    def get_progress_percentage_string(self):
-        return '{}%'.format(int(self.progress * 100))
+        return '{}%'.format(self.progress)
 
     def get_bar_str(self, size):
         size -= len(self.border_chars)  # to let room for the border chars and/or percentage string
         bar_end = self.border_chars[1]
         if self.show_percentage:
-            percentage = self.get_progress_percentage_string()
+            percentage = self.get_progress_percentage()
             # Leaving room for the border chars and/or percentage string
             size -= self.percentage_offset if self.percentage_offset > 0 else len(percentage)
             bar_end += percentage.rjust(self.percentage_offset)
 
-        filled_col_count = int(size * self.progress)
+        filled_col_count = int(size * (self.progress / 100.0))
         unfilled_col_count = size - filled_col_count
         fill_str = self.fill_char * int(filled_col_count) + self.empty_char * int(unfilled_col_count)
 
@@ -242,30 +236,41 @@ class TextProgressBar(ProgressIndicator):
         return [self.message.center(self.o.cols), bar]
 
 
-class GraphicalProgressBar(ProgressIndicator, CenteredTextRenderer):
+class GraphicalProgressBar(ProgressIndicator):
     """ A horizontal progress bar for graphical displays, showing a message to the user.
     Allows to adjust padding and margin for a little bit of customization,
     as well as to show or hide the progress percentage."""
 
     def __init__(self, i, o, *args, **kwargs):
+        self.message = kwargs.pop("message", "Loading")
         self.show_percentage = kwargs.pop("show_percentage", True)
-        self.margin = kwargs.pop("margin", 15)
-        self.padding = kwargs.pop("padding", 2)
+        self.margin = int(kwargs.pop("margin", 7))
+        self.text_margin = int(kwargs.pop("text_margin", 0))
+        self.percentage_margin = int(kwargs.pop("percentage_margin", 40))
+        self.padding = int(kwargs.pop("padding", 2))
         self.bar_height = kwargs.pop("bar_height", 15)
         BaseLoadingIndicator.__init__(self, i, o, *args, **kwargs)
 
     def refresh(self):
         c = Canvas(self.o)
-        bar_top = self.o.width / 2
         if self.show_percentage:
-            percentage_text = "{:.0%}".format(self.progress)
-            coords = self.get_centered_text_bounds(c, percentage_text)
-            c.text((coords.left, self.margin), percentage_text, fill=True)  # Drawn top-centered (with margin)
-            bar_top = self.margin + (coords.bottom - coords.top)
+            percentage_text = "{}%".format(self.progress)
+            coords = c.get_centered_text_bounds(percentage_text)
+            c.text(percentage_text, (coords.left, self.percentage_margin), fill=True)  # Drawn top-centered (with margin)
+            bar_top_min = self.margin + (coords.bottom - coords.top)
+            bar_top = bar_top_min if self.margin < bar_top_min else self.margin
+        else:
+            bar_top = self.o.width / 2
 
+        self.draw_message(c)
         self.draw_bar(c, bar_top)
 
         self.o.display_image(c.get_image())
+
+    def draw_message(self, c):
+        # type: Canvas -> None
+        coords = c.get_centered_text_bounds(self.message)
+        c.text(self.message, (coords.left, self.text_margin))
 
     def draw_bar(self, c, top_y):
         # type: (Canvas, int) -> None
@@ -277,12 +282,12 @@ class GraphicalProgressBar(ProgressIndicator, CenteredTextRenderer):
         )
 
         bar_width = outline_coords.right - outline_coords.left - self.padding * 2
-        bar_width *= self.progress
+        bar_width *= (self.progress / 100.0)
 
         bar_coords = Rect(
             outline_coords.left + self.padding,
             outline_coords.top + self.padding,
-            outline_coords.left + self.padding + bar_width,
+            outline_coords.left + self.padding + int(bar_width),
             outline_coords.bottom - self.padding
         )
 
@@ -302,7 +307,7 @@ def ProgressBar(i, o, *args, **kwargs):
         raise ValueError("Unsupported display type: {}".format(repr(o.type)))
 
 # noinspection PyPep8Naming
-def LoadingIndicator(i, o, *args, **kwargs):
+def LoadingBar(i, o, *args, **kwargs):
     """Instantiates and returns the appropriate kind of loading indicator
     for the output device - either graphical or text-based."""
     if "b&w-pixel" in o.type:

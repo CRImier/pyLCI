@@ -1,15 +1,17 @@
 import os
+from datetime import datetime
 from subprocess import check_output, CalledProcessError, STDOUT
 
-from helpers import read_or_create_config, local_path_gen
+from helpers import read_or_create_config, local_path_gen, save_config_gen
 from ui import Menu, Printer, PrettyPrinter, DialogBox, PathPicker, UniversalInput, TextReader
 
 menu_name = "Scripts"  # App name as seen in main menu while using the system
 
 scripts_dir = "s/"
 config_filename = "config.json"
-default_config = """
-[
+default_config = """{
+"output_dir":"/home/pi",
+"scripts":[
  {"path":"./s/login.sh",
   "name":"Hotspot login"},
  {"path":"./s/dmesg.sh",
@@ -23,11 +25,12 @@ default_config = """
  {"path":"wget",
   "name":"wget google main page",
   "args":["http://www.google.com"]}
-]"""
+]}"""
 
 local_path = local_path_gen(__name__)
 config_path = local_path(config_filename)
 config = read_or_create_config(config_path, default_config, menu_name + " app")
+save_config = save_config_gen(config_path)
 
 
 def call_external(script_list, shell=False):
@@ -62,7 +65,29 @@ def call_external(script_list, shell=False):
         answer = DialogBox("yn", i, o, message="Show output?").activate()
         if answer:
             TextReader(output, i, o, autohide_scrollbars=True, h_scroll=True).activate()
+            answer = DialogBox("yn", i, o, message="Save output?").activate()
+            if answer:
+                save_output(script_list, output)
 
+
+def save_output(command, output):
+    if not isinstance(command, basestring):
+        command = " ".join(command)
+    command = command.lstrip("/").replace("/", "_")
+    now = datetime.now()
+    filename = "log-{}-{}".format(command, now.strftime("%y%m%d-%H%M%S"))
+    print(filename)
+    old_dir = config["output_dir"]
+    dir = PathPicker(old_dir, i, o, dirs_only=True).activate()
+    if not dir:
+        return
+    # Saving the path into the config
+    config["output_dir"] = dir
+    save_config(config)
+    path = os.path.join(dir, filename)
+    print(path)
+    with open(path, "w") as f:
+        f.write(output)
 
 def call_by_path():
     path = PathPicker("/", i, o).activate()
@@ -85,7 +110,7 @@ def callback():
     script_menu_contents = [["Script by path", call_by_path],
                             ["Custom command", call_command]]
     scripts_in_config = []
-    for script_def in config:
+    for script_def in config["scripts"]:
         script_path = script_def["path"]
         if script_path.startswith('./'):
             script_path = script_path.lstrip('.').lstrip('/')

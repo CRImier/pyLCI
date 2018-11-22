@@ -39,8 +39,8 @@ class NumberedMenu(Menu):
         Menu.idle_loop(self)
         self.check_character_state()
 
-    def set_keymap(self):
-        Menu.set_keymap(self)
+    def configure_input(self):
+        Menu.configure_input(self)
         self.i.set_streaming(self.on_key_pressed)
 
     def deactivate(self):

@@ -30,13 +30,13 @@ Find a task to work on
 Testing your changes locally
 ============================
 
-You can build the documentation using ``make html``. Then, you can run:
-
-    ``cd _build/html && python -m SimpleHTTPServer``
-
-and connect to your computer on port 8000 to see your changes. 
-
-.. note:: ``SimpleHTTPServer`` needs to run in the directory where the HTML files are located (``_build/html``), so you might need at least three different console windows open - one for editing, one for triggering documentation builds and one for SimpleHTTP server. I, personally, use tmux for that.
+You can build the documentation using ``make html`` from the ``docs/`` folder. Then,
+you can run ``./run_server.py`` to run a HTTP server on localhost, serving the
+documentation on port 8000. If you make changes to the documentation, just run
+``make html`` again to rebuild the documentation - webserver will serve the updated
+documentation once it finishes building. In addition to that, you can test the code
+blocks for errors using ``docs/test.sh`` - you need to have ``rstcheck`` installed
+from pip for that to work.
 
 =========================
 Contributing your changes

@@ -16,7 +16,7 @@ Guides:
 * :doc:`App development - how to ... ? <howto>`
 * :doc:`ZPUI configuration files <config>`
 * :doc:`Hacking on UI <hacking_ui>`
-* :doc:`Logging configuration <logging_config>`
+* :doc:`Logging configuration <logging>`
 
 References:
 ===========
