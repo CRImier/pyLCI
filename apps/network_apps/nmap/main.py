@@ -6,7 +6,7 @@ from functools import wraps
 import time
 import os, sys
 
-from ui import Menu, PrettyPrinter, Checkbox, NumpadNumberInput, LoadingIndicator
+from ui import Menu, PrettyPrinter, Checkbox, NumpadNumberInput, LoadingIndicator, HelpOverlay, TextReader
 from if_info import get_ip_addr, get_network_from_ip, sort_ips
 
 try:
@@ -339,7 +339,7 @@ def callback():
         PrettyPrinter("nmap not installed!", i, o, 3)
         return False
     #Dump function support
-    i.set_maskable_callback("KEY_F5", dump_current_scan_to_file)
+    i.set_maskable_callback("KEY_F6", dump_current_scan_to_file)
     #Constructing and loading app main menu
     menu_contents = [
     ["Smart scan", smart_scan],
@@ -347,9 +347,12 @@ def callback():
     ["Scan arbitrary IP", scan_arbitrary_ip],
     ["Scan localhost", scan_localhost]
     ]
-    Menu(menu_contents, i, o).activate()
+    menu = Menu(menu_contents, i, o)
+    tr = TextReader("Press F6 in the scan results menu to save the scan results into a file", i, o, h_scroll=False)
+    HelpOverlay(tr.activate).apply_to(menu)
+    menu.activate()
     #Have to remove the dump function callback because once application exits it isn't removed automatically
-    i.remove_maskable_callback("KEY_F5")
+    i.remove_maskable_callback("KEY_F6")
 
 def init_app(input, output):
     global i, o
