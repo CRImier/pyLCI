@@ -49,18 +49,28 @@ class Testoverlays(unittest.TestCase):
 
     def test_ho_constructor(self):
         """tests constructor"""
-        overlay = HelpOverlay(lambda: true)
+        overlay = HelpOverlay(lambda: True)
         self.assertIsNotNone(overlay)
 
     def test_ho_apply(self):
-        overlay = HelpOverlay(lambda: true)
+        overlay = HelpOverlay(lambda: True)
         mu = Menu([], get_mock_input(), get_mock_output(), name=mu_name, config={})
         overlay.apply_to(mu)
         self.assertIsNotNone(overlay)
         self.assertIsNotNone(mu)
 
+    def test_ho_push_pop_callback(self):
+        cb1 = lambda:True
+        cb2 = lambda:False
+        overlay = HelpOverlay(cb1)
+        assert(overlay.get_key_and_callback()[1] == cb1)
+        overlay.push_callback(cb2)
+        assert(overlay.get_key_and_callback()[1] == cb2)
+        overlay.pop_callback()
+        assert(overlay.get_key_and_callback()[1] == cb1)
+
     def test_ho_text_redraw(self):
-        overlay = HelpOverlay(lambda: true)
+        overlay = HelpOverlay(lambda: True)
         mu = Menu([["Hello"]], get_mock_input(), get_mock_output(), name=mu_name, config={})
         overlay.apply_to(mu)
         def scenario():
@@ -68,14 +78,14 @@ class Testoverlays(unittest.TestCase):
             assert not mu.in_foreground
 
         with patch.object(mu, 'idle_loop', side_effect=scenario) as p:
-            return_value = mu.activate()
+            mu.activate()
         assert mu.o.display_data.called
         assert mu.o.display_data.call_count == 1 #One in to_foreground
         assert mu.o.display_data.call_args[0] == ('Hello', 'Back')
 
     def test_ho_graphical_redraw(self):
         o = get_mock_graphical_output()
-        overlay = HelpOverlay(lambda: true)
+        overlay = HelpOverlay(lambda: True)
         mu = Menu([], get_mock_input(), o, name=mu_name, config={})
         Canvas.fonts_dir = fonts_dir
         overlay.apply_to(mu)
@@ -85,9 +95,35 @@ class Testoverlays(unittest.TestCase):
             assert not mu.in_foreground
 
         with patch.object(mu, 'idle_loop', side_effect=scenario) as p:
-            return_value = mu.activate()
+            mu.activate()
         assert o.display_image.called
         assert o.display_image.call_count == 1 #One in to_foreground
+
+    def test_ho_graphical_icon_disappears(self):
+        o = get_mock_graphical_output()
+        overlay = HelpOverlay(lambda: True)
+        mu = Menu([], get_mock_input(), o, name=mu_name, config={})
+        mu.idle_loop = lambda *a, **k: True
+        Canvas.fonts_dir = fonts_dir
+        overlay.apply_to(mu)
+        def activate():
+            mu.before_activate()
+            mu.to_foreground()
+            mu.idle_loop()
+            img_1 = o.display_image.call_args[0]
+            mu.idle_loop()
+            mu.refresh()
+            img_2 = o.display_image.call_args[0]
+            assert(img_1 == img_2)
+            for i in range(overlay.duration):
+                mu.idle_loop()
+            mu.refresh()
+            img_2 = o.display_image.call_args[0]
+            assert(img_1 != img_2)
+            mu.deactivate()  # KEY_LEFT
+
+        with patch.object(mu, 'activate', side_effect=activate) as p:
+            mu.activate()
 
 
 if __name__ == '__main__':
