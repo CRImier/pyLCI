@@ -156,7 +156,7 @@ class BaseListUIElement(BaseUIElement):
             if self.scrolling["counter"] == 10:
                 self.scrolling["pointer"] += self.scrolling["current_speed"]
                 self.scrolling["counter"] = 0
-                self.view.refresh()
+                self.refresh()
 
     def reset_scrolling(self):
         self.scrolling.update(self.scrolling_defaults)
@@ -180,7 +180,7 @@ class BaseListUIElement(BaseUIElement):
             logger.debug("moved down")
             self.pointer += 1
             self.reset_scrolling()
-            self.view.refresh()
+            self.refresh()
             return True
         else:
             return False
@@ -194,7 +194,7 @@ class BaseListUIElement(BaseUIElement):
             logger.debug("moved down")
             self.pointer += 1
             counter -= 1
-        self.view.refresh()
+        self.refresh()
         self.reset_scrolling()
         return True
 
@@ -207,7 +207,7 @@ class BaseListUIElement(BaseUIElement):
         if self.pointer != 0:
             logger.debug("moved up")
             self.pointer -= 1
-            self.view.refresh()
+            self.refresh()
             self.reset_scrolling()
             return True
         else:
@@ -222,7 +222,7 @@ class BaseListUIElement(BaseUIElement):
             logger.debug("moved down")
             self.pointer -= 1
             counter -= 1
-        self.view.refresh()
+        self.refresh()
         self.reset_scrolling()
         return True
 
@@ -302,6 +302,9 @@ class BaseListUIElement(BaseUIElement):
             self.contents.append(self.exit_entry)
         logger.debug("{}: contents processed".format(self.name))
 
+    def add_view_wrapper(self, wrapper):
+        self.view.wrapper = wrapper(self.view.wrapper)
+
     def refresh(self):
         """ A placeholder to be used for BaseUIElement. """
         self.view.refresh()
@@ -326,6 +329,8 @@ class TextView(object):
     use_mixin = True
     first_displayed_entry = 0
     scrolling_speed_divisor = 4
+    # Default wrapper
+    wrapper = lambda o, *a: a
 
     def __init__(self, o, entry_height, ui_element):
         self.o = o
@@ -459,7 +464,7 @@ class TextView(object):
         self.fix_pointers_on_refresh()
         displayed_data = self.get_displayed_text()
         self.o.noCursor()
-        self.o.display_data(*displayed_data)
+        self.o.display_data(*self.wrapper(*displayed_data))
         self.o.setCursor(self.get_active_line_num(), 0)
         self.o.cursor()
 
@@ -471,6 +476,8 @@ class EightPtView(TextView):
     x_scrollbar_offset = 5
     scrollbar_y_offset = 1
     font = None
+    # Default wrapper only returns an image
+    wrapper = lambda o, *a: a[0]
 
     def __init__(self, *args, **kwargs):
         self.full_width_cursor = kwargs.pop("full_width_cursor", False)
@@ -486,8 +493,7 @@ class EightPtView(TextView):
     def refresh(self):
         logger.debug("{}: refreshed data on display".format(self.el.name))
         self.fix_pointers_on_refresh()
-        image = self.get_displayed_image()
-        self.o.display_image(image)
+        self.o.display_image(self.wrapper(self.get_displayed_image()))
 
     def scrollbar_needed(self):
         # No scrollbar if all the entries fit on the screen
