@@ -388,14 +388,14 @@ class AvrdudeApp(ZeroApp):
         file. For now, is only used for "write_file".
         """
         original_file = getattr(self, attr_name)
-        dir = os.path.split(original_file)[0]
+        dir, filename = os.path.split(original_file)
         # The original dir might not exist anymore, we might need to go through directories
         # until we find a working one
         while dir and not (os.path.exists(dir) and os.path.isdir(dir)):
             dir = os.path.split(dir)[0]
         if not dir:
             dir = '/'
-        file = PathPicker(dir, self.i, self.o).activate()
+        file = PathPicker(dir, self.i, self.o, file=filename).activate()
         if file and os.path.isfile(file):
             setattr(self, attr_name, file)
             self.config[config_option_name] = file
