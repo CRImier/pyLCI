@@ -1,6 +1,8 @@
 menu_name = "MOCP control"
 
-from subprocess import call
+import shlex
+
+from subprocess import call, CalledProcessError
 from ui import Menu, Printer, DialogBox, IntegerAdjustInput
 from helpers import read_or_create_config, local_path_gen, save_config_gen
 
@@ -23,7 +25,7 @@ def mocp_command(*command, **options):
         mocp = config["command"]
         mocp = shlex.split(mocp) if not isinstance(mocp, list) else mocp
         return call(mocp + list(command))
-    except:
+    except (IOError, CalledProcessError):
         #We shouldn't print anything to the screen if called from a non-maskable callback
         silent = options.get("silent", False)
         if not silent:
