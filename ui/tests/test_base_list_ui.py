@@ -5,7 +5,7 @@ import unittest
 from mock import patch, Mock
 
 try:
-    from ui.base_list_ui import BaseListUIElement, BaseListBackgroundableUIElement, Canvas
+    from ui.base_list_ui import BaseListUIElement, Canvas
     fonts_dir = "ui/fonts"
 except ImportError as e:
     print("Absolute imports failed, trying relative imports")
@@ -22,7 +22,7 @@ except ImportError as e:
         return orig_import(name, *args)
 
     with patch('__builtin__.__import__', side_effect=import_mock):
-        from base_list_ui import Canvas, BaseListUIElement, BaseListBackgroundableUIElement
+        from base_list_ui import Canvas, BaseListUIElement
         fonts_dir = "../fonts"
 
 def get_mock_input():
@@ -58,7 +58,7 @@ class TestBaseListUIElement(unittest.TestCase):
 
     def test_properties(self):
         """tests in_background property"""
-        element = BaseListBackgroundableUIElement([["Option", "option"]], get_mock_input(), get_mock_output(), name=el_name, config={})
+        element = BaseListUIElement([["Option", "option"]], get_mock_input(), get_mock_output(), name=el_name, config={})
         assert(element.in_background == False)
         assert(not element._in_background.isSet())
         element.in_background = True

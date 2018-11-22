@@ -31,6 +31,9 @@ else:
 
 class BaseListUIElement(BaseUIElement):
     """This is a base UI element for list-like UI elements.
+       This UI element has the ability to go into background. It's usually for the cases when
+       an UI element can call another UI element, after the second UI element returns,
+       context has to return to the first UI element - like in nested menus.
 
        This UI element has built-in scrolling of entries - if the entry text is longer
        than the screen, once the entry is selected, UI element will scroll through its text."""
@@ -145,7 +148,7 @@ class BaseListUIElement(BaseUIElement):
 
     @property
     def is_active(self):
-        return self.in_foreground
+        return self.in_background
 
     # Scroll functions - will likely be moved into a mixin or views later on
 
@@ -309,19 +312,6 @@ class BaseListUIElement(BaseUIElement):
         """ A placeholder to be used for BaseUIElement. """
         self.view.refresh()
 
-
-class BaseListBackgroundableUIElement(BaseListUIElement):
-    """This is a base UI element for list-like UI elements.
-       This UI element has the ability to go into background. It's usually for the cases when
-       an UI element can call another UI element, after the second UI element returns,
-       context has to return to the first UI element - like in nested menus.
-
-       This UI element has built-in scrolling of entries - if the entry text is longer
-       than the screen, once the entry is selected, UI element will scroll through its text."""
-
-    @property
-    def is_active(self):
-        return self.in_background
 
 # Views.
 

@@ -1,7 +1,7 @@
 from threading import Event
 from time import sleep
 
-from base_list_ui import BaseListBackgroundableUIElement, to_be_foreground
+from base_list_ui import BaseListUIElement, to_be_foreground
 from loading_indicators import LoadingBar
 from utils import clamp, clamp_list_index
 
@@ -16,7 +16,7 @@ class MenuExitException(Exception):
     pass
 
 
-class Menu(BaseListBackgroundableUIElement):
+class Menu(BaseListUIElement):
     """Implements a menu which can be used to navigate through your application,
     output a list of values or select actions to perform. Is one of the most used
     UI elements, used both in system core and in most of the applications."""
@@ -57,7 +57,7 @@ class Menu(BaseListBackgroundableUIElement):
         """
         self.catch_exit = kwargs.pop("catch_exit", True)
         self.contents_hook = kwargs.pop("contents_hook", None)
-        BaseListBackgroundableUIElement.__init__(self, *args, **kwargs)
+        BaseListUIElement.__init__(self, *args, **kwargs)
 
     def before_activate(self):
         # Clearing flags before the menu is activated
