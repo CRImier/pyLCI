@@ -58,6 +58,13 @@ class TestListbox(unittest.TestCase):
         for key_name, callback in lb.keymap.iteritems():
             self.assertIsNotNone(callback)
 
+    def test_contents(self):
+        """tests contents str-to-list replacement"""
+        lb = Listbox([["Option", "option1"], "option2"], get_mock_input(), get_mock_output(), name=lb_name, config={})
+        self.assertIsNotNone(lb.contents)
+        for entry in lb.contents:
+            assert(isinstance(entry, list))
+
     @unittest.skip("expected to fail since Listbox doesn't handle exit label replacement yet")
     def test_exit_label_leakage(self):
         """tests whether the exit label of one Listbox leaks into another"""
