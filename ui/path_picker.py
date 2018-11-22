@@ -7,9 +7,10 @@ logger = setup_logger(__name__, "warning")
 
 class PathPicker(Menu):
 
+    default_path = "/"
     path_chosen = None
 
-    def __init__(self, path, i, o, callback = None, name = None, display_hidden = False, dirs_only = False, append_current_dir = True, current_dot = False, prev_dot = True, scrolling=True, **kwargs):
+    def __init__(self, path, i, o, callback = None, name = None, file = None, display_hidden = False, dirs_only = False, append_current_dir = True, current_dot = False, prev_dot = True, scrolling=True, **kwargs):
         """Initialises the PathPicker object.
 
         Args:
@@ -19,17 +20,23 @@ class PathPicker(Menu):
 
         Kwargs:
 
-            * ``callback``: if set, PathPicker will call the callback with path as first argument upon selecting path, instead of exiting the activate().
-            * ``dirs_only``: if True, PathPicker will only show directories.
+            * ``callback``: if set, PathPicker will call the callback with path as first argument upon selecting path, instead of exiting the activate()
+            * ``file``: if set, PathPicker will locate the file in the ``path`` passed and move its pointer to that file (provided it is found)
+            * ``dirs_only``: if True, PathPicker will only show directories
             * ``append_current_dir``: if False, PathPicker won't add "Dir: %/current/dir%" first entry when `dirs_only` is enabled
-            * ``current_dot``: if True, PathPicker will show '.' path.
-            * ``prev_dot``: if True, PathPicker will show '..' path.
-            * ``display_hidden``: if True, PathPicker will display hidden files.
+            * ``current_dot``: if True, PathPicker will show '.' path
+            * ``prev_dot``: if True, PathPicker will show '..' path
+            * ``display_hidden``: if True, PathPicker will display hidden files
 
         """
         Menu.__init__(self, [], i, o, entry_height=1, scrolling=True, append_exit=False, catch_exit=False, contents_hook=None, **kwargs)
         if not os.path.isdir(path):
-             raise ValueError("PathPicker path has to be a directory!")
+             if os.path.exists(path):
+                 path, filename = os.path.split(path)
+                 # Picking file if file kwarg wasn't already passed
+                 file = filename if not file else file
+             else:
+                 logger.warning("PathPicker path has to be a directory or a file that exists! Received {}, setting path to default path: {}".format(path, self.default_path))
         self.base_name = name if name else "PathPicker"
         self.display_hidden = display_hidden
         self.callback = callback
@@ -39,6 +46,8 @@ class PathPicker(Menu):
         self.prev_dot = prev_dot
         self.menu_pointers = {}
         self.set_path(os.path.normpath(path))
+        if file:
+            self.move_to_file(file)
         self.update_keymap()
 
     def before_activate(self):
@@ -126,6 +135,17 @@ class PathPicker(Menu):
             full_path = os.path.join(self.path, file)
             contents.append([file, lambda x=full_path: self.select_path(x)])
         return contents
+
+    def move_to_file(self, filename):
+        for i, entry in enumerate(self.contents):
+            label = entry[0]
+            filepath = os.path.join(self.path, label)
+            if filename == label and os.path.exists(filepath) and not os.path.isdir(filepath):
+                self.pointer = i
+                if self.in_foreground:
+                    self.refresh()
+                return
+        logger.warning("File {} not found in current path {}".format(filename, self.path))
 
     @to_be_foreground
     def options_menu(self):
