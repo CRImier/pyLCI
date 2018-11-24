@@ -106,9 +106,8 @@ class MatrixClientApp(ZeroApp):
 
 				logger.info("Succesfully logged in")
 			else:
-				l.pause()
-				Printer("Failed to log in", self.i, self.o)
-				l.resume()
+				with l.paused:
+					Printer("Failed to log in", self.i, self.o)
 				return False
 
 	def process_rooms(self):

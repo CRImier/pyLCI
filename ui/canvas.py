@@ -265,7 +265,12 @@ class Canvas(object):
         """
         Inverts the image that ``Canvas`` is currently operating on.
         """
-        self.image = ImageOps.invert(self.image).convert(o.device_mode)
+        image = self.image
+        # "1" won't invert, need "L"
+        image = image.convert("L") if image.mode == "1" else image
+        self.image = ImageOps.invert(image)
+        # If was converted to "L", setting back to "1"
+        self.image = self.image.convert("1") if self.image.mode == "L" else self.image
         self.display_if_interactive()
 
     def display(self):
@@ -395,16 +400,32 @@ class Canvas(object):
         """
 
         coords = self.check_coordinates(coords)
+        # draw.bitmap seems to need RGBA instead of RGB
+        if self.image.mode == "RGB":
+            self.image = self.image.convert("RGBA")
         image_subset = self.image.crop(coords)
 
-        if image_subset.mode != "L": # PIL can only invert "L" and "RGBA" images
-            # We only support "L" for now
+        if image_subset.mode == "1":
+            # PIL can't invert "1" mode - need to use "L"
             image_subset = image_subset.convert("L")
-        image_subset = ImageOps.invert(image_subset)
-        image_subset = image_subset.convert(self.o.device_mode)
+            image_subset = ImageOps.invert(image_subset)
+            image_subset = image_subset.convert(self.o.device_mode)
+        elif image_subset.mode == "RGBA":
+            # PIL can't invert "RGBA" mode - need to use "RGB"
+            r, g, b, a = image_subset.split()
+            rgb_image_subset = ImageOps.invert(Image.merge("RGB", (r, g, b)))
+            rn, gn, bn = rgb_image_subset.split()
+            image_subset = Image.merge('RGBA', (rn,gn,bn,a))
+            #image_subset = image_subset.convert("RGBA")
+        else: #Unknown mode - try and invert it anyway
+            image_subset = ImageOps.invert(image_subset)
 
         self.clear(coords)
         self.draw.bitmap((coords[0], coords[1]), image_subset, fill=self.default_color)
+        if self.image.mode == "RGBA" and self.o.device_mode == "RGB":
+            #Convert back if it was previously converted from RGB to RGBA
+            self.image = self.image.convert("RGB")
+
         self.display_if_interactive()
 
     def display_if_interactive(self):

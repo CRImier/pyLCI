@@ -4,9 +4,8 @@ from threading import Thread
 from time import time
 
 from canvas import Canvas
-
-from ui import Refresher
-from ui.utils import clamp, Chronometer, to_be_foreground, Rect
+from refresher import Refresher
+from utils import clamp, Chronometer, to_be_foreground, Rect
 
 """
 These UI elements are used to show the user that something is happening in the background.
@@ -22,6 +21,23 @@ These classes are based on `Refresher`.
 # ========================= abstract classes =========================
 
 
+class Paused(object):
+    """Wrapping for a `paused` context manager for loading indicators. Allows for:
+
+    with li.paused:
+        do some stuff
+    """
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __enter__(self):
+        self.obj.pause()
+        return self
+
+    def __exit__(self, *args):
+        self.obj.resume()
+
+
 class BaseLoadingIndicator(Refresher):
     """Abstract class for "loading indicator" elements."""
 
@@ -29,6 +45,7 @@ class BaseLoadingIndicator(Refresher):
         self._progress = 0
         Refresher.__init__(self, self.on_refresh, i, o, *args, **kwargs)
         self.t = None
+        self.paused = Paused(self)
 
     def on_refresh(self):
         pass

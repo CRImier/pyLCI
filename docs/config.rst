@@ -126,7 +126,7 @@ The resulting file should look like this, as a result:
    "output": ... ,
    "app_manager": {
       "do_not_load":
-         ["apps/phone/"]
+         ["apps/phone"]
     }
   }
 

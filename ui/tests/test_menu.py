@@ -147,35 +147,32 @@ class TestMenu(unittest.TestCase):
         assert o.display_image.called
         assert o.display_image.call_count == 1 #One in to_foreground
 
-    @unittest.skip("needs to check whether the callback is executed instead")
-    def test_enter_on_last_returns_right(self):
+    def test_callback_is_executed(self):
         num_elements = 3
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        cb1 = Mock()
+        cb2 = Mock()
+        contents[0][1] = cb1
+        contents[1][1] = cb2
+
         mu = Menu(contents, get_mock_input(), get_mock_output(), name=mu_name, config={})
         mu.refresh = lambda *args, **kwargs: None
 
         # Checking at other elements - shouldn't return
         def scenario():
             mu.select_entry()  # KEY_ENTER
-            assert mu.in_foreground  # Should still be active
-            mu.deactivate()  # because is not deactivated yet and would idle loop otherwise
-
-        with patch.object(mu, 'idle_loop', side_effect=scenario) as p:
-            return_value = mu.activate()
-        assert return_value is None
-
-        # Scrolling to the end of the list and pressing Enter - should return a correct dict
-        def scenario():
-            for i in range(num_elements):
-                mu.move_down()  # KEY_DOWN x3
+            assert cb1.called
+            assert mu.in_foreground
+            mu.move_down() # KEY_DOWN
             mu.select_entry()  # KEY_ENTER
+            assert cb2.called
+            assert mu.in_foreground
+            mu.deactivate()  # because is not deactivated yet and would idle loop otherwise
             assert not mu.in_foreground
 
         with patch.object(mu, 'idle_loop', side_effect=scenario) as p:
             return_value = mu.activate()
-        assert isinstance(return_value, dict)
-        assert all([isinstance(key, basestring) for key in return_value.keys()])
-        assert all([isinstance(value, bool) for value in return_value.values()])
+        assert return_value is None
 
     def test_shows_data_on_screen(self):
         """Tests whether the Menu outputs data on screen when it's ran"""

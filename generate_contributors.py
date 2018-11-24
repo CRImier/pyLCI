@@ -12,7 +12,8 @@ duplicate_contributors = ["ahub",
                           "CrunchBang LiveUser"]
 
 replace_contributors = {"CRImier": "CRImier (Arsenijs)",
-                        "Zero Phone": "Unnamed contributor"}
+                        "Zero Phone": "Unnamed contributor",
+                        "Louis Pi": "Louis Parkerson"}
 
 output = check_output(["git", "shortlog", "--numbered", "--summary", "--all"])
 lines = filter(None, [line.strip() for line in output.split('\n')])

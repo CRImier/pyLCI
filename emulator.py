@@ -50,9 +50,12 @@ class EmulatorProxy(object):
     def __init__(self):
         self.device = type("MockDevice", (), {"mode":"1", "size":(128, 64)})
         self.parent_conn, self.child_conn = Pipe()
-        self.proc = Process(target=Emulator, args=(self.child_conn,))
         self.__base_classes__ = (GraphicalOutputDevice, CharacterOutputDevice)
         self.current_image = None
+        self.start_process()
+
+    def start_process(self):
+        self.proc = Process(target=Emulator, args=(self.child_conn,))
         self.proc.start()
 
     def poll_input(self, timeout=1):
@@ -114,11 +117,15 @@ class Emulator(object):
             'width': 128,
             'height': 64,
         }
+        self.busy_flag = Lock()
+        self.init_hw()
+        self.runner()
 
+    def init_hw(self):
         Device = getattr(luma.emulator.device, 'pygame')
         self.device = Device(**emulator_attributes)
-        self.busy_flag = Lock()
 
+    def runner(self):
         try:
             self._event_loop()
         except KeyboardInterrupt:
