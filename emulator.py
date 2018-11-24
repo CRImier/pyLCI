@@ -40,22 +40,23 @@ def get_emulator():
 
 class EmulatorProxy(object):
 
-    width = 128
-    height = 64
     device_mode = "1"
     char_width = 6
     char_height = 8
     type = ["char", "b&w-pixel"]
 
-    def __init__(self):
-        self.device = type("MockDevice", (), {"mode":"1", "size":(128, 64)})
+    def __init__(self, mode="1", width=128, height=64):
+        self.width = width
+        self.height = height
+        self.mode = mode
+        self.device = type("MockDevice", (), {"mode":self.mode, "size":(self.width, self.height)})
         self.parent_conn, self.child_conn = Pipe()
         self.__base_classes__ = (GraphicalOutputDevice, CharacterOutputDevice)
         self.current_image = None
         self.start_process()
 
     def start_process(self):
-        self.proc = Process(target=Emulator, args=(self.child_conn,))
+        self.proc = Process(target=Emulator, args=(self.child_conn,) kwargs={"mode":self.mode, "width":self.width, "height":self.height}))
         self.proc.start()
 
     def poll_input(self, timeout=1):
@@ -99,31 +100,35 @@ class DummyCallableRPCObject(object):
 
 
 class Emulator(object):
-    def __init__(self, child_conn):
+    def __init__(self, child_conn, mode="1", width=128, height=64):
         self.child_conn = child_conn
+
+        self.width = width
+        self.height = height
 
         self.char_width = 6
         self.char_height = 8
 
-        self.cols = 128 / self.char_width
-        self.rows = 64 / self.char_height
+        self.cols = self.width / self.char_width
+        self.rows = self.height / self.char_height
 
         self.cursor_enabled = False
         self.cursor_pos = [0, 0]
         self._quit = False
 
-        emulator_attributes = {
+        self.emulator_attributes = {
             'display': 'pygame',
-            'width': 128,
-            'height': 64,
+            'width': self.width,
+            'height': self.height,
         }
+
         self.busy_flag = Lock()
         self.init_hw()
         self.runner()
 
     def init_hw(self):
-        Device = getattr(luma.emulator.device, 'pygame')
-        self.device = Device(**emulator_attributes)
+        Device = getattr(luma.emulator.device, self.emulator_attributes['display'])
+        self.device = Device(**self.emulator_attributes)
 
     def runner(self):
         try:
