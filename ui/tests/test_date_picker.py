@@ -111,5 +111,20 @@ class TestDatePicker(unittest.TestCase):
 		dp.move_up()
 		assert(dp.get_current_day() == 1)
 
+	def callback_is_executed(self):
+		cb1 = Mock()
+
+		dp = DatePicker(get_mock_input(), get_mock_output(), name=dp_name, callback=cb1, init_strftime='2008-03-12')
+		dp.refresh = lambda *args, **kwargs: None
+
+		def scenario():
+			dp.accept_value()
+			assert cb1.called
+
+		with patch.object(dp, 'idle_loop', side_effect=scenario) as p:
+			return_value = dp.acitvate()
+		assert return_value is None
+
+
 if __name__ == '__main__':
 	unittest.main()

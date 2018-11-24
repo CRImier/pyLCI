@@ -1,8 +1,8 @@
 #ZPUI project contributors
 
  - CRImier (Arsenijs)
- - monsieur_h
  - derivmug
+ - monsieur_h
  - Unnamed contributor
  - Björn Pettersson
  - Jon Maier
