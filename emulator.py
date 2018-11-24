@@ -56,7 +56,7 @@ class EmulatorProxy(object):
         self.start_process()
 
     def start_process(self):
-        self.proc = Process(target=Emulator, args=(self.child_conn,) kwargs={"mode":self.mode, "width":self.width, "height":self.height}))
+        self.proc = Process(target=Emulator, args=(self.child_conn,), kwargs={"mode":self.mode, "width":self.width, "height":self.height})
         self.proc.start()
 
     def poll_input(self, timeout=1):
