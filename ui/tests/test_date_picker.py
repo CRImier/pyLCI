@@ -120,6 +120,8 @@ class TestDatePicker(unittest.TestCase):
 		def scenario():
 			dp.accept_value()
 			assert cb1.called
+			dp.deactivate()
+			assert not dp.is_active
 
 		with patch.object(dp, 'idle_loop', side_effect=scenario) as p:
 			return_value = dp.acitvate()
