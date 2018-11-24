@@ -87,28 +87,24 @@ class DatePicker(BaseUIElement):
 		if self.accepted_value:
 			# Needs to be updated for python3 to use str instead of basestring
 			# Return either a strftime string or a dict containing the date
+			return_date = None
 			if isinstance(self.strftime_return_format, basestring):
 				selected_date = datetime.date(self.current_year, self.current_month, self.get_current_day())
-				date = selected_date.strftime(self.strftime_return_format)
-
-				# Check for a provided callback
-				if callable(self.callback):
-					self.callback(date)
-				else:
-					return date
+				return_date = selected_date.strftime(self.strftime_return_format)
 
 			else:
-				date_dict = {
+				return_date = {
 						'month': self.current_month,
 						'year': self.current_year,
 						'date': self.get_current_day()
 					}
 
-				# Check for a provided callback
-				if callable(self.callback):
-					self.callback(date_dict)
-				else:
-					return date_dict
+			# Check for a provided callback
+			if callable(self.callback):
+				self.callback(return_date)
+			else:
+				return return_date
+
 		else:
 			return None
 
