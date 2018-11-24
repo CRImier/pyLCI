@@ -18,16 +18,19 @@ class MatrixClientApp(ZeroApp):
 	default_config = '{"user_id":"", "token":"", "your_other_usernames":[]}'
 	config_filename = "config.json"
 
-        client = None
+	client = None
 
-        def __init__(self, *args, **kwargs):
+    	def __init__(self, *args, **kwargs):
 		ZeroApp.__init__(self, *args, **kwargs)
+
+		# Read config and create a function for saving it
 		self.config = read_or_create_config(local_path(self.config_filename), self.default_config, self.menu_name+" app")
 		self.save_config = save_config_method_gen(self, local_path(self.config_filename))
 
-		self.init_vars()
 		self.login_runner = BackgroundRunner(self.background_login)
 		self.login_runner.run()
+
+		self.init_vars()
 
 	def init_vars(self):
 		self.stored_messages = {}
@@ -220,6 +223,19 @@ class MatrixClientApp(ZeroApp):
 						'type': event.get('type', 'unknown_type'),
 						'sender': unicode(rfa(event.get('sender', 'unknown_sender'))),
 						'content': rfa(unicode("+ {}").format(content.get('displayname', ''))),
+						'id': event.get('event_id', 0)
+					})
+
+			elif event.get('membership', None) == "leave":
+
+				print(event)
+				prev_content = event.get('prev_content', {})
+
+				self._add_new_message(room.room_id, {
+						'timestamp': event.get('origin_server_ts', 0),
+						'type': event.get('type', 'unknown_type'),
+						'sender': unicode(rfa(event.get('sender', 'unknown_sender'))),
+						'content': rfa(unicode("- {}").format(prev_content.get('displayname', ''))),
 						'id': event.get('event_id', 0)
 					})
 
