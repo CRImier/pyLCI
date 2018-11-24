@@ -288,6 +288,8 @@ class MatrixClientApp(ZeroApp):
 			content = rfa(message["content"])
 			menu_contents.append([content, lambda c=content, s=rfa(message['sender']), t=message['timestamp']: self.display_single_message(c, s, t)])
 
+		menu_contents.append(["Write message", lambda r=self.rooms[room_id]: self.write_message(r)])
+
 		return menu_contents
 
 	# Callback for MessagesMenu
