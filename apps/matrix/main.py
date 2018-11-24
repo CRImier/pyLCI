@@ -154,8 +154,7 @@ class MatrixClientApp(ZeroApp):
 			# Right arrow 	-> Write message to room
 			menu_contents.append([
 				room_name,
-				lambda x=current_room: self.display_messages(x),
-				lambda x=current_room: self.write_message(x)
+				lambda x=current_room: self.display_messages(x)
 			])
 
 		menu_contents.append(["Settings", self.show_settings])
