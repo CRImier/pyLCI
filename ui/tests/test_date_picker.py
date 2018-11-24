@@ -111,15 +111,34 @@ class TestDatePicker(unittest.TestCase):
 		dp.move_up()
 		assert(dp.get_current_day() == 1)
 
-	def test_callback_is_executed(self):
+	def test_callback(self):
 		cb1 = Mock()
 
-		dp = DatePicker(get_mock_input(), get_mock_output(), name=dp_name, callback=cb1, init_strftime='2008-03-12')
+		dp = DatePicker(get_mock_input(), get_mock_output(), name=dp_name, callback=cb1)
 		dp.refresh = lambda *args, **kwargs: None
 
 		def scenario():
 			dp.accept_value()
-			assert cb1.called
+			assert cb1.called_once
+			assert isinstance(cb1.call_args[0][0], dict)
+			assert dp.is_active
+			dp.deactivate()
+			assert not dp.is_active
+
+		with patch.object(dp, 'idle_loop', side_effect=scenario) as p:
+			return_value = dp.activate()
+		assert return_value is None
+
+	def test_callback_with_return_strftime(self):
+		cb1 = Mock()
+		dp = DatePicker(get_mock_input(), get_mock_output(), name=dp_name, callback=cb1, return_strftime="%Y-%m-%d %H:%M:%S")
+		dp.refresh = lambda *args, **kwargs: None
+
+		def scenario():
+			dp.accept_value()
+			assert cb1.called_once
+			assert isinstance(cb1.call_args[0][0], basestring)
+			assert dp.is_active
 			dp.deactivate()
 			assert not dp.is_active
 

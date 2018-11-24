@@ -13,7 +13,7 @@ class DatePicker(BaseUIElement):
 
 	MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-	def __init__(self, i, o, name="DatePicker", year=None, month=None, day=None, callback=None, starting_sunday=False, init_strftime=None, strftime_return_format=None):
+	def __init__(self, i, o, name="DatePicker", year=None, month=None, day=None, callback=None, starting_sunday=False, init_strftime=None, return_strftime=None):
 
 		# Init BaseUIElement and canvas
 		BaseUIElement.__init__(self, i, o, name)
@@ -26,7 +26,7 @@ class DatePicker(BaseUIElement):
 
 		# Store values of optional parameters
 		self.starting_sunday = starting_sunday
-		self.strftime_return_format = strftime_return_format
+		self.return_strftime = return_strftime
 		self.callback = callback
 
 		# Top-left cell is (0, 0)
@@ -82,32 +82,19 @@ class DatePicker(BaseUIElement):
 		y = int(index / self.GRID_WIDTH)
 		self.selected_option = {'x': x, 'y': y}
 
-	def get_return_value(self):
+	def get_return_value(self, check_accepted = True):
 		"""Calculate the value to be returned or given as a parameter to the callback"""
-		if self.accepted_value:
+		if self.accepted_value or not check_accepted:
 			# Needs to be updated for python3 to use str instead of basestring
 			# Return either a strftime string or a dict containing the date
-			return_date = None
-			if isinstance(self.strftime_return_format, basestring):
+			if isinstance(self.return_strftime, basestring):
 				selected_date = datetime.date(self.current_year, self.current_month, self.get_current_day())
-				return_date = selected_date.strftime(self.strftime_return_format)
+				return selected_date.strftime(self.return_strftime)
 
 			else:
-				return_date = {
-						'month': self.current_month,
-						'year': self.current_year,
-						'date': self.get_current_day()
-					}
-
-			# Check for a provided callback
-			if callable(self.callback):
-				self.to_background()
-				self.callback(return_date)
-				self.to_foreground()
-			else:
-				self.deactivate()
-				return return_date
-
+				return {'month': self.current_month,
+					'year': self.current_year,
+					'date': self.get_current_day()}
 		else:
 			return None
 
@@ -202,8 +189,14 @@ class DatePicker(BaseUIElement):
 		self.refresh()
 
 	def accept_value(self):
-		self.accepted_value = True
-		self.deactivate()
+		# Check for a provided callback
+		if callable(self.callback):
+			self.to_background()
+			self.callback(self.get_return_value(check_accepted=False))
+			self.to_foreground()
+		else:
+			self.accepted_value = True
+			self.deactivate()
 
 	def draw_calendar(self):
 		"""Draw the calendar view"""
