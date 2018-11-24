@@ -101,8 +101,11 @@ class DatePicker(BaseUIElement):
 
 			# Check for a provided callback
 			if callable(self.callback):
+				self.to_background()
 				self.callback(return_date)
+				self.to_foreground()
 			else:
+				self.deactivate()
 				return return_date
 
 		else:
