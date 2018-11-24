@@ -73,6 +73,21 @@ class TestDatePicker(unittest.TestCase):
 			return_value = dp.activate()
 		assert return_value is None
 
+	def test_accepts_and_returns_dict(self):
+		date = {"year":2018, "month":2, "day":1}
+		dp = DatePicker(get_mock_input(), get_mock_output(), name=dp_name, **date)
+		dp.refresh = lambda *args, **kwargs: None
+
+		def scenario():
+			dp.accept_value()
+			dp.deactivate()
+			assert not dp.is_active
+
+		with patch.object(dp, 'idle_loop', side_effect=scenario) as p:
+			return_value = dp.activate()
+		assert isinstance(return_value, dict)
+		assert return_value == date
+
 	def test_set_current_day(self):
 		grid = [30,  31, -1, -1, -1, -1,  1,
 			 2,   3,  4,  5,  6,  7,  8,
@@ -145,6 +160,21 @@ class TestDatePicker(unittest.TestCase):
 		with patch.object(dp, 'idle_loop', side_effect=scenario) as p:
 			return_value = dp.activate()
 		assert return_value is None
+
+	def test_init_strftime(self):
+		init_str = "2018-02-01"
+		dp = DatePicker(get_mock_input(), get_mock_output(), name=dp_name, init_strftime=init_str)
+		dp.refresh = lambda *args, **kwargs: None
+
+		def scenario():
+			dp.accept_value()
+			dp.deactivate()
+			assert not dp.is_active
+
+		with patch.object(dp, 'idle_loop', side_effect=scenario) as p:
+			return_value = dp.activate()
+		assert isinstance(return_value, dict)
+		assert return_value == {"year":2018, "month":2, "day":1}
 
 
 if __name__ == '__main__':

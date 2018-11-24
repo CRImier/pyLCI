@@ -97,7 +97,7 @@ class DatePicker(BaseUIElement):
 			else:
 				return {'month': self.current_month,
 					'year': self.current_year,
-					'date': self.get_current_day()}
+					'day': self.get_current_day()}
 		else:
 			return None
 
