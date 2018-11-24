@@ -13,6 +13,9 @@ class DatePicker(BaseUIElement):
 
 	MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
+	init_strftime_template = '%Y-%m-%d'
+
+
 	def __init__(self, i, o, name="DatePicker", year=None, month=None, day=None, callback=None, starting_sunday=False, init_strftime=None, return_strftime=None):
 
 		# Init BaseUIElement and canvas
@@ -41,7 +44,7 @@ class DatePicker(BaseUIElement):
 
 		# If an init_strftime has been provided set the starting date to it
 		if isinstance(init_strftime, basestring):
-			time_object = datetime.datetime.strptime(init_strftime, '%Y-%m-%d')
+			time_object = datetime.datetime.strptime(init_strftime, self.init_strftime_template)
 			self._set_month_year(time_object.month, time_object.year)
 			self.set_current_day(time_object.day)
 
