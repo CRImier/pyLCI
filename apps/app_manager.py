@@ -49,7 +49,7 @@ class AppManager(object):
             for subdir in subdirs:
                 # First, we create subdir menus (not yet linking because they're not created in correct order) and put them in subdir_menus.
                 subdir_path = os.path.join(path, subdir)
-                self.subdir_menus[subdir_path] = NumberedMenu([], self.i, self.o, subdir_path)
+                self.subdir_menus[subdir_path] = Menu([], self.i, self.o, subdir_path)
             for _module in modules:
                 # Then, we load modules and store them along with their paths
                 try:
