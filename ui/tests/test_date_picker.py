@@ -176,6 +176,17 @@ class TestDatePicker(unittest.TestCase):
 		assert isinstance(return_value, dict)
 		assert return_value == {"year":2018, "month":2, "day":1}
 
+	def test_redraw(self):
+		dp = DatePicker(get_mock_input(), get_mock_output(), name=dp_name)
+
+		def scenario():
+			dp.deactivate()
+			assert not dp.is_active
+
+		with patch.object(dp, 'idle_loop', side_effect=scenario) as p:
+			return_value = dp.activate()
+		assert dp.o.display_data.called_once
+
 
 if __name__ == '__main__':
 	unittest.main()
