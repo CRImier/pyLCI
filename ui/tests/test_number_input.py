@@ -35,6 +35,8 @@ def get_mock_output(rows=8, cols=21):
 shorthands = {
     "u":"KEY_UP",
     "d":"KEY_DOWN",
+    "p":"KEY_PAGEUP",
+    "q":"KEY_PAGEDOWN",
     "l":"KEY_LEFT",
     "r":"KEY_RIGHT",
     "e":"KEY_ENTER"}
@@ -93,6 +95,26 @@ class TestIntegerAdjustInput(unittest.TestCase):
                 execute_shorthand(ii, "u")
             for i in range(minus):
                 execute_shorthand(ii, "d")
+            execute_shorthand(ii, 'e')
+            assert not ii.is_active
+
+        with patch.object(ii, 'idle_loop', side_effect=scenario) as p:
+            return_value = ii.activate()
+        assert return_value == expected
+
+    def test_pageup_pagedown(self):
+        ii = IntegerAdjustInput(0, get_mock_input(), get_mock_output(), name=ii_name)
+        ii.refresh = lambda *args, **kwargs: None
+
+        plus = 5
+        minus = 4
+        expected = 10
+
+        def scenario():
+            for i in range(plus):
+                execute_shorthand(ii, "p")
+            for i in range(minus):
+                execute_shorthand(ii, "q")
             execute_shorthand(ii, 'e')
             assert not ii.is_active
 

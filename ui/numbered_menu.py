@@ -1,8 +1,8 @@
 from threading import Lock
 from time import time
 
-from ui import Menu
-from ui.utils import clamp, check_value_lock, to_be_foreground
+from menu import Menu
+from utils import clamp, check_value_lock, to_be_foreground
 
 
 class NumberedMenu(Menu):
@@ -81,19 +81,26 @@ class NumberedMenu(Menu):
         self.current_input = None
         self.view.refresh()
 
-    def process_contents(self):
-        Menu.process_contents(self)
+    def get_displayed_contents(self):
+        """
+        Overriding this function lets us have entry numbers while
+        not modifying the actual ``contents`` of the menu
+        """
         if self.prepend_numbers:
-            self.prepend_entry_text()
+            return self.get_contents_with_numbers()
+        else:
+            return self.contents
 
-    def prepend_entry_text(self):
+    def get_contents_with_numbers(self):
         # prepend numbers to each entry name
         if self.is_multi_digit():
-            self.contents = [["{} {}".format(i, entry[0]), entry[1]]
-                             for i, entry in enumerate(self.contents)]
+            return [["{} {}".format(i, entry[0]), entry[1]]
+                    for i, entry in enumerate(self.contents)]
         else:
-            for i, entry in enumerate(self.contents[:10]):
+            numbered_contents = copy(numbered_contents)
+            for i, entry in enumerate(numbered_contents[:10]):
                 entry[0] = "{} {}".format(i, entry[0])
+            return numbered_contents
 
     @check_value_lock
     def check_character_state(self):

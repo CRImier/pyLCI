@@ -39,11 +39,14 @@ class Listbox(BaseListUIElement):
 
         """
         selected = kwargs.pop("selected", None)
+        exitable = kwargs.pop("exitable", None)
         BaseListUIElement.__init__(self, *args, **kwargs)
         if len(self.contents) == 0:
             raise ValueError("A listbox can't be empty!")
         if selected:
             self.go_to_value(selected)
+        if exitable:
+            logger.warning("Listbox ignores the 'exitable' argument!")
 
     def get_return_value(self):
         if self.selected_entry is None:
@@ -54,6 +57,7 @@ class Listbox(BaseListUIElement):
             return self.contents[self.selected_entry][1]
 
     def process_contents(self):
+        BaseListUIElement.process_contents(self)
         # Replacing string-based entry labels with single-element lists
         for i, entry in enumerate(self.contents):
             if isinstance(entry, basestring):

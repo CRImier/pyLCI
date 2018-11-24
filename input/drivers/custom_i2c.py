@@ -50,7 +50,6 @@ class InputDevice(InputSkeleton):
 
         """
         self.bus_num = bus
-        self.bus = smbus.SMBus(self.bus_num)
         if isinstance(addr, basestring):
             addr = int(addr, 16)
         self.addr = addr
@@ -59,6 +58,7 @@ class InputDevice(InputSkeleton):
 
     def init_hw(self):
         try:
+            self.bus = smbus.SMBus(self.bus_num)
             self.bus.read_byte(self.addr)
         except IOError:
             return True
