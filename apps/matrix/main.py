@@ -90,6 +90,8 @@ class MatrixClientApp(ZeroApp):
 		if not username:
 			return False
 
+		displayname = username
+
 		# Create a matrix user id from the username, currently only ids on matrix.org are possible
 		username = "@{}:matrix.org".format(username)
 
@@ -105,6 +107,7 @@ class MatrixClientApp(ZeroApp):
 			if self.client.logged_in:
 				self.config['user_id'] = username
 				self.config['token'] = self.client.get_token()
+				self.config['displayname'] = displayname
 				self.save_config()
 
 				logger.info("Succesfully logged in")
@@ -247,6 +250,12 @@ class MatrixClientApp(ZeroApp):
 				if event.get('sender', None) == self.client.get_user().user_id or event.get("sender", None) in self.config["your_other_usernames"]:
 					# Prefix own messages with a '*'
 					prefix = "* "
+
+				elif self.config['displayname'] in content.get('body', ""):
+					# Prefix messages with your name in it with a '#'
+					prefix = "# "
+
+
 
 				self._add_new_message(room.room_id, {
 						'timestamp': event.get('origin_server_ts', 0),
