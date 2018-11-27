@@ -116,7 +116,7 @@ class BaseListUIElement(BaseUIElement):
                 raise NotImplementedError  # Again, this is for fine-tuning
         elif not view:
             view = self.get_default_view()
-        self.view = view(self.o, self.entry_height, self)
+        self.view = view(self.o, self)
 
     def get_default_view(self):
         """Decides on the view to use for UI element when config file has
@@ -339,10 +339,10 @@ class TextView(object):
     # Default wrapper
     wrapper = lambda o, *a: a
 
-    def __init__(self, o, entry_height, ui_element):
+    def __init__(self, o, ui_element):
         self.o = o
-        self.entry_height = entry_height
         self.el = ui_element
+        self.entry_height = self.el.entry_height
         self.setup_scrolling()
 
     def setup_scrolling(self):
