@@ -6,13 +6,14 @@ from canvas import Canvas
 
 class GridMenu(Menu):
 
-	GRID_WIDTH = 3
-	GRID_HEIGHT = 3
+	cols = 3
+	rows = 3
 
-	def __init__(self, i, o, contents, name="GridMenu", **kwargs):
+	def __init__(self, contents, i, o, rows=3, cols=3, name=None, **kwargs):
 
-		Menu.__init__(self, contents, i, o, name, override_left=False, **kwargs)
-
+		Menu.__init__(self, contents, i, o, name=name, override_left=False, **kwargs)
+                self.rows = rows
+                self.cols = cols
 		self.view = GridView(o, self)
 
 	def generate_keymap(self):
@@ -26,7 +27,7 @@ class GridMenu(Menu):
 		}
 
 	def select_entry(self, callback_number=1):
-		entry_index = self.pointer+self.y_index*self.GRID_WIDTH
+		entry_index = self.pointer+self.y_index*self.cols
 		Menu.select_entry(self, callback_number=callback_number, entry_index=entry_index)
 
 	def exit_menu(self):
@@ -39,10 +40,10 @@ class GridMenu(Menu):
 		self._move_cursor(-1)
 
 	def move_up(self):
-		self._move_cursor(-self.GRID_WIDTH)
+		self._move_cursor(-self.cols)
 
 	def move_down(self):
-		self._move_cursor(self.GRID_WIDTH)
+		self._move_cursor(self.cols)
 
 	def refresh(self):
 		self.view.refresh()
@@ -55,16 +56,16 @@ class GridMenu(Menu):
 			self.y_index += -1
 
 		# Scroll down if the pointer has reached the end and there are cells left
-		if self.pointer//self.GRID_WIDTH >= self.GRID_HEIGHT:
-			if self.y_index + self.GRID_HEIGHT < ceil(len(self.contents)/float(self.GRID_WIDTH)):
+		if self.pointer//self.cols >= self.rows:
+			if self.y_index + self.rows < ceil(len(self.contents)/float(self.cols)):
 				self.y_index += 1
 				self.pointer += -3
 
 		# Check whether the new cell is empty
-		if self.pointer + self.y_index*self.GRID_WIDTH >= len(self.contents):
+		if self.pointer + self.y_index*self.cols >= len(self.contents):
 			self.pointer -= m
 
-		self.pointer = self.pointer%(self.GRID_WIDTH*self.GRID_HEIGHT)
+		self.pointer = self.pointer%(self.cols*self.rows)
                 print(self.pointer)
 		self.refresh()
 
@@ -74,37 +75,33 @@ class GridView():
 	def __init__(self, o, ui_element):
 		self.c = Canvas(o)
 		self.el = ui_element
-		self.y_index = 0;
-
-
-		self.GRID_WIDTH = el.GRID_WIDTH
-		self.GRID_HEIGHT = el.GRID_HEIGHT
+		self.y_index = 0
 
 	def draw_grid(self):
 		self.c.clear()
 
 		# Calculate margins
-		step_width = self.c.width / self.GRID_WIDTH
-		step_height = self.c.height / self.GRID_HEIGHT
+		step_width = self.c.width / self.el.cols
+		step_height = self.c.height / self.el.rows
 
 		# Calculate grid index
-		item_x = self.el.pointer%self.GRID_WIDTH
-		item_y = self.el.pointer//self.GRID_HEIGHT
+		item_x = self.el.pointer%self.el.cols
+		item_y = self.el.pointer//self.el.rows
 
 		# Draw horizontal and vertical lines
-		for x in range(1, self.GRID_WIDTH):
+		for x in range(1, self.el.cols):
 			self.c.line((x*step_width, 0, x*step_width, self.c.height))
 
-			for y in range(1, self.GRID_HEIGHT):
+			for y in range(1, self.el.rows):
 				self.c.line((0, y*step_height, self.c.width, y*step_height))
 
 		# Draw the app names
-		for index, item in enumerate(self.el.contents[self.el.y_index*self.GRID_WIDTH:]):
-			app_name = self.el.contents[index+self.el.y_index*self.GRID_WIDTH][0]
+		for index, item in enumerate(self.el.contents[self.y_index*self.el.cols:]):
+			app_name = self.el.contents[index+self.y_index*self.el.cols][0]
 			text_bounds = self.c.get_text_bounds(app_name)
 
-			x_cord = (index%self.GRID_WIDTH)*step_width+(step_width-text_bounds[0])/2
-			y_cord = (index//self.GRID_HEIGHT)*step_height+(step_height-text_bounds[1])/2
+			x_cord = (index%self.el.cols)*step_width+(step_width-text_bounds[0])/2
+			y_cord = (index//self.el.rows)*step_height+(step_height-text_bounds[1])/2
 			self.c.text(app_name, (x_cord, y_cord))
 
 		# Invert the selected cell

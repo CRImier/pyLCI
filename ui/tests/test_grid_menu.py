@@ -43,7 +43,6 @@ def get_mock_graphical_output(width=128, height=64, mode="1", cw=6, ch=8):
 
 mu_name = "Test GridMenu"
 
-
 class TestGridMenu(unittest.TestCase):
     """tests GridMenu class"""
 
@@ -71,6 +70,7 @@ class TestGridMenu(unittest.TestCase):
         assert (c2.exit_entry != c3.exit_entry)
         assert (c1.exit_entry != c3.exit_entry)
 
+    @unittest.skip("LEFT is used for navigation")
     def test_left_key_disabled_when_not_exitable(self):
         """Tests whether a menu does not exit on KEY_LEFT when exitable is set to False"""
         num_elements = 3
@@ -79,7 +79,7 @@ class TestGridMenu(unittest.TestCase):
         mu.refresh = lambda *args, **kwargs: None
 
         def scenario():
-            assert "KEY_LEFT" not in mu.keymap  # KEY_LEFT
+            assert "KEY_LEFT" not in mu.keymap
             mu.deactivate()
             assert not mu.is_active
 
