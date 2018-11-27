@@ -9,13 +9,11 @@ class GridMenu(Menu):
 	GRID_WIDTH = 3
 	GRID_HEIGHT = 3
 
-	def __init__(self, i, o, contents, name="GridMenu"):
+	def __init__(self, i, o, contents, name="GridMenu", **kwargs):
 
-		Menu.__init__(self, contents, i, o, name, override_left=False)
+		Menu.__init__(self, contents, i, o, name, override_left=False, **kwargs)
 
-		self.view = GridView(o, self, self.GRID_WIDTH, self.GRID_HEIGHT)
-
-		self.y_index = 0;
+		self.view = GridView(o, self)
 
 	def generate_keymap(self):
 		return {
@@ -30,9 +28,6 @@ class GridMenu(Menu):
 	def select_entry(self, callback_number=1):
 		entry_index = self.pointer+self.y_index*self.GRID_WIDTH
 		Menu.select_entry(self, callback_number=callback_number, entry_index=entry_index)
-
-	def idle_loop(self):
-		sleep(0.1)
 
 	def exit_menu(self):
 		self.deactivate()
@@ -70,17 +65,20 @@ class GridMenu(Menu):
 			self.pointer -= m
 
 		self.pointer = self.pointer%(self.GRID_WIDTH*self.GRID_HEIGHT)
+                print(self.pointer)
 		self.refresh()
 
 
 class GridView():
 
-	def __init__(self, o, ui_element, width, height):
+	def __init__(self, o, ui_element):
 		self.c = Canvas(o)
 		self.el = ui_element
+		self.y_index = 0;
 
-		self.GRID_WIDTH = width
-		self.GRID_HEIGHT = height
+
+		self.GRID_WIDTH = el.GRID_WIDTH
+		self.GRID_HEIGHT = el.GRID_HEIGHT
 
 	def draw_grid(self):
 		self.c.clear()
@@ -107,7 +105,6 @@ class GridView():
 
 			x_cord = (index%self.GRID_WIDTH)*step_width+(step_width-text_bounds[0])/2
 			y_cord = (index//self.GRID_HEIGHT)*step_height+(step_height-text_bounds[1])/2
-
 			self.c.text(app_name, (x_cord, y_cord))
 
 		# Invert the selected cell
