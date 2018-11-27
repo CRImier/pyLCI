@@ -16,14 +16,16 @@ class GridMenu(Menu):
 		Menu.__init__(self, contents, i, o, name=name, override_left=False, **kwargs)
 
 	def generate_keymap(self):
-		keymap = {
+		keymap = Menu.generate_keymap(self)
+                keymap.update({
 			"KEY_RIGHT": "move_down",
 			"KEY_LEFT": "move_up",
 			"KEY_UP": "grid_move_up",
 			"KEY_DOWN": "grid_move_down",
 			"KEY_ENTER": "select_entry",
 			"KEY_F1": "deactivate"
-		}
+		})
+                return keymap
 
 	def grid_move_up(self):
 		Menu.page_up(self, counter=self.cols)
