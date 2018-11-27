@@ -22,7 +22,6 @@ def splash(i, o):
         image = ImageOps.expand(image, border=(left, top, right, bottom), fill="black")
     else:
 	o.display_data("Welcome to", "ZPUI")
-	image = ImageOps.invert(image)
     image = image.convert(o.device_mode)
     o.display_image(image)
 
