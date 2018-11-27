@@ -171,6 +171,26 @@ class TestBaseListUIElement(unittest.TestCase):
         assert o.display_data.call_count == 1 #One in to_foreground
         assert o.display_data.call_args[0] == ('A0', 'A1', 'A2', 'Back')
 
+    def test_pagedown_pageup_refresh_once(self):
+        """Tests whether the BaseListUIElement page_down and page_up only refresh the screen once."""
+        num_elements = 20
+        contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        i = get_mock_input()
+        o = get_mock_output()
+        el = BaseListUIElement(contents, i, o, name=el_name, config={})
+
+        def scenario():
+            assert o.display_data.call_count == 1 #One in to_foreground
+            el.page_down()
+            assert o.display_data.call_count == 2 #One more
+            el.page_up()
+            assert o.display_data.call_count == 3 #And one more
+            el.deactivate()
+            assert not el.is_active
+
+        with patch.object(el, 'idle_loop', side_effect=scenario) as p:
+            el.activate()
+
     def test_append_exit_works(self):
         """
         Tests whether the BaseListUIElement stops appending "Exit" when append_exit

@@ -4,6 +4,7 @@ Best example of such an element is a Menu element - it has menu entries you can 
 
 from copy import copy
 from time import sleep
+from threading import Event
 
 from canvas import Canvas
 from helpers import setup_logger
@@ -68,6 +69,7 @@ class BaseListUIElement(BaseUIElement):
         self.config = config if config is not None else global_config
         self.set_view(self.config.get(self.config_key, {}))
         self.set_contents(contents)
+        self.inhibit_refresh = Event()
 
     def set_views_dict(self):
         self.views = {
@@ -189,14 +191,16 @@ class BaseListUIElement(BaseUIElement):
             return False
 
     @to_be_foreground
-    def page_down(self):
+    def page_down(self, counter=None):
         """ Scrolls up a full screen of entries, if possible.
             If not possible, moves as far as it can."""
-        counter = self.view.get_entry_count_per_screen()
+        if not counter:
+            counter = self.view.get_entry_count_per_screen()
+        self.inhibit_refresh.set()
         while counter != 0 and self.pointer < (len(self.contents) - 1):
-            logger.debug("moved down")
-            self.pointer += 1
             counter -= 1
+            self.move_down()
+        self.inhibit_refresh.clear()
         self.refresh()
         self.reset_scrolling()
         return True
@@ -217,14 +221,16 @@ class BaseListUIElement(BaseUIElement):
             return False
 
     @to_be_foreground
-    def page_up(self):
+    def page_up(self, counter=None):
         """ Scrolls down a full screen of UI entries, if possible.
             If not possible, moves as far as it can."""
-        counter = self.view.get_entry_count_per_screen()
+        if not counter:
+            counter = self.view.get_entry_count_per_screen()
+        self.inhibit_refresh.set()
         while counter != 0 and self.pointer != 0:
-            logger.debug("moved down")
-            self.pointer -= 1
             counter -= 1
+            self.move_up()
+        self.inhibit_refresh.clear()
         self.refresh()
         self.reset_scrolling()
         return True
@@ -318,7 +324,10 @@ class BaseListUIElement(BaseUIElement):
 
     def refresh(self):
         """ A placeholder to be used for BaseUIElement. """
+        if self.inhibit_refresh.isSet():
+            return False
         self.view.refresh()
+        return True
 
 
 # Views.
