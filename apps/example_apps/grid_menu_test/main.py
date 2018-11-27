@@ -16,5 +16,5 @@ class MainMenu(ZeroApp):
 			["211", lambda x=211: test_func(x)]
 		]
 
-		self.gm = GridMenu(self.i, self.o, contents=grid_contents)
+		self.gm = GridMenu(grid_contents, self.i, self.o)
 		self.gm.activate()
