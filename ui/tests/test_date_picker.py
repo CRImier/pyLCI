@@ -73,6 +73,21 @@ class TestDatePicker(unittest.TestCase):
 			return_value = dp.activate()
 		assert return_value is None
 
+	def test_accepts_and_returns_dict(self):
+		date = {"year":2018, "month":2, "day":1}
+		dp = DatePicker(get_mock_input(), get_mock_output(), name=dp_name, **date)
+		dp.refresh = lambda *args, **kwargs: None
+
+		def scenario():
+			dp.accept_value()
+			dp.deactivate()
+			assert not dp.is_active
+
+		with patch.object(dp, 'idle_loop', side_effect=scenario) as p:
+			return_value = dp.activate()
+		assert isinstance(return_value, dict)
+		assert return_value == date
+
 	def test_set_current_day(self):
 		grid = [30,  31, -1, -1, -1, -1,  1,
 			 2,   3,  4,  5,  6,  7,  8,
@@ -110,6 +125,68 @@ class TestDatePicker(unittest.TestCase):
 		assert(dp.get_current_day() == 8)
 		dp.move_up()
 		assert(dp.get_current_day() == 1)
+
+	def test_callback(self):
+		cb1 = Mock()
+
+		dp = DatePicker(get_mock_input(), get_mock_output(), name=dp_name, callback=cb1)
+		dp.refresh = lambda *args, **kwargs: None
+
+		def scenario():
+			dp.accept_value()
+			assert cb1.called_once
+			assert isinstance(cb1.call_args[0][0], dict)
+			assert dp.is_active
+			dp.deactivate()
+			assert not dp.is_active
+
+		with patch.object(dp, 'idle_loop', side_effect=scenario) as p:
+			return_value = dp.activate()
+		assert return_value is None
+
+	def test_callback_with_return_strftime(self):
+		cb1 = Mock()
+		dp = DatePicker(get_mock_input(), get_mock_output(), name=dp_name, callback=cb1, return_strftime="%Y-%m-%d %H:%M:%S")
+		dp.refresh = lambda *args, **kwargs: None
+
+		def scenario():
+			dp.accept_value()
+			assert cb1.called_once
+			assert isinstance(cb1.call_args[0][0], basestring)
+			assert dp.is_active
+			dp.deactivate()
+			assert not dp.is_active
+
+		with patch.object(dp, 'idle_loop', side_effect=scenario) as p:
+			return_value = dp.activate()
+		assert return_value is None
+
+	def test_init_strftime(self):
+		init_str = "2018-02-01"
+		dp = DatePicker(get_mock_input(), get_mock_output(), name=dp_name, init_strftime=init_str)
+		dp.refresh = lambda *args, **kwargs: None
+
+		def scenario():
+			dp.accept_value()
+			dp.deactivate()
+			assert not dp.is_active
+
+		with patch.object(dp, 'idle_loop', side_effect=scenario) as p:
+			return_value = dp.activate()
+		assert isinstance(return_value, dict)
+		assert return_value == {"year":2018, "month":2, "day":1}
+
+	def test_redraw(self):
+		dp = DatePicker(get_mock_input(), get_mock_output(), name=dp_name)
+
+		def scenario():
+			dp.deactivate()
+			assert not dp.is_active
+
+		with patch.object(dp, 'idle_loop', side_effect=scenario) as p:
+			return_value = dp.activate()
+		assert dp.o.display_data.called_once
+
 
 if __name__ == '__main__':
 	unittest.main()

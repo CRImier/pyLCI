@@ -11,10 +11,10 @@ class InputDevice(InputSkeleton):
     ["KEY_*", "KEY_0", "KEY_#"]]
 
     def __init__(self, cols=[5, 6, 13], rows=[12, 16, 20, 21], **kwargs):
-        """Initialises the ``InputDevice`` object. 
+        """Initialises the ``InputDevice`` object.
 
         Kwargs:
-        
+
         * ``button_pins``: GPIO mubers which to treat as buttons (GPIO.BCM numbering)
         * ``debug``: enables printing button press and release events when set to True
         """

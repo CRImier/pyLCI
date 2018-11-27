@@ -64,14 +64,12 @@ class IntegerAdjustInput(BaseUIElement):
         """ A debug method. Useful for hooking up to an input event so that you can see current number value. """
         logger.info(self.number)
 
-    @to_be_foreground
     def decrement(self, multiplier=1):
         """Decrements the number by selected ``interval``"""
         self.number -= self.interval*multiplier
         self.clamp()
         self.refresh()
 
-    @to_be_foreground
     def increment(self, multiplier=1):
         """Increments the number by selected ``interval``"""
         self.number += self.interval*multiplier

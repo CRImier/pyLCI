@@ -1,6 +1,8 @@
 from threading import Event
+from time import sleep
 
-from base_list_ui import BaseListBackgroundableUIElement, to_be_foreground, TextView, EightPtView, SixteenPtView
+from base_list_ui import BaseListUIElement, to_be_foreground
+from loading_indicators import LoadingBar
 from utils import clamp, clamp_list_index
 
 from helpers import setup_logger
@@ -14,7 +16,7 @@ class MenuExitException(Exception):
     pass
 
 
-class Menu(BaseListBackgroundableUIElement):
+class Menu(BaseListUIElement):
     """Implements a menu which can be used to navigate through your application,
     output a list of values or select actions to perform. Is one of the most used
     UI elements, used both in system core and in most of the applications."""
@@ -55,15 +57,7 @@ class Menu(BaseListBackgroundableUIElement):
         """
         self.catch_exit = kwargs.pop("catch_exit", True)
         self.contents_hook = kwargs.pop("contents_hook", None)
-        BaseListBackgroundableUIElement.__init__(self, *args, **kwargs)
-
-    def set_views_dict(self):
-        self.views = {
-            "PrettyGraphicalView": MeSixteenPtView,  # Left for compatibility
-            "SimpleGraphicalView": MeEightPtView,  # Left for compatibility
-            "SixteenPtView": MeSixteenPtView,
-            "EightPtView": MeEightPtView,
-            "TextView": MeTextView}
+        BaseListUIElement.__init__(self, *args, **kwargs)
 
     def before_activate(self):
         # Clearing flags before the menu is activated
@@ -143,29 +137,16 @@ class MenuRenderingMixin(object):
             )
             c.polygon(coords, fill=c.default_color)
 
-
-class MeEightPtView(MenuRenderingMixin, EightPtView):
-
     def draw_menu_text(self, c, menu_text, left_offset):
         for i, line in enumerate(menu_text):
             y = (i * self.charheight - 1) if i != 0 else 0
-            c.text(line, (left_offset, y))
-            self.draw_triangle(c, i)
+            c.text(line, (left_offset, y), font=self.font)
+            if "b&w-pixel" in self.o.type:
+                self.draw_triangle(c, i)
 
 
-class MeTextView(MenuRenderingMixin, TextView):
-    # Arrow rendering not yet done for text-based displays =(
-    pass
+Menu.view_mixin = MenuRenderingMixin
 
-
-class MeSixteenPtView(MenuRenderingMixin, SixteenPtView):
-
-    def draw_menu_text(self, c, menu_text, left_offset):
-        font = c.load_font(self.font, self.charheight)
-        for i, line in enumerate(menu_text):
-            y = (i * self.charheight - 1) if i != 0 else 0
-            c.text(line, (left_offset, y), font=font)
-            self.draw_triangle(c, i)
 
 class MessagesMenu(Menu):
     """A modified version of the Menu class for displaying a list of messages and loading new ones"""
@@ -199,16 +180,35 @@ class MessagesMenu(Menu):
         self.load_more_allow_refresh.clear()
         before = len(self.contents)
 	self.remove_load_more_marker()
-        has_loaded_more = self.load_more_callback()
-        if has_loaded_more:
-		self.remove_load_more_marker()
-		self.add_load_more_marker()
-	        after = len(self.contents)
-                logger.info("Loaded {} messages".format(after-before))
-	        self.pointer += (after-before)+1
-		self.pointer = clamp_list_index(self.pointer, self.contents)
-	else:
-		self.remove_load_more_marker()
+	has_loaded_more_events = True
+	contents_added = False
+        counter = 0
+        li = None
+	while has_loaded_more_events and not contents_added:
+                if counter == 5: # the user is let down, let's at least show them stuff is happening
+                    li = LoadingBar(self.i, self.o, message="Loading messages", name="{} - load_more() LoadingBar")
+                    li.run_in_background()
+	        has_loaded_more_events = self.load_more_callback()
+                logger.debug("Loaded more events!")
+		if has_loaded_more_events:
+			self.remove_load_more_marker()
+			self.add_load_more_marker()
+		        after = len(self.contents)
+			difference = after-before
+			if difference > 0:
+				contents_added = True
+				logger.info("Loaded {} messages".format(difference))
+			        self.pointer += (after-before)+1
+			else:
+				logger.info("Loaded events but no messages, retrying")
+			self.pointer = clamp_list_index(self.pointer, self.contents)
+		else:
+			self.remove_load_more_marker()
+                counter += 1
+        if li: # LoadingBar fired up, need to stop it now
+            li.stop()
+            sleep(0.5) # until it actually stops =D
+            self.activate_input() #reset keymap back to normal
         self.load_more_allow_refresh.set()
         self.refresh()
 

@@ -31,6 +31,9 @@ else:
 
 class BaseListUIElement(BaseUIElement):
     """This is a base UI element for list-like UI elements.
+       This UI element has the ability to go into background. It's usually for the cases when
+       an UI element can call another UI element, after the second UI element returns,
+       context has to return to the first UI element - like in nested menus.
 
        This UI element has built-in scrolling of entries - if the entry text is longer
        than the screen, once the entry is selected, UI element will scroll through its text."""
@@ -42,6 +45,7 @@ class BaseListUIElement(BaseUIElement):
     exit_entry = ["Back", "exit"]
 
     config_key = "base_list_ui"
+    view_mixin = None
 
     def __init__(self, contents, i, o, name=None, entry_height=1, append_exit=True, exitable=True, scrolling=True,
                  config=None, keymap=None, override_left=True):
@@ -74,6 +78,13 @@ class BaseListUIElement(BaseUIElement):
             "PrettyGraphicalView": SixteenPtView,  # Not a descriptive name - left for compatibility
             "SimpleGraphicalView": EightPtView  # Not a descriptive name - left for compatibility
         }
+        if self.view_mixin:
+            class_name = self.__class__.__name__
+            for view_name, view_class in self.views.items():
+                if view_class.use_mixin:
+                    name = "{}-{}".format(view_name, class_name)
+                    logger.debug("Subclassing {} into {}".format(view_name, name))
+                    self.views[view_name] = type(name, (self.view_mixin, view_class), {})
 
     def set_view(self, config):
         view = None
@@ -137,7 +148,7 @@ class BaseListUIElement(BaseUIElement):
 
     @property
     def is_active(self):
-        return self.in_foreground
+        return self.in_background
 
     # Scroll functions - will likely be moved into a mixin or views later on
 
@@ -148,7 +159,7 @@ class BaseListUIElement(BaseUIElement):
             if self.scrolling["counter"] == 10:
                 self.scrolling["pointer"] += self.scrolling["current_speed"]
                 self.scrolling["counter"] = 0
-                self.view.refresh()
+                self.refresh()
 
     def reset_scrolling(self):
         self.scrolling.update(self.scrolling_defaults)
@@ -172,7 +183,7 @@ class BaseListUIElement(BaseUIElement):
             logger.debug("moved down")
             self.pointer += 1
             self.reset_scrolling()
-            self.view.refresh()
+            self.refresh()
             return True
         else:
             return False
@@ -186,7 +197,7 @@ class BaseListUIElement(BaseUIElement):
             logger.debug("moved down")
             self.pointer += 1
             counter -= 1
-        self.view.refresh()
+        self.refresh()
         self.reset_scrolling()
         return True
 
@@ -199,7 +210,7 @@ class BaseListUIElement(BaseUIElement):
         if self.pointer != 0:
             logger.debug("moved up")
             self.pointer -= 1
-            self.view.refresh()
+            self.refresh()
             self.reset_scrolling()
             return True
         else:
@@ -214,7 +225,7 @@ class BaseListUIElement(BaseUIElement):
             logger.debug("moved down")
             self.pointer -= 1
             counter -= 1
-        self.view.refresh()
+        self.refresh()
         self.reset_scrolling()
         return True
 
@@ -294,29 +305,30 @@ class BaseListUIElement(BaseUIElement):
             self.contents.append(self.exit_entry)
         logger.debug("{}: contents processed".format(self.name))
 
+    def get_displayed_contents(self):
+        """
+        This function is to be used for views, in case an UI element wants to
+        display entries differently than they're stored (for example, this is used
+        in ``NumberedMenu``).
+        """
+        return self.contents
+
+    def add_view_wrapper(self, wrapper):
+        self.view.wrapper = wrapper(self.view.wrapper)
+
     def refresh(self):
         """ A placeholder to be used for BaseUIElement. """
         self.view.refresh()
 
 
-class BaseListBackgroundableUIElement(BaseListUIElement):
-    """This is a base UI element for list-like UI elements.
-       This UI element has the ability to go into background. It's usually for the cases when
-       an UI element can call another UI element, after the second UI element returns,
-       context has to return to the first UI element - like in nested menus.
-
-       This UI element has built-in scrolling of entries - if the entry text is longer
-       than the screen, once the entry is selected, UI element will scroll through its text."""
-
-    @property
-    def is_active(self):
-        return self.in_background
-
 # Views.
 
 class TextView(object):
+    use_mixin = True
     first_displayed_entry = 0
     scrolling_speed_divisor = 4
+    # Default wrapper
+    wrapper = lambda o, *a: a
 
     def __init__(self, o, entry_height, ui_element):
         self.o = o
@@ -345,9 +357,10 @@ class TextView(object):
     def fix_pointers_on_contents_update(self):
         """Boundary-checks ``pointer``, re-sets the ``first_displayed_entry`` pointer."""
         full_entries_shown = self.get_entry_count_per_screen()
-        entry_count = len(self.el.contents)
+        contents = self.el.get_displayed_contents()
+        entry_count = len(contents)
 
-        new_pointer = clamp_list_index(self.el.pointer, self.el.contents)  # Makes sure the pointer isn't larger than the entry count
+        new_pointer = clamp_list_index(self.el.pointer, contents)  # Makes sure the pointer isn't larger than the entry count
         if new_pointer == self.el.pointer:
             return # Pointer didn't change from clamping, no action needs to be taken
 
@@ -368,17 +381,17 @@ class TextView(object):
     def entry_is_active(self, entry_num):
         return entry_num == self.el.pointer
 
-    def get_displayed_text(self):
+    def get_displayed_text(self, contents):
         """Generates the displayed data for a character-based output device. The output of this function can be fed to the o.display_data function.
         |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed entries' numbers, renders each one 
         of them and concatenates them into one big list which it returns.
         |Doesn't support partly-rendering entries yet."""
         displayed_data = []
         full_entries_shown = self.get_entry_count_per_screen()
-        entries_shown = min(len(self.el.contents), full_entries_shown)
+        entries_shown = min(len(contents), full_entries_shown)
         disp_entry_positions = range(self.first_displayed_entry, self.first_displayed_entry+entries_shown)
         for entry_num in disp_entry_positions:
-            displayed_entry = self.render_displayed_entry_text(entry_num)
+            displayed_entry = self.render_displayed_entry_text(entry_num, contents)
             displayed_data += displayed_entry
         logger.debug("Displayed data: {}".format(displayed_data))
         return displayed_data
@@ -407,7 +420,7 @@ class TextView(object):
     def process_inactive_entry(self, entry):
         return entry
 
-    def render_displayed_entry_text(self, entry_num):
+    def render_displayed_entry_text(self, entry_num, contents):
         """Renders an UI element entry by its position number in self.contents, determined also by display width, self.entry_height and entry's representation type.
         If entry representation is a string, splits it into parts as long as the display's width in characters.
            If active flag is set, appends a "*" as the first entry's character. Otherwise, appends " ".
@@ -415,7 +428,7 @@ class TextView(object):
         If entry representation is a list, it returns that list as the rendered entry, trimming and padding with empty strings when necessary (to match the ``entry_height``).
         """
         rendered_entry = []
-        entry = self.el.contents[entry_num][0]
+        entry = contents[entry_num][0]
         active = self.entry_is_active(entry_num)
         display_columns = self.get_fow_width_in_chars()
         if type(entry) in [str, unicode]:
@@ -436,7 +449,7 @@ class TextView(object):
                 entry.append('')
             return [str(entry_str)[:display_columns] for entry_str in entry]
         else:
-            # How did this slip past the check on set_contents?
+            # Something slipped past the check in set_contents
             raise Exception("Entries may contain either strings or lists of strings as their representations")
         logger.debug("Rendered entry: {}".format(rendered_entry))
         return rendered_entry
@@ -448,9 +461,9 @@ class TextView(object):
     def refresh(self):
         logger.debug("{}: refreshed data on display".format(self.el.name))
         self.fix_pointers_on_refresh()
-        displayed_data = self.get_displayed_text()
+        displayed_data = self.get_displayed_text(self.el.get_displayed_contents())
         self.o.noCursor()
-        self.o.display_data(*displayed_data)
+        self.o.display_data(*self.wrapper(*displayed_data))
         self.o.setCursor(self.get_active_line_num(), 0)
         self.o.cursor()
 
@@ -461,6 +474,9 @@ class EightPtView(TextView):
     x_offset = 2
     x_scrollbar_offset = 5
     scrollbar_y_offset = 1
+    font = None
+    # Default wrapper only returns an image
+    wrapper = lambda o, *a: a[0]
 
     def __init__(self, *args, **kwargs):
         self.full_width_cursor = kwargs.pop("full_width_cursor", False)
@@ -476,20 +492,19 @@ class EightPtView(TextView):
     def refresh(self):
         logger.debug("{}: refreshed data on display".format(self.el.name))
         self.fix_pointers_on_refresh()
-        image = self.get_displayed_image()
-        self.o.display_image(image)
+        self.o.display_image(self.wrapper(self.get_displayed_image()))
 
-    def scrollbar_needed(self):
+    def scrollbar_needed(self, contents):
         # No scrollbar if all the entries fit on the screen
         full_entries_shown = self.get_entry_count_per_screen()
-        total_entry_count = len(self.el.contents)
+        total_entry_count = len(contents)
         return total_entry_count > full_entries_shown
 
-    def get_scrollbar_top_bottom(self):
-        if not self.scrollbar_needed():
+    def get_scrollbar_top_bottom(self, contents):
+        if not self.scrollbar_needed(contents):
             return 0, 0
         full_entries_shown = self.get_entry_count_per_screen()
-        total_entry_count = len(self.el.contents)
+        total_entry_count = len(contents)
         scrollbar_max_length = self.o.height - (self.scrollbar_y_offset * 2)
         entries_before = self.first_displayed_entry
         # Scrollbar length per one entry
@@ -499,8 +514,8 @@ class EightPtView(TextView):
         bottom = top + length
         return top, bottom
 
-    def draw_scrollbar(self, c):
-        scrollbar_coordinates = self.get_scrollbar_top_bottom()
+    def draw_scrollbar(self, c, contents):
+        scrollbar_coordinates = self.get_scrollbar_top_bottom(contents)
         # Drawing scrollbar, if applicable
         if scrollbar_coordinates == (0, 0):
             # left offset is dynamic and depends on whether there's a scrollbar or not
@@ -514,7 +529,7 @@ class EightPtView(TextView):
     def draw_menu_text(self, c, menu_text, left_offset):
         for i, line in enumerate(menu_text):
             y = (i * self.charheight - 1) if i != 0 else 0
-            c.text(line, (left_offset, y))
+            c.text(line, (left_offset, y), font=self.font)
 
     def draw_cursor(self, c, menu_text, left_offset):
         cursor_y = self.get_active_line_num()
@@ -540,10 +555,12 @@ class EightPtView(TextView):
         """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.display_image function.
         |Doesn't support partly-rendering entries yet."""
         c = Canvas(self.o)
+        # Get the display-ready contents
+        contents = self.el.get_displayed_contents()
         # Get the menu text
-        menu_text = self.get_displayed_text()
+        menu_text = self.get_displayed_text(contents)
         # Drawing the scrollbar (will only be drawn if applicable)
-        left_offset = self.draw_scrollbar(c)
+        left_offset = self.draw_scrollbar(c, contents)
         # Drawing the text itself
         self.draw_menu_text(c, menu_text, left_offset)
         # Drawing the cursor
@@ -555,18 +572,13 @@ class EightPtView(TextView):
 class SixteenPtView(EightPtView):
     charwidth = 8
     charheight = 16
-    font = "Fixedsys62.ttf"
-
-    def draw_menu_text(self, c, menu_text, left_offset):
-        font = c.load_font(self.font, self.charheight)
-        for i, line in enumerate(menu_text):
-            y = (i * self.charheight - 1) if i != 0 else 0
-            c.text(line, (left_offset, y), font=font)
+    font = ("Fixedsys62.ttf", 16)
 
 
 class MainMenuTripletView(SixteenPtView):
     # TODO: enable scrolling
 
+    use_mixin = False
     charwidth = 8
     charheight = 16
 
@@ -577,16 +589,18 @@ class MainMenuTripletView(SixteenPtView):
     @to_be_foreground
     def get_displayed_image(self):
         # This view doesn't have a cursor, instead, the entry that's currently active is in the display center
+        contents = self.el.get_displayed_contents()
+        pointer = self.el.pointer # A shorthand
         c = Canvas(self.o)
         central_position = (10, 16)
         font = c.load_font("Fixedsys62.ttf", 32)
-        current_entry = self.el.contents[self.el.pointer]
+        current_entry = contents[pointer]
         c.text(current_entry[0], central_position, font=font)
         font = c.load_font("Fixedsys62.ttf", 16)
-        if self.el.pointer != 0:
-            line = self.el.contents[self.el.pointer - 1][0]
+        if pointer != 0:
+            line = contents[pointer - 1][0]
             c.text(line, (2, 0), font=font)
-        if self.el.pointer < len(self.el.contents) - 1:
-            line = self.el.contents[self.el.pointer + 1][0]
+        if pointer < len(contents) - 1:
+            line = contents[pointer + 1][0]
             c.text(line, (2, 48), font=font)
         return c.get_image()

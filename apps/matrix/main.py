@@ -90,7 +90,7 @@ class MatrixClientApp(ZeroApp):
 		# Create a matrix user id from the username, currently only ids on matrix.org are possible
 		username = "@{}:matrix.org".format(username)
 
-		password = UniversalInput(self.i, self.o, message="Enter password", name="Matrix app password dialog").activate()
+		password = UniversalInput(self.i, self.o, message="Enter password", name="Matrix app password dialog", charmap="password").activate()
 		if not password:
 			return False
 
@@ -106,9 +106,8 @@ class MatrixClientApp(ZeroApp):
 
 				logger.info("Succesfully logged in")
 			else:
-				l.pause()
-				Printer("Failed to log in", self.i, self.o)
-				l.resume()
+				with l.paused:
+					Printer("Failed to log in", self.i, self.o)
 				return False
 
 	def process_rooms(self):

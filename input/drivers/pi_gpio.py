@@ -24,7 +24,7 @@ class InputDevice(InputSkeleton):
 
         Kwargs:
         
-        * ``button_pins``: GPIO mubers which to treat as buttons (GPIO.BCM numbering)
+        * ``button_pins``: GPIO numbers which to treat as buttons (GPIO.BCM numbering)
         * ``pullups``: if True, enables pullups on all pins, if False, doesn't. Default: True
         * ``debug``: enables printing button press and release events when set to True
         """

@@ -1,4 +1,3 @@
-from threading import Event
 from time import sleep
 
 import PIL
@@ -50,8 +49,6 @@ class Refresher(BaseUIElement):
         self.set_refresh_interval(refresh_interval)
         self.refresh_function = refresh_function
         self.calculate_intervals()
-        self.in_foreground = False
-        self.in_background = Event()
 
     @property
     def is_active(self):

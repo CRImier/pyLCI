@@ -9,7 +9,7 @@ try:
 except:
     import http.client as httplib
 
-from ui import Menu, PrettyPrinter, DialogBox, ProgressBar, Listbox, UniversalInput
+from ui import Menu, PrettyPrinter, DialogBox, ProgressBar, Listbox, UniversalInput, TextReader, HelpOverlay
 from helpers import setup_logger, read_or_create_config, save_config_method_gen, local_path_gen
 
 local_path = local_path_gen(__name__)
@@ -132,27 +132,24 @@ class GenericUpdater(object):
             failed_step = step
             logger.exception("Failed on step {}".format(failed_step))
             failed_message = self.failed_messages.get(failed_step, "Failed on step '{}'".format(failed_step))
-            pb.pause()
-            PrettyPrinter(failed_message, i, o, 2)
-            pb.set_message("Reverting update")
-            pb.resume()
+            with pb.paused:
+                PrettyPrinter(failed_message, i, o, 2)
+                pb.set_message("Reverting update")
             try:
                 logger.info("Reverting the failed step: {}".format(failed_step))
                 self.revert_step(failed_step)
             except:
                 logger.exception("Can't revert failed step {}".format(failed_step))
-                pb.pause()
-                PrettyPrinter("Can't revert failed step '{}'".format(step), i, o, 2)
-                pb.resume()
+                with pb.paused:
+                    PrettyPrinter("Can't revert failed step '{}'".format(step), i, o, 2)
             logger.info("Reverting the previous steps")
             for step in completed_steps:
                 try:
                     self.revert_step(step)
                 except:
                     logger.exception("Failed to revert step {}".format(failed_step))
-                    pb.pause()
-                    PrettyPrinter("Failed to revert step '{}'".format(step), i, o, 2)
-                    pb.resume()
+                    with pb.paused:
+                        PrettyPrinter("Failed to revert step '{}'".format(step), i, o, 2)
                 pb.progress -= progress_per_step
             sleep(1) # Needed here so that 1) the progressbar goes to 0 2) run_in_background launches the thread before the final stop() call
             #TODO: add a way to pause the Refresher
@@ -327,4 +324,7 @@ def callback():
          #["Submit logs", logging_ui.submit_logs],
          ["Logging settings", logging_ui.config_logging],
          ["About", about.about]]
-    Menu(c, i, o, "ZPUI settings menu").activate()
+    menu = Menu(c, i, o, "ZPUI settings menu")
+    tr = TextReader("Press RIGHT on \"Update ZPUI\" to change OTA update settings (branch or git URL to use)", i, o, h_scroll=False)
+    HelpOverlay(tr.activate).apply_to(menu)
+    menu.activate()

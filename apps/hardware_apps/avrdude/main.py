@@ -360,8 +360,8 @@ class AvrdudeApp(ZeroApp):
                     pass # Is going to fail/succeed anyway once it goes through all the lines
                 previous_s = s
         # Process is over, showing the result
-        self.read_write_bar.pause()
-        self.erase_restore_indicator.pause()
+        self.read_write_bar.stop()
+        self.erase_restore_indicator.stop()
         status = self.p.get_status()
         hrs = heuristics.get_human_readable_status(status)
         self.display_status(hrs, success_message = "Done!", delay=1)
@@ -388,14 +388,14 @@ class AvrdudeApp(ZeroApp):
         file. For now, is only used for "write_file".
         """
         original_file = getattr(self, attr_name)
-        dir = os.path.split(original_file)[0]
+        dir, filename = os.path.split(original_file)
         # The original dir might not exist anymore, we might need to go through directories
         # until we find a working one
         while dir and not (os.path.exists(dir) and os.path.isdir(dir)):
             dir = os.path.split(dir)[0]
         if not dir:
             dir = '/'
-        file = PathPicker(dir, self.i, self.o).activate()
+        file = PathPicker(dir, self.i, self.o, file=filename).activate()
         if file and os.path.isfile(file):
             setattr(self, attr_name, file)
             self.config[config_option_name] = file

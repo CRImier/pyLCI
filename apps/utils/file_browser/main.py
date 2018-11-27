@@ -24,4 +24,4 @@ def print_path(path):
 def browse():
     #"File options" menu yet to be added
     path_picker = PathPicker("/", i, o, callback=print_path)
-    path_picker.activate() 
+    path_picker.activate()
