@@ -154,15 +154,17 @@ class MatrixClientApp(ZeroApp):
 			# Right arrow 	-> Write message to room
 			menu_contents.append([
 				room_name,
-				lambda x=current_room: self.display_messages(x)
+				lambda r=current_room: self.display_messages(r),
+				lambda r=current_room: self.display_room_members(r)
 			])
 
 		menu_contents.append(["Settings", self.show_settings])
 		Menu(menu_contents, self.i, self.o, name="Matrix app main menu").activate()
 
+	# Display a menu of settings for the app
 	def show_settings(self):
 		mc = [["Log out", self.logout]]
-		Menu(mc, self.i, self.o, catch_exit=False, name="Matrix app settings menu").activate()
+		Menu(mc, self.i, self.o, name="Matrix app settings menu").activate()
 
 	def logout(self):
 		self.config["token"] = ''
@@ -171,6 +173,15 @@ class MatrixClientApp(ZeroApp):
 		self.init_vars()
 
 		raise MenuExitException
+
+	def display_room_members(self, room):
+		members = room.get_joined_members()
+
+		mc = []
+		for m in members:
+			mc.append([m.get_display_name()])
+
+		Menu(mc, self.i, self.o, catch_exit=False, name="Matrix app room members menu").activate()
 
 	# Creates a new screen with an Input to write a message
 	def write_message(self, room):
