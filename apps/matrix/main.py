@@ -242,13 +242,16 @@ class MatrixClientApp(ZeroApp):
 			elif event.get('membership', None) == "leave":
 
 				print(event)
-				prev_content = event.get('prev_content', {})
+				content = event.get('prev_content', {})
+				if content == {}:
+					content = event.get('unsigned', {})
+					content = content.get('prev_content', {})
 
 				self._add_new_message(room.room_id, {
 						'timestamp': event.get('origin_server_ts', 0),
 						'type': event.get('type', 'unknown_type'),
 						'sender': unicode(rfa(event.get('sender', 'unknown_sender'))),
-						'content': rfa(unicode("- {}").format(prev_content.get('displayname', ''))),
+						'content': rfa(unicode("- {}").format(content.get('displayname', ''))),
 						'id': event.get('event_id', 0)
 					})
 
@@ -264,8 +267,6 @@ class MatrixClientApp(ZeroApp):
 				elif self.config['displayname'] in content.get('body', ""):
 					# Prefix messages with your name in it with a '#'
 					prefix = "# "
-
-
 
 				self._add_new_message(room.room_id, {
 						'timestamp': event.get('origin_server_ts', 0),
