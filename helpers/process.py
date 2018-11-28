@@ -15,7 +15,7 @@ class ProHelper(object):
 
     process = None
 
-    def __init__(self, command, shell = False, use_terminal = False, output_callback = None):
+    def __init__(self, command, shell = False, use_terminal = True, output_callback = None):
         self.command = command
         self.shell = shell
         self.use_terminal = use_terminal
