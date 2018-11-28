@@ -4,7 +4,7 @@ def splash(i, o):
     if (o.width, o.height) == (128, 64):
 	image = Image.open("splash.png").convert('L')
 	image = ImageOps.invert(image)
-    else:
+    elif o.width >= 128 and o.height >= 64:
 	image = Image.open("splash_big.png").convert('L')
 	image = ImageOps.invert(image)
 	size = o.width, o.height
@@ -20,6 +20,9 @@ def splash(i, o):
 	    top = delta // 2
 	    bottom = delta - top
         image = ImageOps.expand(image, border=(left, top, right, bottom), fill="black")
+    else:
+	o.display_data("Welcome to", "ZPUI")
+	return 
     image = image.convert(o.device_mode)
     o.display_image(image)
 
