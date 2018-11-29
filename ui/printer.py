@@ -18,7 +18,7 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
     Kwargs:
 
         * ``sleep_time``: Time to display each the message (for each of resulting screens).
-        * ``skippable``: If set, allows skipping message screens by presing ENTER. """
+        * ``skippable``: If set, allows skipping message screens by pressing ENTER. """
     Printer.skip_screen_flag = False #A flag which is set for skipping screens and is polled while printer is displaying things
     Printer.exit_flag = False #A flag which is set for stopping exiting the printing process completely
 
