@@ -18,7 +18,7 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
     Kwargs:
 
         * ``sleep_time``: Time to display each the message (for each of resulting screens).
-        * ``skippable``: If set, allows skipping message screens by presing ENTER. """
+        * ``skippable``: If set, allows skipping message screens by pressing ENTER. """
     Printer.skip_screen_flag = False #A flag which is set for skipping screens and is polled while printer is displaying things
     Printer.exit_flag = False #A flag which is set for stopping exiting the printing process completely
 
@@ -29,7 +29,7 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
     def exit_printer():
         Printer.exit_flag = True
 
-    #If skippable option is enabled, etting input callbacks on keys we use for skipping screens
+    #If skippable option is enabled, setting input callbacks on keys we use for skipping screens
     if i is not None: #On boot, None is passed to print debugging messages when i is not yet initialized
         i.stop_listen()
         i.clear_keymap()
