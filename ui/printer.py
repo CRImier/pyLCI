@@ -29,7 +29,7 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
     def exit_printer():
         Printer.exit_flag = True
 
-    #If skippable option is enabled, getting input callbacks on keys we use for skipping screens
+    #If skippable option is enabled, setting input callbacks on keys we use for skipping screens
     if i is not None: #On boot, None is passed to print debugging messages when i is not yet initialized
         i.stop_listen()
         i.clear_keymap()
