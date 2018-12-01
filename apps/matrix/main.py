@@ -15,7 +15,7 @@ logger = setup_logger(__name__, "info")
 class MatrixClientApp(ZeroApp):
 
 	menu_name = "Matrix Client"
-	default_config = '{"user_id":"", "token":"", "your_other_usernames":[]}'
+	default_config = '{"user_id":"", "token":"", "your_other_usernames":[], "show_join_leave_messages":"True"}'
 	config_filename = "config.json"
 
 	client = None
@@ -163,8 +163,17 @@ class MatrixClientApp(ZeroApp):
 
 	# Display a menu of settings for the app
 	def show_settings(self):
-		mc = [["Log out", self.logout]]
+		mc = [
+				["Log out", self.logout],
+				["Hide join/leave messages", lambda: self._change_setting("show_join_leave_messages", False)],
+				["Show join/leave messages", lambda: self._change_setting("show_join_leave_messages", True)]
+
+			]
 		Menu(mc, self.i, self.o, name="Matrix app settings menu").activate()
+
+	def _change_setting(self, key, value):
+		self.config[key] = value
+		self.save_config()
 
 	def logout(self):
 		self.config["token"] = ''
@@ -236,7 +245,8 @@ class MatrixClientApp(ZeroApp):
 						'type': event.get('type', 'unknown_type'),
 						'sender': unicode(rfa(event.get('sender', 'unknown_sender'))),
 						'content': rfa(unicode("+ {}").format(content.get('displayname', ''))),
-						'id': event.get('event_id', 0)
+						'id': event.get('event_id', 0),
+						'membership': event.get('membership', None)
 					})
 
 			elif event.get('membership', None) == "leave":
@@ -252,7 +262,8 @@ class MatrixClientApp(ZeroApp):
 						'type': event.get('type', 'unknown_type'),
 						'sender': unicode(rfa(event.get('sender', 'unknown_sender'))),
 						'content': rfa(unicode("- {}").format(content.get('displayname', ''))),
-						'id': event.get('event_id', 0)
+						'id': event.get('event_id', 0),
+						'membership': event.get('membership', None)
 					})
 
 		# Check for new messages
@@ -305,6 +316,8 @@ class MatrixClientApp(ZeroApp):
 		menu_contents = []
 
 		for message in sorted_messages:
+			if not self.config["show_join_leave_messages"] and message["type"] == "m.room.member":
+				continue
 			content = rfa(message["content"])
 			menu_contents.append([content, lambda c=content, s=rfa(message['sender']), t=message['timestamp']: self.display_single_message(c, s, t)])
 
