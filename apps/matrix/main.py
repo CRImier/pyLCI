@@ -262,11 +262,11 @@ class MatrixClientApp(ZeroApp):
 				prefix = ""
 				if event.get('sender', None) == self.client.get_user().user_id or event.get("sender", None) in self.config["your_other_usernames"]:
 					# Prefix own messages with a '*'
-					prefix = "* "
+					prefix = "[*] "
 
 				elif self.config['displayname'] in content.get('body', ""):
 					# Prefix messages with your name in it with a '#'
-					prefix = "# "
+					prefix = "[#] "
 
 				self._add_new_message(room.room_id, {
 						'timestamp': event.get('origin_server_ts', 0),
