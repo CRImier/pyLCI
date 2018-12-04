@@ -14,6 +14,7 @@ from helpers import setup_logger, read_or_create_config, save_config_method_gen,
 
 local_path = local_path_gen(__name__)
 
+import bugreport_ui
 import logging_ui
 import about
 
@@ -314,6 +315,8 @@ def init_app(input, output):
     o = output
     logging_ui.i = i
     logging_ui.o = o
+    bugreport_ui.i = i
+    bugreport_ui.o = o
     about.i = i
     about.o = o
     about.git_if = GitInterface
@@ -321,7 +324,7 @@ def init_app(input, output):
 def callback():
     git_updater = GitUpdater()
     c = [["Update ZPUI", git_updater.update, git_updater.settings],
-         #["Submit logs", logging_ui.submit_logs],
+         ["Bugreport", bugreport_ui.main_menu],
          ["Logging settings", logging_ui.config_logging],
          ["About", about.about]]
     menu = Menu(c, i, o, "ZPUI settings menu")
