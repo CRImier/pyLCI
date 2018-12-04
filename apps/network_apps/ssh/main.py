@@ -2,6 +2,7 @@ menu_name = "SSH settings"
 
 import os
 import subprocess
+from time import sleep
 from datetime import datetime
 
 from helpers import read_or_create_config, local_path_gen, save_config_gen, setup_logger
@@ -31,7 +32,7 @@ def init_app(input_obj, output_obj):
 
 def regenerate_ssh_keys():
     try:
-        with LoadingIndicator(i, o, message="Regenerating SSH"):
+        with LoadingIndicator(i, o, message="Regenerating SSH keys"):
             logger.info("Regenerating SSH keys")
             ssh_dir = config["ssh_key_dir"]
             key_files = [os.path.join(ssh_dir, f) for f in os.listdir(ssh_dir) \
@@ -60,6 +61,7 @@ def enable_ssh():
     ssh_unit = config["ssh_unit"]
     systemctl.action_unit("enable", ssh_unit)
     systemctl.action_unit("start", ssh_unit)
+    sleep(1)
     logger.info("Enabled SSH")
 
 def callback():
