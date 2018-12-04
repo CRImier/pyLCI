@@ -12,7 +12,7 @@ from time import sleep
 from ui import Menu, Printer, PrettyPrinter, Checkbox, MenuExitException
 
 try:
-    import systemctl
+    from libs import systemctl
 except ImportError as e:
     try: # Are we missing gi.repository?
         import gi.repository
