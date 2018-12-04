@@ -101,7 +101,7 @@ def process_choice(choice, bugreport, li):
         def remove_file(file):
             choice = DialogBox("yn", i, o, message="Remove from list?", name="Bugreport app custom file picker remove confirmation DialogBox").activate()
             if choice:
-                file_list.pop(file)
+                file_list.remove(file)
         def add_file():
             default_path = PathPicker.default_path if not file_list else file_list[-1]
             path = PathPicker(default_path, i, o, name="Bugreport app custom file picker PathPicker", display_hidden = True).activate()
