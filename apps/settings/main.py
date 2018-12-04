@@ -317,6 +317,7 @@ def init_app(input, output):
     logging_ui.o = o
     bugreport_ui.i = i
     bugreport_ui.o = o
+    bugreport_ui.git_if = GitInterface
     about.i = i
     about.o = o
     about.git_if = GitInterface

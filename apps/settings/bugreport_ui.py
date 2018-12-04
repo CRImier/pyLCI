@@ -34,7 +34,7 @@ logger = setup_logger(__name__, "info")
 
 log_options = [
 ["ZPUI logs", "zpui_logs"],
-["ZPUI config", "zpui_config"],
+["ZPUI info (config, git info)", "zpui_info"],
 ["ZPUI threads", "zpui_threads"],
 #["ZPUI contexts", "zpui_contexts"],
 ["dmesg output", "dmesg"],
@@ -45,6 +45,7 @@ log_options = [
 
 i = None
 o = None
+git_if = None
 
 def main_menu():
     mc = [["Send logs", send_logs],
@@ -60,9 +61,18 @@ def process_choice(choice, bugreport, li):
        logfiles = [os.path.join(dir, f) for f in os.listdir(dir) if f.startswith('zpui.log')]
        for logfile in logfiles:
            bugreport.add_file(logfile)
-    elif choice == "zpui_config":
+    elif choice == "zpui_info":
        import __main__
        bugreport.add_file(__main__.config_path)
+       try:
+           branch = git_if.get_current_branch()
+           head = git_if.get_head_for_branch(branch)[:10]
+       except:
+           logger.exception("Can't get git information!")
+           branch = "unknown"
+           head = "unknown"
+       git_info = "ZPUI branch: {}; commit: {}".format(branch, head)
+       bugreport.add_text(git_info, "zpui_git_info.txt")
     elif choice == "zpui_threads":
        data = []
        for th in threading.enumerate():
