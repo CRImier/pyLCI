@@ -1,6 +1,7 @@
 """test for Menu"""
 import os
 import unittest
+from threading import Event
 
 from mock import patch, Mock
 
@@ -79,6 +80,25 @@ class TestMenu(unittest.TestCase):
 
         def scenario():
             assert "KEY_LEFT" not in mu.keymap  # KEY_LEFT
+            mu.deactivate()
+            assert not mu.in_foreground
+
+        with patch.object(mu, 'idle_loop', side_effect=scenario) as p:
+            mu.activate()
+
+    def test_contents_hook(self):
+        """Tests whether menu contents hook is executed"""
+        ev = Event()
+        def gen_contents():
+            return [["True", ev.clear] if ev.isSet() else ["False", ev.set]]
+        mu = Menu([], get_mock_input(), get_mock_output(), name=mu_name, contents_hook=gen_contents, config={})
+
+        def scenario():
+            assert mu.contents[0][0] == "False"
+            mu.select_entry()
+            assert mu.contents[0][0] == "True"
+            mu.select_entry()
+            assert mu.contents[0][0] == "False"
             mu.deactivate()
             assert not mu.in_foreground
 

@@ -292,6 +292,46 @@ that would signal the task to stop.
     eh = ExitHelper(i, cb=task.stop).start()
     task.run() # Will run until the task is not stopped
 
+Auto-regenerating menu contents
+-------------------------------
+
+Say, you have a menu with an entry that toggles an LED on and off. You want to make it
+user-friendly, so you want to display the status of the LED in that same menu, and
+update the menu entry label to reflect the LED status. In other words, let's say your
+LED is off by default, so your menu has an "LED off" entry, and when the user presses it,
+it turns the LED on and changes the entry text to "LED on". Here's how you can do that:
+
+.. code-block:: python
+
+    led_status = False
+
+    def enable_led():
+        global led_status
+        ... # Toggle the GPIO or something
+        led_status = True
+
+    def disable_led():
+        global led_status
+        ... # Toggle the GPIO or something
+        led_status = False
+
+    def callback():
+        def gen_menu_contents():
+            led_entry = ["LED on", disable_led] if led_status else ["LED off", enable_led]
+            return [led_entry]
+        Menu([], i, o, "LED app menu", contents_hook=gen_menu_contents).activate()
+
+``gen_menu_contents`` will be called each time ``Menu`` goes to foreground (``activate``,
+after finishing executing a callback etc.) and should return
+the new ``contents`` for the ``Menu``, which the ``Menu`` will then set as its new
+``contents``. Obviously, it's best if it doesn't run too long, otherwise your ``Menu``
+won't be responsive.
+
+.. note:: This also allows you to make a "Refresh" entry in your menu - just
+          generate contents using ``contents_hook`` (even if they're static) and
+          add a ``["Refresh"]`` entry, which won't have a callback but will trigger
+          a refresh nevertheless.
+
 Draw on the screen
 ==================
 
