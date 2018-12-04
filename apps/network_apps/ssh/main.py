@@ -31,17 +31,17 @@ def init_app(input_obj, output_obj):
 
 def regenerate_ssh_keys():
     try:
-        with LoadingIndicator(i, o, message="Scanning ports"):
+        with LoadingIndicator(i, o, message="Regenerating SSH"):
             logger.info("Regenerating SSH keys")
             ssh_dir = config["ssh_key_dir"]
             key_files = [os.path.join(ssh_dir, f) for f in os.listdir(ssh_dir) \
                            if os.path.isfile(os.path.join(ssh_dir, f)) \
                            and f.startswith("ssh_host") and "key" in f]
-        for f in key_files:
-            logger.warning("Removing {}".format(f))
-            os.remove(f)
-        for command in config["key_regen_commands"]:
-            subprocess.call(command, shell=True)
+            for f in key_files:
+                logger.warning("Removing {}".format(f))
+                os.remove(f)
+            for command in config["key_regen_commands"]:
+                subprocess.call(command, shell=True)
     except:
         logger.exception("Failed to regenerate keys!")
         Printer("Failed to regenerate keys!", i, o)
