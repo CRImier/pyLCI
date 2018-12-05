@@ -50,10 +50,14 @@ git_if = None
 
 def main_menu():
     mc = [["Send logs", send_logs],
-          ["Manage UUID", manage_uuid]]
-          #["Privacy policy", read_privacy_policy]]
+          ["Manage UUID", manage_uuid],
+          ["Privacy policy", read_privacy_policy]]
     Menu(mc, i, o, name="Bugreport app main menu").activate()
 
+def read_privacy_policy():
+    with open(local_path("privacy_policy.txt")) as f:
+       pp_text = f.read()
+    TextReader(pp_text, i, o, "Bugreport app privacy policy reader", h_scroll=False).activate()
 
 def process_choice(choice, bugreport, li):
     logger.info("Processing choice: {}".format(choice))
