@@ -272,9 +272,14 @@ class GitUpdater(GenericUpdater):
     def do_tests(self):
         with open('test_commandline', 'r') as f:
             commandline = f.readline().strip()
-        output = check_output(commandline.split(" "))
-        logger.debug("pytest output:")
-        logger.debug(output)
+        try:
+            output = check_output(commandline.split(" "))
+            logger.debug("pytest output:")
+            logger.debug(output)
+        except CalledProcessError as e:
+            logger.warning("pytest output:")
+            logger.warning(e.output)
+            raise
 
     def revert_pull(self):
         # do_check_revisions already ran, we now have the previous revision's
