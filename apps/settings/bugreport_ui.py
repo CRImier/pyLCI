@@ -49,7 +49,7 @@ o = None
 git_if = None
 
 def main_menu():
-    mc = [["Send logs", send_logs],
+    mc = [["Send a bugreport", send_files],
           ["Manage UUID", manage_uuid],
           ["Privacy policy", read_privacy_policy]]
     Menu(mc, i, o, name="Bugreport app main menu").activate()
@@ -145,7 +145,7 @@ def process_choice(choice, bugreport, li):
             except ValueError:
                 logger.warning("Path {} is neither file nor directory, ignoring".format(path))
 
-def send_logs():
+def send_files():
     if not config.get("uuid", None):
         generate_uuid()
     uuid = config["uuid"]
@@ -169,7 +169,7 @@ def send_logs():
     save_config(config)
     ##### DATE_STR!~
     date_str = "ololo"
-    with LoadingIndicator(i, o, message="Processing logs", name="Bugreport log sending loading bar") as li:
+    with LoadingIndicator(i, o, message="Processing files", name="Bugreport log sending loading bar") as li:
         try:
             filename = "ZPUI_logs-{}-{}.zip".format(uuid, date_str)
             bugreport = BugReport(filename)
@@ -182,22 +182,22 @@ def send_logs():
                      logger.exception("Failed to process {} choice".format(choice))
                      bugreport.add_text(json.dumps(traceback.format_exc()), "choice_{}_failed.json".format(choice))
         except:
-            logger.exception("Failed to collect logs!")
+            logger.exception("Failed to collect files!")
             li.stop()
-            PrettyPrinter("Failed while collecting logs!", i, o, 3)
+            PrettyPrinter("Failed while collecting files!", i, o, 3)
             return
         try:
-            li.message = "Sending logs"
+            li.message = "Sending files"
             bugreport.send()
         except:
-            logger.exception("Failed to collect logs!")
+            logger.exception("Failed to collect files!")
             bugreport.add_text(json.dumps(traceback.format_exc()), "bugreport_sending_failed.json")
             li.stop()
-            PrettyPrinter("Failed while collecting logs!", i, o, 3)
+            PrettyPrinter("Failed while collecting files!", i, o, 3)
             return
         else:
             li.stop()
-            PrettyPrinter("Sent logs successfully!", i, o, 3)
+            PrettyPrinter("Sent files successfully!", i, o, 3)
 
 def manage_uuid():
     mc = [["See UUID", see_uuid],
