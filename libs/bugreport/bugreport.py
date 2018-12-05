@@ -33,6 +33,14 @@ class BugReport(object):
     def add_text(self, text, filename):
         self.zip.writestr(filename, text)
 
+    def save_in(self, path):
+        full_path = os.path.join(path, self.zip_contents.name)
+        self.zip.close()
+        self.zip_contents.seek(0)
+        with open(full_path, 'w') as f:
+            f.write(self.zip_contents.read())
+        return full_path
+
     def send(self):
         ftp = FTP(self.ftp_destination)
         ftp.set_debuglevel(2)

@@ -190,10 +190,15 @@ def send_files():
             li.message = "Sending files"
             bugreport.send()
         except:
-            logger.exception("Failed to collect files!")
+            logger.exception("Failed to send files!")
             bugreport.add_text(json.dumps(traceback.format_exc()), "bugreport_sending_failed.json")
             li.stop()
-            PrettyPrinter("Failed while collecting files!", i, o, 3)
+            PrettyPrinter("Failed while sending files!", i, o, 3)
+            try:
+                location = bugreport.save_in("/boot/")
+                PrettyPrinter("Stored in {}".format(location), i, o, 3)
+            except:
+                PrettyPrinter("Failed to store files!", i, o, 3)
             return
         else:
             li.stop()
