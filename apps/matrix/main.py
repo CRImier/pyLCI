@@ -163,13 +163,13 @@ class MatrixClientApp(ZeroApp):
 
 	# Display a menu of settings for the app
 	def show_settings(self):
-		mc = [
-				["Log out", self.logout],
-				["Hide join/leave messages", lambda: self._change_setting("show_join_leave_messages", False)],
-				["Show join/leave messages", lambda: self._change_setting("show_join_leave_messages", True)]
 
-			]
-		Menu(mc, self.i, self.o, name="Matrix app settings menu").activate()
+		def gen_menu_contents():
+			mc = [["Log out", self.logout]]
+			mc.append(["Hide join/leave messages", lambda: self._change_setting("show_join_leave_messages", False)] if self.config["show_join_leave_messages"] else ["Show join/leave messages", lambda: self._change_setting("show_join_leave_messages", True)])
+			return mc
+
+		Menu([], self.i, self.o, name="Matrix app settings menu", contents_hook=gen_menu_contents).activate()
 
 	def _change_setting(self, key, value):
 		self.config[key] = value
