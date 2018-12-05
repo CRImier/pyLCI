@@ -15,13 +15,13 @@ class PathPicker(Menu):
 
         Args:
 
-            * ``path``: a path to start from.
+            * ``path``: a path to start from. If path to a file is passed, will start from that file (unless overridden with ``file`` keyword argument).
             * ``i``, ``o``: input&output device objects.
 
         Kwargs:
 
             * ``callback``: if set, PathPicker will call the callback with path as first argument upon selecting path, instead of exiting the activate()
-            * ``file``: if set, PathPicker will locate the file in the ``path`` passed and move its pointer to that file (provided it is found)
+            * ``file``: if set, PathPicker will locate the file in the ``path`` passed and move its pointer to that file (provided it is found).
             * ``dirs_only``: if True, PathPicker will only show directories
             * ``append_current_dir``: if False, PathPicker won't add "Dir: %/current/dir%" first entry when `dirs_only` is enabled
             * ``current_dot``: if True, PathPicker will show '.' path

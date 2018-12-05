@@ -19,6 +19,7 @@ UI elements:
    * :ref:`ui_checkbox`
    * :ref:`ui_number_input`
    * :ref:`ui_char_input`
+   * :ref:`ui_path_picker`
 
 .. toctree::
    :maxdepth: 1
@@ -31,3 +32,4 @@ UI elements:
    ui/checkbox.rst
    ui/number_input.rst
    ui/char_input.rst
+   ui/path_picker.rst
