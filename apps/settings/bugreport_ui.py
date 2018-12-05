@@ -119,11 +119,17 @@ def process_choice(choice, bugreport, li):
             path = PathPicker(default_path, i, o, name="Bugreport app custom file picker PathPicker", display_hidden = True).activate()
             if path:
                 file_list.append(path)
+        def add_dir():
+            default_path = PathPicker.default_path if not file_list else file_list[-1]
+            path = PathPicker(default_path, i, o, dirs_only=True, name="Bugreport app custom file picker PathPicker", display_hidden = True).activate()
+            if path:
+                file_list.append(path)
         def get_contents():
             c = []
             for f in file_list:
                 c.append([f, lambda x=f: remove_file(x)])
             c.append(["Add file", add_file])
+            c.append(["Add dir", add_dir])
             return c
         m = Menu([], i, o, name="Bugreport app custom file picker menu", contents_hook=get_contents)
         m.exit_entry = ["Send", 'exit']
