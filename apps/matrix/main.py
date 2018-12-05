@@ -15,19 +15,22 @@ logger = setup_logger(__name__, "info")
 class MatrixClientApp(ZeroApp):
 
 	menu_name = "Matrix Client"
-	default_config = '{"user_id":"", "token":"", "your_other_usernames":[]}'
+	default_config = '{"user_id":"", "token":"", "your_other_usernames":[], "show_join_leave_messages":"True"}'
 	config_filename = "config.json"
 
-        client = None
+	client = None
 
-        def __init__(self, *args, **kwargs):
+    	def __init__(self, *args, **kwargs):
 		ZeroApp.__init__(self, *args, **kwargs)
+
+		# Read config and create a function for saving it
 		self.config = read_or_create_config(local_path(self.config_filename), self.default_config, self.menu_name+" app")
 		self.save_config = save_config_method_gen(self, local_path(self.config_filename))
 
-		self.init_vars()
 		self.login_runner = BackgroundRunner(self.background_login)
 		self.login_runner.run()
+
+		self.init_vars()
 
 	def init_vars(self):
 		self.stored_messages = {}
@@ -87,6 +90,8 @@ class MatrixClientApp(ZeroApp):
 		if not username:
 			return False
 
+		displayname = username
+
 		# Create a matrix user id from the username, currently only ids on matrix.org are possible
 		username = "@{}:matrix.org".format(username)
 
@@ -102,6 +107,7 @@ class MatrixClientApp(ZeroApp):
 			if self.client.logged_in:
 				self.config['user_id'] = username
 				self.config['token'] = self.client.get_token()
+				self.config['displayname'] = displayname
 				self.save_config()
 
 				logger.info("Succesfully logged in")
@@ -148,16 +154,31 @@ class MatrixClientApp(ZeroApp):
 			# Right arrow 	-> Write message to room
 			menu_contents.append([
 				room_name,
-				lambda x=current_room: self.display_messages(x),
-				lambda x=current_room: self.write_message(x)
+				lambda r=current_room: self.display_messages(r),
+				lambda r=current_room: self.display_room_members(r)
 			])
 
 		menu_contents.append(["Settings", self.show_settings])
 		Menu(menu_contents, self.i, self.o, name="Matrix app main menu").activate()
 
+	# Display a menu of settings for the app
 	def show_settings(self):
-		mc = [["Log out", self.logout]]
-		Menu(mc, self.i, self.o, catch_exit=False, name="Matrix app settings menu").activate()
+
+		def gen_menu_contents():
+			mc = [["Log out", self.logout]]
+			conv_key = "show_join_leave_messages"
+			mc.append(["Hide join/leave messages", \
+				lambda: self._change_setting(conv_key, False)] \
+				if self.config[conv_key] else ["Show join/leave messages", \
+				lambda: self._change_setting(conv_key, True)])
+			
+			return mc
+
+		Menu([], self.i, self.o, name="Matrix app settings menu", contents_hook=gen_menu_contents).activate()
+
+	def _change_setting(self, key, value):
+		self.config[key] = value
+		self.save_config()
 
 	def logout(self):
 		self.config["token"] = ''
@@ -166,6 +187,15 @@ class MatrixClientApp(ZeroApp):
 		self.init_vars()
 
 		raise MenuExitException
+
+	def display_room_members(self, room):
+		members = room.get_joined_members()
+
+		mc = []
+		for m in members:
+			mc.append([m.get_display_name()])
+
+		Menu(mc, self.i, self.o, catch_exit=False, name="Matrix app room members menu").activate()
 
 	# Creates a new screen with an Input to write a message
 	def write_message(self, room):
@@ -220,7 +250,26 @@ class MatrixClientApp(ZeroApp):
 						'type': event.get('type', 'unknown_type'),
 						'sender': unicode(rfa(event.get('sender', 'unknown_sender'))),
 						'content': rfa(unicode("+ {}").format(content.get('displayname', ''))),
-						'id': event.get('event_id', 0)
+						'id': event.get('event_id', 0),
+						'membership': event.get('membership', None)
+					})
+
+			elif event.get('membership', None) == "leave":
+
+				# Leave events are linked to their corresponding join events, so instead of the key 'content' there is 'prev_content'
+				# Sometimes there is also the key unsigned, will still need to investigate this further to make sure all cases are covered
+				content = event.get('prev_content', {})
+				if content == {}:
+					content = event.get('unsigned', {})
+					content = content.get('prev_content', {})
+
+				self._add_new_message(room.room_id, {
+						'timestamp': event.get('origin_server_ts', 0),
+						'type': event.get('type', 'unknown_type'),
+						'sender': unicode(rfa(event.get('sender', 'unknown_sender'))),
+						'content': rfa(unicode("- {}").format(content.get('displayname', ''))),
+						'id': event.get('event_id', 0),
+						'membership': event.get('membership', None)
 					})
 
 		# Check for new messages
@@ -231,6 +280,10 @@ class MatrixClientApp(ZeroApp):
 				if event.get('sender', None) == self.client.get_user().user_id or event.get("sender", None) in self.config["your_other_usernames"]:
 					# Prefix own messages with a '*'
 					prefix = "* "
+
+				elif self.config['displayname'] in content.get('body', ""):
+					# Prefix messages with your name in it with a '#'
+					prefix = "# "
 
 				self._add_new_message(room.room_id, {
 						'timestamp': event.get('origin_server_ts', 0),
@@ -269,8 +322,12 @@ class MatrixClientApp(ZeroApp):
 		menu_contents = []
 
 		for message in sorted_messages:
+			if not self.config["show_join_leave_messages"] and message["type"] == "m.room.member":
+				continue
 			content = rfa(message["content"])
 			menu_contents.append([content, lambda c=content, s=rfa(message['sender']), t=message['timestamp']: self.display_single_message(c, s, t)])
+
+		menu_contents.append(["Write message", lambda r=self.rooms[room_id]: self.write_message(r)])
 
 		return menu_contents
 
