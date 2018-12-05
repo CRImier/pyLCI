@@ -36,6 +36,7 @@ log_options = [
 ["ZPUI logs", "zpui_logs"],
 ["ZPUI info (config, git info)", "zpui_info"],
 ["ZPUI threads", "zpui_threads"],
+["ZPUI screenshots", "zpui_screenshots"],
 #["ZPUI contexts", "zpui_contexts"],
 ["dmesg output", "dmesg"],
 ["/var/log/ contents", "var_log"],
@@ -61,6 +62,9 @@ def process_choice(choice, bugreport, li):
        logfiles = [os.path.join(dir, f) for f in os.listdir(dir) if f.startswith('zpui.log')]
        for logfile in logfiles:
            bugreport.add_file(logfile)
+    if choice == "zpui_screenshots":
+       dir = "screenshots/"
+       bugreport.add_dir(dir)
     elif choice == "zpui_info":
        import __main__
        bugreport.add_file(__main__.config_path)
@@ -87,9 +91,7 @@ def process_choice(choice, bugreport, li):
        bugreport.add_text(json.dumps(dmesg.get_dmesg()), "dmesg.json")
     elif choice == "var_log":
        dir = "/var/log/"
-       var_log_files = [os.path.join(dir, f) for f in os.listdir(dir) if os.path.isfile(os.path.join(dir, f))]
-       for f in var_log_files:
-           bugreport.add_file(f)
+       bugreport.add_dir(dir)
     elif choice == "ps":
        data = []
        attrs = ["cmdline", "pid", "memory_info", "memory_percent",
@@ -127,8 +129,11 @@ def process_choice(choice, bugreport, li):
         m.exit_entry = ["Send", 'exit']
         with li.paused:
             m.activate()
-        for file in file_list:
-            bugreport.add_file(file)
+        for path in file_list:
+            try:
+                bugreport.add_dir_or_file(path)
+            except ValueError:
+                logger.warning("Path {} is neither file nor directory, ignoring".format(path))
 
 def send_logs():
     if not config.get("uuid", None):

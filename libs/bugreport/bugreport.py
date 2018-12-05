@@ -2,6 +2,7 @@ from ftplib import FTP_TLS as FTP
 from StringIO import StringIO
 import zipfile
 import ssl
+import os
 
 class BugReport(object):
 
@@ -14,6 +15,20 @@ class BugReport(object):
 
     def add_file(self, path):
         self.zip.write(path)
+
+    def add_dir(self, path):
+        for root, dirs, files in os.walk(path, topdown=False):
+            for name in files:
+                file_path = os.path.join(root, name)
+                self.add_file(file_path)
+
+    def add_dir_or_file(self, path):
+        if os.path.isfile(path):
+            self.add_file(path)
+        elif os.path.isdir(path):
+            self.add_dir(path)
+        else:
+            raise ValueError("{} is neither file nor directory!".format(path))
 
     def add_text(self, text, filename):
         self.zip.writestr(filename, text)
