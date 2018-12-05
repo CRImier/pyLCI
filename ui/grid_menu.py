@@ -1,5 +1,6 @@
 from time import sleep
 from math import ceil
+from copy import copy
 
 from menu import Menu
 from canvas import Canvas
@@ -42,6 +43,13 @@ class GridViewMixin(object):
 	def draw_grid(self):
 		contents = self.el.get_displayed_contents()
 		pointer = self.el.pointer
+		full_entries_shown = self.get_entry_count_per_screen()
+		entries_shown = min(len(contents), full_entries_shown)
+		disp_entry_positions = range(self.first_displayed_entry, self.first_displayed_entry+entries_shown)
+		for i in copy(disp_entry_positions):
+			if i not in range(len(contents)):
+				disp_entry_positions.remove(i)
+		print(disp_entry_positions)
                 c = Canvas(self.o)
                 print("P: {} FDE: {}".format(self.el.pointer, self.first_displayed_entry))
 		c.clear()
@@ -51,8 +59,8 @@ class GridViewMixin(object):
 		step_height = c.height / self.el.rows
 
 		# Calculate grid index
-		item_x = pointer%self.el.cols
-		item_y = pointer//self.el.rows
+		item_x = (pointer-self.first_displayed_entry)%self.el.cols
+		item_y = (pointer-self.first_displayed_entry)//self.el.rows
 
 		# Draw horizontal and vertical lines
 		for x in range(1, self.el.cols):
@@ -62,12 +70,12 @@ class GridViewMixin(object):
 				c.line((0, y*step_height, c.width, y*step_height))
 
 		# Draw the app names
-		for index, item in enumerate(self.el.contents[self.first_displayed_entry*self.el.cols:]):
-			app_name = contents[index+self.first_displayed_entry*self.el.cols][0]
+		for i, index in enumerate(disp_entry_positions):
+			app_name = contents[index][0]
 			text_bounds = c.get_text_bounds(app_name)
 
-			x_cord = (index%self.el.cols)*step_width+(step_width-text_bounds[0])/2
-			y_cord = (index//self.el.rows)*step_height+(step_height-text_bounds[1])/2
+			x_cord = (i%self.el.cols)*step_width+(step_width-text_bounds[0])/2
+			y_cord = (i//self.el.rows)*step_height+(step_height-text_bounds[1])/2
 			c.text(app_name, (x_cord, y_cord))
 
 		# Invert the selected cell
@@ -79,6 +87,11 @@ class GridViewMixin(object):
 
 	def refresh(self):
 		self.fix_pointers_on_refresh()
+                if self.first_displayed_entry:
+			div, mod = divmod(self.first_displayed_entry, self.el.cols)
+			print("{}-{}".format(div, mod))
+			self.first_displayed_entry = (div)*self.el.cols
+			if mod: self.first_displayed_entry += self.el.cols
 		self.o.display_image(self.draw_grid())
 
 
