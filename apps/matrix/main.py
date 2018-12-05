@@ -251,7 +251,8 @@ class MatrixClientApp(ZeroApp):
 
 			elif event.get('membership', None) == "leave":
 
-				print(event)
+				# Leave events are linked to their corresponding join events, so instead of the key 'content' there is 'prev_content'
+				# Sometimes there is also the key unsigned, will still need to investigate this further to make sure all cases are covered
 				content = event.get('prev_content', {})
 				if content == {}:
 					content = event.get('unsigned', {})
