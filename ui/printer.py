@@ -1,6 +1,5 @@
 import PIL
 from PIL import ImageOps, Image
-from math import trunc
 from time import sleep
 from funcs import format_for_screen as ffs
 
@@ -19,7 +18,7 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
     Kwargs:
 
         * ``sleep_time``: Time to display each the message (for each of resulting screens).
-        * ``skippable``: If set, allows skipping message screens by presing ENTER. """
+        * ``skippable``: If set, allows skipping message screens by pressing ENTER. """
     Printer.skip_screen_flag = False #A flag which is set for skipping screens and is polled while printer is displaying things
     Printer.exit_flag = False #A flag which is set for stopping exiting the printing process completely
 
@@ -30,7 +29,7 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
     def exit_printer():
         Printer.exit_flag = True
 
-    #If skippable option is enabled, etting input callbacks on keys we use for skipping screens
+    #If skippable option is enabled, setting input callbacks on keys we use for skipping screens
     if i is not None: #On boot, None is passed to print debugging messages when i is not yet initialized
         i.stop_listen()
         i.clear_keymap()
@@ -119,21 +118,23 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
         i.set_callback("KEY_ENTER", exit_printer)
         i.listen()
     image_width, image_height = image.size
-    size = o.width, o.height
-    width = o.width/image_width
-    height = o.height/image_height
-    if height < width:
-        multiplier = height
+    if o.height > image_height and o.width > image.width:
+	width_multiplier = o.width/image_width
+    	height_multiplier = o.height/image_height
+    	if height_multiplier < width_multiplier:
+            multiplier = o.height
+    	else:
+            multiplier = o.width
+     	m_percent = (multiplier/float(image_width))
+    	other_size = int((float(image_height)*float(m_percent)))
+    	image = image.resize((multiplier,other_size))
+    elif (o.width, o.height) == image.size:
+	pass
     else:
-        multiplier = width
-    multiplier = trunc(multiplier)
-    if multiplier != 0:
-        new_image_width = multiplier*image_width
-	new_image_height = multiplier*image_height
-	image.resize((new_image_width, new_image_height))
-    else:
+        size = o.width, o.height
         image.thumbnail(size, Image.ANTIALIAS)
-    if invert: image = ImageOps.invert(image.convert('L'))
+    if invert:
+	image = ImageOps.invert(image.convert('L'))
     left = top = right = bottom = 0
     width, height = image.size
     if o.width > width:
@@ -145,7 +146,6 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
         top = delta // 2
         bottom = delta - top
     image = ImageOps.expand(image, border=(left, top, right, bottom), fill="black")
-
     image = image.convert(o.device_mode)
     o.display_image(image)
     poll_period = 0.1
