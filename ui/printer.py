@@ -1,5 +1,6 @@
 import PIL
-from PIL import ImageOps
+from PIL import ImageOps, Image
+from math import trunc
 from time import sleep
 from funcs import format_for_screen as ffs
 
@@ -18,7 +19,7 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
     Kwargs:
 
         * ``sleep_time``: Time to display each the message (for each of resulting screens).
-        * ``skippable``: If set, allows skipping message screens by pressing ENTER. """
+        * ``skippable``: If set, allows skipping message screens by presing ENTER. """
     Printer.skip_screen_flag = False #A flag which is set for skipping screens and is polled while printer is displaying things
     Printer.exit_flag = False #A flag which is set for stopping exiting the printing process completely
 
@@ -29,7 +30,7 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
     def exit_printer():
         Printer.exit_flag = True
 
-    #If skippable option is enabled, setting input callbacks on keys we use for skipping screens
+    #If skippable option is enabled, etting input callbacks on keys we use for skipping screens
     if i is not None: #On boot, None is passed to print debugging messages when i is not yet initialized
         i.stop_listen()
         i.clear_keymap()
@@ -105,7 +106,7 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
         * ``sleep_time``: Time to display the image
         * ``invert``: Invert the image before displaying (True by default) """
     if isinstance(image_or_path, basestring):
-        image = PIL.Image.open(image_or_path).convert('L')
+        image = Image.open(image_or_path).convert('L')
     else:
         image = image_or_path
     GraphicsPrinter.exit_flag = False
@@ -117,7 +118,34 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
         i.set_callback("KEY_LEFT", exit_printer)
         i.set_callback("KEY_ENTER", exit_printer)
         i.listen()
+    image_width, image_height = image.size
+    size = o.width, o.height
+    width = o.width/image_width
+    height = o.height/image_height
+    if height < width:
+        multiplier = height
+    else:
+        multiplier = width
+    multiplier = trunc(multiplier)
+    if multiplier != 0:
+        new_image_width = multiplier*image_width
+	new_image_height = multiplier*image_height
+	image.resize((new_image_width, new_image_height))
+    else:
+        image.thumbnail(size, Image.ANTIALIAS)
     if invert: image = ImageOps.invert(image.convert('L'))
+    left = top = right = bottom = 0
+    width, height = image.size
+    if o.width > width:
+	delta = o.width - width
+        left = delta // 2
+        right = delta - left
+    if o.height > height:
+        delta = o.height - height
+        top = delta // 2
+        bottom = delta - top
+    image = ImageOps.expand(image, border=(left, top, right, bottom), fill="black")
+
     image = image.convert(o.device_mode)
     o.display_image(image)
     poll_period = 0.1
