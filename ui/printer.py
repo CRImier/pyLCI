@@ -132,6 +132,8 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
     	image = image.resize((bigger_side,other_size), Image.ANTIALIAS) # Resizes the image to the calculated dimensions to fit the screen and stick to the aspect ratio using a high quality downsampling filter
     elif (o.width, o.height) == image.size: # Checks if screen dimensions and exactly the same as image dimensions
 	pass
+    elif (o.width == image_width and o.height < image_height) or (o.height == image_height and o.height < image_height):
+	pass
     else: # This should happen if the screen is smaller on one or both sides than the image
         size = o.width, o.height
         image.thumbnail(size, Image.ANTIALIAS) # Resizes the image sticking to the aspect ratio using
