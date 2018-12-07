@@ -119,9 +119,7 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
         i.listen()
     image_width, image_height = image.size
     if o.height > image_height and o.width > image.width:
-	width_multiplier = o.width/image_width
-    	height_multiplier = o.height/image_height
-    	if height_multiplier < width_multiplier:
+    	if o.height/image_height < o.width/image_width:
             multiplier = o.height
     	else:
             multiplier = o.width
