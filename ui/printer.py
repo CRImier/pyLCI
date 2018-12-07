@@ -118,14 +118,18 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
         i.set_callback("KEY_ENTER", exit_printer)
         i.listen()
     image_width, image_height = image.size
-    if o.height > image_height and o.width > image.width:
-    	if o.height/image_height < o.width/image_width:
-            multiplier = o.height
+    if o.height > image_height and o.width > image.width: # Checks if the screen dimensions are equal to the image size
+    	if o.height/image_height < o.width/image_width: # Checks which side will is bigger in proportion to the image size
+            bigger_side = o.height
+	    bigger_image_side = image_height
+	    smaller_image_side = image_width
     	else:
-            multiplier = o.width
-     	m_percent = (multiplier/float(image_width))
-    	other_size = int((float(image_height)*float(m_percent)))
-    	image = image.resize((multiplier,other_size))
+            bigger_side = o.width
+	    bigger_image_side = image_width
+	    smaller_image_side = image_height
+     	bigger_side_percent = (bigger_side/float(bigger_image_side))
+    	other_size = int((float(smaller_image_side)*float(bigger_side_percent)))
+    	image = image.resize((bigger_side,other_size), Image.LANCZOS) # Resizes the image to the calculated dimensions to fit the screen using a high quality downsampling filter
     elif (o.width, o.height) == image.size:
 	pass
     else:
