@@ -62,7 +62,7 @@ def Printer(message, i, o, sleep_time=1, skippable=True):
     for screen_num in range(num_screens):
         Printer.skip_screen_flag = False
         shown_element_numbers = [(screen_num*screen_rows)+i for i in range(screen_rows)]
-        screen_data = [rendered_message[i] for i in shown_element_numbers if i in range(render_length)] 
+        screen_data = [rendered_message[i] for i in shown_element_numbers if i in range(render_length)]
         o.display_data(*screen_data)
         poll_period = 0.1
         sleep_periods = sleep_time/poll_period
@@ -139,17 +139,18 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
         image.thumbnail(size, Image.ANTIALIAS) # Resizes the image sticking to the aspect ratio using
     if invert:
 	image = ImageOps.invert(image.convert('L'))
-    left = top = right = bottom = 0
-    width, height = image.size
-    if o.width > width:
-	delta = o.width - width
-        left = delta // 2
-        right = delta - left
-    if o.height > height:
-        delta = o.height - height
-        top = delta // 2
-        bottom = delta - top
-    image = ImageOps.expand(image, border=(left, top, right, bottom), fill="black")
+    if (o.width, o.height) != image.size:
+	left = top = right = bottom = 0
+    	width, height = image.size
+    	if o.width > width:
+	    delta = o.width - width
+            left = delta // 2
+            right = delta - left
+        if o.height > height:
+            delta = o.height - height
+            top = delta // 2
+            bottom = delta - top
+    	image = ImageOps.expand(image, border=(left, top, right, bottom), fill="black")
     image = image.convert(o.device_mode)
     o.display_image(image)
     poll_period = 0.1
