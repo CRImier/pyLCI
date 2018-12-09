@@ -83,7 +83,19 @@ class MatrixClientApp(ZeroApp):
 			logger.error(dir(e))
 			return False
 		else:
-			return self.client.logged_in
+			if self.client.logged_in:
+				# config["displayname"] might not exist in older versions of the app
+				if 'displayname' not in self.config:
+					displayname = self.config["user_id"].lstrip("@")
+					displayname = displayname.rsplit(":", 1)[0]
+                                        print(displayname)
+                                        self.config["displayname"] = displayname
+					self.save_config()
+
+				logger.info("Succesfully logged in")
+                                return True
+			else:
+				return False
 
 	def login_with_username(self):
 		# Get the required user data
