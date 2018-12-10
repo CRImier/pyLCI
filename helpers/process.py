@@ -15,11 +15,13 @@ class ProHelper(object):
 
     process = None
 
-    def __init__(self, command, shell = False, use_terminal = True, output_callback = None):
+    def __init__(self, command, shell = False, use_terminal = True, output_callback = None, cwd = None, popen_kwargs = None):
         self.command = command
         self.shell = shell
+        self.cwd = cwd
         self.use_terminal = use_terminal
         self.output_callback = output_callback
+        self.popen_kwargs = popen_kwargs if popen_kwargs else {}
         if self.output_callback == 'print':
             self.output_callback = self.print_output
 
@@ -30,7 +32,7 @@ class ProHelper(object):
         """
         if self.use_terminal:
             self.terminal, self.s = pty.openpty()
-            self.process = subprocess.Popen(self.command, stdin=self.s, stdout=self.s, stderr=self.s, shell=self.shell, close_fds=True)
+            self.process = subprocess.Popen(self.command, stdin=self.s, stdout=self.s, stderr=self.s, shell=self.shell, cwd=self.cwd, close_fds=True, **self.popen_kwargs)
         else:
             raise NotImplementedException
 
@@ -140,6 +142,17 @@ class ProHelper(object):
         self.process.poll()
         return self.process.returncode is None
 
+    def dump_info(self):
+        self.poll()
+        ongoing = self.is_ongoing()
+        info = {"command":self.command, "is_ongoing":ongoing, "return_code":None,
+                "cwd":self.cwd, "shell":self.shell, "use_terminal":self.use_terminal,
+                "output_callback":str(self.output_callback),
+                "popen_kwargs":self.popen_kwargs }
+        if not ongoing:
+            info["return_code"] = self.get_return_code()
+        return info
+
 
 import unittest
 
@@ -162,6 +175,13 @@ class TestProHelper(unittest.TestCase):
         ph = ProHelper("false", use_terminal=True)
         ph.run_in_foreground()
         assert(ph.get_return_code() == 1)
+
+    def test_dump_info(self):
+        ph = ProHelper("false", use_terminal=True)
+        ph.run_in_foreground()
+        info = ph.dump_info()
+        assert(info["return_code"] == 1)
+        assert(info["is_ongoing"] == False)
 
     def test_launch_kill(self):
         ph = ProHelper("python", use_terminal=True, output_callback=lambda *a, **k: True)
