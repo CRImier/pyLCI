@@ -2,11 +2,12 @@ from __future__ import division
 
 import math
 import os
+import time
 from datetime import datetime, timedelta
 from dateutil.zoneinfo import getzoneinfofile_stream, ZoneInfoFile
 
 from apps import ZeroApp
-from ui import Menu, Refresher, Canvas, IntegerAdjustInput
+from ui import Menu, Refresher, Canvas, IntegerAdjustInput, Listbox
 
 from helpers import read_or_create_config, local_path_gen
 
@@ -72,19 +73,21 @@ class ClockApp(ZeroApp, Refresher):
             countdown = {"time": datetime.now()+timedelta(minutes=offset)}
             self.countdown = countdown
 
-    # Shows a menu of available timezones and py pressing ENTER it changes to the specific zone
+    # Shows a menu of available timezones, accept new TZ by pressing ENTER
     def set_timezone(self):
 
-        def _update_timezone(zone):
-            os.environ['TZ'] = zone
+        with open('/etc/timezone', "r") as f:
+            current_timezone = f.readline().strip()
 
-        mc = []
-        for k in ZoneInfoFile(getzoneinfofile_stream()).zones.keys():
-            mc.append([k, lambda z=k: _update_timezone(z)])
+            mc = []
+            entry = None
+            for k in ZoneInfoFile(getzoneinfofile_stream()).zones.keys():
+                if k == current_timezone:
+                    entry = [k, lambda z=k: _update_timezone(z)]
+                mc.append([k, k])
 
-        mc = sorted(mc, key=lambda x: x[0])
-
-        Menu(mc, self.i, self.o, "Timezone selection menu").activate()
+            mc = sorted(mc, key=lambda x: x[0])
+            lb = Listbox(mc, self.i, self.o, "Timezone selection listbox", selected=current_timezone).activate()
 
     def draw_analog_clock(self, c, time, radius="min(*c.size) / 3", clock_x = "center_x+32", clock_y = "center_y+5", h_len = "radius / 2", m_len = "radius - 5", s_len = "radius - 3", **kwargs):
         """Draws the analog clock, with parameters configurable through config.json."""
