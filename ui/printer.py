@@ -2,6 +2,7 @@ import PIL
 from PIL import ImageOps
 from time import sleep
 from funcs import format_for_screen as ffs
+from utils import fit_image_to_screen
 
 def Printer(message, i, o, sleep_time=1, skippable=True):
     """Outputs a string, or a list of strings, on a display as soon as it's called.
@@ -117,6 +118,7 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
         i.set_callback("KEY_LEFT", exit_printer)
         i.set_callback("KEY_ENTER", exit_printer)
         i.listen()
+    fit_image_to_screen(image, o)
     if invert: image = ImageOps.invert(image.convert('L'))
     image = image.convert(o.device_mode)
     o.display_image(image)
