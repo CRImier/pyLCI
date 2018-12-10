@@ -1,11 +1,17 @@
 menu_name = "Hardware setup"
 
 import os
+import sys
+import traceback
+from time import sleep
 
-from ui import Menu, PrettyPrinter as Printer, DialogBox, LoadingIndicator, PathPicker, Listbox #, UniversalInput, Refresher, IntegerAdjustInput
+from ui import Menu, PrettyPrinter as Printer, DialogBox, LoadingIndicator, PathPicker, Listbox, ProgressBar
 from helpers import setup_logger, read_or_create_config, local_path_gen, write_config, save_config_gen
 
 import smbus
+import gpio
+sys.excepthook = sys.__excepthook__
+gpio.log.setLevel(gpio.logging.INFO)
 
 from mtkdownload import MTKDownloadProcess, collect_fw_folders
 
@@ -21,7 +27,7 @@ o = None
 
 def change_settings():
     menu_contents = [
-    ["Set mtkdownload path", set_mtkdownload_path]]
+      ["Set mtkdownload path", set_mtkdownload_path]]
     Menu(menu_contents, i, o, "ZP hardware setup settings menu").activate()
 
 def set_mtkdownload_path():
@@ -30,6 +36,22 @@ def set_mtkdownload_path():
     if path:
         config["mtkdownload_path"] = path
         save_config(config)
+        return True
+    return False
+
+def get_gsm_reset_gpio():
+    hw_revs = [["Gamma", "gamma"], ["Delta", "delta"], ["Delta-B", "deltab"]]
+    gpios = {"gamma":502, "delta":496, "deltab": 496}
+    assert(all([hwr[1] in gpios.keys() for hwr in hw_revs])) # check after editing
+    hwr = Listbox(hw_revs, i, o, name="Hardware setup app GSM FW picker").activate()
+    if not hwr:
+        return None
+    if hwr in ["delta", "deltab"]:
+        # Enable UARTs
+        gpio.setup(500, gpio.OUT)
+        gpio.set(500, False)
+    gp = gpios[hwr]
+    return gp
 
 def flash_image_ui():
     if not MTKDownloadProcess(None, None, path=config["mtkdownload_path"]).mtkdownload_is_available():
@@ -37,14 +59,80 @@ def flash_image_ui():
         choice = DialogBox("yn", i, o, name="Hardware setup app mtkdownload path confirmation", message="Set mtkdownload path?").activate()
         if choice:
             if set_mtkdownload_path():
-                callback()
-            else:
-                return
+                # Running again, now the path should be valid
+                flash_image_ui()
+            return # No need to continue whether we've recursed or not, exiting
     files = collect_fw_folders(config["gsm_fw_path"])
     lbc = [[os.path.basename(file), file] for file in files]
     choice = Listbox(lbc, i, o, name="Hardware setup app GSM FW picker").activate()
+    # A ProgressBar for the flashing specifically
+    pb = ProgressBar(i, o, message="Flashing the modem")
+    # A LoadingIndicator for everything else
+    li = LoadingIndicator(i, o, message="Waiting for modem")
     if choice:
-        print(choice)
+        cb = lambda state: process_state(pb, li, state)
+        p = MTKDownloadProcess("/dev/ttyAMA0", choice, callback=cb, path=config["mtkdownload_path"])
+        gp = get_gsm_reset_gpio()
+        if not gp:
+            return
+        def reset():
+            gpio.setup(gp, gpio.OUT)
+            gpio.set(gp, False)
+            sleep(0.1)
+            gpio.set(gp, True)
+        e = None
+        try:
+            p.write_image(reset_cb=reset)
+        except Exception as e:
+            e = traceback.format_exc()
+        state = p.get_state()
+        if state["state"] == "failed" or e:
+            choice = DialogBox("yn", i, o, message="Send bugreport?").activate()
+            if choice:
+                br = BugReport("mtkdownload_flash_fail.zip")
+                if e:
+                    br.add_text(json.dumps(e), "mtkdownload_exception.json")
+                br.add_text(json.dumps(p.dump_info()), "mtkdownload_psinfo.json")
+                result = br.send_or_store("/boot/", logger=logger)
+                if result[0]:
+                    logger.info("Report sent to {}".format(result[1]))
+                else:
+                    logger.info("Report stored in {}".format(result[1]))
+
+last_state = None
+
+def process_state(pb, li, state):
+    # filtering repeated status to avoid wasting CPU power
+    global last_state
+    if state == last_state:
+        return
+    last_state = state
+    # actually processing the status
+    cs = state["state"]
+    if cs == "flashing":
+        progress = state["progress"]
+        li.pause()
+        pb.background_if_inactive()
+        if pb.progress != progress:
+            pb.progress = progress
+    elif cs in ["started", "processing", "not_started"]:
+        li.background_if_inactive()
+        pb.pause()
+        if cs == "started":
+            li.message = "Waiting for modem"
+        elif cs == "processing":
+            li.message = "Erasing flash"
+        elif cs == "not_started":
+            li.message = "Not started (?)"
+    elif cs in ["failed", "finished"]:
+        pb.stop()
+        li.stop()
+        if cs == "failed":
+            Printer("Failed to flash!", i, o, 5)
+        else:
+            Printer("Finished!", i, o, 5)
+    else:
+        logger.warning("Unrecognized status: {} (full: {})".format(cs, state))
 
 def init_app(input, output):
     global main_menu, callback, i, o
@@ -52,6 +140,6 @@ def init_app(input, output):
 
 def callback():
     main_menu_contents = [
-    ["Flash GSM modem", flash_image_ui],
-    ["Settings", change_settings]]
+      ["Flash GSM modem", flash_image_ui],
+      ["Settings", change_settings]]
     Menu(main_menu_contents, i, o, "ZP hardware setup menu").activate()
