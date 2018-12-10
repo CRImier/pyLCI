@@ -1,7 +1,9 @@
 from __future__ import division
 
 import math
+import os
 from datetime import datetime, timedelta
+from dateutil.zoneinfo import getzoneinfofile_stream, ZoneInfoFile
 
 from apps import ZeroApp
 from ui import Menu, Refresher, Canvas, IntegerAdjustInput
@@ -50,6 +52,9 @@ class ClockApp(ZeroApp, Refresher):
             if countdown_label: contents.append(["Countdown: {}".format(countdown_label)])
             #contents.append(["Set absolute", lambda: self.set_countdown(absolute=True)])
             contents.append(["Set relative", self.set_countdown])
+
+            # Add an option for setting the timezone
+            contents.append(["Set timezone", self.set_timezone])
             return contents
         Menu([], self.i, self.o, "Countdown settings menu", contents_hook=gmc).activate()
 
@@ -66,6 +71,20 @@ class ClockApp(ZeroApp, Refresher):
         if offset is not None:
             countdown = {"time": datetime.now()+timedelta(minutes=offset)}
             self.countdown = countdown
+
+    # Shows a menu of available timezones and py pressing ENTER it changes to the specific zone
+    def set_timezone(self):
+
+        def _update_timezone(zone):
+            os.environ['TZ'] = zone
+
+        mc = []
+        for k in ZoneInfoFile(getzoneinfofile_stream()).zones.keys():
+            mc.append([k, lambda z=k: _update_timezone(z)])
+
+        mc = sorted(mc, key=lambda x: x[0])
+
+        Menu(mc, self.i, self.o, "Timezone selection menu").activate()
 
     def draw_analog_clock(self, c, time, radius="min(*c.size) / 3", clock_x = "center_x+32", clock_y = "center_y+5", h_len = "radius / 2", m_len = "radius - 5", s_len = "radius - 3", **kwargs):
         """Draws the analog clock, with parameters configurable through config.json."""
