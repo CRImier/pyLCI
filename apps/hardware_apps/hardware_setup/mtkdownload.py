@@ -1,4 +1,7 @@
-from helpers import ProHelper
+import os
+from helpers import ProHelper, setup_logger
+
+logger = setup_logger(__name__, "debug")
 
 class MTKDownloadProcess(object):
     state = "not_started"
@@ -53,3 +56,27 @@ class MTKDownloadProcess(object):
         elif self.state == "failed":
             s_d["returncode"] = self.p.get_return_code()
             return s_d
+
+def collect_fw_folders(base_path, key="SIM800", check_cfg=True, requirements=["ROM", "ROM_VIVA", "VIVA"]):
+    unsorted_paths = []
+    for path in os.listdir(base_path):
+        full_path = os.path.join(base_path, path)
+        if os.path.isdir(full_path):
+            if key not in path:
+                logger.debug("{} doesn't have \"{}\" key in it, continuing".format(path, key))
+                continue
+            fw_files = os.listdir(full_path)
+            version = None
+            if "sim_fw_zp_version" in fw_files:
+                with open(os.path.join(full_path, "sim_fw_zp_version")) as f:
+                    version = f.read().strip()
+            if check_cfg and not "{}.cfg".format(path) in fw_files:
+                logger.debug("{} doesn't have CFG, continuing".format(path))
+                continue
+            if not all([req in fw_files for req in requirements]):
+                logger.debug("{} doesn't have one of the requirements, continuing".format(path))
+                continue
+            unsorted_paths.append([version, full_path])
+    logger.debug(unsorted_paths)
+    paths = [path for v, path in reversed(sorted(unsorted_paths))]
+    return paths

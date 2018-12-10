@@ -2,16 +2,16 @@ menu_name = "Hardware setup"
 
 import os
 
-from ui import Menu, PrettyPrinter as Printer, DialogBox, LoadingIndicator, PathPicker #, UniversalInput, Refresher, IntegerAdjustInput
+from ui import Menu, PrettyPrinter as Printer, DialogBox, LoadingIndicator, PathPicker, Listbox #, UniversalInput, Refresher, IntegerAdjustInput
 from helpers import setup_logger, read_or_create_config, local_path_gen, write_config, save_config_gen
 
 import smbus
 
-from mtkdownload import MTKDownloadProcess
+from mtkdownload import MTKDownloadProcess, collect_fw_folders
 
 local_path = local_path_gen(__name__)
 logger = setup_logger(__name__, "warning")
-default_config = '{"mtkdownload_path":"mtkdownload"}'
+default_config = '{"mtkdownload_path":"mtkdownload", "gsm_fw_path":"/lib/firmware/"}'
 config_path = local_path("config.json")
 config = read_or_create_config(config_path, default_config, menu_name+" app")
 save_config = save_config_gen(config_path)
@@ -40,7 +40,11 @@ def flash_image_ui():
                 callback()
             else:
                 return
-    pass
+    files = collect_fw_folders(config["gsm_fw_path"])
+    lbc = [[os.path.basename(file), file] for file in files]
+    choice = Listbox(lbc, i, o, name="Hardware setup app GSM FW picker").activate()
+    if choice:
+        print(choice)
 
 def init_app(input, output):
     global main_menu, callback, i, o
