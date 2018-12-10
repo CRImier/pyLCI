@@ -195,7 +195,7 @@ def send_files():
             li.stop()
             PrettyPrinter("Failed while sending files!", i, o, 3)
             try:
-                location = bugreport.save_in("/boot/")
+                location = bugreport.store_in("/boot/")
                 PrettyPrinter("Stored in {}".format(location), i, o, 3)
             except:
                 PrettyPrinter("Failed to store files!", i, o, 3)
