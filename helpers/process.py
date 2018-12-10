@@ -58,14 +58,29 @@ class ProHelper(object):
         else:
             raise NotImplementedException
 
-    def readall(self, timeout=0, readsize=1):
+    def readall_or_until(self, timeout=0, readsize=1, until=None):
         """
-        Reads all available output from the process. Timeout is 0 by default,
-        meaning that function will return immediately.
+        Reads all available output from the process, or until a character is encountered.
+        Timeout is 0 by default, meaning that function will return immediately.
         """
         output = []
         while self.output_available():
-            output.append(self.read(readsize, timeout))
+            data = self.read(readsize, timeout)
+            output.append(data)
+            if data == until:
+                break
+        return "".join(output)
+
+    def readall(self, timeout=0, readsize=1):
+        """
+        Reads all available output from the process. Timeout is 0 by default,
+        meaning that function will return immediately (unless output is a constant
+        stream of data, in which case it's best if you use ``readall_or_until``.
+        """
+        output = []
+        while self.output_available():
+            data = self.read(readsize, timeout)
+            output.append(data)
         return "".join(output)
 
     def write(self, data):
@@ -92,7 +107,7 @@ class ProHelper(object):
             time.sleep(delay)
         return True
 
-    def poll(self):
+    def poll(self, **read_kw):
         """
         This function polls the process for output (and relays it into the callback),
         as well as polls whether the process is finished.
@@ -100,15 +115,17 @@ class ProHelper(object):
         if self.process:
             self.process.poll()
             if callable(self.output_callback):
-                self.relay_output()
+                self.relay_output(**read_kw)
 
-    def relay_output(self):
+    def relay_output(self, read_type="readall", read_kw={}):
         """
         This method checks if there's output waiting to be read; if there is,
         it reads all of it and sends it to the output callback.
         """
         if self.output_available():
-            self.output_callback(self.readall(timeout=0))
+            read = getattr(self, read_type)
+            output = read(timeout=0, **read_kw)
+            self.output_callback(output)
 
     def print_output(self, data):
         """
