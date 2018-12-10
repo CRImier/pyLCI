@@ -216,7 +216,7 @@ def fit_image_to_screen(image, o):
 
     Args:
 
-        * ``image``: An image specified using GraphicsPrinter
+        * ``image``: Specify a PIL image here
         * ``o``: output device object."""
 
     image_width, image_height = image.size
