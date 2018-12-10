@@ -32,7 +32,7 @@ def set_mtkdownload_path():
         save_config(config)
 
 def flash_image_ui():
-    if not MTKDownloadProcess(path=config["mtkdownload_path"]).mtkdownload_is_available():
+    if not MTKDownloadProcess(None, None, path=config["mtkdownload_path"]).mtkdownload_is_available():
         Printer("mtkdownload not found!", i, o, 5)
         choice = DialogBox("yn", i, o, name="Hardware setup app mtkdownload path confirmation", message="Set mtkdownload path?").activate()
         if choice:
