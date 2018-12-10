@@ -211,7 +211,7 @@ class Ticker(object):
 
 Rect = namedtuple('Rect', ['left', 'top', 'right', 'bottom'])
 
-def fit_image_to_screen(image_or_path, o):
+def fit_image_to_screen(image, o):
     """Fits a given image to fit on any sized screen whilst maintaining the aspect ratio
 
     Args:
@@ -219,10 +219,6 @@ def fit_image_to_screen(image_or_path, o):
         * ``image_or_path``: Either a PIL image or path to an image to be displayed.
         * ``o``: output device object."""
 
-    if isinstance(image_or_path, basestring):
-        image = Image.open(image_or_path).convert('L')
-    else:
-        image = image_or_path
     image_width, image_height = image.size
     if o.height > image_height and o.width > image.width: # Checks if the screen dimensions are equal to the image size
         if o.height/image_height < o.width/image_width: # Checks which side will is bigger in proportion to the image size
@@ -243,8 +239,6 @@ def fit_image_to_screen(image_or_path, o):
     else: # This should happen if the screen is smaller on one or both sides than the image
         size = o.width, o.height
         image.thumbnail(size, Image.ANTIALIAS) # Resizes the image sticking to the aspect ratio using
-    if invert:
-        image = ImageOps.invert(image.convert('L'))
     if (o.width, o.height) != image.size:
         left = top = right = bottom = 0
         width, height = image.size
@@ -257,3 +251,4 @@ def fit_image_to_screen(image_or_path, o):
             top = delta // 2
             bottom = delta - top
         image = ImageOps.expand(image, border=(left, top, right, bottom), fill="black")
+    return image
