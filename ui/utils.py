@@ -221,7 +221,7 @@ def fit_image_to_screen(image, o):
 
     image_width, image_height = image.size
     if o.height > image_height and o.width > image.width: # Checks if the screen dimensions are equal to the image size
-        if o.height/image_height < o.width/image_width: # Checks which side will is bigger in proportion to the image size
+        if o.height/image_height < o.width/image_width: # Checks which side is bigger in proportion to the image size
             bigger_side = o.height
             bigger_image_side = image_height
             smaller_image_side = image_width
@@ -251,4 +251,6 @@ def fit_image_to_screen(image, o):
             top = delta // 2
             bottom = delta - top
         image = ImageOps.expand(image, border=(left, top, right, bottom), fill="black")
+        if (o.width, o.height) != image.size:
+	    logger.debug("Something strange has happened! Please contact LouisPi on the Zerophone IRC for help")
     return image
