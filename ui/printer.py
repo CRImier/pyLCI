@@ -118,8 +118,8 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
         i.set_callback("KEY_LEFT", exit_printer)
         i.set_callback("KEY_ENTER", exit_printer)
         i.listen()
-    fit_image_to_screen(image, o)
     if invert: image = ImageOps.invert(image.convert('L'))
+    image = fit_image_to_screen(image, o)
     image = image.convert(o.device_mode)
     o.display_image(image)
     poll_period = 0.1
