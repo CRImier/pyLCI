@@ -33,7 +33,7 @@ class Listbox(BaseListUIElement):
         Kwargs:
 
             * ``name``: listbox name which can be used internally and for debugging.
-            * ``selected``: an element to be selected (by value, that is, ``entry[1]``.) If no element with this value is found, this is ignored.
+            * ``selected``: value (that is, ``entry[1]``) of the element to be selected. If no element with this value is found, this is ignored.
             * ``entry_height``: number of display rows one listbox entry occupies.
             * ``append_exit``: appends an "Exit" entry to listbox.
 
