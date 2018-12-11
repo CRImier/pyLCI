@@ -17,6 +17,7 @@ from mtkdownload import MTKDownloadProcess, collect_fw_folders
 
 local_path = local_path_gen(__name__)
 logger = setup_logger(__name__, "warning")
+default_gsm_fw_path = "/lib/firmware/"
 default_config = '{"mtkdownload_path":"mtkdownload", "gsm_fw_path":"/lib/firmware/"}'
 config_path = local_path("config.json")
 config = read_or_create_config(config_path, default_config, menu_name+" app")
@@ -27,8 +28,27 @@ o = None
 
 def change_settings():
     menu_contents = [
-      ["Set mtkdownload path", set_mtkdownload_path]]
+      ["Set mtkdownload path", set_mtkdownload_path],
+      ["Set firmware path", set_sim_firmware_path, set_default_sim_firmware_path]]
     Menu(menu_contents, i, o, "ZP hardware setup settings menu").activate()
+
+def set_default_sim_firmware_path():
+    choice = DialogBox("yn", i, o, name="Hardware setup app default SIM firmware path confirmation", message="Set default FW path?").activate()
+    if choice:
+        config["gsm_fw_path"] = default_gsm_fw_path
+        save_config(config)
+        return True
+    return False
+
+def set_sim_firmware_path():
+    key = "gsm_fw_path"
+    default_path = config.get(key, default_gsm_fw_path)
+    path = PathPicker(default_path, i, o, dirs_only=True, name="Hardware setup app SIM firmware path picker").activate()
+    if path:
+        config[key] = path
+        save_config(config)
+        return True
+    return False
 
 def set_mtkdownload_path():
     default_path = config["mtkdownload_path"] if os.path.isabs(config["mtkdownload_path"]) else "/"
@@ -64,6 +84,14 @@ def flash_image_ui():
             return # No need to continue whether we've recursed or not, exiting
     files = collect_fw_folders(config["gsm_fw_path"])
     lbc = [[os.path.basename(file), file] for file in files]
+    if not lbc:
+        Printer("No firmware images found!", i, o, 5)
+        choice = DialogBox("yn", i, o, name="Hardware setup app mtkdownload path confirmation", message="Alternative FW path?").activate()
+        if choice:
+            if set_sim_firmware_path():
+                # Running again, now there should be some firmware
+                flash_image_ui()
+            return
     choice = Listbox(lbc, i, o, name="Hardware setup app GSM FW picker").activate()
     # A ProgressBar for the flashing specifically
     pb = ProgressBar(i, o, message="Flashing the modem")
