@@ -47,6 +47,8 @@ class MTKDownloadProcess(object):
                     self.state = "finished"
             if callable(self.callback):
                 self.callback(self.get_state())
+        if callable(reset_cb):
+            reset_cb()
 
     def process_output(self, output):
         sys.stdout.flush()
