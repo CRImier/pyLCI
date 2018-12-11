@@ -60,13 +60,13 @@ def set_mtkdownload_path():
     return False
 
 def get_gsm_reset_gpio():
-    hw_revs = [["Gamma", "gamma"], ["Delta", "delta"], ["Delta-B", "deltab"]]
-    gpios = {"gamma":502, "delta":496, "deltab": 496}
+    hw_revs = [["Gamma", "gamma"], ["Delta/Delta-B", "delta"]]
+    gpios = {"gamma":502, "delta":496}
     assert(all([hwr[1] in gpios.keys() for hwr in hw_revs])) # check after editing
     hwr = Listbox(hw_revs, i, o, name="Hardware setup app GSM FW picker").activate()
     if not hwr:
         return None
-    if hwr in ["delta", "deltab"]:
+    if hwr == "delta":
         # Enable UARTs
         gpio.setup(500, gpio.OUT)
         gpio.set(500, False)
