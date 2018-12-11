@@ -51,10 +51,11 @@ def set_sim_firmware_path():
     return False
 
 def set_mtkdownload_path():
-    default_path = config["mtkdownload_path"] if os.path.isabs(config["mtkdownload_path"]) else "/"
+    key = "mtkdownload_path"
+    default_path = config[key] if os.path.isabs(config[key]) else "/"
     path = PathPicker(default_path, i, o, name="Hardware setup app mtkdownload path picker").activate()
     if path:
-        config["mtkdownload_path"] = path
+        config[key] = path
         save_config(config)
         return True
     return False
