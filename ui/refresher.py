@@ -71,6 +71,27 @@ class Refresher(BaseUIElement):
             self.activate_input()
             self.refresh()
 
+    def background_if_inactive(self):
+        """
+        If the UI element hasn't been launched yet, launches it in background
+        and waits until it's fully running.
+        """
+        if not self.is_active:
+            self.run_in_background()
+            self.wait_for_active()
+
+    def wait_for_active(self, timeout=100):
+        """
+        If the UI element hasn't been launched yet, launches it in background
+        and waits until it's fully running.
+        """
+        counter = 0
+        while not self.is_active:
+            sleep(0.1)
+            counter += 1
+            if counter == timeout:
+                raise ValueError("Waiting for {} to be active - never became active!".format(self.name))
+
     def set_refresh_interval(self, new_interval):
         """Allows setting Refresher's refresh intervals after it's been initialized"""
         #interval for checking the in_background property in the activate()

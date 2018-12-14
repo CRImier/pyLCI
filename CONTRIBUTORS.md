@@ -4,10 +4,10 @@
  - derivmug
  - monsieur_h
  - Unnamed contributor
+ - Louis Parkerson
  - Björn Pettersson
  - Jon Maier
  - Gnu-Bricoleur
- - Louis Parkerson
  - Brian Dunlay
  - KyleMoran138
  - Patrick Schneeweis
