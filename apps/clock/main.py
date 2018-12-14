@@ -6,11 +6,14 @@ import time
 from datetime import datetime, timedelta
 from dateutil.zoneinfo import getzoneinfofile_stream, ZoneInfoFile
 
+from subprocess import check_output, CalledProcessError
+
 from apps import ZeroApp
-from ui import Menu, Refresher, Canvas, IntegerAdjustInput, Listbox
+from ui import Menu, Refresher, Canvas, IntegerAdjustInput, Listbox, LoadingBar
 
-from helpers import read_or_create_config, local_path_gen
+from helpers import read_or_create_config, local_path_gen, setup_logger
 
+logger = setup_logger(__name__, "warning")
 local_path = local_path_gen(__name__)
 
 class ClockApp(ZeroApp, Refresher):
@@ -76,18 +79,29 @@ class ClockApp(ZeroApp, Refresher):
     # Shows a menu of available timezones, accept new TZ by pressing ENTER
     def set_timezone(self):
 
-        with open('/etc/timezone', "r") as f:
-            current_timezone = f.readline().strip()
+        try:
+            with open('/etc/timezone', "r") as f:
+                current_timezone = f.readline().strip()
+        except:
+            logger.exception("Can't get current timezone!")
+            current_timezone = None
+        else:
+            logger.info("Current timezone: {}".format(repr(current_timezone)))
 
-            mc = []
-            entry = None
+        lc = []
+        with LoadingBar(self.i, self.o, message="Getting timezones"):
             for k in ZoneInfoFile(getzoneinfofile_stream()).zones.keys():
-                if k == current_timezone:
-                    entry = [k, lambda z=k: _update_timezone(z)]
-                mc.append([k, k])
-
-            mc = sorted(mc, key=lambda x: x[0])
-            lb = Listbox(mc, self.i, self.o, "Timezone selection listbox", selected=current_timezone).activate()
+                lc.append([k])
+        lc = sorted(lc)
+        choice = Listbox(lc, self.i, self.o, "Timezone selection listbox", selected=current_timezone).activate()
+        if choice:
+            # Setting timezone using timedatectl
+            try:
+                check_output(["timedatectl", "set-timezone", choice])
+            except CalledProcessError as e:
+                logger.exception("Can't set timezone using timedatectl! Return code: {}, output: {}".format(e.returncode, repr(e.output)))
+            else:
+                logger.info("Set timezone successfully")
 
     def draw_analog_clock(self, c, time, radius="min(*c.size) / 3", clock_x = "center_x+32", clock_y = "center_y+5", h_len = "radius / 2", m_len = "radius - 5", s_len = "radius - 3", **kwargs):
         """Draws the analog clock, with parameters configurable through config.json."""
