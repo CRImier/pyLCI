@@ -254,6 +254,4 @@ def fit_image_to_screen(image, o):
             top = delta // 2
             bottom = delta - top
         image = ImageOps.expand(image, border=(left, top, right, bottom), fill="black")
-	if (o.width, o.height) != image.size:
-		raise Exception("Hmmm the image size is not the same size as the screen!")
     return image
