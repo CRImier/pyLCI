@@ -77,6 +77,6 @@ class Listbox(BaseListUIElement):
         Moves the pointer to the first entry which has the value passed.
         """
         for i, entry in enumerate(self.contents):
-            if len(entry) > 1 and entry[1] == value:
+            if (len(entry) > 1 and entry[1] == value) or entry[0] == value:
                 self.start_pointer = i
                 return
