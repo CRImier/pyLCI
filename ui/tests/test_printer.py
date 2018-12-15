@@ -47,11 +47,17 @@ class TestPrinter(unittest.TestCase):
     def test_graphical_printer(self):
         GraphicsPrinter("test", None, get_mock_output(128, 64), 0)
         assert o.display_image.called
-	GraphicsPrinter("test", None, get_mock_output(128, 128), 0)
+	GraphicsPrinter("test", None, get_mock_output(128, 125), 0)
         assert o.display_image.called
-	GraphicsPrinter("test", None, get_mock_output(128, 32), 0)
+	GraphicsPrinter("test", None, get_mock_output(128, 38), 0)
         assert o.display_image.called
 	GraphicsPrinter("test", None, get_mock_output(56, 75), 0)
+	assert o.display_image.called
+	GraphicsPrinter("test", None, get_mock_output(31, 64), 0)
+        assert o.display_image.called
+	GraphicsPrinter("test", None, get_mock_output(25, 64), 0)
+        assert o.display_image.called
+	GraphicsPrinter("test", None, get_mock_output(167, 153), 0)
         assert o.display_image.called
         assert o.display_image.call_count == 1
 
