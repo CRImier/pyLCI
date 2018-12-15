@@ -31,11 +31,10 @@ def get_mock_output(rows=8, cols=21):
     m.configure_mock(rows=rows, cols=cols, type=["char"])
     return m
 
-def get_mock_graphical_output(width=128, height=64, mode="1", cw=6, ch=8):
+def get_mock_graphical_output(width, height, mode="1", cw=6, ch=8):
     m = get_mock_output(rows=width/cw, cols=height/ch)
     m.configure_mock(width=width, height=height, device_mode=mode, char_height=ch, char_width=cw, type=["b&w-pixel"])
     return m
-
 
 class TestPrinter(unittest.TestCase):
     """tests Printer functions"""
@@ -46,7 +45,13 @@ class TestPrinter(unittest.TestCase):
 
     @unittest.skip("Need to feed it an image or something")
     def test_graphical_printer(self):
-        GraphicsPrinter("test", None, get_mock_output(), 0)
+        GraphicsPrinter("test", None, get_mock_output(128, 64), 0)
+        assert o.display_image.called
+	GraphicsPrinter("test", None, get_mock_output(128, 128), 0)
+        assert o.display_image.called
+	GraphicsPrinter("test", None, get_mock_output(128, 32), 0)
+        assert o.display_image.called
+	GraphicsPrinter("test", None, get_mock_output(56, 75), 0)
         assert o.display_image.called
         assert o.display_image.call_count == 1
 
