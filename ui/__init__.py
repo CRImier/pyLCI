@@ -24,7 +24,7 @@ from canvas import Canvas, MockOutput
 from date_picker import DatePicker
 from time_picker import TimePicker
 from order_adjust import OrderAdjust
-from overlays import HelpOverlay
+from overlays import HelpOverlay, FunctionOverlay
 
 IntegerInDecrementInput = IntegerAdjustInput  # Compatibility with old ugly name
 LoadingIndicator = LoadingBar

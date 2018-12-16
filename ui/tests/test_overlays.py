@@ -5,7 +5,7 @@ import unittest
 from mock import patch, Mock
 
 try:
-    from ui import Menu, HelpOverlay
+    from ui import Menu, HelpOverlay, FunctionOverlay
     from ui.base_list_ui import Canvas
     fonts_dir = "ui/fonts"
 except ImportError:
@@ -23,7 +23,7 @@ except ImportError:
         return orig_import(name, *args)
 
     with patch('__builtin__.__import__', side_effect=import_mock):
-        from overlays import HelpOverlay
+        from overlays import HelpOverlay, FunctionOverlay
         from menu import Menu
         from base_list_ui import Canvas
         fonts_dir = "../fonts"
@@ -54,6 +54,30 @@ class Testoverlays(unittest.TestCase):
 
     def test_ho_apply(self):
         overlay = HelpOverlay(lambda: True)
+        mu = Menu([], get_mock_input(), get_mock_output(), name=mu_name, config={})
+        overlay.apply_to(mu)
+        self.assertIsNotNone(overlay)
+        self.assertIsNotNone(mu)
+
+    def test_ho_keymap(self):
+        overlay = HelpOverlay(lambda: True)
+        mu = Menu([], get_mock_input(), get_mock_output(), name=mu_name, config={})
+        overlay.apply_to(mu)
+        self.assertIsNotNone(mu.keymap)
+        assert("KEY_F5" in mu.keymap)
+        assert(all([callable(v) for v in mu.keymap.values()]))
+
+    def test_fo_keymap(self):
+        overlay = FunctionOverlay([lambda: True, lambda: False])
+        mu = Menu([], get_mock_input(), get_mock_output(), name=mu_name, config={})
+        overlay.apply_to(mu)
+        self.assertIsNotNone(mu.keymap)
+        assert("KEY_F1" in mu.keymap)
+        assert("KEY_F2" in mu.keymap)
+        assert(all([callable(v) for v in mu.keymap.values()]))
+
+    def test_fo_apply(self):
+        overlay = FunctionOverlay([lambda: True, lambda: False])
         mu = Menu([], get_mock_input(), get_mock_output(), name=mu_name, config={})
         overlay.apply_to(mu)
         self.assertIsNotNone(overlay)
@@ -99,9 +123,51 @@ class Testoverlays(unittest.TestCase):
         assert o.display_image.called
         assert o.display_image.call_count == 1 #One in to_foreground
 
+    def test_fo_graphical_redraw(self):
+        o = get_mock_graphical_output()
+        overlay = FunctionOverlay([lambda: True, lambda: False])
+        mu = Menu([], get_mock_input(), o, name=mu_name, config={})
+        Canvas.fonts_dir = fonts_dir
+        overlay.apply_to(mu)
+        # Exiting immediately, but we should get at least one redraw
+        def scenario():
+            mu.deactivate()  # KEY_LEFT
+            assert not mu.in_foreground
+
+        with patch.object(mu, 'idle_loop', side_effect=scenario) as p:
+            mu.activate()
+        assert o.display_image.called
+        assert o.display_image.call_count == 1 #One in to_foreground
+
     def test_ho_graphical_icon_disappears(self):
         o = get_mock_graphical_output()
         overlay = HelpOverlay(lambda: True)
+        mu = Menu([], get_mock_input(), o, name=mu_name, config={})
+        mu.idle_loop = lambda *a, **k: True
+        Canvas.fonts_dir = fonts_dir
+        overlay.apply_to(mu)
+        def activate():
+            mu.before_activate()
+            mu.to_foreground()
+            mu.idle_loop()
+            img_1 = o.display_image.call_args[0]
+            mu.idle_loop()
+            mu.refresh()
+            img_2 = o.display_image.call_args[0]
+            assert(img_1 == img_2)
+            for i in range(overlay.duration):
+                mu.idle_loop()
+            mu.refresh()
+            img_2 = o.display_image.call_args[0]
+            assert(img_1 != img_2)
+            mu.deactivate()  # KEY_LEFT
+
+        with patch.object(mu, 'activate', side_effect=activate) as p:
+            mu.activate()
+
+    def test_fo_graphical_icon_disappears(self):
+        o = get_mock_graphical_output()
+        overlay = FunctionOverlay([lambda: True, lambda: False])
         mu = Menu([], get_mock_input(), o, name=mu_name, config={})
         mu.idle_loop = lambda *a, **k: True
         Canvas.fonts_dir = fonts_dir
