@@ -18,3 +18,4 @@ requests
 responses
 kmodpy
 psutil
+PyRIC
