@@ -33,7 +33,7 @@ def format_for_screen(data, screen_width, break_words=False, linebreak=None):
             screen_data.append(current_data)
             current_data = ""
             if linebreak is not None:
-                screen_data.append(linebreak) 
+                screen_data.append(linebreak)
         elif len(word) <= screen_width-len(current_data): #Word fits on current line
             current_data += word+" "
         elif not break_words and len(word) <= screen_width:
@@ -81,6 +81,8 @@ def replace_filter_ascii(text, replace_characters=replace_characters):
     strings with Unicode characters, you'll want to use this function to filter your
     text before displaying.
     """
+    if isinstance(text, str) and not isinstance(text, unicode):
+        text = text.decode('utf-8')
     # First, developer-added exceptions
     for character, replacement in replace_characters.items():
         if character in text:

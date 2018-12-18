@@ -38,6 +38,10 @@ class TestFuncs(unittest.TestCase):
         # sneaky Russian letters
         assert(rfa(u"may I have some lооps brоther") == "may I have some loops brother")
         assert(rfa(u"may I have some lооps бrоther") == "may I have some loops brother")
+        # Testing non-Unicode strings
+        assert(rfa('\xc3\x85land Islands') == "Aland Islands")
+        # And the corresponding Unicode string, just in case
+        assert(rfa(u"Åland Islands") == "Aland Islands")
 
     def test_ffs(self):
         """Tests format_for_screen"""
