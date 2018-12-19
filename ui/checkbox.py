@@ -1,6 +1,6 @@
 from copy import copy
 
-from base_list_ui import BaseListUIElement, TextView, EightPtView, SixteenPtView, to_be_foreground
+from base_list_ui import BaseListUIElement, to_be_foreground
 from helpers import setup_logger
 
 logger = setup_logger(__name__, "warning")
@@ -49,14 +49,6 @@ class Checkbox(BaseListUIElement):
             self.exit_entry = copy(self.exit_entry)
             self.exit_entry[0] = final_button_name
         BaseListUIElement.__init__(self, *args, **kwargs)
-
-    def set_views_dict(self):
-        self.views = {
-            "PrettyGraphicalView": ChSixteenPtView,  # Left for compatibility
-            "SimpleGraphicalView": ChEightPtView,  # Left for compatibility
-            "SixteenPtView": ChSixteenPtView,
-            "EightPtView": ChEightPtView,
-            "TextView": ChTextView}
 
     def get_return_value(self):
         if self.accepted:
@@ -107,7 +99,7 @@ class Checkbox(BaseListUIElement):
 
 class CheckboxRenderingMixin(object):
     """A mixin to add checkbox-specific functions and overrides to views.
-    If you're making your own view for BaseListUIElements and want it to 
+    If you're making your own view for BaseListUIElements and want it to
     work with checkbox UI elements, you will probably want to use this mixin,
     like this:
 
@@ -121,9 +113,9 @@ class CheckboxRenderingMixin(object):
     def entry_is_checked(self, entry_num):
         return self.el.states[entry_num]
 
-    def render_displayed_entry_text(self, entry_num):
+    def render_displayed_entry_text(self, entry_num, contents):
         rendered_entry = []
-        entry = self.el.contents[entry_num][0]
+        entry = contents[entry_num][0]
         active = self.entry_is_active(entry_num)
         checked = self.entry_is_checked(entry_num)
         display_columns = self.get_fow_width_in_chars()
@@ -161,13 +153,4 @@ class CheckboxRenderingMixin(object):
         return rendered_entry
 
 
-class ChEightPtView(CheckboxRenderingMixin, EightPtView):
-    pass
-
-
-class ChTextView(CheckboxRenderingMixin, TextView):
-    pass
-
-
-class ChSixteenPtView(CheckboxRenderingMixin, SixteenPtView):
-    pass
+Checkbox.view_mixin = CheckboxRenderingMixin

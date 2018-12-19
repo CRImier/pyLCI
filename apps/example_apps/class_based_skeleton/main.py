@@ -21,7 +21,6 @@ class SkeletonApp(ZeroApp):
 
     def on_start(self):
         """gets called when application is activated in the main menu"""
-        super(SkeletonApp, self).on_start()  # call to base class method. Not mandatory but good practice
         Menu(self.main_menu_contents, self.i, self.o, "Skeleton app menu").activate()
 
     def call_internal(self):

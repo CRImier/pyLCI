@@ -5,7 +5,7 @@ import unittest
 from mock import patch, Mock
 
 try:
-    from ui.base_list_ui import BaseListUIElement, BaseListBackgroundableUIElement, Canvas
+    from ui.base_list_ui import BaseListUIElement, Canvas
     fonts_dir = "ui/fonts"
 except ImportError as e:
     print("Absolute imports failed, trying relative imports")
@@ -22,7 +22,7 @@ except ImportError as e:
         return orig_import(name, *args)
 
     with patch('__builtin__.__import__', side_effect=import_mock):
-        from base_list_ui import Canvas, BaseListUIElement, BaseListBackgroundableUIElement
+        from base_list_ui import Canvas, BaseListUIElement
         fonts_dir = "../fonts"
 
 def get_mock_input():
@@ -58,7 +58,7 @@ class TestBaseListUIElement(unittest.TestCase):
 
     def test_properties(self):
         """tests in_background property"""
-        element = BaseListBackgroundableUIElement([["Option", "option"]], get_mock_input(), get_mock_output(), name=el_name, config={})
+        element = BaseListUIElement([["Option", "option"]], get_mock_input(), get_mock_output(), name=el_name, config={})
         assert(element.in_background == False)
         assert(not element._in_background.isSet())
         element.in_background = True
@@ -86,7 +86,7 @@ class TestBaseListUIElement(unittest.TestCase):
         # Checking at the start of the list
         def scenario():
             el.deactivate()  # KEY_LEFT
-            assert not el.in_foreground
+            assert not el.is_active
 
         with patch.object(el, 'idle_loop', side_effect=scenario) as p:
             return_value = el.activate()
@@ -97,7 +97,7 @@ class TestBaseListUIElement(unittest.TestCase):
             for i in range(num_elements):
                 el.move_down()  # KEY_DOWN x3
             el.deactivate()  # KEY_LEFT
-            assert not el.in_foreground
+            assert not el.is_active
 
         with patch.object(el, 'idle_loop', side_effect=scenario) as p:
             return_value = el.activate()
@@ -112,10 +112,10 @@ class TestBaseListUIElement(unittest.TestCase):
         # Exiting immediately, but we should get at least one redraw
         def scenario():
             el.deactivate()  # KEY_LEFT
-            assert not el.in_foreground
+            assert not el.is_active
 
         with patch.object(el, 'idle_loop', side_effect=scenario) as p:
-            return_value = el.activate()
+            el.activate()
         assert o.display_image.called
         assert o.display_image.call_count == 1 #One in to_foreground
 
@@ -129,7 +129,7 @@ class TestBaseListUIElement(unittest.TestCase):
         # Checking at other elements - shouldn't return
         def scenario():
             el.select_entry()  # KEY_ENTER
-            assert el.in_foreground  # Should still be active
+            assert el.is_active  # Should still be active
             el.deactivate()  # because is not deactivated yet and would idle loop otherwise
 
         with patch.object(el, 'idle_loop', side_effect=scenario) as p:
@@ -141,7 +141,7 @@ class TestBaseListUIElement(unittest.TestCase):
             for i in range(num_elements):
                 el.move_down()  # KEY_DOWN x3
             el.select_entry()  # KEY_ENTER
-            assert not el.in_foreground
+            assert not el.is_active
 
         with patch.object(el, 'idle_loop', side_effect=scenario) as p:
             return_value = el.activate()
@@ -159,6 +159,7 @@ class TestBaseListUIElement(unittest.TestCase):
 
         def scenario():
             el.deactivate()
+            assert not el.is_active
 
         with patch.object(el, 'idle_loop', side_effect=scenario) as p:
             el.activate()
@@ -169,6 +170,57 @@ class TestBaseListUIElement(unittest.TestCase):
         assert o.display_data.called
         assert o.display_data.call_count == 1 #One in to_foreground
         assert o.display_data.call_args[0] == ('A0', 'A1', 'A2', 'Back')
+
+    def test_append_exit_works(self):
+        """
+        Tests whether the BaseListUIElement stops appending "Exit" when append_exit
+        is set to false.
+        """
+        contents = [["A" + str(i), "a" + str(i)] for i in range(3)]
+        i = get_mock_input()
+        o = get_mock_output()
+        el = BaseListUIElement(contents, i, o, name=el_name, append_exit=False, config={})
+
+        def scenario():
+            el.deactivate()
+            assert not el.is_active
+
+        with patch.object(el, 'idle_loop', side_effect=scenario) as p:
+            el.activate()
+
+        assert o.display_data.call_args[0] == ('A0', 'A1', 'A2')
+
+    def test_content_update_maintains_pointers(self):
+        """Tests whether the BaseListUIElement outputs data on screen when it's ran"""
+        i = get_mock_input()
+        o = get_mock_output()
+
+        contents = [["A" + str(x), "a" + str(x)] for x in range(10)]
+        el = BaseListUIElement(contents, i, o, name=el_name, config={})
+
+        def scenario():
+            for x in range(5):
+                el.move_down()
+
+            # Now, we should be on element "A3"
+            assert o.display_data.called
+            assert o.display_data.call_count == 6 # 1 in to_foreground, 5 in move_down
+            assert o.display_data.call_args[0] == ('A0', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7')
+
+            # Setting shorter contents and scrolling some more
+            el.set_contents([["A" + str(x), "a" + str(x)] for x in range(3)])
+            el.move_up()
+            for x in range(3):
+                el.move_down()
+            assert o.display_data.call_count == 6 + 2 # 1 in move_up, 3 in move_down but 2 didn't work
+            assert o.display_data.call_args[0] == ('A0', 'A1', 'A2', 'Back')
+
+            el.deactivate()
+            assert not el.is_active
+
+        with patch.object(el, 'idle_loop', side_effect=scenario) as p:
+            el.activate()
+
 
 if __name__ == '__main__':
     unittest.main()

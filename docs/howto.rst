@@ -178,6 +178,65 @@ through a really long list of options to choose from, here's what you can do:
         print(choices)
     # {"replace_on_change":True, "delete_in_destination":False, "save_settings":False}
 
+-----------
+
+Indicate progress
+-----------------
+
+If you're going to launch a background task, it's best if the user knows what's
+happening. The simplest way is to print something on the screen:
+
+.. code-block:: python
+
+    from ui import PrettyPrinter
+    ...
+    PrettyPrinter("Scanning ports", i, o, 5)
+    results = scan_ports()
+    print_results(results)
+
+Or, a little bit prettier:
+
+.. code-block:: python
+
+    from ui import Canvas
+    ...
+    c = Canvas(o)
+    c.centered_text("Scanning ports")
+    c.display()
+    results = scan_ports()
+    print_results(results)
+
+Or, even better - use a LoadingIndicator UI element, which is much prettier and
+user-friendly:
+
+.. code-block:: python
+
+    from ui import LoadingIndicator
+    ...
+    with LoadingIndicator(i, o, message="Scanning ports"):
+        results = scan_ports()
+    print_results(results)
+
+What if you actually know how much of the task is completed? Then, you can use a
+ProgressBar, which is going to show the user a percentage of the task completed:
+
+.. code-block:: python
+
+    from ui import ProgressBar
+    ...
+    ports = [22, 23, 80, 111, 443]
+    with ProgressBar(i, o, message="Scanning ports") as pb:
+        process = PortScanner(ports)
+        process.start()
+        while process.is_ongoing():
+            current_port_index = ports.index(process.current_port)
+            # Calculating progress from 0 to 100
+            progress = int( 100.0/len(ports) * current_port_index )
+            pb.progress = progress
+    print_results(results)
+
+-----------
+
 Pick a file/directory
 ---------------------
 
@@ -232,6 +291,46 @@ that would signal the task to stop.
     # Can also be stopped from another thread with ``task.stop()``
     eh = ExitHelper(i, cb=task.stop).start()
     task.run() # Will run until the task is not stopped
+
+Auto-regenerating menu contents
+-------------------------------
+
+Say, you have a menu with an entry that toggles an LED on and off. You want to make it
+user-friendly, so you want to display the status of the LED in that same menu, and
+update the menu entry label to reflect the LED status. In other words, let's say your
+LED is off by default, so your menu has an "LED off" entry, and when the user presses it,
+it turns the LED on and changes the entry text to "LED on". Here's how you can do that:
+
+.. code-block:: python
+
+    led_status = False
+
+    def enable_led():
+        global led_status
+        ... # Toggle the GPIO or something
+        led_status = True
+
+    def disable_led():
+        global led_status
+        ... # Toggle the GPIO or something
+        led_status = False
+
+    def callback():
+        def gen_menu_contents():
+            led_entry = ["LED on", disable_led] if led_status else ["LED off", enable_led]
+            return [led_entry]
+        Menu([], i, o, "LED app menu", contents_hook=gen_menu_contents).activate()
+
+``gen_menu_contents`` will be called each time ``Menu`` goes to foreground (``activate``,
+after finishing executing a callback etc.) and should return
+the new ``contents`` for the ``Menu``, which the ``Menu`` will then set as its new
+``contents``. Obviously, it's best if it doesn't run too long, otherwise your ``Menu``
+won't be responsive.
+
+.. note:: This also allows you to make a "Refresh" entry in your menu - just
+          generate contents using ``contents_hook`` (even if they're static) and
+          add a ``["Refresh"]`` entry, which won't have a callback but will trigger
+          a refresh nevertheless.
 
 Draw on the screen
 ==================
@@ -441,7 +540,7 @@ submit a bugreport to you!
         # .exception will also log the details of the exception after your message
 
 Add names to your UI elements
-=============================
+-----------------------------
 
 UI elements aren't perfect - sometimes, they themselves cause exceptions. In this case,
 we'll want to be able to debug them, to make sure we understand what was it that went
@@ -460,16 +559,57 @@ For example:
 
     from ui import Menu
     ...
-    Menu(contents, i, o, name="Main menu of Frobulator app".activate()
+    Menu(contents, i, o, name="Main menu of Frobulator app").activate()
 
 .. note:: The only UI elements that don't support the ``name`` attribute are Printers:
           ``Printer``, ``GraphicsPrinter`` and ``PrettyPrinter``
+
+Use failsafe item fetching
+--------------------------
+
+When working with dictionaries, it's tempting to write straightforward
+code that uses straightforward item fetching, like ``my_dict["key1"]``.
+However, in certain cases this might fail - the most obvious one is, what if the dictionary
+is outside of your control and you end up with a dict that doesn't have the "key1" key?
+It will throw ``KeyError``, of course, stopping your code from reaching the goal.
+Here's how to fetch items from untrusted dictionaries:
+
+.. code-block:: python
+
+     value = my_dict.get("key1", "default_value")
+
+Of course, it's not needed everywhere, but it does make sense to do it when, say,
+working with user input, data generated by other software out of your control,
+and even config files (they're there to be changed, which means they will be broken
+at some point). To sum up, this is a great trick for foolproofing your app.
 
 Config (and other) files
 ========================
 
 Read JSON from a config file located in the app directory
 ---------------------------------------------------------
+
+You'll want to configure your application from time to time - typically,
+to allow users to change your app's configuration, but it's also useful for storing
+user-specific data, allow other software to change your app's configuration, or
+simply a way to hide all those magic numbers in your code out of plain sight.
+
+JSON dictionaries are a good fit in that they convert to Python objects pretty easily
+- you can store strings, numbers, dictionaries and lists. A suggested config file for
+an app would be a dictionary (an "object" in JSON terms), here's an example of how
+that could look like for a music player app, one to needs to store a few settings that
+were set by the user:
+
+.. code-block:: json
+
+    {
+     "shuffle":true,
+     "repeat":true,
+     "last_directory":"/home/pi/music",
+     "disabled_plugins":["lyrics", "thumbnails"]
+    }
+
+Here's the simplest way to read data from a config file located in an app's directory:
 
 .. code-block:: python
 
@@ -479,10 +619,18 @@ Read JSON from a config file located in the app directory
     local_path = local_path_gen(__name__)
     config = read_config(local_path(config_filename))
 
+Do you have more requirements for your config file = like, easily saving it, restoring
+it on failure, as well as some primitive migrations as you update your app? The next
+example will probably work for your needs.
+
 ------------
 
-Read a config file with an easy "save" function and "restore to defaults on error" check
-----------------------------------------------------------------------------------------
+Read a config file with "restore to defaults on error", migrations and save_config() method
+-------------------------------------------------------------------------------------------
+
+There's, however, a way to work with config files that you're the most likely to use.
+It allows you to read an app-specific config, restore it to defaults if the reading/parsing
+fails for some reason and get a convenient ``save_config()`` method to save it.
 
 .. code-block:: python
 
@@ -503,6 +651,38 @@ To save the config, use ``save_config(config)`` from anywhere in your app.
              function, you will likely want to use Python ``global`` keyword in order
              to make sure your reassignment will actually work.
 
+In addition
+to that, if the highest level of your config is a dictionary, it allows you to perform small
+migrations - specifically, auto-adding new keys with default values to the config as your
+app is updated to rely on those. 
+
+Say, here's a config you have, created from the default config and then changed
+by the user:
+
+.. code-block:: json
+
+    {
+      "your":"non-default",
+      "config":"to_use"
+    }
+
+And here's a new default config, with additional ``"but_now"`` key that you roll out through
+an app upgrade:
+
+.. code-block:: python
+
+    default_config = '{"your":"default", "config":"to_use", "but_now":"its_updated"}'
+
+The resulting config received from ``read_or_create_config`` will look like this:
+
+.. code-block:: json
+
+    {
+      "your":"non-default",
+      "config":"to_use",
+      "but_now":"its_updated"
+    }
+
 ------------
 
 "Read", "save" and "restore" - in a class-based app
@@ -522,7 +702,7 @@ To save the config, use ``save_config(config)`` from anywhere in your app.
         def __init__(self, *args, **kwargs):
             ZeroApp.__init__(self, *args, **kwargs)
             self.config = read_or_create_config(local_path(self.config_filename), self.default_config, self.menu_name+" app")
-            self.save_config = save_config_method_gen(local_path(self.config_filename))
+            self.save_config = save_config_method_gen(self, local_path(self.config_filename))
 
 To save the config, use ``self.save_config()`` from anywhere in your app class.
 
@@ -705,3 +885,106 @@ place in the interface.
 The ``request_global_keymap`` call returns a dictionary with a keyname as a key for each
 requested callback, with ``True`` as the value if the key was set or, if an exception was
 raised while setting the , an exception object.
+
+Readability
+===========
+
+When writing a ZPUI app, keep in mind that other people might refer to it afterwards,
+trying to understand how it works (possibly, also debugging).
+
+How to arrange imports
+----------------------
+
+One step towards readability is rearranging your import statements. Here's something you might
+start with:
+
+.. code-block:: python
+
+    from ui import GraphicsPrinter # ZPUI libraries
+    import json # built-in library
+    import smbus # external library, needs to be installed
+    ...
+
+A more readable way to arrange imports is:
+
+* Built-in libraries
+* ZPUI libraries
+* External libraries (that you need to install from pip/apt)
+* Local imports (something in the same folder as your ``main.py``
+
+It's best if you separate these groups with a single empty line. This is especially
+helpful once your app grows big. Here's an example:
+
+.. code-block:: python
+
+    import json # built-in
+
+    from ui import GraphicsPrinter # ZPUI
+
+    import smbus # external
+
+    import smbus_funcs # local
+    ...
+
+Frequent mistakes
+=================
+
+Using variables named ``i`` in a function-based app
+---------------------------------------------------
+
+If you decided to go the easy way and make a function-based app, do keep in mind
+that they require global variables named ``i`` and ``o``. Therefore, if you use
+constructs like this in a function:
+
+.. code-block:: python
+    :class: warning
+
+    for i in range(8):
+        print(i) # do stuff
+
+the local ``i`` will overwrite the global ``i`` variable **locally**. So, this code:
+
+.. code-block:: python
+    :class: hint
+
+    for i in range(8):
+        print(i)
+    Printer("Done!", i, o) # this will fail
+
+will fail. Solutions? Don't use ``i`` as a local name in the same function where you'll
+need to access the global ``i``. Also, class-based apps won't suffer from this (admittedly
+minor) flaw.
+
+Dynamically building lists/dictionaries with lambdas
+----------------------------------------------------
+
+If you're dynamically building contents of a menu/listbox/whatever (for example, using
+a ``for`` loop or a list/dictionary comprehension), you will likely need to use lambdas,
+like this:
+
+.. code-block:: python
+    :class: warning
+
+    interfaces = ["eth0", "wlan0", "lo0"]
+    # No! Bad!
+    menu_contents = [[if_name, lambda: show_ip(if_name)] for if_name in interfaces]
+    Menu(menu_contents, i, o).activate()
+
+However, the lambdas constructed will not refer to the ``if_name`` by value - instead,
+it's referred by its name and the value will only be resolved at runtime when the
+lambda is called. So, all the ``show_ip`` lambdas constructed will execute with
+``"lo0"`` as their first argument (the last value that the ``if_name`` variable
+was assigned). There's a workaround - you can create a temporary keyword argument
+for the lambda with the default value of ``if_name``:
+
+.. code-block:: python
+    :class: hint
+
+    interfaces = ["eth0", "wlan0", "lo0"]
+    # The right way
+    menu_contents = [[if_name, lambda x=if_name: show_ip(x)] for if_name in interfaces]
+    Menu(menu_contents, i, o).activate()
+
+This way, a temporary variable is created, and the ``if_name`` variable is copied into
+it by value at list generation time, so the resulting lambda will use the proper value
+as the positional argument.

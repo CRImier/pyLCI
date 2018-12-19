@@ -119,6 +119,14 @@ class Context(object):
         self.o._clear()
         return self.event_cb(self.name, "finished")
 
+    def signal_background(self):
+        """
+        Signals to the ContextManager that the application wants to go into background.
+        Currently, has the same effect as ``signal_finished`` - except it doesn't
+        clear the screen.
+        """
+        return self.event_cb(self.name, "background")
+
     def list_contexts(self):
         """
         Returns a list of all available contexts, containing:
@@ -130,12 +138,26 @@ class Context(object):
         """
         return self.event_cb(self.name, "list_contexts")
 
-    def signal_background(self):
+    def request_exclusive(self):
         """
-        Signals to the ContextManager that the application wants to go into background.
-        Currently, has the same effect as ``signal_finished``.
+        Request exclusive context switch for an app. You can't switch away from it until
+        the switch is rescinded.
         """
-        return self.event_cb(self.name, "background")
+        return self.event_cb(self.name, "request_exclusive")
+
+    def rescind_exclusive(self):
+        """
+        Rescind exclusive context switch from the app. Will only work if such a context is
+        already requested.
+        """
+        return self.event_cb(self.name, "rescind_exclusive")
+
+    def exclusive_status(self):
+        """
+        Rescind exclusive context switch from the app. Will only work if such a context is
+        already requested.
+        """
+        return self.event_cb(self.name, "exclusive_status")
 
     def request_switch(self, requested_context=None):
         """
@@ -198,8 +220,10 @@ class Context(object):
 class ContextManager(object):
 
     current_context = None
+    exclusive_context = None
     fallback_context = "main"
     initial_contexts = ["main"]
+    allowed_exclusive_contexts = ["apps/lockscreen"]
 
     def __init__(self):
         self.contexts = {}
@@ -270,7 +294,7 @@ class ContextManager(object):
         """
         This is a non-thread-safe context switch function. Not to be used directly
         - is only for internal usage. In case an exception is raised, sets things as they
-        were before and re-raises the exception - in the worst case, 
+        were before and re-raises the exception - in the worst case,
         """
         logger.info("Switching to {} context".format(context_alias))
         previous_context = self.current_context
@@ -288,7 +312,7 @@ class ContextManager(object):
                 raise
             self.current_context = previous_context
             # Passing the exception back to the caller
-            raise 
+            raise
         # Activating the context - restoring everything if it fails
         try:
             self.contexts[context_alias].activate()
@@ -358,7 +382,17 @@ class ContextManager(object):
         proxy_o = OutputProxy(context_alias)
         self.input_processor.register_proxy(proxy_i)
         self.screen.init_proxy(proxy_o)
+        self.set_default_callbacks_on_proxy(context_alias, proxy_i)
         return proxy_i, proxy_o
+
+    def set_default_callbacks_on_proxy(self, context_alias, proxy_i):
+        """
+        Sets some default callbacks on the input proxy. For now, the only
+        callback is the KEY_LEFT maskable callback exiting the app -
+        in case the app is hanging for some reason.
+        """
+        flc = lambda x=context_alias: self.failsafe_left_handler(x)
+        proxy_i.maskable_keymap["KEY_LEFT"] = flc
 
     def get_io_for_context(self, context_alias):
         """
@@ -371,6 +405,13 @@ class ContextManager(object):
         Returns name of the previous context for a given context. If ``pop``
         is set to True, also removes the name from the internal dictionary.
         """
+        # WORKAROUND, future self - TODO please reconsider
+        # (after you move between different contexts a lot and trigger something,
+        # say, use ZeroMenu to switch to main context,
+        # pressing LEFT in main context can move you to another context,
+        # probably because of context switcing mechanics and previous context stuff.
+        if context_alias == self.fallback_context:
+            return context_alias
         if pop:
             prev_context = self.previous_contexts.pop(context_alias, self.fallback_context)
         else:
@@ -380,9 +421,19 @@ class ContextManager(object):
             prev_context = self.fallback_context
         return prev_context
 
+    def failsafe_left_handler(self, context_alias):
+        """
+        This function is set up as the default maskable callback for new contexts,
+        so that users can exit on LEFT press if the context is waiting.
+        """
+        previous_context = self.get_previous_context(context_alias)
+        if not previous_context:
+            previous_context = self.fallback_context
+        self.switch_to_context(previous_context)
+
     def signal_event(self, context_alias, event, *args, **kwargs):
         """
-        A callback for context objects to use to signal/receive events - 
+        A callback for context objects to use to signal/receive events -
         providing an interface for apps to interact with the context manager.
         This function will, at some point in the future, be working through
         RPC.
@@ -417,6 +468,26 @@ class ContextManager(object):
             d["app_name"] = context_alias
             d["full_name"] = "{}-{}".format(context_alias, d["name"])
             self.am.register_action(**d)
+        elif event == "request_exclusive":
+            if self.exclusive_context and self.exclusive_context != context_alias:
+                logger.warning("Context {} requested exclusive switch but {} already got it".format(context_alias, self.exclusive_context))
+                return False
+            if context_alias in self.allowed_exclusive_contexts:
+                logger.warning("Context {} requested exclusive switch, allowing".format(context_alias))
+                self.exclusive_context = context_alias
+                self.switch_to_context(context_alias)
+                return True
+            else:
+                logger.warning("Context {} requested exclusive switch - not allowed!".format(context_alias))
+                return False
+        elif event == "rescind_exclusive":
+            if self.exclusive_context == context_alias:
+                self.exclusive_context = None
+                return self.signal_event("finished", context_alias)
+            else:
+                return False
+        elif event == "exclusive_status":
+            return True if self.exclusive_context else False
         elif event ==  "get_actions":
             return self.am.get_actions()
         elif event == "list_contexts":
@@ -437,11 +508,15 @@ class ContextManager(object):
         elif event == "request_switch":
             # As usecases appear, we will likely want to do some checks here
             logger.info("Context switch requested by {} app".format(context_alias))
+            if self.exclusive_context:
+                return False
             return self.switch_to_context(context_alias)
         elif event == "request_switch_to":
             # If app is not the one active, should we honor its request?
             # probably not, but we might want to do something about it
             # to be considered
+            if self.exclusive_context:
+                return False
             new_context = args[0]
             logger.info("Context switch to {} requested by {} app".format(new_context, context_alias))
             return self.switch_to_context(new_context)

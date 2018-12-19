@@ -60,25 +60,30 @@ def list_units(unit_filter_field = None, unit_filter_values = []):
     return units
 
 
-def action_unit(action, unit):
+def action_unit(action, unit, mode="fail", en_dis_runtime=False, en_force=False):
     # See D-Bus documentation (linked above) for argument explanation
     job = False
 
     try:
         if action is "start":
-            job = systemd.StartUnit(unit, "fail")
+            job = systemd.StartUnit(unit, mode)
         elif action is "stop":
-            job = systemd.StopUnit(unit, "fail")
+            job = systemd.StopUnit(unit, mode)
         elif action is "restart":
-            job = systemd.RestartUnit(unit, "fail")
+            job = systemd.RestartUnit(unit, mode)
         elif action is "reload":
-            job = systemd.ReloadUnit(unit, "fail")
+            job = systemd.ReloadUnit(unit, mode)
+        elif action is "enable":
+            job = systemd.EnableUnitFiles([unit], en_dis_runtime, en_force)
+        elif action is "disable":
+            job = systemd.DisableUnitFiles([unit], en_dis_runtime)
         elif action is "reload-or-restart":
-            job = systemd.ReloadOrRestartUnit(unit, "fail")
+            job = systemd.ReloadOrRestartUnit(unit, mode)
         else:
-            logger.error("Unknown action '{}' attempted on unit '{}'".format(action, unit))
+            raise ValueError("Unknown action '{}' attempted on unit '{}'".format(action, unit))
     except Exception as e:
         logger.exception("Exception while trying to run '{}' on unit '{}'".format(action, unit))
+        raise
 
     return job
 

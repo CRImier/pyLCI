@@ -4,6 +4,7 @@ from subprocess import check_output
 
 """
 
+Bus 001 Device 008: ID 239a:d1ed
 Bus 001 Device 015: ID 045e:00db Microsoft Corp. Natural Ergonomic Keyboard 4000 V1.0
 Bus 001 Device 014: ID 046d:c52f Logitech, Inc. Unifying Receiver
 Bus 001 Device 013: ID 0b95:772a ASIX Electronics Corp. AX88772A Fast Ethernet
@@ -23,7 +24,9 @@ def lsusb():
     output = check_output(["lsusb"])
     for line in [line.strip(' ') for line in output.split('\n') if line.strip(' ')]:
         location, description = line.split(':', 1)
-        id_str, vid_pid, name = description.strip(' ').split(' ', 2)
+        id_str, vid_pid_name = description.strip(' ').split(' ', 1)
+        vid_pid = vid_pid_name.split(' ', 1)[0]
+        name = vid_pid_name.split(' ', 1)[1] if len(vid_pid_name.split(' ', 1)) > 1 else None
         bus_str, bus, device_str, device = location.split(' ', 3)
         bus = str(int(bus, 10))
         device = str(int(device, 10))
@@ -33,9 +36,3 @@ def lsusb():
 
 if __name__ == "__main__":
     print(lsusb())
-
-
-
-
-
-

@@ -15,8 +15,10 @@ UI elements:
    * :ref:`ui_canvas`
    * :ref:`ui_menu`
    * :ref:`ui_printer`
-   * :ref:`ui_refresher`
+   * :ref:`ui_listbox`
+   * :ref:`ui_path_picker`
    * :ref:`ui_checkbox`
+   * :ref:`ui_refresher`
    * :ref:`ui_number_input`
    * :ref:`ui_char_input`
 
@@ -27,7 +29,9 @@ UI elements:
    ui/canvas.rst
    ui/menu.rst
    ui/printer.rst
-   ui/refresher.rst
+   ui/listbox.rst
+   ui/path_picker.rst
    ui/checkbox.rst
+   ui/refresher.rst
    ui/number_input.rst
    ui/char_input.rst

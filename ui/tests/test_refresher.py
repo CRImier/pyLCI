@@ -53,6 +53,15 @@ class TestRefresher(unittest.TestCase):
         for key_name, callback in r.keymap.iteritems():
             self.assertIsNotNone(callback)
 
+    def test_string_keymap(self):
+        """Tests the keymap entries"""
+        k = {"KEY_LEFT":'refresh', "KEY_RIGHT":'deactivate'}
+        r = Refresher(lambda: "Hello", get_mock_input(), get_mock_output(), keymap=k, name=r_name)
+        for key_name, callback in r.keymap.iteritems():
+            self.assertIsNotNone(callback)
+        assert (r.keymap["KEY_LEFT"] == r.refresh)
+        assert (r.keymap["KEY_RIGHT"] == r.deactivate)
+
     def test_exit_label_leakage(self):
         """tests whether the keymaps (and keymap entries) of different Refresher leak one into another"""
         i = get_mock_input()

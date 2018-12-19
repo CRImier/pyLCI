@@ -57,7 +57,7 @@ def connect_to_network(network_info):
         raise MenuExitException
     #Offering to enter a password
     else:
-        input = UniversalInput(i, o, message="Password:", name="WiFi password enter UI element")
+        input = UniversalInput(i, o, message="Password:", name="WiFi password enter UI element", charmap="password")
         password = input.activate()
         if password is None:
             return False

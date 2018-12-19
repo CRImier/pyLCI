@@ -30,5 +30,4 @@ Namespaces are one honking great idea - let's do more of those!
         self.text_reader = TextReader(zen_of_python, i, o, self.menu_name)
 
     def on_start(self):
-        super(TextReaderExample, self).on_start()
         self.text_reader.activate()

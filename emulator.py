@@ -15,6 +15,7 @@ hardcoded values in EmulatorProxy =)
 """
 
 from multiprocessing import Process, Pipe
+from threading import Lock
 from time import sleep
 
 import luma.emulator.device
@@ -39,19 +40,23 @@ def get_emulator():
 
 class EmulatorProxy(object):
 
-    width = 128
-    height = 64
     device_mode = "1"
     char_width = 6
     char_height = 8
     type = ["char", "b&w-pixel"]
 
-    def __init__(self):
-        self.device = type("MockDevice", (), {"mode":"1", "size":(128, 64)})
+    def __init__(self, mode="1", width=128, height=64):
+        self.width = width
+        self.height = height
+        self.mode = mode
+        self.device = type("MockDevice", (), {"mode":self.mode, "size":(self.width, self.height)})
         self.parent_conn, self.child_conn = Pipe()
-        self.proc = Process(target=Emulator, args=(self.child_conn,))
         self.__base_classes__ = (GraphicalOutputDevice, CharacterOutputDevice)
         self.current_image = None
+        self.start_process()
+
+    def start_process(self):
+        self.proc = Process(target=Emulator, args=(self.child_conn,), kwargs={"mode":self.mode, "width":self.width, "height":self.height})
         self.proc.start()
 
     def poll_input(self, timeout=1):
@@ -95,28 +100,37 @@ class DummyCallableRPCObject(object):
 
 
 class Emulator(object):
-    def __init__(self, child_conn):
+    def __init__(self, child_conn, mode="1", width=128, height=64):
         self.child_conn = child_conn
+
+        self.width = width
+        self.height = height
 
         self.char_width = 6
         self.char_height = 8
 
-        self.cols = 128 / self.char_width
-        self.rows = 64 / self.char_height
+        self.cols = self.width / self.char_width
+        self.rows = self.height / self.char_height
 
         self.cursor_enabled = False
         self.cursor_pos = [0, 0]
         self._quit = False
 
-        emulator_attributes = {
+        self.emulator_attributes = {
             'display': 'pygame',
-            'width': 128,
-            'height': 64,
+            'width': self.width,
+            'height': self.height,
         }
 
-        Device = getattr(luma.emulator.device, 'pygame')
-        self.device = Device(**emulator_attributes)
+        self.busy_flag = Lock()
+        self.init_hw()
+        self.runner()
 
+    def init_hw(self):
+        Device = getattr(luma.emulator.device, self.emulator_attributes['display'])
+        self.device = Device(**self.emulator_attributes)
+
+    def runner(self):
         try:
             self._event_loop()
         except KeyboardInterrupt:
@@ -159,25 +173,51 @@ class Emulator(object):
     def cursor(self):
         self.cursor_enabled = True
 
-    def display_data(self, *args):
-        with canvas(self.device) as draw:
-
-            if self.cursor_enabled:
-                dims = (
-                    self.cursor_pos[0] - 1 + 2,
-                    self.cursor_pos[1] - 1,
-                    self.cursor_pos[0] + self.char_width + 2,
-                    self.cursor_pos[1] + self.char_height + 1,
-                )
-                draw.rectangle(dims, outline='white')
-
-            args = args[:self.rows]
-
-            for line, arg in enumerate(args):
-                if not isinstance(arg, basestring):
-                    raise ValueError("*args[{}] is not a string, but a {} - unacceptable!".format(line, type(arg)))
-                y = (line * self.char_height - 1) if line != 0 else 0
-                draw.text((2, y), arg, fill='white')
-
     def display_image(self, image):
+        """Displays a PIL Image object onto the display
+        Also saves it for the case where display needs to be refreshed"""
+        with self.busy_flag:
+            self.current_image = image
+            self._display_image(image)
+
+    def _display_image(self, image):
         self.device.display(image)
+
+    def display_data_onto_image(self, *args, **kwargs):
+        """
+        This method takes lines of text and draws them onto an image,
+        helping emulate a character display API.
+        """
+        cursor_position = kwargs.pop("cursor_position", None)
+        if not cursor_position:
+            cursor_position = self.cursor_pos if self.cursor_enabled else None
+        args = args[:self.rows]
+        draw = canvas(self.device)
+        d = draw.__enter__()
+        if cursor_position:
+            dims = (self.cursor_pos[0] - 1 + 2, self.cursor_pos[1] - 1, self.cursor_pos[0] + self.char_width + 2,
+                    self.cursor_pos[1] + self.char_height + 1)
+            d.rectangle(dims, outline="white")
+        for line, arg in enumerate(args):
+            y = (line * self.char_height - 1) if line != 0 else 0
+            d.text((2, y), arg, fill="white")
+        return draw.image
+
+    def display_data(self, *args):
+        """Displays data on display. This function does the actual work of printing things to display.
+
+        ``*args`` is a list of strings, where each string corresponds to a row of the display, starting with 0."""
+        image = self.display_data_onto_image(*args)
+        with self.busy_flag:
+            self.current_image = image
+            self._display_image(image)
+
+    def home(self):
+        """Returns cursor to home position. If the display is being scrolled, reverts scrolled data to initial position.."""
+        self.setCursor(0, 0)
+
+    def clear(self):
+        """Clears the display."""
+        draw = canvas(self.device)
+        self.display_image(draw.image)
+        del draw

@@ -16,11 +16,13 @@ Menu UI element
     ]
     Menu(menu_contents, i, o, "My menu").activate()
 
+``Menu`` always returns ``None``, so you don't need to check its return value.
+
 .. automodule:: ui
  
 .. autoclass:: Menu
     :show-inheritance:
-    :members: __init__,activate,deactivate,set_contents,print_name,print_contents,pointer,in_background,in_foreground
+    :members: __init__,activate,deactivate,set_contents
     
 .. autoclass:: MenuExitException
     :show-inheritance:

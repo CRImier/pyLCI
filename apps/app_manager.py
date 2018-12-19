@@ -4,7 +4,7 @@ import traceback
 
 from apps import zero_app
 from helpers import setup_logger
-from ui import Printer, Menu
+from ui import Printer, Menu, HelpOverlay, TextReader
 
 logger = setup_logger(__name__, "info")
 
@@ -16,7 +16,7 @@ class ListWithMetadata(list):
 class AppManager(object):
     subdir_menus = {}
     """ Example of subdir_menus:
-    {'apps/network_apps': <ui.menu.Menu instance at 0x7698ac10>, 
+    {'apps/network_apps': <ui.menu.Menu instance at 0x7698ac10>,
     ...
     'apps/system_apps': <ui.menu.Menu instance at 0x7698abc0>}
     """
@@ -38,6 +38,9 @@ class AppManager(object):
     def load_all_apps(self):
         base_menu = Menu([], self.i, self.o, "Main app menu",
                                     exitable=False)  # Main menu for all applications.
+        main_menu_help = "ZPUI main menu. Navigate the folders to get to different apps, or press KEY_PROG2 (anywhere in ZPUI) to get to the context menu."
+        tr = TextReader(main_menu_help, self.i, self.o, h_scroll=False)
+        HelpOverlay(tr.activate).apply_to(base_menu)
         base_menu.exit_entry = ["Exit", "exit"]
         base_menu.process_contents()
         self.subdir_menus[self.app_directory] = base_menu
@@ -204,7 +207,7 @@ class AppManager(object):
 
 
 def app_walk(base_dir):
-    """Example of app_walk(directory):  
+    """Example of app_walk(directory):
     [('./apps', ['ee_apps', 'media_apps', 'test', 'system_apps', 'skeleton', 'network_apps'], ['__init__.pyc', '__init__.py']),
     ('./apps/ee_apps', ['i2ctools'], ['__init__.pyc', '__init__.py']),
     ('./apps/ee_apps/i2ctools', [], ['__init__.pyc', '__init__.py', 'main.pyc', 'main.py']),

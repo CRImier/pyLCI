@@ -122,6 +122,7 @@ class TestCheckbox(unittest.TestCase):
             cb.select_entry()  # KEY_ENTER
             assert cb.in_foreground  # Should still be active
             cb.deactivate()  # because is not deactivated yet and would idle loop otherwise
+            assert not cb.in_foreground  # Should no longer be active
 
         with patch.object(cb, 'idle_loop', side_effect=scenario) as p:
             return_value = cb.activate()

@@ -33,13 +33,20 @@ class Listbox(BaseListUIElement):
         Kwargs:
 
             * ``name``: listbox name which can be used internally and for debugging.
+            * ``selected``: value (that is, ``entry[1]``) of the element to be selected. If no element with this value is found, this is ignored.
             * ``entry_height``: number of display rows one listbox entry occupies.
             * ``append_exit``: appends an "Exit" entry to listbox.
 
         """
+        selected = kwargs.pop("selected", None)
+        exitable = kwargs.pop("exitable", None)
         BaseListUIElement.__init__(self, *args, **kwargs)
         if len(self.contents) == 0:
             raise ValueError("A listbox can't be empty!")
+        if selected:
+            self.go_to_value(selected)
+        if exitable:
+            logger.warning("Listbox ignores the 'exitable' argument!")
 
     def get_return_value(self):
         if self.selected_entry is None:
@@ -50,6 +57,7 @@ class Listbox(BaseListUIElement):
             return self.contents[self.selected_entry][1]
 
     def process_contents(self):
+        BaseListUIElement.process_contents(self)
         # Replacing string-based entry labels with single-element lists
         for i, entry in enumerate(self.contents):
             if isinstance(entry, basestring):
@@ -63,3 +71,12 @@ class Listbox(BaseListUIElement):
         logger.debug("entry selected")
         self.selected_entry = self.pointer
         self.deactivate()
+
+    def go_to_value(self, value):
+        """
+        Moves the pointer to the first entry which has the value passed.
+        """
+        for i, entry in enumerate(self.contents):
+            if (len(entry) > 1 and entry[1] == value) or entry[0] == value:
+                self.start_pointer = i
+                return
