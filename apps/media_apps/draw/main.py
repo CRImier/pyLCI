@@ -2,7 +2,7 @@ from time import sleep
 from copy import copy
 from collections import OrderedDict
 
-from ui import Canvas, Listbox, PrettyPrinter
+from ui import Canvas, Listbox, PrettyPrinter, FunctionOverlay
 from ui.base_ui import BaseUIElement
 from ui.utils import to_be_foreground
 from helpers import flatten, Singleton
@@ -188,6 +188,7 @@ class DrawingBoard(BaseUIElement):
         BaseUIElement.__init__(self, i, o, "Drawing app's drawing board", override_left=False)
         self.reset()
         self.sleep_time = 0.01
+        self.view_wrappers = []
 
     def idle_loop(self):
         self.display_tool_image()
@@ -195,7 +196,13 @@ class DrawingBoard(BaseUIElement):
 
     @to_be_foreground
     def display_tool_image(self):
-        self.o.display_image(self.tool.get_current_image())
+        image = self.tool.get_current_image()
+        for wrapper in self.view_wrappers:
+            image = wrapper(image)
+        self.o.display_image(image)
+
+    def add_view_wrapper(self, wrapper):
+        self.view_wrappers.append(wrapper)
 
     def reset(self):
         self.coords = [0, 0]
@@ -269,4 +276,6 @@ class DrawingApp(ZeroApp):
 
     def on_start(self):
         PrettyPrinter("No image saving implemented yet!", self.i, self.o, 3)
-        DrawingBoard(self.i, self.o).activate()
+        board = DrawingBoard(self.i, self.o)
+        FunctionOverlay(["back", board.pick_tools], labels=["Exit", "Tools"]).apply_to(board)
+        board.activate()

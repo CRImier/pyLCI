@@ -72,15 +72,11 @@ class HelpOverlay(BaseOverlayWithTimeout):
         ui_el.set_default_keymap()
 
     def wrap_view(self, ui_el):
-        def wrapper_wrapper(func):
-            @wraps(func)
-            def wrapper(*args, **kwargs):
-                image = func(*args, **kwargs)
-                if isinstance(image, Image):
-                    image = self.modify_image_if_needed(ui_el, image)
-                return image
-            return wrapper
-        ui_el.add_view_wrapper(wrapper_wrapper)
+        def wrapper(image):
+            if isinstance(image, Image):
+                image = self.modify_image_if_needed(ui_el, image)
+            return image
+        ui_el.add_view_wrapper(wrapper)
 
     def push_callback(self, callback):
         self.callbacks.append(callback)

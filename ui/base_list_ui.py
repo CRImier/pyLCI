@@ -314,7 +314,7 @@ class BaseListUIElement(BaseUIElement):
         return self.contents
 
     def add_view_wrapper(self, wrapper):
-        self.view.wrapper = wrapper(self.view.wrapper)
+        self.view.wrappers.append(wrapper)
 
     def refresh(self):
         """ A placeholder to be used for BaseUIElement. """
@@ -328,12 +328,12 @@ class TextView(object):
     first_displayed_entry = 0
     scrolling_speed_divisor = 4
     # Default wrapper
-    wrapper = lambda o, *a: a
 
     def __init__(self, o, entry_height, ui_element):
         self.o = o
         self.entry_height = entry_height
         self.el = ui_element
+        self.wrappers = []
         self.setup_scrolling()
 
     def setup_scrolling(self):
@@ -462,8 +462,10 @@ class TextView(object):
         logger.debug("{}: refreshed data on display".format(self.el.name))
         self.fix_pointers_on_refresh()
         displayed_data = self.get_displayed_text(self.el.get_displayed_contents())
+        for wrapper in self.wrappers:
+            displayed_data = wrapper(displayed_data)
         self.o.noCursor()
-        self.o.display_data(*self.wrapper(*displayed_data))
+        self.o.display_data(*displayed_data)
         self.o.setCursor(self.get_active_line_num(), 0)
         self.o.cursor()
 
@@ -475,8 +477,6 @@ class EightPtView(TextView):
     x_scrollbar_offset = 5
     scrollbar_y_offset = 1
     font = None
-    # Default wrapper only returns an image
-    wrapper = lambda o, *a: a[0]
 
     def __init__(self, *args, **kwargs):
         self.full_width_cursor = kwargs.pop("full_width_cursor", False)
@@ -492,7 +492,10 @@ class EightPtView(TextView):
     def refresh(self):
         logger.debug("{}: refreshed data on display".format(self.el.name))
         self.fix_pointers_on_refresh()
-        self.o.display_image(self.wrapper(self.get_displayed_image()))
+        image = self.get_displayed_image()
+        for wrapper in self.wrappers:
+            image = wrapper(image)
+        self.o.display_image(image)
 
     def scrollbar_needed(self, contents):
         # No scrollbar if all the entries fit on the screen
