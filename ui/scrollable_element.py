@@ -147,7 +147,7 @@ class TextReader(object):
 
         self._content = text.splitlines() if h_scroll else format_for_screen(text, text_width)
         self._content_width = max([len(line) for line in self._content])
-        self.horizontal_scroll = h_scroll if h_scroll else self._content_width > self.o.cols
+        self.horizontal_scroll = h_scroll if h_scroll is not None else self._content_width > self.o.cols
         self._content_height = len(self._content)
 
         self.in_foreground = False
