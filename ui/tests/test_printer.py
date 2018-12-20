@@ -1,11 +1,12 @@
 """test for Printer functions"""
 import os
 import unittest
+from PIL import Image
 
 from mock import patch, Mock
 
 try:
-    from ui import Printer, GraphicsPrinter
+    from ui import Canvas, Printer, GraphicsPrinter
 except ImportError:
     print("Absolute imports failed, trying relative imports")
     os.sys.path.append(os.path.dirname(os.path.abspath('.')))
@@ -22,6 +23,7 @@ except ImportError:
 
     with patch('__builtin__.__import__', side_effect=import_mock):
         from printer import Printer, GraphicsPrinter
+	from canvas import Canvas
 
 def get_mock_input():
     return Mock()
@@ -31,35 +33,36 @@ def get_mock_output(rows=8, cols=21):
     m.configure_mock(rows=rows, cols=cols, type=["char"])
     return m
 
-def get_mock_graphical_output(width, height, mode="1", cw=6, ch=8):
+def get_mock_graphical_output(width=128, height=64, mode="1", cw=6, ch=8):
     m = get_mock_output(rows=width/cw, cols=height/ch)
     m.configure_mock(width=width, height=height, device_mode=mode, char_height=ch, char_width=cw, type=["b&w-pixel"])
     return m
 
 class TestPrinter(unittest.TestCase):
     """tests Printer functions"""
-
     def test_runs_with_none_i(self):
         """tests constructor"""
         assert Printer("test", None, get_mock_output(), 0) == None
 
-    @unittest.skip("Need to feed it an image or something")
     def test_graphical_printer(self):
-        GraphicsPrinter("test", None, get_mock_output(128, 64), 0)
+	o = get_mock_graphical_output()
+	image = Canvas(o).get_image()
+        GraphicsPrinter(image, None, get_mock_graphical_output(), 0)
+	assert(image.size == (128, 64))
         assert o.display_image.called
-	GraphicsPrinter("test", None, get_mock_output(128, 125), 0)
-        assert o.display_image.called
-	GraphicsPrinter("test", None, get_mock_output(128, 38), 0)
-        assert o.display_image.called
-	GraphicsPrinter("test", None, get_mock_output(56, 75), 0)
-	assert o.display_image.called
-	GraphicsPrinter("test", None, get_mock_output(31, 64), 0)
-        assert o.display_image.called
-	GraphicsPrinter("test", None, get_mock_output(25, 64), 0)
-        assert o.display_image.called
-	GraphicsPrinter("test", None, get_mock_output(167, 153), 0)
-        assert o.display_image.called
-        assert o.display_image.call_count == 1
+	GraphicsPrinter("test", None, get_mock_graphical_output(128, 125), 0)
+        assert m.display_image.called
+	GraphicsPrinter("test", None, get_mock_graphical_output(128, 38), 0)
+        assert m.display_image.called
+	GraphicsPrinter("test", None, get_mock_graphical_output(56, 75), 0)
+	assert m.display_image.called
+	GraphicsPrinter("test", None, get_mock_graphical_output(31, 64), 0)
+        assert m.display_image.called
+	GraphicsPrinter("test", None, get_mock_graphical_output(25, 64), 0)
+        assert m.display_image.called
+	GraphicsPrinter("test", None, get_mock_graphical_output(167, 153), 0)
+        assert m.display_image.called
+        assert m.display_image.call_count == 1
 
     def test_shows_data_on_screen(self):
         """Tests whether the Printer outputs data on screen when it's ran"""
