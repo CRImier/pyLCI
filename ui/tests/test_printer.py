@@ -33,36 +33,34 @@ def get_mock_output(rows=8, cols=21):
     m.configure_mock(rows=rows, cols=cols, type=["char"])
     return m
 
-def get_mock_graphical_output(width=128, height=64, mode="1", cw=6, ch=8):
+def get_mock_graphical_output(width, height, mode="1", cw=6, ch=8):
     m = get_mock_output(rows=width/cw, cols=height/ch)
     m.configure_mock(width=width, height=height, device_mode=mode, char_height=ch, char_width=cw, type=["b&w-pixel"])
+    global o
+    o=m
     return m
+
+def easy_graphics_test(image, width, height):
+	GraphicsPrinter(image, None, get_mock_graphical_output(width, height), 0)
+	o.display_image.called
+        assert(image.size == (width, height)
 
 class TestPrinter(unittest.TestCase):
     """tests Printer functions"""
     def test_runs_with_none_i(self):
         """tests constructor"""
-        assert Printer("test", None, get_mock_output(), 0) == None
+	image = Canvas(get_mock_graphical_output(128, 64)).get_image()
+        assert GraphicsPrinter(image, None, get_mock_graphical_output(128, 64), 0) == None
 
     def test_graphical_printer(self):
-	o = get_mock_graphical_output()
-	image = Canvas(o).get_image()
-        GraphicsPrinter(image, None, get_mock_graphical_output(), 0)
-	assert(image.size == (128, 64))
-        assert o.display_image.called
-	GraphicsPrinter("test", None, get_mock_graphical_output(128, 125), 0)
-        assert m.display_image.called
-	GraphicsPrinter("test", None, get_mock_graphical_output(128, 38), 0)
-        assert m.display_image.called
-	GraphicsPrinter("test", None, get_mock_graphical_output(56, 75), 0)
-	assert m.display_image.called
-	GraphicsPrinter("test", None, get_mock_graphical_output(31, 64), 0)
-        assert m.display_image.called
-	GraphicsPrinter("test", None, get_mock_graphical_output(25, 64), 0)
-        assert m.display_image.called
-	GraphicsPrinter("test", None, get_mock_graphical_output(167, 153), 0)
-        assert m.display_image.called
-        assert m.display_image.call_count == 1
+	image = Canvas(get_mock_graphical_output(128,64)).get_image()
+        easy_graphics_test(image, 128, 64)
+	easy_graphics_test(image, 128, 121)
+	easy_graphics_test(image, 128, 37)
+	easy_graphics_test(image, 56, 75)
+	easy_graphics_test(image, 31, 64)
+	easy_graphics_test(image, 167, 153)
+        assert o.display_image.call_count == 1
 
     def test_shows_data_on_screen(self):
         """Tests whether the Printer outputs data on screen when it's ran"""
