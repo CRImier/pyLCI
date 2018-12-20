@@ -234,15 +234,13 @@ def fit_image_to_screen(image, o):
         other_size = int((float(smaller_image_side)*float(bigger_side_percent))) # Working out smaller side length
         image = image.resize((bigger_side,other_size), Image.ANTIALIAS) # Resizes the image to the calculated dimensions to fit the screen and stick to the aspect ratio using a $
     elif (o.width, o.height) == image.size: # Checks if screen dimensions and exactly the same as image dimensions
-	logger.info("No resizing needed and no borders needed")
+	pass
     elif (o.width == image_width and o.height < image_height) or (o.height == image_height and o.height < image_height):
-        logger.info("No resizing needed but borders needed")
+        pass
     else: # This should happen if the screen is smaller on one or both sides than the image
-	logger.info("Using the thumbnail script")
         size = o.width, o.height
         image.thumbnail(size, Image.ANTIALIAS) # Resizes the image sticking to the aspect ratio using
     if (o.width, o.height) != image.size:
-	logger.info("Borders being added")
         left = top = right = bottom = 0
         width, height = image.size
         if o.width > width:
