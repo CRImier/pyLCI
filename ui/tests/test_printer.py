@@ -57,8 +57,11 @@ class TestPrinter(unittest.TestCase):
         easy_graphics_test(image,128,64)
 	easy_graphics_test(image,128,121)
 	easy_graphics_test(image,128,37)
-	easy_graphics_test(image,56,75)
+	easy_graphics_test(image,143,64)
 	easy_graphics_test(image,31,64)
+	easy_graphics_test(image,56,75)
+	easy_graphics_test(image,139,37)
+	easy_graphics_test(image,53,42)
 	easy_graphics_test(image,167,153)
 
     def test_shows_data_on_screen(self):
