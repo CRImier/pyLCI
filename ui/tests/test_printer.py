@@ -43,7 +43,8 @@ def easy_graphics_test(image, width, height):
     GraphicsPrinter(image, None, o, 0)
     assert o.display_image.called
     resized_image = o.display_image.call_args[0][0]
-    assert resized_image.size == width, height
+    print(resized_image.size)
+    assert resized_image.size == (width, height)
 
 class TestPrinter(unittest.TestCase):
     """tests Printer functions"""
