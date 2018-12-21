@@ -42,9 +42,8 @@ def easy_graphics_test(image, width, height):
     o = get_mock_graphical_output(width, height)
     GraphicsPrinter(image, None, o, 0)
     assert o.display_image.called
-    image = o.display_image.call_args()
-    print(image.width)
-
+    resized_image = o.display_image.call_args[0][0]
+    assert resized_image.size == width, height
 
 class TestPrinter(unittest.TestCase):
     """tests Printer functions"""
@@ -54,12 +53,12 @@ class TestPrinter(unittest.TestCase):
 
     def test_graphical_printer(self):
 	image = Canvas(get_mock_graphical_output(128,64)).get_image()
-        easy_graphics_test(image, 128, 64)
-	easy_graphics_test(image, 128, 121)
-	easy_graphics_test(image, 128, 37)
-	easy_graphics_test(image, 56, 75)
-	easy_graphics_test(image, 31, 64)
-	easy_graphics_test(image, 167, 153)
+        easy_graphics_test(image,128,64)
+	easy_graphics_test(image,128,121)
+	easy_graphics_test(image,128,37)
+	easy_graphics_test(image,56,75)
+	easy_graphics_test(image,31,64)
+	easy_graphics_test(image,167,153)
 
     def test_shows_data_on_screen(self):
         """Tests whether the Printer outputs data on screen when it's ran"""
