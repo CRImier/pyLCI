@@ -29,7 +29,6 @@ def get_mock_input():
     return Mock()
 
 def get_mock_output(rows=8, cols=21):
-    global m
     m = Mock()
     m.configure_mock(rows=rows, cols=cols, type=["char"])
     return m
@@ -40,9 +39,10 @@ def get_mock_graphical_output(width, height, mode="1", cw=6, ch=8):
     return m
 
 def easy_graphics_test(image, width, height):
-    GraphicsPrinter(image, None, get_mock_graphical_output(width, height), 0)
-    assert m.display_image.called
-    image = m.display_image.called_args()
+    o = get_mock_graphical_output(width, height)
+    GraphicsPrinter(image, None, o, 0)
+    assert o.display_image.called
+    image = o.display_image.call_args()
     print(image.width)
 
 
@@ -50,8 +50,7 @@ class TestPrinter(unittest.TestCase):
     """tests Printer functions"""
     def test_runs_with_none_i(self):
         """tests constructor"""
-	image = Canvas(get_mock_graphical_output(128, 64)).get_image()
-        assert GraphicsPrinter(image, None, get_mock_graphical_output(128, 64), 0) == None
+	assert Printer("test", None, get_mock_output(), 0) == None
 
     def test_graphical_printer(self):
 	image = Canvas(get_mock_graphical_output(128,64)).get_image()
@@ -61,7 +60,6 @@ class TestPrinter(unittest.TestCase):
 	easy_graphics_test(image, 56, 75)
 	easy_graphics_test(image, 31, 64)
 	easy_graphics_test(image, 167, 153)
-	assert m.display_image.call_count == 1
 
     def test_shows_data_on_screen(self):
         """Tests whether the Printer outputs data on screen when it's ran"""
