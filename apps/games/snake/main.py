@@ -21,6 +21,8 @@ choice_ongoing = False
 speed = 0.1
 level = 2
 scores = []
+width = None
+height = None
 
 local_path = local_path_gen(__name__)
 
@@ -42,7 +44,7 @@ def callback():
 	splash()
 	load_scores()
 	global width, height
-        width = o.width; height = o.height
+	width = o.width; height = o.height
 	mc = [  ["Start", start_game],
 		["Difficulty", change_difficulty],
 		["Highscores", see_highscores]]
