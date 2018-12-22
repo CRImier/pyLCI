@@ -21,6 +21,8 @@ choice_ongoing = False
 speed = 0.1
 level = 2
 scores = []
+width = None
+height = None
 
 local_path = local_path_gen(__name__)
 
@@ -41,6 +43,8 @@ def callback():
 	#Gets called when app is selected from menu
 	splash()
 	load_scores()
+	global width, height
+	width = o.width; height = o.height
 	mc = [  ["Start", start_game],
 		["Difficulty", change_difficulty],
 		["Highscores", see_highscores]]
@@ -114,9 +118,9 @@ def confirm_exit():
 def perdu():
 	global lose
 	for segment in snake:
-		if not(0<segment[0]<128):
+		if not(0<segment[0]<width):
 			lose = True
-		if not(0<segment[1]<64):
+		if not(0<segment[1]<height):
 			lose = True
 	for segment in snake[:-1]:
 		if snake[-1] == segment:
@@ -147,18 +151,18 @@ def eat_apple():
 
 def create_apple():
 	global applex, appley
-	applex = randint(5,128-5) #to limit the difficulty -> no apple to close to the border
-	appley = randint(5,64-5)
+	applex = randint(5,width-5) #to limit the difficulty -> no apple to close to the border
+	appley = randint(5,height-5)
 	while (applex, appley) in snake:
 		# Will regenerate the apple x and y until they're no longer one of the snake points
 		# At some point, it *might* be close to impossible to generate a point, since the snake will be so long
 		# TODO: think of how to work around that? Maybe limit the length and then increase the speed ?
-		applex = randint(5,128-5)
-		appley = randint(5,64-5)
+		applex = randint(5,width-5)
+		appley = randint(5,height-5)
 
 def draw_field():
 	c = Canvas(o)
-	c.rectangle((0, 0, 127, 63))
+	c.rectangle((0, 0, width-1, height-1))
 	c.point(snake)
 	if not(applex and appley):
 		create_apple()
