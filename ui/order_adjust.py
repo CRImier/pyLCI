@@ -2,6 +2,7 @@ from helpers import setup_logger
 logger = setup_logger(__name__, "warning")
 
 from base_list_ui import BaseListUIElement, to_be_foreground
+from entry import Entry
 
 class OrderAdjust(BaseListUIElement):
     """Implements an UI element to change ordering of a list of things.
@@ -13,6 +14,8 @@ class OrderAdjust(BaseListUIElement):
       Entry is a list, where:
          * ``entry[0]`` (entry's label) is usually a string which will be displayed in the UI, such as "Option 1". If ``entry_height`` > 1, can be a list of strings, each of those strings will be shown on a separate display row.
          * ``entry[1]`` (entry's value) is the value to be returned when entry is selected. If it's not supplied, entry's label is returned instead.
+
+      You can also pass ``Entry`` objects as entries - ``text`` will be used as label and and ``name`` will be used as name.
 
       *If you want to set contents after the initalisation, please, use set_contents() method.*
     * ``pointer``: currently selected entry's number in ``self.contents``.
@@ -53,7 +56,10 @@ class OrderAdjust(BaseListUIElement):
                                                         if entry != self.accept_entry]
 
     def get_entry_value(self, entry):
-        return entry[1] if len(entry) > 1 else entry[0]
+        if isinstance(entry, Entry):
+            return entry.name if entry.name is not None else entry.text
+        else:
+            return entry[1] if len(entry) > 1 else entry[0]
 
     def process_contents(self):
         # Replacing string-based entry labels with single-element lists

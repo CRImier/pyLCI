@@ -5,7 +5,7 @@ import unittest
 from mock import patch, Mock
 
 try:
-    from ui import Checkbox
+    from ui import Checkbox, Entry
     from ui.base_list_ui import Canvas
     fonts_dir = "ui/fonts"
 except ImportError:
@@ -25,6 +25,7 @@ except ImportError:
     with patch('__builtin__.__import__', side_effect=import_mock):
         from checkbox import Checkbox
         from base_list_ui import Canvas
+        from entry import Entry
         fonts_dir = "../fonts"
 
 def get_mock_input():
@@ -97,8 +98,16 @@ class TestCheckbox(unittest.TestCase):
 
     def test_graphical_display_redraw(self):
         num_elements = 3
-        o = get_mock_graphical_output()
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        self.graphical_display_redraw_runner(contents)
+
+    def test_graphical_display_redraw_with_entries(self):
+        num_elements = 3
+        contents = [Entry("A" + str(i), name="a" + str(i)) for i in range(num_elements)]
+        self.graphical_display_redraw_runner(contents)
+
+    def graphical_display_redraw_runner(self, contents):
+        o = get_mock_graphical_output()
         cb = Checkbox(contents, get_mock_input(), o, name=cb_name, config={})
         Canvas.fonts_dir = fonts_dir
         # Exiting immediately, but we should get at least one redraw
@@ -114,6 +123,14 @@ class TestCheckbox(unittest.TestCase):
     def test_enter_on_last_returns_right(self):
         num_elements = 3
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        self.enter_on_last_returns_right_runner(contents, num_elements)
+
+    def test_enter_on_last_returns_right_with_entries(self):
+        num_elements = 3
+        contents = [Entry("A" + str(i), name="a" + str(i)) for i in range(num_elements)]
+        self.enter_on_last_returns_right_runner(contents, num_elements)
+
+    def enter_on_last_returns_right_runner(self, contents, num_elements):
         cb = Checkbox(contents, get_mock_input(), get_mock_output(), name=cb_name, config={})
         cb.refresh = lambda *args, **kwargs: None
 
@@ -145,6 +162,15 @@ class TestCheckbox(unittest.TestCase):
         """Tests whether the Checkbox outputs data on screen when it's ran"""
         num_elements = 3
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        self.shows_data_on_screen_runner(contents)
+
+    def test_shows_data_on_screen_with_entries(self):
+        """Tests whether the Checkbox outputs data on screen when it gets entries in the contents"""
+        num_elements = 3
+        contents = [Entry("A" + str(i), name="a" + str(i)) for i in range(num_elements)]
+        self.shows_data_on_screen_runner(contents)
+
+    def shows_data_on_screen_runner(self, contents):
         i = get_mock_input()
         o = get_mock_output()
         cb = Checkbox(contents, i, o, name=cb_name, config={})
@@ -161,6 +187,7 @@ class TestCheckbox(unittest.TestCase):
         assert o.display_data.called
         assert o.display_data.call_count == 1 #One in to_foreground
         assert o.display_data.call_args[0] == (' A0', ' A1', ' A2', ' Accept')
+
 
 if __name__ == '__main__':
     unittest.main()

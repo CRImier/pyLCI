@@ -5,7 +5,7 @@ import unittest
 from mock import patch, Mock
 
 try:
-    from ui import Listbox
+    from ui import Listbox, Entry
     from ui.base_list_ui import Canvas
     fonts_dir = "ui/fonts"
 except ImportError:
@@ -24,6 +24,7 @@ except ImportError:
 
     with patch('__builtin__.__import__', side_effect=import_mock):
         from listbox import Listbox
+        from entry import Entry
         from base_list_ui import Canvas
         fonts_dir = "../fonts"
 
@@ -122,6 +123,14 @@ class TestListbox(unittest.TestCase):
     def test_returns_on_enter(self):
         num_elements = 3
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        self.returns_on_enter_runner(contents, num_elements, contents[0][1], contents[-1][1])
+
+    def test_returns_on_enter_entry(self):
+        num_elements = 3
+        contents = [Entry("A" + str(i), name="a" + str(i)) for i in range(num_elements)]
+        self.returns_on_enter_runner(contents, num_elements, contents[0].name, contents[-1].name)
+
+    def returns_on_enter_runner(self, contents, num_elements, exp_return1, exp_return2):
         lb = Listbox(contents, get_mock_input(), get_mock_output(), name=lb_name, config={})
         lb.refresh = lambda *args, **kwargs: None
 
@@ -132,7 +141,7 @@ class TestListbox(unittest.TestCase):
 
         with patch.object(lb, 'idle_loop', side_effect=scenario) as p:
             return_value = lb.activate()
-        assert return_value == contents[0][1]
+        assert return_value == exp_return1
 
         # Checking at the end of the list
         def scenario():
@@ -143,12 +152,21 @@ class TestListbox(unittest.TestCase):
 
         with patch.object(lb, 'idle_loop', side_effect=scenario) as p:
             return_value = lb.activate()
-        assert return_value == contents[-1][1]
+        assert return_value == exp_return2
 
     def test_selected(self):
         num_elements = 3
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
         selected = contents[1][1]
+        self.selected_runner(contents, selected)
+
+    def test_selected_entry(self):
+        num_elements = 3
+        contents = [Entry("A" + str(i), name="a" + str(i)) for i in range(num_elements)]
+        selected = contents[1].name
+        self.selected_runner(contents, selected)
+
+    def selected_runner(self, contents, selected):
         lb = Listbox(contents, get_mock_input(), get_mock_output(), selected=selected, name=lb_name, config={})
         lb.refresh = lambda *args, **kwargs: None
 
@@ -161,10 +179,19 @@ class TestListbox(unittest.TestCase):
             return_value = lb.activate()
         assert return_value == selected
 
-    def test_selected_single_el_entry(self):
+    def test_selected_single_el(self):
         num_elements = 3
         contents = [["A" + str(i)] for i in range(num_elements)]
         selected = contents[1][0]
+        self.selected_single_el_entry_runner(contents, selected)
+
+    def test_selected_single_el_entry(self):
+        num_elements = 3
+        contents = [Entry("A" + str(i)) for i in range(num_elements)]
+        selected = contents[1].text
+        self.selected_single_el_entry_runner(contents, selected)
+
+    def selected_single_el_entry_runner(self, contents, selected):
         lb = Listbox(contents, get_mock_input(), get_mock_output(), selected=selected, name=lb_name, config={})
         lb.refresh = lambda *args, **kwargs: None
 
@@ -178,9 +205,17 @@ class TestListbox(unittest.TestCase):
         assert return_value == selected
 
     def test_graphical_display_redraw(self):
-        num_elements = 1
-        o = get_mock_graphical_output()
+        num_elements = 2
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        self.graphical_display_redraw_runner(contents)
+
+    def test_graphical_display_redraw_with_entries(self):
+        num_elements = 2
+        contents = [Entry("A" + str(i), name="a" + str(i)) for i in range(num_elements)]
+        self.graphical_display_redraw_runner(contents)
+
+    def graphical_display_redraw_runner(self, contents):
+        o = get_mock_graphical_output()
         lb = Listbox(contents, get_mock_input(), o, name=lb_name, config={})
         Canvas.fonts_dir = fonts_dir
         # Exiting immediately, but we should get at least one redraw
@@ -197,6 +232,15 @@ class TestListbox(unittest.TestCase):
         """Tests whether the Listbox outputs data on screen when it's ran"""
         num_elements = 3
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        self.shows_data_on_screen_runner(contents)
+
+    def test_shows_data_on_screen_with_entries(self):
+        """Tests whether the Listbox outputs data on screen when it's ran - using entries"""
+        num_elements = 3
+        contents = [Entry("A" + str(i), name="a" + str(i)) for i in range(num_elements)]
+        self.shows_data_on_screen_runner(contents)
+
+    def shows_data_on_screen_runner(self, contents):
         i = get_mock_input()
         o = get_mock_output()
         lb = Listbox(contents, i, o, name=lb_name, config={})

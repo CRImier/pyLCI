@@ -18,6 +18,7 @@ UI elements:
    * :ref:`ui_listbox`
    * :ref:`ui_path_picker`
    * :ref:`ui_checkbox`
+   * :ref:`ui_dialogbox`
    * :ref:`ui_refresher`
    * :ref:`ui_number_input`
    * :ref:`ui_char_input`
@@ -33,6 +34,7 @@ UI elements:
    ui/listbox.rst
    ui/path_picker.rst
    ui/checkbox.rst
+   ui/dialogbox.rst
    ui/refresher.rst
    ui/number_input.rst
    ui/char_input.rst

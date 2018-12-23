@@ -6,6 +6,7 @@ from mock import patch, Mock
 
 try:
     from ui.base_list_ui import BaseListUIElement, Canvas
+    from ui import Entry
     fonts_dir = "ui/fonts"
 except ImportError as e:
     print("Absolute imports failed, trying relative imports")
@@ -23,6 +24,7 @@ except ImportError as e:
 
     with patch('__builtin__.__import__', side_effect=import_mock):
         from base_list_ui import Canvas, BaseListUIElement
+        from entry import Entry
         fonts_dir = "../fonts"
 
 def get_mock_input():
@@ -105,8 +107,16 @@ class TestBaseListUIElement(unittest.TestCase):
 
     def test_graphical_display_redraw(self):
         num_elements = 3
-        o = get_mock_graphical_output()
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        self.graphical_display_redraw_runner(contents)
+
+    def test_graphical_display_entry_redraw(self):
+        num_elements = 3
+        contents = [Entry("A" + str(i), name="a" + str(i)) for i in range(num_elements)]
+        self.graphical_display_redraw_runner(contents)
+
+    def graphical_display_redraw_runner(self, contents):
+        o = get_mock_graphical_output()
         el = BaseListUIElement(contents, get_mock_input(), o, name=el_name, config={})
         Canvas.fonts_dir = fonts_dir
         # Exiting immediately, but we should get at least one redraw
@@ -153,6 +163,15 @@ class TestBaseListUIElement(unittest.TestCase):
         """Tests whether the BaseListUIElement outputs data on screen when it's ran"""
         num_elements = 3
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        self.shows_data_on_screen_runner(contents)
+
+    def test_entry_shows_data_on_screen(self):
+        """Tests whether the BaseListUIElement outputs data on screen when it's ran"""
+        num_elements = 3
+        contents = [Entry("A" + str(i), name="a" + str(i)) for i in range(num_elements)]
+        self.shows_data_on_screen_runner(contents)
+
+    def shows_data_on_screen_runner(self, contents):
         i = get_mock_input()
         o = get_mock_output()
         el = BaseListUIElement(contents, i, o, name=el_name, config={})
@@ -170,6 +189,26 @@ class TestBaseListUIElement(unittest.TestCase):
         assert o.display_data.called
         assert o.display_data.call_count == 1 #One in to_foreground
         assert o.display_data.call_args[0] == ('A0', 'A1', 'A2', 'Back')
+
+    def test_pagedown_pageup_refresh_once(self):
+        """Tests whether the BaseListUIElement page_down and page_up only refresh the screen once."""
+        num_elements = 20
+        contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        i = get_mock_input()
+        o = get_mock_output()
+        el = BaseListUIElement(contents, i, o, name=el_name, config={})
+
+        def scenario():
+            assert o.display_data.call_count == 1 #One in to_foreground
+            el.page_down()
+            assert o.display_data.call_count == 2 #One more
+            el.page_up()
+            assert o.display_data.call_count == 3 #And one more
+            el.deactivate()
+            assert not el.is_active
+
+        with patch.object(el, 'idle_loop', side_effect=scenario) as p:
+            el.activate()
 
     def test_append_exit_works(self):
         """
