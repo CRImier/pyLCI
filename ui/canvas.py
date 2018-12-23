@@ -267,10 +267,13 @@ class Canvas(object):
         """
         image = self.image
         # "1" won't invert, need "L"
-        image = image.convert("L") if image.mode == "1" else image
-        self.image = ImageOps.invert(image)
+        if image.mode == "1":
+            image = image.convert("L")
+        image = ImageOps.invert(image)
         # If was converted to "L", setting back to "1"
-        self.image = self.image.convert("1") if self.image.mode == "L" else self.image
+        if image.mode == "L" and self.o.device_mode == "1":
+            image = image.convert("1")
+        self.image = image
         self.display_if_interactive()
 
     def display(self):
