@@ -4,6 +4,6 @@
 Utils UI Element
 #####################
 
-.. automodule:: ui.utils
+.. currentmodule:: ui.utils
 
 .. autofunction:: fit_image_to_screen
