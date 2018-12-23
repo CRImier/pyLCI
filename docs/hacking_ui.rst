@@ -45,7 +45,7 @@ If :doc:`existing UI elements <ui>` do not cover your usecase, you can also
 make your own UI elements! :doc:`Contact us <contact>` to find out how, 
 or just use the `code for existing UI elements`_ as guidelines if you feel confident.
 
-Also, check if the UI element you want is mentioned :doc:'Future plans <todo>' and `ZPUI GH issues`_- 
+Also, check if the UI element you want is mentioned :doc:`in ZPUI TODO <plans>` and `ZPUI GH issues`_- 
 there might already be progress on that front, or you might find some 
 useful guidelines.
 
