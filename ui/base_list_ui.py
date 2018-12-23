@@ -336,6 +336,7 @@ class TextView(object):
     use_mixin = True
     first_displayed_entry = 0
     scrolling_speed_divisor = 4
+    fde_increment = 1
     # Default wrapper
 
     def __init__(self, o, ui_element):
@@ -384,7 +385,7 @@ class TextView(object):
             self.first_displayed_entry = self.el.pointer
         while self.el.pointer >= self.first_displayed_entry + full_entries_shown:
             logger.debug("Pointer went too far to bottom, incrementing first_displayed_entry")
-            self.first_displayed_entry += 1
+            self.first_displayed_entry += self.fde_increment
         logger.debug("First displayed entry is {}".format(self.first_displayed_entry))
 
     def entry_is_active(self, entry_num):

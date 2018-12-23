@@ -36,6 +36,7 @@ class GridMenu(Menu):
 
 
 class GridViewMixin(object):
+        fde_increment = 3
 
 	def get_entry_count_per_screen(self):
 		return self.el.cols*self.el.rows
@@ -49,9 +50,7 @@ class GridViewMixin(object):
 		for i in copy(disp_entry_positions):
 			if i not in range(len(contents)):
 				disp_entry_positions.remove(i)
-		print(disp_entry_positions)
                 c = Canvas(self.o)
-                print("P: {} FDE: {}".format(self.el.pointer, self.first_displayed_entry))
 		c.clear()
 
 		# Calculate margins
@@ -86,12 +85,23 @@ class GridViewMixin(object):
 		return c.get_image()
 
 	def refresh(self):
+                # The following code is a dirty hack to fix navigation
+                # because I need to make base_list_ui code better
+                # at dealing with stuff like this. or maybe make GridViewMixin's
+                # own version of fix_pointers_on_refresh?
+                underflow = False
+                # Moving up, this might happen - clamping FDE
+                if self.first_displayed_entry > self.el.pointer:
+                        self.first_displayed_entry = self.el.pointer
+                        underflow = True
 		self.fix_pointers_on_refresh()
                 if self.first_displayed_entry:
+                        # Making sure FDE is divisible by the grid width
 			div, mod = divmod(self.first_displayed_entry, self.el.cols)
-			print("{}-{}".format(div, mod))
-			self.first_displayed_entry = (div)*self.el.cols
-			if mod: self.first_displayed_entry += self.el.cols
+			self.first_displayed_entry = div*self.el.cols
+                        # If we're not moving up
+			if mod and not underflow:
+                            self.first_displayed_entry += self.el.cols
 		self.o.display_image(self.draw_grid())
 
 
