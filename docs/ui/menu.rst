@@ -18,8 +18,8 @@ Menu UI element
 
 ``Menu`` always returns ``None``, so you don't need to check its return value.
 
-.. automodule:: ui
- 
+.. currentmodule:: ui
+
 .. autoclass:: Menu
     :show-inheritance:
     :members: __init__,activate,deactivate,set_contents

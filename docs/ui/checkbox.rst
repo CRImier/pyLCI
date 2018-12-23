@@ -13,7 +13,7 @@ Checkbox UI element
     ["Bananas", 'bananas']]
     selected_fruits = Checkbox(checkbox_contents, i, o).activate()
 
-.. automodule:: ui.checkbox
+.. currentmodule:: ui
  
 .. autoclass:: Checkbox
     :members: __init__,activate,deactivate,set_contents,print_name,print_contents

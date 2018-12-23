@@ -12,7 +12,7 @@ Canvas
     c.text("Hello world", (10, 20))
     c.display()
 
-.. automodule:: ui.canvas
+.. currentmodule:: ui
 
 .. autoclass:: Canvas
     :show-inheritance:
