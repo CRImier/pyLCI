@@ -45,12 +45,11 @@ If :doc:`existing UI elements <ui>` do not cover your usecase, you can also
 make your own UI elements! :doc:`Contact us <contact>` to find out how, 
 or just use the `code for existing UI elements`_ as guidelines if you feel confident.
 
-Also, check if the UI element you want is mentioned `in ZPUI TODO`_ and `ZPUI GH issues`_- 
+Also, check if the UI element you want is mentioned :doc:`in ZPUI TODO <plans>` and `ZPUI GH issues`_- 
 there might already be progress on that front, or you might find some 
 useful guidelines.
 
 .. _code for existing UI elements: https://github.com/ZeroPhone/ZPUI/tree/master/ui
-.. _in ZPUI TODO: http://zpui.readthedocs.io/en/latest/plans.html
 .. _ZPUI GH issues: https://github.com/ZeroPhone/ZPUI/issues
 
 Testing the UI
