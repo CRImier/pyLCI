@@ -9,15 +9,17 @@ logger = setup_logger(__name__, 'info')
 
 class Client():
 
-	def __init__(self, username, password=None, token=None):
+	def __init__(self, username, password=None, token=None, server="matrix.org"):
 
 		self.username = username
+		self.server = server
+		self.server_url = "https://{}".format(self.server)
 		self.token = None
 		self.logged_in = True
 
 		# Create the matrix client
 		if token == None and password != None:
-			self.matrix_client = MatrixClient("https://matrix.org")
+			self.matrix_client = MatrixClient(self.server_url)
 
 			# Try logging in the user
 			try:
@@ -35,7 +37,7 @@ class Client():
 				logger.exception("Bad URL format")
 
 		else:
-			self.matrix_client = MatrixClient("https://matrix.org", token=token, user_id=username)
+			self.matrix_client = MatrixClient(self.server_url, token=token, user_id=username)
 			self.user = User(self.matrix_client, self.matrix_client.user_id)
 
 	# Return the user's display name

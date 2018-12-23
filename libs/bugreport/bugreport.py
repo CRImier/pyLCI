@@ -1,5 +1,7 @@
 from ftplib import FTP_TLS as FTP
 from StringIO import StringIO
+from mock import Mock
+import traceback
 import zipfile
 import ssl
 import os
@@ -33,7 +35,18 @@ class BugReport(object):
     def add_text(self, text, filename):
         self.zip.writestr(filename, text)
 
-    def save_in(self, path):
+    def send_or_store(self, path, logger=Mock()):
+        try:
+            self.send()
+            return [True, self.ftp_destination]
+        except Exception as e:
+            logger.exception("Failed to send to {}!".format(self.ftp_destination))
+            bugreport.add_text(json.dumps(traceback.format_exc()), "bugreport_sending_failed.json")
+            location = self.store_in(path)
+            logger.error("Stored in {}".format(location))
+            return [False, location]
+
+    def store_in(self, path):
         full_path = os.path.join(path, self.zip_contents.name)
         self.zip.close()
         self.zip_contents.seek(0)

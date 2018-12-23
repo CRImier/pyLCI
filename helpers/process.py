@@ -15,11 +15,13 @@ class ProHelper(object):
 
     process = None
 
-    def __init__(self, command, shell = False, use_terminal = True, output_callback = None):
+    def __init__(self, command, shell = False, use_terminal = True, output_callback = None, cwd = None, popen_kwargs = None):
         self.command = command
         self.shell = shell
+        self.cwd = cwd
         self.use_terminal = use_terminal
         self.output_callback = output_callback
+        self.popen_kwargs = popen_kwargs if popen_kwargs else {}
         if self.output_callback == 'print':
             self.output_callback = self.print_output
 
@@ -30,7 +32,7 @@ class ProHelper(object):
         """
         if self.use_terminal:
             self.terminal, self.s = pty.openpty()
-            self.process = subprocess.Popen(self.command, stdin=self.s, stdout=self.s, stderr=self.s, shell=self.shell, close_fds=True)
+            self.process = subprocess.Popen(self.command, stdin=self.s, stdout=self.s, stderr=self.s, shell=self.shell, cwd=self.cwd, close_fds=True, **self.popen_kwargs)
         else:
             raise NotImplementedException
 
@@ -56,14 +58,29 @@ class ProHelper(object):
         else:
             raise NotImplementedException
 
-    def readall(self, timeout=0, readsize=1):
+    def readall_or_until(self, timeout=0, readsize=1, until=None):
         """
-        Reads all available output from the process. Timeout is 0 by default,
-        meaning that function will return immediately.
+        Reads all available output from the process, or until a character is encountered.
+        Timeout is 0 by default, meaning that function will return immediately.
         """
         output = []
         while self.output_available():
-            output.append(self.read(readsize, timeout))
+            data = self.read(readsize, timeout)
+            output.append(data)
+            if data == until:
+                break
+        return "".join(output)
+
+    def readall(self, timeout=0, readsize=1):
+        """
+        Reads all available output from the process. Timeout is 0 by default,
+        meaning that function will return immediately (unless output is a constant
+        stream of data, in which case it's best if you use ``readall_or_until``.
+        """
+        output = []
+        while self.output_available():
+            data = self.read(readsize, timeout)
+            output.append(data)
         return "".join(output)
 
     def write(self, data):
@@ -90,7 +107,7 @@ class ProHelper(object):
             time.sleep(delay)
         return True
 
-    def poll(self):
+    def poll(self, **read_kw):
         """
         This function polls the process for output (and relays it into the callback),
         as well as polls whether the process is finished.
@@ -98,15 +115,17 @@ class ProHelper(object):
         if self.process:
             self.process.poll()
             if callable(self.output_callback):
-                self.relay_output()
+                self.relay_output(**read_kw)
 
-    def relay_output(self):
+    def relay_output(self, read_type="readall", read_kw={}):
         """
         This method checks if there's output waiting to be read; if there is,
         it reads all of it and sends it to the output callback.
         """
         if self.output_available():
-            self.output_callback(self.readall(timeout=0))
+            read = getattr(self, read_type)
+            output = read(timeout=0, **read_kw)
+            self.output_callback(output)
 
     def print_output(self, data):
         """
@@ -140,6 +159,17 @@ class ProHelper(object):
         self.process.poll()
         return self.process.returncode is None
 
+    def dump_info(self):
+        self.poll()
+        ongoing = self.is_ongoing()
+        info = {"command":self.command, "is_ongoing":ongoing, "return_code":None,
+                "cwd":self.cwd, "shell":self.shell, "use_terminal":self.use_terminal,
+                "output_callback":str(self.output_callback),
+                "popen_kwargs":self.popen_kwargs }
+        if not ongoing:
+            info["return_code"] = self.get_return_code()
+        return info
+
 
 import unittest
 
@@ -162,6 +192,13 @@ class TestProHelper(unittest.TestCase):
         ph = ProHelper("false", use_terminal=True)
         ph.run_in_foreground()
         assert(ph.get_return_code() == 1)
+
+    def test_dump_info(self):
+        ph = ProHelper("false", use_terminal=True)
+        ph.run_in_foreground()
+        info = ph.dump_info()
+        assert(info["return_code"] == 1)
+        assert(info["is_ongoing"] == False)
 
     def test_launch_kill(self):
         ph = ProHelper("python", use_terminal=True, output_callback=lambda *a, **k: True)

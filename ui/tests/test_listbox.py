@@ -161,6 +161,22 @@ class TestListbox(unittest.TestCase):
             return_value = lb.activate()
         assert return_value == selected
 
+    def test_selected_single_el_entry(self):
+        num_elements = 3
+        contents = [["A" + str(i)] for i in range(num_elements)]
+        selected = contents[1][0]
+        lb = Listbox(contents, get_mock_input(), get_mock_output(), selected=selected, name=lb_name, config={})
+        lb.refresh = lambda *args, **kwargs: None
+
+        # Checking at the start of the list
+        def scenario():
+            lb.select_entry()  # KEY_ENTER
+            assert not lb.in_foreground
+
+        with patch.object(lb, 'idle_loop', side_effect=scenario) as p:
+            return_value = lb.activate()
+        assert return_value == selected
+
     def test_graphical_display_redraw(self):
         num_elements = 1
         o = get_mock_graphical_output()

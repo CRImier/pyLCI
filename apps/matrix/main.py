@@ -15,7 +15,7 @@ logger = setup_logger(__name__, "info")
 class MatrixClientApp(ZeroApp):
 
 	menu_name = "Matrix Client"
-	default_config = '{"user_id":"", "token":"", "your_other_usernames":[], "show_join_leave_messages":"True"}'
+	default_config = '{"server":"matrix.org", "user_id":"", "token":"", "your_other_usernames":[], "show_join_leave_messages":"True"}'
 	config_filename = "config.json"
 
 	client = None
@@ -27,6 +27,7 @@ class MatrixClientApp(ZeroApp):
 		self.config = read_or_create_config(local_path(self.config_filename), self.default_config, self.menu_name+" app")
 		self.save_config = save_config_method_gen(self, local_path(self.config_filename))
 
+                self.server = self.config.get("server", "matrix.org")
 		self.login_runner = BackgroundRunner(self.background_login)
 		self.login_runner.run()
 
@@ -76,13 +77,25 @@ class MatrixClientApp(ZeroApp):
 
 	def login_with_token(self):
 		try:
-			self.client = Client(self.config['user_id'], token=self.config['token'])
+			self.client = Client(self.config['user_id'], token=self.config['token'], server=self.server)
 		except MatrixRequestError as e:
 			logger.exception("Wrong or outdated token/username?")
 			logger.error(dir(e))
 			return False
 		else:
-			return self.client.logged_in
+			if self.client.logged_in:
+				# config["displayname"] might not exist in older versions of the app
+				if 'displayname' not in self.config:
+					displayname = self.config["user_id"].lstrip("@")
+					displayname = displayname.rsplit(":", 1)[0]
+                                        print(displayname)
+                                        self.config["displayname"] = displayname
+					self.save_config()
+
+				logger.info("Succesfully logged in")
+                                return True
+			else:
+				return False
 
 	def login_with_username(self):
 		# Get the required user data
@@ -92,8 +105,8 @@ class MatrixClientApp(ZeroApp):
 
 		displayname = username
 
-		# Create a matrix user id from the username, currently only ids on matrix.org are possible
-		username = "@{}:matrix.org".format(username)
+		# Create a matrix user id from the username and server from the config
+		username = "@{}:{}".format(username, self.server)
 
 		password = UniversalInput(self.i, self.o, message="Enter password", name="Matrix app password dialog", charmap="password").activate()
 		if not password:
@@ -101,7 +114,7 @@ class MatrixClientApp(ZeroApp):
 
 		# Show a beautiful loading animation while setting everything up
 		with LoadingIndicator(self.i, self.o, message="Logging in ...") as l:
-			self.client = Client(username, password=password)
+			self.client = Client(username, password=password, server=self.server)
 
 			# Store username and token
 			if self.client.logged_in:
@@ -111,6 +124,7 @@ class MatrixClientApp(ZeroApp):
 				self.save_config()
 
 				logger.info("Succesfully logged in")
+                                return True
 			else:
 				with l.paused:
 					Printer("Failed to log in", self.i, self.o)
@@ -171,7 +185,6 @@ class MatrixClientApp(ZeroApp):
 				lambda: self._change_setting(conv_key, False)] \
 				if self.config[conv_key] else ["Show join/leave messages", \
 				lambda: self._change_setting(conv_key, True)])
-			
 			return mc
 
 		Menu([], self.i, self.o, name="Matrix app settings menu", contents_hook=gen_menu_contents).activate()

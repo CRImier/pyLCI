@@ -24,7 +24,7 @@ class TestBugReport(unittest.TestCase):
     def test_save_in(self):
         br = BugReport("test.zip")
         br.add_dir_or_file("__init__.py")
-        br.save_in("/tmp")
+        br.store_in("/tmp")
         assert(os.path.isfile("/tmp/test.zip"))
         # Test if the resulting file is a ZIP file
         assert(zipfile.is_zipfile("/tmp/test.zip"))

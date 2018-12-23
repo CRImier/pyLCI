@@ -6,7 +6,7 @@ install:
   - pip install -r requirements.txt
   - pip install codecov pytest-cov responses
 script:
-  python -B -m pytest --cov=./ --doctest-modules -v --doctest-ignore-import-errors --ignore=output/drivers --ignore=input/drivers --ignore=apps/hardware_apps --ignore=apps/example_apps/fire_detector --ignore=apps/test_hardware --ignore=libs/bugreport --ignore=libs/ofono --ignore=libs/pyavrdude --ignore=libs/dkms_debug.py --ignore=libs/matrix_client/samples --ignore=docs/ --ignore=utils/
+  python -B -m pytest --cov=./ --doctest-modules -v --doctest-ignore-import-errors --ignore=output/drivers --ignore=input/drivers --ignore=apps/hardware_apps --ignore=apps/example_apps/fire_detector --ignore=apps/test_hardware --ignore=libs/ofono --ignore=libs/pyavrdude --ignore=libs/dkms_debug.py --ignore=libs/matrix_client/samples --ignore=docs/ --ignore=utils/
 branches:
   except:
     - test_branch_doug
