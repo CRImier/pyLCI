@@ -88,7 +88,7 @@ def PrettyPrinter(text, i, o, *args, **kwargs):
     Kwargs:
 
         * ``sleep_time``: Time to display each screenful of text.
-        * ``skippable``: If set, allows skipping screens by presing ENTER."""
+        * ``skippable``: If set, allows skipping screens by pressing ENTER."""
     Printer(ffs(text, o.cols), i, o, *args, **kwargs)
 
 def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
@@ -104,7 +104,7 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
     Kwargs:
 
         * ``sleep_time``: Time to display the image
-        * ``invert``: Invert the image before displaying (True by default) """
+        * ``invert``: Invert the image before displaying (True by default). """
     if isinstance(image_or_path, basestring):
         image = PIL.Image.open(image_or_path).convert('L')
     else:
