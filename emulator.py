@@ -49,6 +49,7 @@ class EmulatorProxy(object):
         self.width = width
         self.height = height
         self.mode = mode
+        self.device_mode = mode
         self.device = type("MockDevice", (), {"mode":self.mode, "size":(self.width, self.height)})
         self.parent_conn, self.child_conn = Pipe()
         self.__base_classes__ = (GraphicalOutputDevice, CharacterOutputDevice)
