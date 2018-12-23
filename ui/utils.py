@@ -212,12 +212,13 @@ class Ticker(object):
 Rect = namedtuple('Rect', ['left', 'top', 'right', 'bottom'])
 
 def fit_image_to_screen(image, o):
-    """Fits a given image to fit on any sized screen whilst maintaining the aspect ratio
+    """Fits a given image to fit on any sized screen whilst maintaining the aspect ratio.
+    Any remaining space is filled with borders. The resized image is returned as ``image``.
 
     Args:
 
-        * ``image``: Specify a PIL image here
-        * ``o``: output device object."""
+        * ``image``: A PIL image to be resized.
+        * ``o``: output device object. Used to find the width and height of the screen. """
 
     image_width, image_height = image.size
     if o.height > image_height and o.width > image.width: # Checks if the screen dimensions are equal to the image size

@@ -22,6 +22,7 @@ UI elements:
    * :ref:`ui_refresher`
    * :ref:`ui_number_input`
    * :ref:`ui_char_input`
+   * :ref:`ui_utils`
 
 .. toctree::
    :maxdepth: 1
@@ -37,3 +38,4 @@ UI elements:
    ui/refresher.rst
    ui/number_input.rst
    ui/char_input.rst
+   ui/utils.rst
