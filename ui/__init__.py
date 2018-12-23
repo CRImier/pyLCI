@@ -25,6 +25,7 @@ from date_picker import DatePicker
 from time_picker import TimePicker
 from order_adjust import OrderAdjust
 from overlays import HelpOverlay, FunctionOverlay
+from utils import fit_image_to_screen
 
 IntegerInDecrementInput = IntegerAdjustInput  # Compatibility with old ugly name
 LoadingIndicator = LoadingBar
