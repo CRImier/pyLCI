@@ -6,10 +6,11 @@ from copy import copy
 from time import sleep
 from threading import Event
 
+from entry import Entry
 from canvas import Canvas
 from helpers import setup_logger
-from utils import to_be_foreground, clamp_list_index
 from base_ui import BaseUIElement
+from utils import to_be_foreground, clamp_list_index
 
 logger = setup_logger(__name__, "warning")
 
@@ -290,13 +291,16 @@ class BaseListUIElement(BaseUIElement):
         # if not contents:
         #    raise ValueError("UI element 'contents' argument has to be set to a non-empty list!")
         for entry in contents:
-            entry_repr = entry[0]
-            if not isinstance(entry_repr, basestring) and not isinstance(entry_repr, list):
-                raise Exception("Entry labels can be either strings or lists of strings - {} is neither!".format(entry))
-            if isinstance(entry_repr, list):
-                for entry_str in entry_repr:
-                    if not isinstance(entry_str, basestring):
-                        raise Exception("List entries can only contain strings - {} is not a string!".format(entry_str))
+            if isinstance(entry, Entry):
+                pass # We got an Entry object, we don't validate those yet
+            else:
+                entry_repr = entry[0]
+                if not isinstance(entry_repr, basestring) and not isinstance(entry_repr, list):
+                    raise Exception("Entry labels can be either strings or lists of strings - {} is neither!".format(entry))
+                if isinstance(entry_repr, list):
+                    for entry_str in entry_repr:
+                        if not isinstance(entry_str, basestring):
+                            raise Exception("List entries can only contain strings - {} is not a string!".format(entry_str))
 
     def process_contents(self):
         """Processes contents for custom callbacks. Currently, only 'exit' calbacks are supported.
@@ -306,8 +310,9 @@ class BaseListUIElement(BaseUIElement):
         if self.append_exit:
             # filtering possible duplicate exit entries
             for entry in self.contents:
-                if len(entry) > 1 and entry[1] == 'exit':
-                    self.contents.remove(entry)
+                if not isinstance(entry, Entry):
+                    if len(entry) > 1 and entry[1] == 'exit':
+                        self.contents.remove(entry)
             self.contents.append(self.exit_entry)
         logger.debug("{}: contents processed".format(self.name))
 
@@ -401,8 +406,8 @@ class TextView(object):
         entries_shown = min(len(contents), full_entries_shown)
         disp_entry_positions = range(self.first_displayed_entry, self.first_displayed_entry+entries_shown)
         for entry_num in disp_entry_positions:
-            displayed_entry = self.render_displayed_entry_text(entry_num, contents)
-            displayed_data += displayed_entry
+            text_to_display = self.render_displayed_entry_text(entry_num, contents)
+            displayed_data += text_to_display
         logger.debug("Displayed data: {}".format(displayed_data))
         return displayed_data
 
@@ -438,26 +443,30 @@ class TextView(object):
         If entry representation is a list, it returns that list as the rendered entry, trimming and padding with empty strings when necessary (to match the ``entry_height``).
         """
         rendered_entry = []
-        entry = contents[entry_num][0]
+        entry = contents[entry_num]
+        if isinstance(entry, Entry):
+            text = entry.text
+        else:
+            text = entry[0]
         active = self.entry_is_active(entry_num)
         display_columns = self.get_fow_width_in_chars()
-        if type(entry) in [str, unicode]:
+        if isinstance(text, basestring):
             if active:
-                entry = self.process_active_entry(entry)
+                text = self.process_active_entry(text)
             else:
-                entry = self.process_inactive_entry(entry)
-            rendered_entry.append(entry[:display_columns])  # First part of string displayed
-            entry = entry[display_columns:]  # Shifting through the part we just displayed
+                text = self.process_inactive_entry(text)
+            rendered_entry.append(text[:display_columns])  # First part of string displayed
+            text = text[display_columns:]  # Shifting through the part we just displayed
             for row_num in range(
                     self.entry_height - 1):  # First part of string done, if there are more rows to display, we give them the remains of string
-                rendered_entry.append(entry[:display_columns])
-                entry = entry[display_columns:]
-        elif type(entry) == list:
-            entry = entry[
+                rendered_entry.append(text[:display_columns])
+                text = text[display_columns:]
+        elif type(text) == list:
+            text = text[
                     :self.entry_height]  # Can't have more arguments in the list argument than maximum entry height
-            while len(entry) < self.entry_height:  # Can't have less either, padding with empty strings if necessary
-                entry.append('')
-            return [str(entry_str)[:display_columns] for entry_str in entry]
+            while len(text) < self.entry_height:  # Can't have less either, padding with empty strings if necessary
+                text.append('')
+            return [str(entry_str)[:display_columns] for entry_str in text]
         else:
             # Something slipped past the check in set_contents
             raise Exception("Entries may contain either strings or lists of strings as their representations")

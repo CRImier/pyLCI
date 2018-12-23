@@ -6,7 +6,7 @@ from threading import Event
 from mock import patch, Mock
 
 try:
-    from ui import Menu
+    from ui import Menu, Entry
     from ui.base_list_ui import Canvas
     fonts_dir = "ui/fonts"
 except ImportError:
@@ -25,6 +25,7 @@ except ImportError:
 
     with patch('__builtin__.__import__', side_effect=import_mock):
         from menu import Menu
+        from entry import Entry
         from base_list_ui import Canvas
         fonts_dir = "../fonts"
 
@@ -133,9 +134,17 @@ class TestMenu(unittest.TestCase):
         assert return_value is None
 
     def test_graphical_display_redraw(self):
-        num_elements = 1
-        o = get_mock_graphical_output()
+        num_elements = 3
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        self.graphical_display_redraw_wrapper(contents)
+
+    def test_graphical_display_entry_redraw(self):
+        num_elements = 3
+        contents = [Entry("A" + str(i), name="a" + str(i)) for i in range(num_elements)]
+        self.graphical_display_redraw_wrapper(contents)
+
+    def graphical_display_redraw_wrapper(self, contents):
+        o = get_mock_graphical_output()
         mu = Menu(contents, get_mock_input(), o, name=mu_name, config={})
         Canvas.fonts_dir = fonts_dir
         # Exiting immediately, but we should get at least one redraw
@@ -148,13 +157,21 @@ class TestMenu(unittest.TestCase):
         assert o.display_image.called
         assert o.display_image.call_count == 1 #One in to_foreground
 
-    def test_graphical_redraw_with_eh_2(self):
+    def test_graphical_display_eh2_redraw(self):
+        num_elements = 3
+        contents = [[["A" + str(i), "B"+str(i)], "a" + str(i)] for i in range(num_elements)]
+        self.graphical_display_redraw_eh2_wrapper(contents)
+
+    def test_graphical_display_entry_eh2_redraw(self):
+        num_elements = 3
+        contents = [Entry(["A" + str(i), "B"+str(i)], name="a" + str(i)) for i in range(num_elements)]
+        self.graphical_display_redraw_eh2_wrapper(contents)
+
+    def graphical_display_redraw_eh2_wrapper(self, contents):
         """
         Tests for a bug where a menu with one two-elements-high entry would fail to render
         """
-        num_elements = 3
         o = get_mock_graphical_output()
-        contents = [[["A" + str(i), "B"+str(i)], "a" + str(i)] for i in range(num_elements)]
         mu = Menu(contents, get_mock_input(), o, name=mu_name, entry_height=2, append_exit=False, config={})
         Canvas.fonts_dir = fonts_dir
         # Exiting immediately, but we should get at least one redraw
@@ -168,13 +185,24 @@ class TestMenu(unittest.TestCase):
         assert o.display_image.call_count == 1 #One in to_foreground
 
     def test_callback_is_executed(self):
-        num_elements = 3
+        num_elements = 2
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
         cb1 = Mock()
         cb2 = Mock()
         contents[0][1] = cb1
         contents[1][1] = cb2
+        self.callback_is_executed_wrapper(contents, cb1, cb2)
 
+    def test_entry_callback_is_executed(self):
+        num_elements = 2
+        contents = [Entry("A" + str(i)) for i in range(num_elements)]
+        cb1 = Mock()
+        cb2 = Mock()
+        contents[0].cb = cb1
+        contents[1].cb = cb2
+        self.callback_is_executed_wrapper(contents, cb1, cb2)
+
+    def callback_is_executed_wrapper(self, contents, cb1, cb2):
         mu = Menu(contents, get_mock_input(), get_mock_output(), name=mu_name, config={})
         mu.refresh = lambda *args, **kwargs: None
 
@@ -198,6 +226,15 @@ class TestMenu(unittest.TestCase):
         """Tests whether the Menu outputs data on screen when it's ran"""
         num_elements = 3
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        self.shows_data_on_screen_wrapper(contents)
+
+    def test_shows_entry_data_on_screen(self):
+        """Tests whether the Menu outputs data on screen when it's ran"""
+        num_elements = 3
+        contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        self.shows_data_on_screen_wrapper(contents)
+
+    def shows_data_on_screen_wrapper(self, contents):
         i = get_mock_input()
         o = get_mock_output()
         mu = Menu(contents, i, o, name=mu_name, config={})

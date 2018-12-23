@@ -6,6 +6,7 @@ from mock import patch, Mock
 
 try:
     from ui.base_list_ui import BaseListUIElement, Canvas
+    from ui import Entry
     fonts_dir = "ui/fonts"
 except ImportError as e:
     print("Absolute imports failed, trying relative imports")
@@ -23,6 +24,7 @@ except ImportError as e:
 
     with patch('__builtin__.__import__', side_effect=import_mock):
         from base_list_ui import Canvas, BaseListUIElement
+        from entry import Entry
         fonts_dir = "../fonts"
 
 def get_mock_input():
@@ -105,8 +107,16 @@ class TestBaseListUIElement(unittest.TestCase):
 
     def test_graphical_display_redraw(self):
         num_elements = 3
-        o = get_mock_graphical_output()
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        self.graphical_display_redraw_runner(contents)
+
+    def test_graphical_display_entry_redraw(self):
+        num_elements = 3
+        contents = [Entry("A" + str(i), name="a" + str(i)) for i in range(num_elements)]
+        self.graphical_display_redraw_runner(contents)
+
+    def graphical_display_redraw_runner(self, contents):
+        o = get_mock_graphical_output()
         el = BaseListUIElement(contents, get_mock_input(), o, name=el_name, config={})
         Canvas.fonts_dir = fonts_dir
         # Exiting immediately, but we should get at least one redraw
@@ -153,6 +163,15 @@ class TestBaseListUIElement(unittest.TestCase):
         """Tests whether the BaseListUIElement outputs data on screen when it's ran"""
         num_elements = 3
         contents = [["A" + str(i), "a" + str(i)] for i in range(num_elements)]
+        self.shows_data_on_screen_runner(contents)
+
+    def test_entry_shows_data_on_screen(self):
+        """Tests whether the BaseListUIElement outputs data on screen when it's ran"""
+        num_elements = 3
+        contents = [Entry("A" + str(i), name="a" + str(i)) for i in range(num_elements)]
+        self.shows_data_on_screen_runner(contents)
+
+    def shows_data_on_screen_runner(self, contents):
         i = get_mock_input()
         o = get_mock_output()
         el = BaseListUIElement(contents, i, o, name=el_name, config={})

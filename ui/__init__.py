@@ -26,6 +26,7 @@ from time_picker import TimePicker
 from grid_menu import GridMenu
 from order_adjust import OrderAdjust
 from overlays import HelpOverlay, FunctionOverlay
+from entry import Entry
 
 IntegerInDecrementInput = IntegerAdjustInput  # Compatibility with old ugly name
 LoadingIndicator = LoadingBar
