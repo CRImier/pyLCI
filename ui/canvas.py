@@ -400,9 +400,6 @@ class Canvas(object):
         """
 
         coords = self.check_coordinates(coords)
-        # draw.bitmap seems to need RGBA instead of RGB
-        if self.image.mode == "RGB":
-            self.image = self.image.convert("RGBA")
         image_subset = self.image.crop(coords)
 
         if image_subset.mode == "1":
@@ -410,21 +407,11 @@ class Canvas(object):
             image_subset = image_subset.convert("L")
             image_subset = ImageOps.invert(image_subset)
             image_subset = image_subset.convert(self.o.device_mode)
-        elif image_subset.mode == "RGBA":
-            # PIL can't invert "RGBA" mode - need to use "RGB"
-            r, g, b, a = image_subset.split()
-            rgb_image_subset = ImageOps.invert(Image.merge("RGB", (r, g, b)))
-            rn, gn, bn = rgb_image_subset.split()
-            image_subset = Image.merge('RGBA', (rn,gn,bn,a))
-            #image_subset = image_subset.convert("RGBA")
-        else: #Unknown mode - try and invert it anyway
+        else: # Other mode - invert without workarounds
             image_subset = ImageOps.invert(image_subset)
 
         self.clear(coords)
-        self.draw.bitmap((coords[0], coords[1]), image_subset, fill=self.default_color)
-        if self.image.mode == "RGBA" and self.o.device_mode == "RGB":
-            #Convert back if it was previously converted from RGB to RGBA
-            self.image = self.image.convert("RGB")
+        self.image.paste(image_subset, (coords[0], coords[1]))
 
         self.display_if_interactive()
 
