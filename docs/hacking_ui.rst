@@ -15,9 +15,7 @@ and ZPUI logic changes, so that you don't have to have a ZeroPhone to develop
 and test your UI.
 
 It will require a Linux computer with a graphical interface running (X forwarding 
-might work, too) and Python 2.7 available. Here are `the setup and usage instructions`_.
-
-.. _the setup and usage instructions: wiki.zerophone.org/index.php/ZPUI_emulator_setup
+might work, too) and Python 2.7 available. :ref:`Here are the setup and usage instructions <emulator>`.
 
 Tweaking how the UI looks
 =========================
