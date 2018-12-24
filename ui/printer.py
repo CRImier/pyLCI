@@ -95,7 +95,7 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
     """Outputs image on the display, as soon as it's called.
     You can use either a PIL image, or a relative/absolute path
     to a suitable image. The GraphicsPrinter automatically uses
-    the fit_image_to_screen function to make sure the image can
+    the ``fit_image_to_screen`` function to make sure the image can
     display regardless or image or screen size.
 
     Args:
