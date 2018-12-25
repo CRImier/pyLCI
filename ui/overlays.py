@@ -1,6 +1,8 @@
 from functools import wraps
+from threading import Event
 
 from canvas import Canvas
+from entry import Entry
 
 from PIL import Image
 Image = Image.Image
@@ -105,6 +107,7 @@ class HelpOverlay(BaseOverlayWithTimeout):
         c.clear((str(-(self.right_offset+c.o.char_width)), self.top_offset, str(-self.right_offset), self.top_offset+c.o.char_height))
         c.text("H", ( str(-(self.right_offset+c.o.char_width+self.t_right_offset)), self.top_offset+self.t_top_offset ))
 
+
 class FunctionOverlay(HelpOverlay):
     """
     A screen overlay that hooks onto an UI element, allowing you to execute actions
@@ -147,3 +150,124 @@ class FunctionOverlay(HelpOverlay):
         last_line = "".join([label.center(half_line_length) for label in self.labels])
         c.clear((self.right_offset, str(-self.bottom_offset), c.width-self.right_offset, c.height))
         c.text(last_line, (self.right_offset, str(-self.bottom_offset)), font=self.font)
+
+
+class GridMenuSidebarOverlay(object):
+
+    def __init__(self, top_o = 0, bottom_o = 0, left_o = "-32", right_o = 0):
+        self.top_offset = top_o
+        self.bottom_offset = bottom_o
+        self.left_offset = left_o
+        self.right_offset = right_o
+
+    def apply_to(self, ui_el):
+        self.wrap_view(ui_el)
+
+    def wrap_view(self, ui_el):
+        def wrapper(image):
+            if isinstance(image, Image):
+                image = self.modify_image(ui_el, image)
+            return image
+        ui_el.add_view_wrapper(wrapper)
+
+    def modify_image(self, ui_el, image):
+        c = Canvas(ui_el.o, base_image=image)
+        c.clear((self.right_offset, self.top_offset, self.left_offset, self.bottom_offset))
+        text = self.get_current_entry_text(ui_el)
+        self.draw_sidebar(c, ui_el)
+        image = c.get_image()
+        return image
+
+    def draw_sidebar(self, c, ui_el):
+        raise NotImplementedError
+
+
+class GridMenuLabelOverlay(HelpOverlay):
+
+    def __init__(self, font = None, text_border = 2, **kwargs):
+        BaseOverlayWithTimeout.__init__(self, **kwargs)
+        self.text_border = text_border
+        self.font = font
+        self.is_clear_refresh = Event()
+
+    def get_current_entry_text(self, ui_el):
+        contents = ui_el.get_displayed_contents()
+        entry = contents[ui_el.pointer]
+        if isinstance(entry, Entry):
+            return entry.text
+        else:
+            return entry[0]
+
+    def apply_to(self, ui_el):
+        self.wrap_view(ui_el)
+        self.wrap_refresh(ui_el)
+        self.wrap_idle_loop(ui_el)
+
+    def update_state(self, ui_el):
+        if self.active:
+            self.counter += 1
+            if self.counter == self.duration:
+                self.active = False
+                self.is_clear_refresh.set()
+                ui_el.refresh()
+
+    def wrap_view(self, ui_el):
+        def wrapper(image):
+            if isinstance(image, Image):
+                image = self.modify_image_if_needed(ui_el, image)
+            return image
+        ui_el.add_view_wrapper(wrapper)
+
+    def wrap_refresh(self, ui_el):
+        refresh = ui_el.refresh
+        @wraps(refresh)
+        def wrapper():
+            if self.is_clear_refresh.isSet():
+                # This refresh is internal and done to remove the label
+                self.is_clear_refresh.clear()
+            else:
+                # This is the usual refresh - making sure we draw the label again
+                self.active = True
+                self.counter = 0
+            return refresh()
+        ui_el.refresh = wrapper
+
+    def modify_image_if_needed(self, ui_el, image):
+        if not self.active:
+            return image
+        c = Canvas(ui_el.o, base_image=image)
+        self.draw_text(c, ui_el)
+        image = c.get_image()
+        return image
+
+    def get_text_position(self, c, ui_el, text):
+        pointer = ui_el.pointer
+        fde = ui_el.view.first_displayed_entry
+        position = pointer-fde
+        entries_per_screen = ui_el.view.get_entry_count_per_screen()
+        text_bounds = c.get_text_bounds(text, font=self.font)
+        # Calculating offset from left screen edge to the clear coord start
+        left_offset = max(0, c.width/2-text_bounds[0])
+        # GridMenu-specific calculations for the left offset
+        entry_width = getattr(ui_el.view, "entry_width", 0)
+        if entry_width is None: entry_width = 0
+        cols = getattr(ui_el, "cols", 0)
+        if entry_width*cols > 0:
+            left_offset = (entry_width*cols)/2 - text_bounds[0]/2
+            left_offset = max(0, left_offset)
+        # Generic calculations again
+        # Calculating whether the label is show at the top or the bottom
+        if position / float(entries_per_screen) > 0.5:
+            # label at the top
+            clear_coords = (left_offset, 0, text_bounds[0]+left_offset, text_bounds[1])
+        else:
+            # label at the bottom
+            clear_coords = (left_offset, c.height-text_bounds[1]-self.text_border, text_bounds[0]+left_offset, c.height-1)
+        text_coords = (clear_coords[0] + self.text_border, clear_coords[1] + self.text_border)
+        return text_coords, clear_coords
+
+    def draw_text(self, c, ui_el):
+        entry_text = self.get_current_entry_text(ui_el)
+        text_coords, clear_coords = self.get_text_position(c, ui_el, entry_text)
+        c.clear(clear_coords)
+        c.text(entry_text, text_coords, font=self.font)

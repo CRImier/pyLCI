@@ -5,7 +5,7 @@ import unittest
 from mock import patch, Mock
 
 try:
-    from ui import Menu, HelpOverlay, FunctionOverlay
+    from ui import Menu, HelpOverlay, FunctionOverlay, GridMenu, GridMenuLabelOverlay
     from ui.base_list_ui import Canvas
     fonts_dir = "ui/fonts"
 except ImportError:
@@ -23,8 +23,9 @@ except ImportError:
         return orig_import(name, *args)
 
     with patch('__builtin__.__import__', side_effect=import_mock):
-        from overlays import HelpOverlay, FunctionOverlay
+        from overlays import HelpOverlay, FunctionOverlay, GridMenuLabelOverlay
         from menu import Menu
+        from grid_menu import GridMenu
         from base_list_ui import Canvas
         fonts_dir = "../fonts"
 
@@ -184,6 +185,39 @@ class Testoverlays(unittest.TestCase):
             for i in range(overlay.duration):
                 mu.idle_loop()
             mu.refresh()
+            img_2 = o.display_image.call_args[0]
+            assert(img_1 != img_2)
+            mu.deactivate()  # KEY_LEFT
+
+        with patch.object(mu, 'activate', side_effect=activate) as p:
+            mu.activate()
+
+    def test_gmlo_apply(self):
+        overlay = GridMenuLabelOverlay()
+        mu = GridMenu([], get_mock_input(), get_mock_output(), name=mu_name, config={})
+        overlay.apply_to(mu)
+        self.assertIsNotNone(overlay)
+        self.assertIsNotNone(mu)
+
+    def test_gmlo_graphical_icon_disappears(self):
+        o = get_mock_graphical_output()
+        overlay = GridMenuLabelOverlay()
+        mu = GridMenu([], get_mock_input(), o, name=mu_name, config={})
+        mu.idle_loop = lambda *a, **k: True
+        Canvas.fonts_dir = fonts_dir
+        overlay.apply_to(mu)
+        def activate():
+            mu.before_activate()
+            mu.to_foreground()
+            mu.idle_loop()
+            img_1 = o.display_image.call_args[0]
+            mu.idle_loop()
+            mu.refresh()
+            img_2 = o.display_image.call_args[0]
+            assert(img_1 == img_2)
+            for i in range(overlay.duration):
+                mu.idle_loop()
+            # An internal refresh has happened
             img_2 = o.display_image.call_args[0]
             assert(img_1 != img_2)
             mu.deactivate()  # KEY_LEFT
