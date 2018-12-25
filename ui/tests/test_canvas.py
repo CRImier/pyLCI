@@ -156,27 +156,33 @@ class TestCanvas(unittest.TestCase):
 
     def test_invert(self):
         """tests that inversion works with default display"""
+        test_image = get_image("canvas_10.png")
         o = get_mock_output()
         c = Canvas(o, name=c_name)
         c.text("Hello world", (5, 5))
         c.invert()
         assert(c.get_image().mode == o.device_mode)
+        assert(imgs_are_equal(c.get_image(), test_image))
 
     def test_invert_region_rgb(self):
-        """tests that rgb canvas inversion doesn't fail with RGB displays and returns a RGB image"""
+        """tests that rgb canvas inversion doesn't fail with RGB displays and returns a valid RGB image"""
+        test_image = get_image("canvas_6.png")
         o = get_mock_output(mode="RGB")
         c = Canvas(o, name=c_name)
         c.text("Hello world", (5, 5))
         c.invert_rect((35, 5, 80, 17))
         assert(c.get_image().mode == o.device_mode)
+        assert(imgs_are_equal(c.get_image(), test_image.convert("RGB")))
 
     def test_invert_rgb(self):
-        """tests that rgb canvas inversion doesn't fail with RGB displays and returns a RGB image"""
+        """tests that rgb canvas inversion doesn't fail with RGB displays and returns a valid RGB image"""
+        test_image = get_image("canvas_10.png")
         o = get_mock_output(mode="RGB")
         c = Canvas(o, name=c_name)
         c.text("Hello world", (5, 5))
         c.invert()
         assert(c.get_image().mode == o.device_mode)
+        assert(imgs_are_equal(c.get_image(), test_image.convert("RGB")))
 
 
 def imgs_are_equal(i1, i2):
