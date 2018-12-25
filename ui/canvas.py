@@ -420,14 +420,17 @@ class Canvas(object):
             coord_pairs[i] = self.check_coordinates(coord_pair)
         return tuple(coord_pairs)
 
-    def centered_text(self, text, font=None):
+    def centered_text(self, text, cw=None, ch=None, font=None):
         # type: str -> None
         """
         Draws centered text on the canvas. This is mostly a convenience function,
-        used in some UI elements.
+        used in some UI elements. You can also pass alternate
+        screen center values so that text is centered related to those,
+        as opposed to the real screen center.
+
         """
         font = self.decypher_font_reference(font)
-        coords = self.get_centered_text_bounds(text, font=font)
+        coords = self.get_centered_text_bounds(text, font=font, ch=ch, cw=cw)
         self.text(text, (coords.left, coords.top), font=font)
         self.display_if_interactive()
 
@@ -441,17 +444,24 @@ class Canvas(object):
         w, h = self.draw.textsize(text, font=font)
         return w, h
 
-    def get_centered_text_bounds(self, text, font=None):
+    def get_centered_text_bounds(self, text, cw=None, ch=None, font=None):
         # type: str -> Rect
         """
         Returns the coordinates for the text to be centered on the screen.
         The coordinates come wrapped in a ``Rect`` object. If you use a
-        non-default font, pass it as ``font``.
+        non-default font, pass it as ``font``. You can also pass alternate
+        screen center values so that text is centered related to those,
+        as opposed to the real screen center.
         """
         w, h = self.get_text_bounds(text, font=font)
+        # Text center width and height
         tcw = w / 2
         tch = h / 2
-        cw, ch = self.get_center()
+        # Real center width and height
+        rcw, rch = self.get_center()
+        # If no values supplied as arguments (likely), using the real ones
+        cw = cw if (cw is not None) else rcw
+        ch = ch if (ch is not None) else rch
         return Rect(cw - tcw, ch - tch, cw + tcw, ch + tch)
 
     def invert_rect(self, coords):

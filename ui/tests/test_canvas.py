@@ -101,6 +101,18 @@ class TestCanvas(unittest.TestCase):
         c.text("d", (0, ctc.top))
         assert(imgs_are_equal(c.get_image(), test_image))
 
+    def test_custom_center_centered_text_coords(self):
+        """tests the third text canvas example from howto"""
+        test_image = get_image("canvas_11.png")
+        o = get_mock_output()
+        c = Canvas(o, name=c_name)
+        ctc = c.get_centered_text_bounds("a", ch=32, cw=64)
+        c.text("a", (ctc.left, 0))
+        c.text("b", (str(ctc.left-ctc.right), ctc.top))
+        c.text("c", (ctc.left, str(ctc.top-ctc.bottom)))
+        c.text("d", (0, ctc.top))
+        assert(imgs_are_equal(c.get_image(), test_image))
+
     def test_drawing_custom_shape_text(self):
         """tests the custom shape text drawing"""
         test_image = get_image("canvas_8.png")
