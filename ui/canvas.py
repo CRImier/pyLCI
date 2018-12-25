@@ -173,6 +173,65 @@ class Canvas(object):
             self.draw.text(coords, text, fill=fill, font=font, **kwargs)
             self.display_if_interactive()
 
+    def vertical_text(self, text, coords, **kwargs):
+        """
+        Draw vertical text on the canvas. Coordinates are expected in (x, y)
+        format, where ``x`` & ``y`` are coordinates of the top left corner.
+
+        You can pass a ``font`` keyword argument to it - it accepts either a
+        ``PIL.ImageFont`` object or a tuple of ``(path, size)``, which are
+        then supplied to ``Canvas.load_font()``.
+
+        Do notice that order of first two arguments is reversed compared
+        to the corresponding ``PIL.ImageDraw`` method.
+
+        Keyword arguments:
+
+          * ``fill``: text color (default: white, as default canvas color)
+        """
+        assert(isinstance(text, basestring))
+        fill = kwargs.pop("fill", self.default_color)
+        font = kwargs.pop("font", self.default_font)
+        charheight = kwargs.pop("charheight", None)
+        font = self.decypher_font_reference(font)
+        coords = self.check_coordinates(coords)
+        char_coords = list(coords)
+        if not charheight: # Auto-determining charheight if not available
+            _, charheight = self.draw.textsize("H", font=font)
+        for char in text:
+            self.draw.text(char_coords, char, fill=fill, font=font, **kwargs)
+            char_coords[1] += charheight
+        self.display_if_interactive()
+
+    def custom_shape_text(self, text, coords_cb, **kwargs):
+        """
+        Draw text on the canvas, getting the position for each character
+        from a supplied function. Coordinates are expected in (x, y)
+        format, where ``x`` & ``y`` are coordinates of the top left corner
+        of the character.
+
+        You can pass a ``font`` keyword argument to it - it accepts either a
+        ``PIL.ImageFont`` object or a tuple of ``(path, size)``, which are
+        then supplied to ``Canvas.load_font()``.
+
+        Do notice that order of first two arguments is reversed compared
+        to the corresponding ``PIL.ImageDraw`` method.
+
+        Keyword arguments:
+
+          * ``fill``: text color (default: white, as default canvas color)
+        """
+        assert(isinstance(text, basestring))
+        fill = kwargs.pop("fill", self.default_color)
+        font = kwargs.pop("font", self.default_font)
+        charheight = kwargs.pop("charheight", None)
+        font = self.decypher_font_reference(font)
+        for i, char in enumerate(text):
+            coords = coords_cb(i, char)
+            coords = self.check_coordinates(coords)
+            self.draw.text(coords, char, fill=fill, font=font, **kwargs)
+        self.display_if_interactive()
+
     def rectangle(self, coords, **kwargs):
         """
         Draw a rectangle on the canvas. Coordinates are expected in

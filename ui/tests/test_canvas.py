@@ -101,6 +101,26 @@ class TestCanvas(unittest.TestCase):
         c.text("d", (0, ctc.top))
         assert(imgs_are_equal(c.get_image(), test_image))
 
+    def test_drawing_custom_shape_text(self):
+        """tests the custom shape text drawing"""
+        test_image = get_image("canvas_8.png")
+        o = get_mock_output()
+        c = Canvas(o, name=c_name)
+        ctc = c.get_centered_text_bounds("a")
+        def coords_cb(i, ch):
+            return [(ctc.left, 0), (str(ctc.left-ctc.right), ctc.top),
+                    (ctc.left, str(ctc.top-ctc.bottom)), (0, ctc.top)][i]
+        c.custom_shape_text("abcd", coords_cb)
+        assert(imgs_are_equal(c.get_image(), test_image))
+
+    def test_drawing_vertical_text(self):
+        """tests the vertical text drawing"""
+        test_image = get_image("canvas_9.png")
+        o = get_mock_output()
+        c = Canvas(o, name=c_name)
+        c.vertical_text("Personal", (0, 0))
+        assert(imgs_are_equal(c.get_image(), test_image))
+
     def test_howto_example_drawing_line(self):
         """tests the third canvas example from howto"""
         test_image = get_image("canvas_3.png")
