@@ -4,17 +4,19 @@ from copy import copy
 
 from menu import Menu
 from entry import Entry
-from canvas import Canvas
+from canvas import Canvas, MockOutput
 
 class GridMenu(Menu):
 
 	cols = 3
 	rows = 3
+        font = None
 
-	def __init__(self, contents, i, o, rows=3, cols=3, name=None, draw_lines=True, entry_width=None, **kwargs):
+	def __init__(self, contents, i, o, rows=3, cols=3, name=None, draw_lines=True, font = None, entry_width=None, **kwargs):
 
                 self.rows = rows
                 self.cols = cols
+                self.font = font
 		Menu.__init__(self, contents, i, o, name=name, override_left=False, **kwargs)
 		self.view.draw_lines = draw_lines
 		self.view.entry_width = entry_width
@@ -46,6 +48,7 @@ class GridViewMixin(object):
 	entry_width = None
         fde_increment = 3
 	wrappers = []
+        font = None
 
 	def get_entry_count_per_screen(self):
 		return self.el.cols*self.el.rows
@@ -64,6 +67,9 @@ class GridViewMixin(object):
 		# Calculate margins
 		step_width = c.width / self.el.cols if not self.entry_width else self.entry_width
 		step_height = c.height / self.el.rows
+
+                # Create a special canvas for drawing text - making sure it's cropped
+                text_c = Canvas(MockOutput(step_width, step_height))
 
 		# Calculate grid index
 		item_x = (pointer-self.first_displayed_entry)%self.el.cols
@@ -91,10 +97,12 @@ class GridViewMixin(object):
 				coords = ((i%self.el.cols)*step_width, (i//self.el.rows)*step_height)
 				c.image.paste(icon, coords)
 			else:
-				text_bounds = c.get_text_bounds(text)
-				x_cord = (i%self.el.cols)*step_width+(step_width-text_bounds[0])/2
+                                text_c.clear()
+				text_bounds = c.get_text_bounds(text, font=self.el.font)
+				x_cord = (i%self.el.cols)*step_width #+(step_width-text_bounds[0])/2
 				y_cord = (i//self.el.rows)*step_height+(step_height-text_bounds[1])/2
-				c.text(text, (x_cord, y_cord))
+				text_c.text(text, (0, 0), font=self.el.font)
+                                c.image.paste(text_c.image, (x_cord, y_cord))
 
 		# Invert the selected cell
 		selected_x = (item_x)*step_width
