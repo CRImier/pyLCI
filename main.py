@@ -144,13 +144,12 @@ def launch(name=None, **kwargs):
 
         # Load only single app
         try:
-            app_path = app_man.get_app_path_for_cmdline(name)
-            app = app_man.load_app(app_path, threaded=False)
+            context_name, app = app_man.load_single_app_by_path(name, threaded=False)
         except:
             logging.exception('Failed to load the app: {0}'.format(name))
             input_processor.atexit()
             raise
-        cm.switch_to_context(app_path)
+        cm.switch_to_context(context_name)
         runner = app.on_start if hasattr(app, "on_start") else app.callback
 
     exception_wrapper(runner)
