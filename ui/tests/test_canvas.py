@@ -106,7 +106,7 @@ class TestCanvas(unittest.TestCase):
         test_image = get_image("canvas_11.png")
         o = get_mock_output()
         c = Canvas(o, name=c_name)
-        ctc = c.get_centered_text_bounds("a", ch=32, cw=64)
+        ctc = c.get_centered_text_bounds("", ch=16, cw=32)
         c.text("a", (ctc.left, 0))
         c.text("b", (str(ctc.left-ctc.right), ctc.top))
         c.text("c", (ctc.left, str(ctc.top-ctc.bottom)))
