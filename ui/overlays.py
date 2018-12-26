@@ -2,6 +2,7 @@ from functools import wraps
 from threading import Event
 
 from canvas import Canvas
+from utils import Rect
 from entry import Entry
 
 from PIL import Image
@@ -154,14 +155,20 @@ class FunctionOverlay(HelpOverlay):
 
 class GridMenuSidebarOverlay(object):
 
-    def __init__(self, top_o = 0, bottom_o = 0, left_o = "-32", right_o = 0):
-        self.top_offset = top_o
-        self.bottom_offset = bottom_o
-        self.left_offset = left_o
-        self.right_offset = right_o
+    def __init__(self, sidebar_cb, top_o = None, bottom_o = None, left_o = None, right_o = None):
+        self.sidebar_cb = sidebar_cb
+        self.top_o = top_o
+        self.bottom_o = bottom_o
+        self.left_o = left_o
+        self.right_o = right_o
 
     def apply_to(self, ui_el):
+        if self.get_sidebar_coords(ui_el) is None:
+            raise AttributeError("No coordinate attribute supplied and overlay can't determine them by itself!")
         self.wrap_view(ui_el)
+
+    def get_coords_for_unrecognized_ui_el(self, ui_el):
+        return None
 
     def wrap_view(self, ui_el):
         def wrapper(image):
@@ -172,14 +179,29 @@ class GridMenuSidebarOverlay(object):
 
     def modify_image(self, ui_el, image):
         c = Canvas(ui_el.o, base_image=image)
-        c.clear((self.right_offset, self.top_offset, self.left_offset, self.bottom_offset))
-        text = self.get_current_entry_text(ui_el)
-        self.draw_sidebar(c, ui_el)
+        coords = self.get_sidebar_coords(ui_el)
+        self.draw_sidebar(c, ui_el, coords)
         image = c.get_image()
         return image
 
-    def draw_sidebar(self, c, ui_el):
-        raise NotImplementedError
+    def get_sidebar_coords(self, ui_el):
+        if self.top_o is None and self.bottom_o is None \
+          and self.left_o is None and self.right_o is None:
+            # Let's see if we're being applied on a GridMenu-like thing, fail otherwise
+            entry_width = getattr(ui_el.view, "entry_width", None)
+            cols = getattr(ui_el, "cols", None)
+            if not entry_width and not cols:
+                return self.get_coords_for_unrecognized_ui_el(ui_el)
+            else:
+                # Simplified case - GridMenu with a sidebar on the right
+                left_offset = ui_el.view.entry_width*ui_el.cols
+                sidebar_width = ui_el.o.width-left_offset
+                return Rect(left_offset, 0, ui_el.o.width-1, ui_el.o.height)
+        else:
+            return Rect(self.left_o, self.top_o, self.right_o, self.bottom_o)
+
+    def draw_sidebar(self, c, ui_el, coords):
+        return self.sidebar_cb(c, ui_el, coords)
 
 
 class GridMenuLabelOverlay(HelpOverlay):
