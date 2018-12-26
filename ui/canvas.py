@@ -440,6 +440,8 @@ class Canvas(object):
         Returns the dimensions for a given text. If you use a
         non-default font, pass it as ``font``.
         """
+        if text == "":
+            return (0, 0)
         font = self.decypher_font_reference(font)
         w, h = self.draw.textsize(text, font=font)
         return w, h
