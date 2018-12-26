@@ -1,5 +1,5 @@
 from apps import ZeroApp
-from ui import Listbox, LoadingBar, PrettyPrinter as Printer, rfa
+from ui import Menu, Listbox, LoadingBar, PrettyPrinter as Printer, rfa
 
 from time import sleep
 
@@ -7,7 +7,7 @@ from pyric import pyw
 
 class WifiCountry(ZeroApp):
 
-	menu_name = "WiFi Country"
+	menu_name = "WiFi settings"
 
 	def __init__(self, *args, **kwargs):
 	 	ZeroApp.__init__(self, *args, **kwargs)
@@ -26,7 +26,10 @@ class WifiCountry(ZeroApp):
 		return True
 
 	def on_start(self):
+            mc = [["WiFi country", self.change_wifi_country]]
+            Menu(mc, self.i, self.o, name="WiFi settings app main menu").activate()
 
+        def change_wifi_country(self):
 	 	with open('/usr/share/zoneinfo/iso3166.tab') as f:
 	 		content = f.readlines()
 
