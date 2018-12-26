@@ -11,7 +11,7 @@ class TestBugReport(unittest.TestCase):
     def test_workflow_without_send(self):
         br = BugReport("test.zip")
         br.add_dir_or_file("__init__.py")
-        br.add_dir_or_file(".")
+        br.add_dir_or_file("resources/")
         br.add_text("print('Hello')", "main.py")
         # Let's test if the resulting file is a ZIP file
         br.zip.close()
