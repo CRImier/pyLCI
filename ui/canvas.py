@@ -518,7 +518,7 @@ class MockOutput(object):
         self.type = type if type else ["b&w-pixel"]
         self.device_mode = device_mode
 
-    def display(self, *args):
+    def display_image(self, *args):
         return True
 
 def convert_flat_list_into_pairs(l):
