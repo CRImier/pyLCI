@@ -327,6 +327,7 @@ class BaseListUIElement(BaseUIElement):
     def add_view_wrapper(self, wrapper):
         self.view.wrappers.append(wrapper)
 
+    @to_be_foreground
     def refresh(self):
         """ A placeholder to be used for BaseUIElement. """
         if self.inhibit_refresh.isSet():

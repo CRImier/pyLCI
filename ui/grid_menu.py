@@ -17,7 +17,7 @@ class GridMenu(Menu):
                 self.rows = rows
                 self.cols = cols
                 self.font = font
-		Menu.__init__(self, contents, i, o, name=name, override_left=False, **kwargs)
+		Menu.__init__(self, contents, i, o, name=name, override_left=False, scrolling=False, **kwargs)
 		self.view.draw_lines = draw_lines
 		self.view.entry_width = entry_width
 
