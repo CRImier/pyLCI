@@ -9,6 +9,8 @@ from helpers import setup_logger
 logger = setup_logger(__name__, "info")
 
 
+to_be_foreground_warnings = []
+
 def to_be_foreground(func):
     """ A safety check wrapper so that certain functions can't possibly be called
     if UI element is not the one active"""
@@ -17,8 +19,12 @@ def to_be_foreground(func):
         if self.in_foreground:
             return func(self, *args, **kwargs)
         else:
+            data = (self.__class__.__name__, func.__name__, getattr(self, "name", None))
+            if data not in to_be_foreground_warnings:
+                to_be_foreground_warnings.append(data)
+                logger.warning("{}.{} (UI el {}) was prevented from being executed " \
+                               "by to_be_foreground!".format(*data) )
             return False
-
     return wrapper
 
 
