@@ -108,7 +108,7 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
         * ``sleep_time``: Time to display the image
         * ``invert``: Invert the image before displaying (True by default). """
     if isinstance(image_or_path, basestring):
-        image = PIL.Image.open(image_or_path).convert('L')
+        image = PIL.Image.open(image_or_path)
     else:
         image = image_or_path
     GraphicsPrinter.exit_flag = False
@@ -120,7 +120,10 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
         i.set_callback("KEY_LEFT", exit_printer)
         i.set_callback("KEY_ENTER", exit_printer)
         i.listen()
-    if invert: image = ImageOps.invert(image.convert('L'))
+    if invert:
+        if o.device_mode == "1":
+            image = image.convert('L')
+        image = ImageOps.invert(image)
     image = fit_image_to_screen(image, o)
     image = image.convert(o.device_mode)
     o.display_image(image)
