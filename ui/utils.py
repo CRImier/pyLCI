@@ -265,6 +265,6 @@ def fit_image_to_screen(image, o):
             top = delta // 2
             bottom = delta - top
         image = ImageOps.expand(image, border=(left, top, right, bottom), fill="black")
-	logger.info("Borders added are: top - {}, bottom - {}, left - {} and right {}".format(top, bottom, left, right))
+	logger.info("Borders added are: top - {}, bottom - {}, left - {} and right - {}".format(top, bottom, left, right))
     logger.info("All resizing finished")
     return image
