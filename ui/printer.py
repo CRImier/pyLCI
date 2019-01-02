@@ -123,7 +123,7 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
     if invert:
         if o.device_mode == "1":
             image = image.convert('L')
-            image = ImageOps.invert(image)
+        image = ImageOps.invert(image)
     image = fit_image_to_screen(image, o)
     image = image.convert(o.device_mode)
     o.display_image(image)
