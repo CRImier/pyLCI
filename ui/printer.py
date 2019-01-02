@@ -111,6 +111,7 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
         image = PIL.Image.open(image_or_path)
     else:
         image = image_or_path
+    image = image.convert(o.device_mode)
     GraphicsPrinter.exit_flag = False
     def exit_printer():
         GraphicsPrinter.exit_flag = True
@@ -123,9 +124,11 @@ def GraphicsPrinter(image_or_path, i, o, sleep_time=1, invert=True):
     if invert:
         if o.device_mode == "1":
             image = image.convert('L')
-        image = ImageOps.invert(image)
+            image = ImageOps.invert(image)
+            image = image.convert(o.device_mode)
+        else:
+            image = ImageOps.invert(image)
     image = fit_image_to_screen(image, o)
-    image = image.convert(o.device_mode)
     o.display_image(image)
     poll_period = 0.1
     if sleep_time < poll_period*2:
