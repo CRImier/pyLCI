@@ -235,6 +235,7 @@ class MessagesMenu(Menu):
         self.load_more_allow_refresh.set()
         self.refresh()
 
+    @to_be_foreground
     def refresh(self):
         if not self.load_more_allow_refresh.isSet():
             return
