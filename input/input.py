@@ -244,7 +244,8 @@ class InputProcessor(object):
                 callback()
         except Exception as e:
             locals = inspect.trace()[-1][0].f_locals
-            logger.error("Exception {} caused by callback {} when key {} was received".format(e.__str__() or e.__class__, callback, key))
+            context_alias = getattr(self.get_current_proxy(), "context_alias", None)
+            logger.error("Exception {} caused by callback {} when key {} was received, context: {}".format(e.__str__() or e.__class__, callback, key, context_alias))
             logger.error(format_exc())
             logger.error("Locals of the callback:")
             logger.error(locals)
