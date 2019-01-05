@@ -173,6 +173,65 @@ class Canvas(object):
             self.draw.text(coords, text, fill=fill, font=font, **kwargs)
             self.display_if_interactive()
 
+    def vertical_text(self, text, coords, **kwargs):
+        """
+        Draw vertical text on the canvas. Coordinates are expected in (x, y)
+        format, where ``x`` & ``y`` are coordinates of the top left corner.
+
+        You can pass a ``font`` keyword argument to it - it accepts either a
+        ``PIL.ImageFont`` object or a tuple of ``(path, size)``, which are
+        then supplied to ``Canvas.load_font()``.
+
+        Do notice that order of first two arguments is reversed compared
+        to the corresponding ``PIL.ImageDraw`` method.
+
+        Keyword arguments:
+
+          * ``fill``: text color (default: white, as default canvas color)
+        """
+        assert(isinstance(text, basestring))
+        fill = kwargs.pop("fill", self.default_color)
+        font = kwargs.pop("font", self.default_font)
+        charheight = kwargs.pop("charheight", None)
+        font = self.decypher_font_reference(font)
+        coords = self.check_coordinates(coords)
+        char_coords = list(coords)
+        if not charheight: # Auto-determining charheight if not available
+            _, charheight = self.draw.textsize("H", font=font)
+        for char in text:
+            self.draw.text(char_coords, char, fill=fill, font=font, **kwargs)
+            char_coords[1] += charheight
+        self.display_if_interactive()
+
+    def custom_shape_text(self, text, coords_cb, **kwargs):
+        """
+        Draw text on the canvas, getting the position for each character
+        from a supplied function. Coordinates are expected in (x, y)
+        format, where ``x`` & ``y`` are coordinates of the top left corner
+        of the character.
+
+        You can pass a ``font`` keyword argument to it - it accepts either a
+        ``PIL.ImageFont`` object or a tuple of ``(path, size)``, which are
+        then supplied to ``Canvas.load_font()``.
+
+        Do notice that order of first two arguments is reversed compared
+        to the corresponding ``PIL.ImageDraw`` method.
+
+        Keyword arguments:
+
+          * ``fill``: text color (default: white, as default canvas color)
+        """
+        assert(isinstance(text, basestring))
+        fill = kwargs.pop("fill", self.default_color)
+        font = kwargs.pop("font", self.default_font)
+        charheight = kwargs.pop("charheight", None)
+        font = self.decypher_font_reference(font)
+        for i, char in enumerate(text):
+            coords = coords_cb(i, char)
+            coords = self.check_coordinates(coords)
+            self.draw.text(coords, char, fill=fill, font=font, **kwargs)
+        self.display_if_interactive()
+
     def rectangle(self, coords, **kwargs):
         """
         Draw a rectangle on the canvas. Coordinates are expected in
@@ -267,10 +326,13 @@ class Canvas(object):
         """
         image = self.image
         # "1" won't invert, need "L"
-        image = image.convert("L") if image.mode == "1" else image
-        self.image = ImageOps.invert(image)
+        if image.mode == "1":
+            image = image.convert("L")
+        image = ImageOps.invert(image)
         # If was converted to "L", setting back to "1"
-        self.image = self.image.convert("1") if self.image.mode == "L" else self.image
+        if image.mode == "L" and self.o.device_mode == "1":
+            image = image.convert("1")
+        self.image = image
         self.display_if_interactive()
 
     def display(self):
@@ -358,14 +420,17 @@ class Canvas(object):
             coord_pairs[i] = self.check_coordinates(coord_pair)
         return tuple(coord_pairs)
 
-    def centered_text(self, text, font=None):
+    def centered_text(self, text, cw=None, ch=None, font=None):
         # type: str -> None
         """
         Draws centered text on the canvas. This is mostly a convenience function,
-        used in some UI elements.
+        used in some UI elements. You can also pass alternate
+        screen center values so that text is centered related to those,
+        as opposed to the real screen center.
+
         """
         font = self.decypher_font_reference(font)
-        coords = self.get_centered_text_bounds(text, font=font)
+        coords = self.get_centered_text_bounds(text, font=font, ch=ch, cw=cw)
         self.text(text, (coords.left, coords.top), font=font)
         self.display_if_interactive()
 
@@ -375,21 +440,30 @@ class Canvas(object):
         Returns the dimensions for a given text. If you use a
         non-default font, pass it as ``font``.
         """
+        if text == "":
+            return (0, 0)
         font = self.decypher_font_reference(font)
         w, h = self.draw.textsize(text, font=font)
         return w, h
 
-    def get_centered_text_bounds(self, text, font=None):
+    def get_centered_text_bounds(self, text, cw=None, ch=None, font=None):
         # type: str -> Rect
         """
         Returns the coordinates for the text to be centered on the screen.
         The coordinates come wrapped in a ``Rect`` object. If you use a
-        non-default font, pass it as ``font``.
+        non-default font, pass it as ``font``. You can also pass alternate
+        screen center values so that text is centered related to those,
+        as opposed to the real screen center.
         """
         w, h = self.get_text_bounds(text, font=font)
+        # Text center width and height
         tcw = w / 2
         tch = h / 2
-        cw, ch = self.get_center()
+        # Real center width and height
+        rcw, rch = self.get_center()
+        # If no values supplied as arguments (likely), using the real ones
+        cw = cw if (cw is not None) else rcw
+        ch = ch if (ch is not None) else rch
         return Rect(cw - tcw, ch - tch, cw + tcw, ch + tch)
 
     def invert_rect(self, coords):
@@ -400,9 +474,6 @@ class Canvas(object):
         """
 
         coords = self.check_coordinates(coords)
-        # draw.bitmap seems to need RGBA instead of RGB
-        if self.image.mode == "RGB":
-            self.image = self.image.convert("RGBA")
         image_subset = self.image.crop(coords)
 
         if image_subset.mode == "1":
@@ -410,21 +481,11 @@ class Canvas(object):
             image_subset = image_subset.convert("L")
             image_subset = ImageOps.invert(image_subset)
             image_subset = image_subset.convert(self.o.device_mode)
-        elif image_subset.mode == "RGBA":
-            # PIL can't invert "RGBA" mode - need to use "RGB"
-            r, g, b, a = image_subset.split()
-            rgb_image_subset = ImageOps.invert(Image.merge("RGB", (r, g, b)))
-            rn, gn, bn = rgb_image_subset.split()
-            image_subset = Image.merge('RGBA', (rn,gn,bn,a))
-            #image_subset = image_subset.convert("RGBA")
-        else: #Unknown mode - try and invert it anyway
+        else: # Other mode - invert without workarounds
             image_subset = ImageOps.invert(image_subset)
 
         self.clear(coords)
-        self.draw.bitmap((coords[0], coords[1]), image_subset, fill=self.default_color)
-        if self.image.mode == "RGBA" and self.o.device_mode == "RGB":
-            #Convert back if it was previously converted from RGB to RGBA
-            self.image = self.image.convert("RGB")
+        self.image.paste(image_subset, (coords[0], coords[1]))
 
         self.display_if_interactive()
 
@@ -457,7 +518,7 @@ class MockOutput(object):
         self.type = type if type else ["b&w-pixel"]
         self.device_mode = device_mode
 
-    def display(self, *args):
+    def display_image(self, *args):
         return True
 
 def convert_flat_list_into_pairs(l):

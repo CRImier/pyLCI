@@ -2,15 +2,13 @@ import importlib
 import os
 import traceback
 
-from apps import zero_app
+import zero_app
 from helpers import setup_logger
-from ui import Printer, Menu, HelpOverlay, TextReader
+from ui import Printer, Menu, HelpOverlay, TextReader, GridMenu, Entry, GridMenuLabelOverlay, GridMenuSidebarOverlay
+
+from PIL import Image, ImageOps
 
 logger = setup_logger(__name__, "info")
-
-
-class ListWithMetadata(list):
-    ordering_alias = None
 
 
 class AppManager(object):
@@ -27,67 +25,149 @@ class AppManager(object):
     ...
     'apps/network_apps/network': <module 'apps.network_apps.network.main' from '/root/WCS/apps/network_apps/network/main.py'>}
      """
+    failed_apps = {}
+    """Example of failed_apps:
+    {'apps/network_apps/wpa_cli': "Traceback: \n ...."
+    }
+    """
     ordering_cache = {}
 
-    def __init__(self, app_directory, context_manager, config=None):
+    def __init__(self, app_directory, context_manager, config=None, default_plugins=True):
+        self.subdir_menus = {}
+        self.subdir_menu_contents = {}
+        self.subdir_menu_creators = {}
+        self.subdir_menu_overlays = {}
+        self.subdir_paths = []
+        self.app_list = {}
+        self.failed_apps = {}
         self.app_directory = app_directory
         self.cm = context_manager
         self.i, self.o = self.cm.get_io_for_context("main")
         self.config = config if config else {}
+        if default_plugins:
+            self.register_default_plugins()
 
-    def load_all_apps(self):
-        base_menu = Menu([], self.i, self.o, "Main app menu",
-                                    exitable=False)  # Main menu for all applications.
+    def create_main_menu(self, menu_name, contents):
+        dir = "resources/"
+        icons = [f for f in os.listdir(dir) if f.endswith(".png")]
+        icon_paths = [[f.rsplit('.', 1)[0], os.path.join(dir, f)] for f in icons]
+        used_icons = []
+        for entry in contents:
+            for icon_name, icon_path in icon_paths:
+                if entry.basename.startswith(icon_name):
+                    entry.icon = Image.open(icon_path)
+                    used_icons.append(icon_name)
+                    continue
+            else:
+                pass
+        print([x for x, y, in icon_paths if x not in used_icons])
+        font = ("Fixedsys62.ttf", 16)
+        menu = GridMenu(contents, self.i, self.o, font=font, entry_width=32, name="Main menu", draw_lines=False,  exitable=False)
+        menu.exit_entry = ["Exit", "exit"]
+        menu.process_contents()
+        return menu
+
+    def sidebar_cb(self, c, ui_el, coords):
+        sidebar_image = ImageOps.invert(Image.open("sidebar.png").convert('L'))
+        sidebar_image.convert(c.o.device_mode)
+        c.image.paste(sidebar_image, (coords.left+3, coords.top-5))
+
+    def overlay_main_menu(self, menu):
         main_menu_help = "ZPUI main menu. Navigate the folders to get to different apps, or press KEY_PROG2 (anywhere in ZPUI) to get to the context menu."
         tr = TextReader(main_menu_help, self.i, self.o, h_scroll=False)
-        HelpOverlay(tr.activate).apply_to(base_menu)
-        base_menu.exit_entry = ["Exit", "exit"]
-        base_menu.process_contents()
-        self.subdir_menus[self.app_directory] = base_menu
-        apps_blocked_in_config = self.config.get("do_not_load", {})
+        HelpOverlay(tr.activate).apply_to(menu)
+        GridMenuLabelOverlay().apply_to(menu)
+        GridMenuSidebarOverlay(self.sidebar_cb).apply_to(menu)
+
+    def register_default_plugins(self):
+        self.subdir_menu_creators["apps"] = self.create_main_menu
+        self.subdir_menu_overlays["apps"] = [self.overlay_main_menu]
+
+    def create_subdir_menu(self, menu_name, contents):
+        menu = Menu(contents, self.i, self.o, "Subdir menu ({})".format(menu_name))
+        return menu
+
+    def create_menu_structure(self):
+        base_subdir = self.app_directory.rstrip('/')
+        for subdir_path in self.subdir_paths:
+            self.subdir_menu_contents[subdir_path] = []
+        for subdir_path in self.subdir_paths:
+            if subdir_path == base_subdir:
+                continue
+            parent_path = os.path.split(subdir_path)[0]
+            menu_name = self.get_subdir_menu_name(subdir_path)
+            subdir_entry = Entry(menu_name, type="dir", path=subdir_path)
+            self.subdir_menu_contents[parent_path].append(subdir_entry)
+        subdir_menu_paths = self.subdir_menu_contents.keys()
+        for app_path, app_obj in self.app_list.items():
+            if self.app_has_callback(app_obj):
+                subdir_menu_name = max([n for n in subdir_menu_paths if app_path.startswith(n)])
+                menu_name = self.get_app_name(app_obj, app_path)
+                app_entry = Entry(menu_name, type="app", obj=app_obj, path=app_path)
+                self.subdir_menu_contents[subdir_menu_name].append(app_entry)
+        for path, subdir_contents in self.subdir_menu_contents.items():
+            ordering = self.get_ordering(path)
+            unordered_contents = self.prepare_menu_contents_for_ordering(subdir_contents)
+            menu_contents = self.order_contents_by_ordering(unordered_contents, ordering)
+            creator = self.subdir_menu_creators.get(path, self.create_subdir_menu)
+            menu = creator(path, menu_contents)
+            for overlay_cb in self.subdir_menu_overlays.get(path, []):
+                overlay_cb(menu)
+            self.subdir_menus[path] = menu
+        return self.subdir_menus[base_subdir]
+
+    def prepare_menu_contents_for_ordering(self, subdir_contents):
+        for entry in subdir_contents:
+            entry.basename = os.path.split(entry.path)[-1]
+            if entry.type == "dir":
+                entry.cb = lambda x=entry.path: self.switch_to_subdir(x)
+            elif entry.type == "app":
+                entry.cb = lambda x=entry.path: self.switch_to_app(x)
+        return subdir_contents
+
+    def switch_to_subdir(self, path):
+        self.subdir_menus[path].activate()
+
+    def switch_to_app(self, path):
+        self.cm.switch_to_context(path.replace("/", '.'))
+
+    def order_contents_by_ordering(self, contents, ordering, strip_first_element=True):
+        if ordering:
+            contents = sorted(contents, key=lambda x: ordering.index(x.basename) if x.basename in ordering else 9999)
+        return contents
+
+    def load_all_apps(self, interactive=True):
+        apps_blocked_in_config = self.config.get("do_not_load", [])
+        self.subdir_paths.append(self.app_directory.rstrip("/"))
         for path, subdirs, modules in app_walk(self.app_directory):
             for subdir in subdirs:
-                # First, we create subdir menus (not yet linking because they're not created in correct order) and put them in subdir_menus.
                 subdir_path = os.path.join(path, subdir)
-                self.subdir_menus[subdir_path] = Menu([], self.i, self.o, subdir_path)
+                self.subdir_paths.append(subdir_path)
             for _module in modules:
-                # Then, we load modules and store them along with their paths
+                module_path = os.path.join(path, _module)
                 try:
-                    module_path = os.path.join(path, _module)
                     if module_path in apps_blocked_in_config:
                         logger.warning("App {} blocked from config; not loading".format(module_path))
                         continue
                     app = self.load_app(module_path)
                     logger.info("Loaded app {}".format(module_path))
                     self.app_list[module_path] = app
+                    menu_name = self.get_app_name(app, module_path)
+                    self.bind_context(app, module_path, menu_name)
                 except Exception as e:
-                    logger.error("Failed to load app {}".format(module_path))
-                    logger.error(traceback.format_exc())
-                    Printer(["Failed to load", os.path.split(module_path)[1]], self.i, self.o, 2)
-        for subdir_path in self.subdir_menus:
-            # Now it's time to link menus to parent menus
-            if subdir_path == self.app_directory:
-                continue
-            parent_path = os.path.split(subdir_path)[0]
-            ordering = self.get_ordering(parent_path)
-            parent_menu = self.subdir_menus[parent_path]
-            subdir_menu = self.subdir_menus[subdir_path]
-            subdir_menu_name = self.get_subdir_menu_name(subdir_path)
-            # Inserting by the ordering given
-            parent_menu_contents = self.insert_by_ordering([subdir_menu_name, subdir_menu.activate],
-                                                           os.path.split(subdir_path)[1], parent_menu.contents,
-                                                           ordering)
-            parent_menu.set_contents(parent_menu_contents)
-        for app_path in self.app_list:
-            # Last thing is attaching applications to the menu structure created.
-            app = self.app_list[app_path]
-            subdir_path, app_dirname = os.path.split(app_path)
-            ordering = self.get_ordering(subdir_path)
-            menu_name = app.menu_name if hasattr(app, "menu_name") else app_dirname.capitalize()
-            self.bind_context(app, app_path, menu_name, ordering, subdir_path)
+                    logger.exception("Failed to load app {}".format(module_path))
+                    self.failed_apps[module_path] = traceback.format_exc()
+                    if interactive:
+                        Printer(["Failed to load", os.path.split(module_path)[1]], self.i, self.o, 2)
+        base_menu = self.create_menu_structure()
         return base_menu
 
-    def bind_context(self, app, app_path, menu_name, ordering, subdir_path):
+    def app_has_callback(self, app):
+        return (hasattr(app, "callback") and callable(app.callback)) or \
+               (hasattr(app, "on_start") and callable(app.on_start))
+
+    def bind_context(self, app, path, menu_name):
+        
         if hasattr(app, "callback") and callable(app.callback):  # for function based apps
             app_callback = app.callback
         elif hasattr(app, "on_start") and callable(app.on_start):  # for class based apps
@@ -95,14 +175,9 @@ class AppManager(object):
         else:
             logger.debug("App \"{}\" has no callback; loading silently".format(menu_name))
             return
-        menu_callback = lambda: self.cm.switch_to_context(app_path)
+        app_path = path.replace('/', '.')
         self.cm.register_context_target(app_path, app_callback)
         self.cm.set_menu_name(app_path, menu_name)
-        # App callback is available and wrapped, inserting
-        subdir_menu = self.subdir_menus[subdir_path]
-        subdir_menu_contents = self.insert_by_ordering([menu_name, menu_callback], os.path.split(app_path)[1],
-                                                       subdir_menu.contents, ordering)
-        subdir_menu.set_contents(subdir_menu_contents)
 
     def get_app_path_for_cmdline(self, cmdline_app_path):
         main_py_string = "/main.py"
@@ -114,13 +189,19 @@ class AppManager(object):
             app_path = cmdline_app_path
         return app_path
 
-    def load_app(self, app_path, threaded = True):
-        if "__init__.py" not in os.listdir(app_path):
-            raise ImportError("Trying to import an app with no __init__.py in its folder!")
-        app_import_path = app_path.replace('/', '.')
+    def load_single_app_by_path(self, app_path, threaded = True):
         # If user runs in single-app mode and by accident
         # autocompletes the app name too far, it shouldn't fail
-        app = importlib.import_module(app_import_path + '.main', package='apps')
+        app_path = self.get_app_path_for_cmdline(app_path)
+        if "__init__.py" not in os.listdir(app_path):
+            raise ImportError("Trying to import an app ({}) with no __init__.py in its folder!".format(app_path))
+        app_import_path = app_path.replace('/', '.')
+        app = self.load_app(app_import_path, threaded=threaded)
+        return app_import_path, app
+
+    def load_app(self, path, threaded=True):
+        app_path = path.replace('/', '.')
+        app = importlib.import_module(app_path + '.main', package='apps')
         context = self.cm.create_context(app_path)
         context.threaded = threaded
         i, o = self.cm.get_io_for_context(app_path)
@@ -146,6 +227,12 @@ class AppManager(object):
             else:
                 logger.info("Passed context to app {}".format(app_path))
 
+    def get_app_name(self, app, app_path):
+        if hasattr(app, "menu_name"):
+            return app.menu_name
+        else:
+            return os.path.split(app_path)[-1].capitalize().replace("_", " ")
+
     def get_subdir_menu_name(self, subdir_path):
         """
         This function gets a subdirectory path and imports __init__.py from it.
@@ -157,10 +244,9 @@ class AppManager(object):
         try:
             subdir_object = importlib.import_module(subdir_import_path + '.__init__')
             return subdir_object._menu_name
-        except Exception as e:
-            logger.error("Exception while loading __init__.py for subdir {}".format(subdir_path))
-            logger.error(e)
-            return os.path.split(subdir_path)[1].capitalize()
+        except:
+            logger.exception("Exception while loading __init__.py for subdir {}".format(subdir_path))
+            return os.path.split(subdir_path)[1].capitalize().replace("_", " ")
 
     def get_ordering(self, path):
         """This function gets a subdirectory path and imports __init__.py from it. It then gets _ordering attribute from __init__.py and returns it. It also caches the attribute for faster initialization.
@@ -181,29 +267,6 @@ class AppManager(object):
         finally:
             self.ordering_cache[path] = ordering
             return ordering
-
-    def insert_by_ordering(self, to_insert, alias, l, ordering):
-        if alias in ordering:
-            # HAAAAAAAAAAAAAAXXXXXXXXXX
-            to_insert = ListWithMetadata(to_insert)
-            # Marking the object we're inserting with its alias
-            # so that we won't mix up ordering of elements later
-            to_insert.ordering_alias = alias
-            if not l:  # No conditions to check
-                l.append(to_insert)
-                return l
-            for e in l:
-                if hasattr(e, "ordering_alias"):
-                    if ordering.index(e.ordering_alias) > ordering.index(alias):
-                        l.insert(l.index(e), to_insert)
-                        return l
-                    else:
-                        pass  # going to next element
-                else:
-                    l.insert(l.index(e), to_insert)
-                    return l
-        l.append(to_insert)
-        return l  # Catch-all
 
 
 def app_walk(base_dir):
@@ -258,3 +321,13 @@ def is_module_dir(dir_path):
 def is_subdir(dir_path):
     contents = os.listdir(dir_path)
     return "__init__.py" in contents and "main.py" not in contents and "do_not_load" not in contents
+
+
+if __name__ == "__main__":
+    from mock import Mock
+    cm = Mock()
+    cm.configure_mock(get_io_for_context=lambda x: (x, x))
+    am = AppManager("apps/", cm)
+    am.o = Mock()
+    am.o.configure_mock(cols=20, rows=8, char_width=6, width=128, height=64, device_mode='1', type=["b&w-pixel"])
+    am.load_all_apps(interactive=False)

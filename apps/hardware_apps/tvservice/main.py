@@ -1,4 +1,4 @@
-menu_name = "TVService"
+menu_name = "HDMI control"
 #Some globals for LCS
 callback = None
 #Some globals for us

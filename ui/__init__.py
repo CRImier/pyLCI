@@ -23,8 +23,11 @@ from numbered_menu import NumberedMenu
 from canvas import Canvas, MockOutput
 from date_picker import DatePicker
 from time_picker import TimePicker
+from grid_menu import GridMenu
 from order_adjust import OrderAdjust
-from overlays import HelpOverlay, FunctionOverlay
+from overlays import HelpOverlay, FunctionOverlay, GridMenuLabelOverlay, GridMenuSidebarOverlay
+from utils import fit_image_to_screen
+from entry import Entry
 
 IntegerInDecrementInput = IntegerAdjustInput  # Compatibility with old ugly name
 LoadingIndicator = LoadingBar

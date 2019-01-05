@@ -101,6 +101,38 @@ class TestCanvas(unittest.TestCase):
         c.text("d", (0, ctc.top))
         assert(imgs_are_equal(c.get_image(), test_image))
 
+    def test_custom_center_centered_text_coords(self):
+        """tests the third text canvas example from howto"""
+        test_image = get_image("canvas_11.png")
+        o = get_mock_output()
+        c = Canvas(o, name=c_name)
+        ctc = c.get_centered_text_bounds("", ch=16, cw=32)
+        c.text("a", (ctc.left, 0))
+        c.text("b", (str(ctc.left-ctc.right), ctc.top))
+        c.text("c", (ctc.left, str(ctc.top-ctc.bottom)))
+        c.text("d", (0, ctc.top))
+        assert(imgs_are_equal(c.get_image(), test_image))
+
+    def test_drawing_custom_shape_text(self):
+        """tests the custom shape text drawing"""
+        test_image = get_image("canvas_8.png")
+        o = get_mock_output()
+        c = Canvas(o, name=c_name)
+        ctc = c.get_centered_text_bounds("a")
+        def coords_cb(i, ch):
+            return [(ctc.left, 0), (str(ctc.left-ctc.right), ctc.top),
+                    (ctc.left, str(ctc.top-ctc.bottom)), (0, ctc.top)][i]
+        c.custom_shape_text("abcd", coords_cb)
+        assert(imgs_are_equal(c.get_image(), test_image))
+
+    def test_drawing_vertical_text(self):
+        """tests the vertical text drawing"""
+        test_image = get_image("canvas_9.png")
+        o = get_mock_output()
+        c = Canvas(o, name=c_name)
+        c.vertical_text("Personal", (0, 0))
+        assert(imgs_are_equal(c.get_image(), test_image))
+
     def test_howto_example_drawing_line(self):
         """tests the third canvas example from howto"""
         test_image = get_image("canvas_3.png")
@@ -136,27 +168,33 @@ class TestCanvas(unittest.TestCase):
 
     def test_invert(self):
         """tests that inversion works with default display"""
+        test_image = get_image("canvas_10.png")
         o = get_mock_output()
         c = Canvas(o, name=c_name)
         c.text("Hello world", (5, 5))
         c.invert()
         assert(c.get_image().mode == o.device_mode)
+        assert(imgs_are_equal(c.get_image(), test_image))
 
     def test_invert_region_rgb(self):
-        """tests that rgb canvas inversion doesn't fail with RGB displays and returns a RGB image"""
+        """tests that rgb canvas inversion doesn't fail with RGB displays and returns a valid RGB image"""
+        test_image = get_image("canvas_6.png")
         o = get_mock_output(mode="RGB")
         c = Canvas(o, name=c_name)
         c.text("Hello world", (5, 5))
         c.invert_rect((35, 5, 80, 17))
         assert(c.get_image().mode == o.device_mode)
+        assert(imgs_are_equal(c.get_image(), test_image.convert("RGB")))
 
     def test_invert_rgb(self):
-        """tests that rgb canvas inversion doesn't fail with RGB displays and returns a RGB image"""
+        """tests that rgb canvas inversion doesn't fail with RGB displays and returns a valid RGB image"""
+        test_image = get_image("canvas_10.png")
         o = get_mock_output(mode="RGB")
         c = Canvas(o, name=c_name)
         c.text("Hello world", (5, 5))
         c.invert()
         assert(c.get_image().mode == o.device_mode)
+        assert(imgs_are_equal(c.get_image(), test_image.convert("RGB")))
 
 
 def imgs_are_equal(i1, i2):

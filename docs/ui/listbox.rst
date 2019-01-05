@@ -20,7 +20,7 @@ Listbox UI element
 (``element[0]``) if no value was passed. Otherwise, if the user exited ``Listbox``
 by pressing LEFT, returns ``None``.
 
-.. automodule:: ui
+.. currentmodule:: ui
  
 .. autoclass:: Listbox
     :show-inheritance:

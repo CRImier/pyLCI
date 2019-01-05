@@ -15,9 +15,7 @@ and ZPUI logic changes, so that you don't have to have a ZeroPhone to develop
 and test your UI.
 
 It will require a Linux computer with a graphical interface running (X forwarding 
-might work, too) and Python 2.7 available. Here are `the setup and usage instructions`_.
-
-.. _the setup and usage instructions: wiki.zerophone.org/index.php/ZPUI_emulator_setup
+might work, too) and Python 2.7 available. :ref:`Here are the setup and usage instructions <emulator>`.
 
 Tweaking how the UI looks
 =========================
@@ -47,12 +45,11 @@ If :doc:`existing UI elements <ui>` do not cover your usecase, you can also
 make your own UI elements! :doc:`Contact us <contact>` to find out how, 
 or just use the `code for existing UI elements`_ as guidelines if you feel confident.
 
-Also, check if the UI element you want is mentioned `in ZPUI TODO`_ and `ZPUI GH issues`_- 
+Also, check if the UI element you want is mentioned :doc:`in ZPUI TODO <plans>` and `ZPUI GH issues`_- 
 there might already be progress on that front, or you might find some 
 useful guidelines.
 
 .. _code for existing UI elements: https://github.com/ZeroPhone/ZPUI/tree/master/ui
-.. _in ZPUI TODO: http://zpui.readthedocs.io/en/latest/plans.html
 .. _ZPUI GH issues: https://github.com/ZeroPhone/ZPUI/issues
 
 Testing the UI

@@ -25,7 +25,8 @@ License: Apache 2.0, with MIT components."""
 
 def about():
     mc = [["About ZPUI", about_zpui],
-          ["Contributors", about_contributors]]
+          ["Contributors", about_contributors],
+          ["Supporters", about_supporters]]
     Menu(mc, i, o, name="Settings-About menu").activate()
 
 def about_zpui():
@@ -50,3 +51,11 @@ def about_contributors():
         text = text.replace(character, replacement)
     text = filter(lambda x: x in printable_characters, text).strip('\n')
     TextReader(text, i, o, name="About contributors TextReader").activate()
+
+def about_supporters():
+    with open("SUPPORTERS.md", 'r') as f:
+        supporters_md = f.read()
+    lines = supporters_md.split('\n')[2:]
+    supporter_names = "\n".join([line[3:] for line in lines])
+    text = "ZPUI supporters:\n\n"+supporter_names
+    TextReader(text, i, o, name="About supporters TextReader").activate()

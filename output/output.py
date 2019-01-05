@@ -31,7 +31,7 @@ class OutputDevice(object):
         attribute_names = [ k for (k, v) in public_attributes if not callable(v) and k not in hidden_attributes]
         method_names = [ k for (k, v) in public_attributes if callable(v) and k not in hidden_methods]
         direct_methods = ["display_data_onto_image"]
-        
+
         for attribute_name in attribute_names:
             #print("attribute: {}".format(attribute_name))
             # Setting attributes of the proxy object to the same values
@@ -44,13 +44,13 @@ class OutputDevice(object):
             #print("Setting to value {}".format(copied_value))
         for method_name in method_names:
             #print("method: {}".format(method_name))
-            # Setting functions to proxy the current object's 
+            # Setting functions to proxy the current object's
             self.proxify_method(proxy, method_name)
         for method_name in direct_methods:
             # Methods that are proxied directly
             setattr(proxy, method_name, getattr(self, method_name))
         # Proxies have no use for hidden methods
-        # Unless 
+        # Unless
         #for attribute_name in hidden_attributes+hidden_methods:
         #    if hasattr(proxy, attribute_name):
         #        delattr(proxy, attribute_name)
@@ -86,7 +86,7 @@ class CharacterOutputDevice(OutputDevice):
     rows = None  # number of columns
     cols = None  # number of rows
     type = ["char"]  # supported output type list
-    
+
     def cursor(self):
         """
         Enables the cursor.

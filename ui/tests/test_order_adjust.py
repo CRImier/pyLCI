@@ -5,7 +5,7 @@ import unittest
 from mock import patch, Mock
 
 try:
-    from ui import OrderAdjust
+    from ui import OrderAdjust, Entry
 except ImportError:
     print("Absolute imports failed, trying relative imports")
     os.sys.path.append(os.path.dirname(os.path.abspath('.')))
@@ -22,6 +22,7 @@ except ImportError:
 
     with patch('__builtin__.__import__', side_effect=import_mock):
         from order_adjust import OrderAdjust
+        from entry import Entry
 
 def get_mock_input():
     return Mock()
@@ -80,8 +81,23 @@ class TestOrderAdjust(unittest.TestCase):
         assert return_value is None
 
     def test_entering_value(self):
-        start = ["1", "3", "2"]
-        oa = OrderAdjust(start, get_mock_input(), get_mock_output(), name=oa_name, config={})
+        contents = [["Entry 1", "1"], ["Entry 3", "3"], ["Entry 2", "2"]]
+        self.entering_value_runner(contents)
+
+    def test_entering_value_with_entries(self):
+        contents = [Entry("Entry {}".format(x), name=x) for x in ("1", "3", "2")]
+        self.entering_value_runner(contents)
+
+    def test_entering_value_single_element(self):
+        contents = ["1", "3", "2"]
+        self.entering_value_runner(contents)
+
+    def test_entering_value_with_entries_no_name(self):
+        contents = [Entry(x) for x in ("1", "3", "2")]
+        self.entering_value_runner(contents)
+
+    def entering_value_runner(self, contents):
+        oa = OrderAdjust(contents, get_mock_input(), get_mock_output(), name=oa_name, config={})
         oa.refresh = lambda *args, **kwargs: None
 
         expected_output = ["1", "2", "3"]
@@ -97,7 +113,7 @@ class TestOrderAdjust(unittest.TestCase):
             return_value = oa.activate()
         assert return_value == expected_output
 
-        oa = OrderAdjust(start, get_mock_input(), get_mock_output(), name=oa_name, config={})
+        oa = OrderAdjust(contents, get_mock_input(), get_mock_output(), name=oa_name, config={})
         # down, down, enter (pick 2), up, enter (put 2), down, down, enter (accept)
         test_keys = "ddeuedde"
         def scenario():
@@ -111,10 +127,19 @@ class TestOrderAdjust(unittest.TestCase):
 
     def test_shows_data_on_screen(self):
         """Tests whether the OrderAdjust outputs data on screen when it's ran"""
-        i = get_mock_input()
         o = get_mock_output()
-        start = [str(x) for x in range(o.rows+4)]
-        oa = OrderAdjust(start, i, o, name=oa_name, config={})
+        contents = [str(x) for x in range(o.rows+4)]
+        self.shows_data_on_screen_wrapper(contents, o)
+
+    def test_shows_entry_data_on_screen(self):
+        """Tests whether the OrderAdjust outputs data on screen when it's ran"""
+        o = get_mock_output()
+        contents = [Entry(str(x)) for x in range(o.rows+4)]
+        self.shows_data_on_screen_wrapper(contents, o)
+
+    def shows_data_on_screen_wrapper(self, contents, o):
+        i = get_mock_input()
+        oa = OrderAdjust(contents, i, o, name=oa_name, config={})
 
         def scenario():
             assert o.display_data.called
@@ -135,6 +160,7 @@ class TestOrderAdjust(unittest.TestCase):
 
         # moved o.rows+4, and one more refresh on activate()
         assert o.display_data.call_count == o.rows+4+1
+
 
 if __name__ == '__main__':
     unittest.main()

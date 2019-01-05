@@ -3,8 +3,8 @@
  - CRImier (Arsenijs)
  - derivmug
  - monsieur_h
- - Unnamed contributor
  - Louis Parkerson
+ - Unnamed contributor
  - Björn Pettersson
  - Jon Maier
  - Gnu-Bricoleur

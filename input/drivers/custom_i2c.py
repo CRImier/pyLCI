@@ -55,6 +55,7 @@ class InputDevice(InputSkeleton):
         self.addr = addr
         self.int_pin = int_pin
         InputSkeleton.__init__(self, **kwargs)
+        self.connected = True
 
     def init_hw(self):
         try:
@@ -85,8 +86,13 @@ class InputDevice(InputSkeleton):
                     data = self.bus.read_byte(self.addr)
                     logger.debug("Received {:#010b}".format(data))
                 except IOError:
-                    logger.error("Can't get data from keypad!")
+                    if self.connected:
+                        logger.error("Can't get data from keypad!")
+                        self.connected = False
                 else:
+                    if not self.connected:
+                        logger.info("Receiving data from keypad again!")
+                        self.connected = True
                     if data != 0:
                         data -= 1
                         if data in range(len(self.mapping)):

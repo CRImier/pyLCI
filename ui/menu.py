@@ -4,6 +4,7 @@ from time import sleep
 from base_list_ui import BaseListUIElement, to_be_foreground
 from loading_indicators import LoadingBar
 from utils import clamp, clamp_list_index
+from entry import Entry
 
 from helpers import setup_logger
 
@@ -33,7 +34,7 @@ class Menu(BaseListUIElement):
 
             * ``contents``: list of menu entries which was passed either to ``Menu`` constructor or to ``menu.set_contents()``.
 
-              Menu entry is a list, where:
+              Simplest ``Menu`` entry is a list, where:
                  * ``entry[0]`` (entry label) is usually a string which will be displayed in the UI, such as "Menu entry 1". If ``entry_height`` > 1, can be a list of strings, each of those strings will be shown on a separate display row.
                  * ``entry[1]`` (entry callback) is a function which is called when the user presses Enter.
 
@@ -41,6 +42,8 @@ class Menu(BaseListUIElement):
                    * You can supply 'exit' (a string, not a function) if you want a menu entry that exits the menu when the user presses Enter.
 
                  * ``entry[2]`` (entry second callback) is a callback for the right key press.
+
+              You can also pass ``Entry`` objects as entries - ``text`` will be used as label, ``cb`` will be used as first callback and ``cb2`` will be used as the second callback.
 
               If you want to set contents after the initialisation, please, use set_contents() method.*
             * ``i``, ``o``: input&output device objects
@@ -73,23 +76,38 @@ class Menu(BaseListUIElement):
                 logger.info("{} received MenuExitException, raising it further".format(self.name))
                 raise MenuExitException
 
+    def get_callback_from_entry(self, entry, callback_number=1):
+        if isinstance(entry, Entry):
+            attr_names = [None, "cb", "cb2"]
+            attr_name = attr_names[callback_number]
+            return getattr(entry, attr_name, None)
+        else:
+            if len(entry) > callback_number:
+                return entry[callback_number]
+            else:
+                return None
+
     @to_be_foreground
-    def select_entry(self, callback_number=1):
+    def select_entry(self, callback_number=1, entry_index=None):
         """ Gets the currently specified entry's description from self.contents and executes the callback, if set.
         |Is typically used as a callback from input event processing thread.
         |After callback's execution is finished, sets the keymap again and refreshes the screen.
         |If MenuExitException is returned from the callback, exits menu."""
         logger.debug("entry selected")
         self.to_background()
-        entry = self.contents[self.pointer]
-        if len(entry) > callback_number:
-            # Current menu entry has a callback
-            if entry == self.exit_entry:
-                # It's an exit entry, exiting
-                self.deactivate()
-                return
+        if entry_index != None:
+            entry = self.contents[entry_index]
+        else:
+            entry = self.contents[self.pointer]
+        if entry == self.exit_entry:
+            # It's the exit entry, exiting
+            self.deactivate()
+            return
+        callback = self.get_callback_from_entry(entry, callback_number=callback_number)
+        if callback:
+            # Current menu entry has a valid callback
             try:
-                entry[callback_number]()
+                callback()
             except MenuExitException:
                 self.exit_exception = True
             finally:
@@ -121,9 +139,17 @@ class MenuRenderingMixin(object):
 
     """
 
+    def has_second_callback(self, entry):
+        if isinstance(entry, Entry):
+            if callable(entry.cb2):
+               return True
+        elif len(entry) > 2 and callable(entry[2]):
+            return True
+        return False
+
     def draw_triangle(self, c, index):
         contents_entry = self.el.contents[self.first_displayed_entry + index/self.el.entry_height]
-        if len(contents_entry) > 2 and callable(contents_entry[2]):
+        if self.has_second_callback(contents_entry):
             tw, th = self.charwidth / 2, self.charheight / 2
             right_offset = 1
             top_offset = (self.charheight - th) / 2
@@ -209,6 +235,7 @@ class MessagesMenu(Menu):
         self.load_more_allow_refresh.set()
         self.refresh()
 
+    @to_be_foreground
     def refresh(self):
         if not self.load_more_allow_refresh.isSet():
             return
