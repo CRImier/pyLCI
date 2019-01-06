@@ -116,10 +116,6 @@ class NumpadCharInput(BaseViewMixin, BaseUIElement):
     def before_activate(self):
         self.o.cursor()
 
-    @property
-    def is_active(self):
-        return self.in_foreground
-
     def after_activate(self):
         self.o.noCursor()
         self.i.remove_streaming()
