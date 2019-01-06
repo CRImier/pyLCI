@@ -60,11 +60,11 @@ class NumpadCharInput(BaseViewMixin, BaseUIElement):
               }
 
     action_keys = {
-               "ENTER":"accept_value",
-               "F1":"deactivate",
-               "LEFT":"deactivate_if_first",
-               "RIGHT":"skip",
-               "F2":"backspace",
+               "KEY_F1":"deactivate",
+               "KEY_F2":"backspace",
+               "KEY_ENTER":"accept_value",
+               "KEY_LEFT":"deactivate_if_first",
+               "KEY_RIGHT":"skip"
               }
 
     bottom_row_buttons = ["Cancel", "OK", "Erase"]
@@ -93,11 +93,11 @@ class NumpadCharInput(BaseViewMixin, BaseUIElement):
             * ``mapping``: alternative key-to-characters mapping to use
 
         """
+        self.action_keys = copy(self.action_keys)
         BaseUIElement.__init__(self, i, o, name)
         self.message = message
         self.value = value
         self.position = len(self.value)
-        self.action_keys = copy(self.action_keys)
         if mapping is not None:
             self.mapping = copy(mapping)
         else:
@@ -148,10 +148,6 @@ class NumpadCharInput(BaseViewMixin, BaseUIElement):
         header = "KEY_"
         key = key_name[len(header):]
         logger.debug("Received "+key_name)
-        if key in self.action_keys:
-            #Is one of the action keys
-            getattr(self, self.action_keys[key])()
-            return
         if key in self.mapping:
             #It's one of the keys we can process
             #NO INSERT IN MIDDLE/START SUPPORT
@@ -276,12 +272,13 @@ class NumpadCharInput(BaseViewMixin, BaseUIElement):
     #Functions that set up the input listener
 
     def generate_keymap(self):
-        return {}
+        return self.action_keys
 
     @to_be_foreground
     def configure_input(self):
         self.i.clear_keymap()
         remove_left_failsafe(self.i)
+        self.i.set_keymap(self.keymap)
         self.i.set_streaming(self.process_streaming_keycode)
 
     #Functions that are responsible for input to display

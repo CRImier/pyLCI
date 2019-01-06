@@ -49,19 +49,19 @@ class TestNumpadCharInput(unittest.TestCase):
         ni = self.cls(get_mock_input(), get_mock_output(), name=ni_name)
         self.assertIsNotNone(ni)
 
-    def test_action_keys_leakage(self):
-        """tests whether the action key settings of one NumpadCharInput leaks into another"""
+    def test_mapping_leakage(self):
+        """tests whether the mapping of one NumpadCharInput leaks into another"""
         i = get_mock_input()
         o = get_mock_output()
         i1 = self.cls(i, o, name=ni_name + "1")
-        i1.action_keys["F1"] = "accept_value"
+        i1.mapping["0"] = "a"
         i2 = self.cls(i, o, name=ni_name + "2")
-        i1.action_keys["F1"] = "accept_value"
-        i2.action_keys["ENTER"] = "deactivate"
+        i1.mapping["0"] = "s"
+        i2.mapping["1"] = "d"
         i3 = self.cls(i, o, name=ni_name + "3")
-        assert (i1.action_keys != i2.action_keys)
-        assert (i2.action_keys != i3.action_keys)
-        assert (i1.action_keys != i3.action_keys)
+        assert (i1.mapping != i2.mapping)
+        assert (i2.mapping != i3.mapping)
+        assert (i1.mapping != i3.mapping)
 
     def test_f1_left_returns_none(self):
         ni = self.cls(get_mock_input(), get_mock_output(), name=ni_name)
@@ -69,7 +69,7 @@ class TestNumpadCharInput(unittest.TestCase):
 
         # Checking at the start of the list
         def scenario():
-            ni.process_streaming_keycode("KEY_LEFT")
+            ni.keymap["KEY_LEFT"]()
             assert not ni.in_foreground
 
         with patch.object(ni, 'idle_loop', side_effect=scenario) as p:
@@ -80,7 +80,7 @@ class TestNumpadCharInput(unittest.TestCase):
         def scenario():
             for i in range(3):
                 ni.process_streaming_keycode("KEY_1")
-            ni.process_streaming_keycode("KEY_F1")
+            ni.keymap["KEY_F1"]()
             assert not ni.in_foreground
 
         with patch.object(ni, 'idle_loop', side_effect=scenario) as p:
@@ -97,7 +97,10 @@ class TestNumpadCharInput(unittest.TestCase):
 
         def scenario():
             for key in key_sequence:
-                ni.process_streaming_keycode("KEY_{}".format(key))
+                if len(str(key)) > 1:
+                    ni.keymap["KEY_{}".format(key)]()
+                else:
+                    ni.process_streaming_keycode("KEY_{}".format(key))
             assert not ni.in_foreground  # Should not be active
 
         with patch.object(ni, 'idle_loop', side_effect=scenario) as p:
@@ -113,7 +116,10 @@ class TestNumpadCharInput(unittest.TestCase):
         expected_output = "hello!"
         def scenario():
             for key in key_sequence:
-                ni.process_streaming_keycode("KEY_{}".format(key))
+                if len(str(key)) > 1:
+                    ni.keymap["KEY_{}".format(key)]()
+                else:
+                    ni.process_streaming_keycode("KEY_{}".format(key))
             assert not ni.in_foreground  # Should not be active
 
         with patch.object(ni, 'idle_loop', side_effect=scenario) as p:
