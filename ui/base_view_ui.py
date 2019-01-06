@@ -109,3 +109,36 @@ class BaseViewMixin(object):
             return False
         self.view.refresh()
         return True
+
+
+class BaseView(object):
+
+    def __init__(self, o, el):
+        self.o = o
+        self.el = el
+        self.wrappers = []
+
+    def execute_wrappers(self, data):
+        """
+        For all the defined wrappers, passes the data to be displayed
+        (whether it's text or an image) through them.
+        """
+        for wrapper in self.wrappers:
+            data = wrapper(data)
+        return data
+
+    def get_displayed_image(self):
+        """ Needs to be implemented by child views. """
+        raise NotImplementedError
+
+    def graphical_refresh(self):
+        """
+        A very cookie-cutter graphical refresh for a view,
+        might not even need to be redefined.
+        """
+        image = self.get_displayed_image()
+        image = self.execute_wrappers(image)
+        self.o.display_image(image)
+
+    def refresh(self):
+        return self.graphical_refresh()

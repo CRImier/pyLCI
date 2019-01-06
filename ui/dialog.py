@@ -2,7 +2,7 @@ from time import sleep
 from helpers import setup_logger
 
 from base_ui import BaseUIElement
-from base_view_ui import BaseViewMixin
+from base_view_ui import BaseViewMixin, BaseView
 from canvas import Canvas
 
 logger = setup_logger(__name__, "info")
@@ -110,12 +110,10 @@ class DialogBox(BaseViewMixin, BaseUIElement):
         self.deactivate()
 
 
-class TextView(object):
+class TextView(BaseView):
 
     def __init__(self, o, el):
-        self.o = o
-        self.el = el
-        self.wrappers = []
+        BaseView.__init__(self, o, el)
         self.process_values()
 
     def process_values(self):
@@ -144,7 +142,7 @@ class TextView(object):
 
 class GraphicalView(TextView):
 
-    def get_image(self):
+    def get_displayed_image(self):
         c = Canvas(self.o)
 
         #Drawing text
@@ -169,7 +167,4 @@ class GraphicalView(TextView):
         return c.get_image()
 
     def refresh(self):
-        image = self.get_image()
-        for wrapper in self.wrappers:
-            image = wrapper(image)
-        self.o.display_image(image)
+        return self.graphical_refresh()

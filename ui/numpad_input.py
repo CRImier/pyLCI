@@ -6,7 +6,7 @@ from functools import wraps
 from helpers import setup_logger, remove_left_failsafe
 from utils import to_be_foreground, check_value_lock
 from base_ui import BaseUIElement
-from base_view_ui import BaseViewMixin
+from base_view_ui import BaseViewMixin, BaseView
 
 logger = setup_logger(__name__, "warning")
 
@@ -382,13 +382,7 @@ class NumpadKeyboardInput(NumpadCharInput):
 
 # Views
 
-class TextView(object):
-    wrappers = []
-
-    def __init__(self, o, el):
-        self.el = el
-        self.o = o
-
+class TextView(BaseView):
     def get_displayed_data(self):
         """Experimental: not meant for 2x16 displays
 

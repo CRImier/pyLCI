@@ -9,7 +9,7 @@ from entry import Entry
 from canvas import Canvas
 from helpers import setup_logger
 from base_ui import BaseUIElement
-from base_view_ui import BaseViewMixin
+from base_view_ui import BaseViewMixin, BaseView
 from utils import to_be_foreground, clamp_list_index
 
 logger = setup_logger(__name__, "warning")
@@ -279,18 +279,15 @@ class BaseListUIElement(BaseViewMixin, BaseUIElement):
 
 # Views.
 
-class TextView(object):
+class TextView(BaseView):
     use_mixin = True
     first_displayed_entry = 0
     scrolling_speed_divisor = 4
     fde_increment = 1
-    # Default wrapper
 
     def __init__(self, o, ui_element):
-        self.o = o
-        self.el = ui_element
+        BaseView.__init__(self, o, ui_element)
         self.entry_height = self.el.entry_height
-        self.wrappers = []
         self.setup_scrolling()
 
     def setup_scrolling(self):
@@ -423,8 +420,7 @@ class TextView(object):
         logger.debug("{}: refreshed data on display".format(self.el.name))
         self.fix_pointers_on_refresh()
         displayed_data = self.get_displayed_text(self.el.get_displayed_contents())
-        for wrapper in self.wrappers:
-            displayed_data = wrapper(displayed_data)
+        displayed_data = self.execute_wrappers(displayed_data)
         self.o.noCursor()
         self.o.display_data(*displayed_data)
         self.o.setCursor(self.get_active_line_num(), 0)
@@ -454,8 +450,7 @@ class EightPtView(TextView):
         logger.debug("{}: refreshed data on display".format(self.el.name))
         self.fix_pointers_on_refresh()
         image = self.get_displayed_image()
-        for wrapper in self.wrappers:
-            image = wrapper(image)
+        image = self.execute_wrappers(image)
         self.o.display_image(image)
 
     def scrollbar_needed(self, contents):

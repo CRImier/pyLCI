@@ -7,9 +7,10 @@ import string
 from utils import to_be_foreground
 from canvas import Canvas
 from base_ui import BaseUIElement
+from base_view_ui import BaseViewMixin, BaseView
 
 
-class CharArrowKeysInput(BaseUIElement):
+class CharArrowKeysInput(BaseViewMixin, BaseUIElement):
     """
     Implements a character input dialog which allows to input a character string using arrow keys to scroll through characters
     """
@@ -37,7 +38,11 @@ class CharArrowKeysInput(BaseUIElement):
     cancel_flag = False
     charmap = ""
 
-    def __init__(self, i, o, message="Value:", value="",  allowed_chars=['][S', '][c', '][C', '][s', '][n'], name="CharArrowKeysInput", initial_value=""):
+    config_key = "char_arrow_keys_input"
+    default_pixel_view = "GraphicalView"
+    default_char_view = "TextView"
+
+    def __init__(self, i, o, message="Value:", value="",  allowed_chars=['][S', '][c', '][C', '][s', '][n'], name="CharArrowKeysInput", initial_value="", config={}):
         """Initialises the CharArrowKeysInput object.
 
         Args:
@@ -76,16 +81,12 @@ class CharArrowKeysInput(BaseUIElement):
         self.char_indices = [] #Fixes a bug with char_indices remaining from previous input ( 0_0 )
         for char in self.value:
             self.char_indices.append(self.charmap.index(char))
-        self.set_view()
+        BaseViewMixin.__init__(self, config=config)
 
-    def set_view(self):
-        if "b&w-pixel" in self.o.type:
-            view_class = GraphicalView
-        elif "char" in self.o.type:
-            view_class = TextView
-        else:
-            raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
-        self.view = view_class(self.o, self)
+
+    def generate_views_dict(self):
+        return {"GraphicalView":GraphicalView,
+                "TextView": TextView}
 
     def get_return_value(self):
         if self.cancel_flag:
@@ -200,14 +201,13 @@ class CharArrowKeysInput(BaseUIElement):
         logger.debug("{}: refreshed data on display".format(self.name))
 
 
-class TextView(object):
+class TextView(BaseView):
 
     last_displayed_char = 0
     first_displayed_char = 0
 
     def __init__(self, o, el):
-        self.o = o
-        self.el = el
+        BaseView.__init__(self, o, el)
         self.last_displayed_char = self.o.cols
 
     def get_displayed_data(self):
@@ -237,7 +237,7 @@ class TextView(object):
 
 class GraphicalView(TextView):
 
-    def get_image(self):
+    def get_displayed_image(self):
         c = Canvas(self.o)
 
         #Getting displayed data, drawing it
@@ -261,4 +261,4 @@ class GraphicalView(TextView):
         return c.get_image()
 
     def refresh(self):
-        self.o.display_image(self.get_image())
+        return self.graphical_refresh()
