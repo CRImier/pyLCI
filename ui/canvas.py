@@ -435,7 +435,7 @@ class Canvas(object):
         self.display_if_interactive()
 
     def get_text_bounds(self, text, font=None):
-        # type: str -> Rect
+        # type: str -> tuple
         """
         Returns the dimensions for a given text. If you use a
         non-default font, pass it as ``font``.
