@@ -1,12 +1,66 @@
 from apps import ZeroApp
-from ui import Refresher
+from ui import Refresher, NumpadCharInput, Canvas, FunctionOverlay
 from ui.base_ui import BaseUIElement
 
-class InputScreen(BaseUIElement):
+class InputScreen(NumpadCharInput):
 
-    def __init__(self, i, o):
-       self.i = i
-       self.o = o
+    message = "Input number:"
+    default_pixel_view = "InputScreenView"
+    def __init__(self, i, o, *args, **kwargs):
+        kwargs["message"] = self.message
+        NumpadCharInput.__init__(self, i, o, *args, **kwargs)
+        self.value = "123456789023456789012345678901234567890"
+
+    def generate_views_dict(self):
+        d = NumpadCharInput.generate_views_dict(self)
+        d.update({"InputScreenView":InputScreenView})
+        return d
+
+
+class InputScreenView(object):
+
+    def __init__(self, o, el):
+        self.o = o
+        self.el = el
+        self.wrappers = []
+        self.c = Canvas(self.o)
+        self.value_height = 16
+        self.top_offset = 8
+        self.value_font = ("Fixedsys62.ttf", self.value_height)
+
+    def gtb(self, text, font):
+        return self.c.get_text_bounds(text, font=font)
+
+    def get_onscreen_value_parts(self, value_parts):
+        return value_parts[-3:]
+
+    def get_displayed_image(self):
+        self.c.clear()
+        value = self.el.get_displayed_value()
+        value_parts = self.paginate_value(value, self.value_font, width=self.o.width-6)
+        onscreen_value_parts = self.get_onscreen_value_parts(value_parts)
+        for i, value_part in enumerate(onscreen_value_parts):
+            self.c.text(value_part, (3, self.top_offset+self.value_height*i), font=self.value_font)
+        return self.c.get_image()
+
+    def paginate_value(self, value, font, width=None):
+        width = width if width else self.o.width
+        value_parts = []
+        while value:
+            counter = 0
+            while self.gtb(value[:counter], font)[0] <= width and value[counter:]:
+                counter += 1
+            value_parts.append(value[:counter])
+            value = value[counter:]
+        print(value_parts)
+        return value_parts
+
+    def refresh(self):
+        image = self.get_displayed_image()
+        for wrapper in self.wrappers:
+            image = wrapper(image)
+        self.o.display_image(image)
+
 
 class StatusScreen(Refresher):
 
@@ -16,6 +70,7 @@ class StatusScreen(Refresher):
     def show_status(self):
        pass
 
+
 class PhoneApp(ZeroApp):
 
     menu_name = "Phone"
@@ -23,7 +78,12 @@ class PhoneApp(ZeroApp):
     def __init__(self, *args, **kwargs):
         ZeroApp.__init__(self, *args, **kwargs)
         self.input_screen = InputScreen(self.i, self.o)
-        self.status_screen = StatusScreen(self.i, self.o)
+        self.insc_overlay = FunctionOverlay(["deactivate", self.insc_options])
+        self.insc_overlay.apply_to(self.input_screen)
+        #self.status_screen = StatusScreen(self.i, self.o)
+
+    def insc_options(self):
+        pass
 
     def get_context(self, c):
         self.context = c
@@ -43,4 +103,4 @@ class PhoneApp(ZeroApp):
         pass
 
     def on_start(self):
-        pass
+        self.switch_to_input_screen()
