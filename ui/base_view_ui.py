@@ -30,7 +30,8 @@ class BaseViewMixin(object):
     view_mixin = None
 
     def __init__(self, **kwargs):
-        self.config = kwargs.pop("config", global_config)
+        config = kwargs.pop("config", None)
+        self.config = config if config is not None else global_config
         self.set_view(self.config.get(self.config_key, {}))
         self.inhibit_refresh = Event()
 
