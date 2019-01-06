@@ -134,8 +134,7 @@ class TextView(BaseView):
         self.o.noCursor()
         self.o.setCursor(1, self.positions[self.el.selected_option])
         data = [self.el.message, self.displayed_label]
-        for wrapper in self.wrappers:
-            data = wrapper(data)
+        data = self.execute_wrappers(data)
         self.o.display_data(*data)
         self.o.cursor()
 
