@@ -11,8 +11,8 @@ class InputScreen(NumpadNumberInput):
     default_pixel_view = "InputScreenView"
     def __init__(self, i, o, *args, **kwargs):
         kwargs["message"] = self.message
-        self.value = "00000000000000000000000000000000000000000000000000000000012345"
-        NumpadNumberInput.__init__(self, i, o, value=self.value, *args, **kwargs)
+        kwargs["value"] = "00000000000000000000000000000000000000000000000000000000012345"
+        NumpadNumberInput.__init__(self, i, o, *args, **kwargs)
 
     def generate_views_dict(self):
         d = NumpadNumberInput.generate_views_dict(self)
@@ -111,7 +111,7 @@ class PhoneApp(ZeroApp):
     def __init__(self, *args, **kwargs):
         ZeroApp.__init__(self, *args, **kwargs)
         self.input_screen = InputScreen(self.i, self.o)
-        self.insc_overlay = FunctionOverlay(["deactivate", self.insc_options])
+        self.insc_overlay = FunctionOverlay(["deactivate", "backspace"], labels=["Exit", "Backspace"])
         self.insc_overlay.apply_to(self.input_screen)
         #self.status_screen = StatusScreen(self.i, self.o)
 
