@@ -1,6 +1,7 @@
 from apps import ZeroApp
 from ui import Refresher, NumpadCharInput, Canvas, FunctionOverlay
 from ui.base_ui import BaseUIElement
+from ui.base_view_ui import BaseView
 
 class InputScreen(NumpadCharInput):
 
@@ -17,16 +18,15 @@ class InputScreen(NumpadCharInput):
         return d
 
 
-class InputScreenView(object):
+class InputScreenView(BaseView):
+
+    top_offset = 8
+    value_height = 16
+    value_font = ("Fixedsys62.ttf", value_height)
 
     def __init__(self, o, el):
-        self.o = o
-        self.el = el
-        self.wrappers = []
+        BaseView.__init__(self, o, el)
         self.c = Canvas(self.o)
-        self.value_height = 16
-        self.top_offset = 8
-        self.value_font = ("Fixedsys62.ttf", self.value_height)
 
     def gtb(self, text, font):
         return self.c.get_text_bounds(text, font=font)
@@ -54,12 +54,6 @@ class InputScreenView(object):
             value = value[counter:]
         print(value_parts)
         return value_parts
-
-    def refresh(self):
-        image = self.get_displayed_image()
-        for wrapper in self.wrappers:
-            image = wrapper(image)
-        self.o.display_image(image)
 
 
 class StatusScreen(Refresher):
