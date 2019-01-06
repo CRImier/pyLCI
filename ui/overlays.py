@@ -59,20 +59,13 @@ class HelpOverlay(BaseOverlayWithTimeout):
         BaseOverlayWithTimeout.__init__(self, **kwargs)
 
     def apply_to(self, ui_el):
-        self.wrap_generate_keymap(ui_el)
+        self.update_keymap(ui_el)
         self.wrap_view(ui_el)
         BaseOverlayWithTimeout.apply_to(self, ui_el)
 
-    def wrap_generate_keymap(self, ui_el):
-        generate_keymap = ui_el.generate_keymap
-        @wraps(generate_keymap)
-        def wrapper(*args, **kwargs):
-            keymap = generate_keymap(*args, **kwargs)
-            key, callback = self.get_key_and_callback()
-            keymap[key] = ui_el.process_callback(callback)
-            return keymap
-        ui_el.generate_keymap = wrapper
-        ui_el.set_default_keymap()
+    def update_keymap(self, ui_el):
+        key, callback = self.get_key_and_callback()
+        ui_el.update_keymap({key:callback})
 
     def wrap_view(self, ui_el):
         def wrapper(image):
@@ -135,6 +128,9 @@ class FunctionOverlay(HelpOverlay):
             self.keymap = keymap
         self.labels = labels
         BaseOverlayWithTimeout.__init__(self, **kwargs)
+
+    def update_keymap(self, ui_el):
+        ui_el.update_keymap(self.keymap)
 
     def wrap_generate_keymap(self, ui_el):
         generate_keymap = ui_el.generate_keymap
