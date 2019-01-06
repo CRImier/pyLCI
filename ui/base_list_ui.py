@@ -415,16 +415,15 @@ class TextView(BaseView):
     def get_active_line_num(self):
         return (self.el.pointer - self.first_displayed_entry) * self.entry_height
 
-    @to_be_foreground
+    def get_displayed_data(self):
+        return self.get_displayed_text(self.el.get_displayed_contents())
+
+    def get_cursor_pos(self):
+        return (self.get_active_line_num(), 0)
+
     def refresh(self):
-        logger.debug("{}: refreshed data on display".format(self.el.name))
         self.fix_pointers_on_refresh()
-        displayed_data = self.get_displayed_text(self.el.get_displayed_contents())
-        displayed_data = self.execute_wrappers(displayed_data)
-        self.o.noCursor()
-        self.o.display_data(*displayed_data)
-        self.o.setCursor(self.get_active_line_num(), 0)
-        self.o.cursor()
+        self.character_refresh()
 
 
 class EightPtView(TextView):

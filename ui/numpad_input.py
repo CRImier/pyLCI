@@ -404,13 +404,11 @@ class TextView(BaseView):
         displayed_data.append(last_line)
         return displayed_data
 
-    def refresh(self):
-        """Function that is called each time data has to be output on display"""
+    def get_cursor_pos(self):
         cursor_y, cursor_x = divmod(self.el.position, self.o.cols)
         cursor_y += 1
-        data = self.get_displayed_data()
-        for wrapper in self.wrappers:
-            data = wrapper(data)
-        self.o.setCursor(cursor_y, cursor_x)
-        self.o.display_data(*data)
+        return (cursor_y, cursor_x)
 
+    def refresh(self):
+        """Function that is called each time data has to be output on display"""
+        return self.character_refresh()

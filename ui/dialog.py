@@ -130,13 +130,14 @@ class TextView(BaseView):
             self.positions.append(current_position)
             current_position += len(label) + 1
 
+    def get_cursor_pos(self):
+        return (1, self.positions[self.el.selected_option])
+
+    def get_displayed_data(self):
+        return [self.el.message, self.displayed_label]
+
     def refresh(self):
-        self.o.noCursor()
-        self.o.setCursor(1, self.positions[self.el.selected_option])
-        data = [self.el.message, self.displayed_label]
-        data = self.execute_wrappers(data)
-        self.o.display_data(*data)
-        self.o.cursor()
+        return self.character_refresh()
 
 
 class GraphicalView(TextView):

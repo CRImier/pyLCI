@@ -141,5 +141,28 @@ class BaseView(object):
         image = self.execute_wrappers(image)
         self.o.display_image(image)
 
+    def get_cursor_pos(self):
+        """
+        A helper function to get cursor coordinates - if anything other than None
+        is returned, the cursor will be drawn in the character view.
+        """
+        return None
+
+    def character_refresh(self):
+        """
+        A very cookie-cutter char display refresh for a view,
+        might not even need to be redefined. Draws the cursor
+        if ``self.get_cursor_pos()`` returns anything other than ``None``.
+        """
+        data = self.get_displayed_data()
+        data = self.execute_wrappers(data)
+        cursor_pos = self.get_cursor_pos()
+        if cursor_pos is not None:
+            self.o.noCursor()
+            self.o.setCursor(*cursor_pos)
+        self.o.display_data(*data)
+        if cursor_pos is not None:
+            self.o.cursor()
+
     def refresh(self):
         return self.graphical_refresh()

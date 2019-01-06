@@ -140,10 +140,8 @@ class CharArrowKeysInput(BaseViewMixin, BaseUIElement):
     def move_right(self):
         """Moves cursor to the next element. """
         self.check_for_backspace()
+        self.view.fix_pointers_before_refresh()
         self.position += 1
-        if self.view.last_displayed_char < self.position: #Went too far to the part of the value that isn't currently displayed
-            self.view.last_displayed_char = self.position
-            self.view.first_displayed_char = self.position - self.o.cols
         self.refresh()
 
     @to_be_foreground
@@ -153,10 +151,8 @@ class CharArrowKeysInput(BaseViewMixin, BaseUIElement):
         if self.position == 0:
             self.exit()
             return
+        self.view.fix_pointers_before_refresh()
         self.position -= 1
-        if self.view.first_displayed_char > self.position: #Went too far back to the part that's not currently displayed
-            self.view.first_displayed_char = self.position
-            self.view.last_displayed_char = self.position + self.o.cols
         self.refresh()
 
     @to_be_foreground
@@ -203,14 +199,21 @@ class CharArrowKeysInput(BaseViewMixin, BaseUIElement):
 
 class TextView(BaseView):
 
-    last_displayed_char = 0
     first_displayed_char = 0
 
     def __init__(self, o, el):
         BaseView.__init__(self, o, el)
-        self.last_displayed_char = self.o.cols
+
+    def fix_pointers_before_refresh(self):
+        if self.first_displayed_char+self.o.cols < self.el.position: #Went too far to the part of the value that isn't currently displayed
+            self.first_displayed_char = self.el.position - self.o.cols
+        if self.first_displayed_char > self.el.position: #Went too far back to the part that's not currently displayed
+            self.first_displayed_char = self.el.position
 
     def get_displayed_data(self):
+        return self.convert_chars_to_hd44780_charset( *self.get_displayed_text() )
+
+    def get_displayed_text(self):
         """
         Formats the value and the message to show it on the screen,
         then returns a list that can be directly used by o.display_data.
@@ -227,12 +230,11 @@ class TextView(BaseView):
         value = value.replace(' ', chr(255)) #Displaying all spaces as black boxes
         return message, value
 
+    def get_cursor_pos(self):
+        return (1, self.el.position-self.first_displayed_char)
+
     def refresh(self):
-        self.o.noCursor()
-        #self.o.cursor()# Only needed for testing TextView on luma.oled
-        displayed_data = self.convert_chars_to_hd44780_charset( *self.get_displayed_data() )
-        self.o.display_data(*displayed_data)
-        self.o.cursor()
+        return self.character_refresh()
 
 
 class GraphicalView(TextView):
@@ -241,7 +243,7 @@ class GraphicalView(TextView):
         c = Canvas(self.o)
 
         #Getting displayed data, drawing it
-        lines = self.get_displayed_data()
+        lines = self.get_displayed_text()
         for i, line in enumerate(lines):
             y = (i*self.o.char_height - 1) if i != 0 else 0
             c.text(line, (2, y))
