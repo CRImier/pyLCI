@@ -4,12 +4,12 @@ Best example of such an element is a Menu element - it has menu entries you can 
 
 from copy import copy
 from time import sleep
-from threading import Event
 
 from entry import Entry
 from canvas import Canvas
 from helpers import setup_logger
 from base_ui import BaseUIElement
+from base_view_ui import BaseViewMixin
 from utils import to_be_foreground, clamp_list_index
 
 logger = setup_logger(__name__, "warning")
@@ -31,7 +31,7 @@ else:
         logger.exception(e)
 
 
-class BaseListUIElement(BaseUIElement):
+class BaseListUIElement(BaseViewMixin, BaseUIElement):
     """This is a base UI element for list-like UI elements.
        This UI element has the ability to go into background. It's usually for the cases when
        an UI element can call another UI element, after the second UI element returns,
@@ -47,7 +47,8 @@ class BaseListUIElement(BaseUIElement):
     exit_entry = ["Back", "exit"]
 
     config_key = "base_list_ui"
-    view_mixin = None
+    default_pixel_view = "SixteenPtView"
+    default_char_view = "TextView"
 
     def __init__(self, contents, i, o, name=None, entry_height=1, append_exit=True, exitable=True, scrolling=True,
                  config=None, keymap=None, override_left=True):
@@ -67,13 +68,11 @@ class BaseListUIElement(BaseUIElement):
             "pointer": 0
         }
         self.reset_scrolling()
-        self.config = config if config is not None else global_config
-        self.set_view(self.config.get(self.config_key, {}))
+        BaseViewMixin.__init__(self, config=config)
         self.set_contents(contents)
-        self.inhibit_refresh = Event()
 
-    def set_views_dict(self):
-        self.views = {
+    def generate_views_dict(self):
+        return {
             "TextView": TextView,
             "EightPtView": EightPtView,
             "SixteenPtView": SixteenPtView,
@@ -81,53 +80,6 @@ class BaseListUIElement(BaseUIElement):
             "PrettyGraphicalView": SixteenPtView,  # Not a descriptive name - left for compatibility
             "SimpleGraphicalView": EightPtView  # Not a descriptive name - left for compatibility
         }
-        if self.view_mixin:
-            class_name = self.__class__.__name__
-            for view_name, view_class in self.views.items():
-                if view_class.use_mixin:
-                    name = "{}-{}".format(view_name, class_name)
-                    logger.debug("Subclassing {} into {}".format(view_name, name))
-                    self.views[view_name] = type(name, (self.view_mixin, view_class), {})
-
-    def set_view(self, config):
-        view = None
-        self.set_views_dict()
-        if self.name in config.get("custom_views", {}).keys():
-            view_config = config["custom_views"][self.name]
-            if isinstance(view_config, basestring):
-                if view_config not in self.views:
-                    logger.warning('Unknown view "{}" given for UI element "{}"!'.format(view_config, self.name))
-                else:
-                    view = self.views[view_config]
-            elif isinstance(view_config, dict):
-                raise NotImplementedError
-                # This is the part where fine-tuning views will be possible,
-                # once passing args&kwargs is implemented, that is
-            else:
-                logger.error(
-                    "Custom view description can only be a string or a dictionary; is {}!".format(type(view_config)))
-        elif not view and "default" in config:
-            view_config = config["default"]
-            if isinstance(view_config, basestring):
-                if view_config not in self.views:
-                    logger.warning('Unknown view "{}" given for UI element "{}"!'.format(view_config, self.name))
-                else:
-                    view = self.views[view_config]
-            elif isinstance(view_config, dict):
-                raise NotImplementedError  # Again, this is for fine-tuning
-        elif not view:
-            view = self.get_default_view()
-        self.view = view(self.o, self)
-
-    def get_default_view(self):
-        """Decides on the view to use for UI element when config file has
-        no information on it."""
-        if "b&w-pixel" in self.o.type:
-            return self.views["SixteenPtView"]
-        elif "char" in self.o.type:
-            return self.views["TextView"]
-        else:
-            raise ValueError("Unsupported display type: {}".format(repr(self.o.type)))
 
     def before_activate(self):
         """
@@ -323,17 +275,6 @@ class BaseListUIElement(BaseUIElement):
         in ``NumberedMenu``).
         """
         return self.contents
-
-    def add_view_wrapper(self, wrapper):
-        self.view.wrappers.append(wrapper)
-
-    @to_be_foreground
-    def refresh(self):
-        """ A placeholder to be used for BaseUIElement. """
-        if self.inhibit_refresh.isSet():
-            return False
-        self.view.refresh()
-        return True
 
 
 # Views.

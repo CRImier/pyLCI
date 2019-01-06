@@ -26,12 +26,15 @@ except ImportError:
 def get_mock_input():
     return Mock(maskable_keymap=["KEY_LEFT"])
 
-
 def get_mock_output(rows=8, cols=21):
     m = Mock()
     m.configure_mock(rows=rows, cols=cols, type=["char"])
     return m
 
+def get_mock_graphical_output(width=128, height=64, mode="1", **kwargs):
+    m = get_mock_output(**kwargs)
+    m.configure_mock(width=width, height=height, device_mode=mode, type=["char", "b&w-pixel"])
+    return m
 
 ni_name = "Test NumpadCharInput"
 
@@ -121,6 +124,25 @@ class TestNumpadCharInput(unittest.TestCase):
         """Tests whether the NumpadCharInput outputs data on screen when it's ran"""
         i = get_mock_input()
         o = get_mock_output()
+        ni = self.cls(i, o, message="Test:", name=ni_name)
+
+        def scenario():
+            ni.deactivate()
+
+        with patch.object(ni, 'idle_loop', side_effect=scenario) as p:
+            ni.activate()
+            #The scenario should only be called once
+            assert ni.idle_loop.called
+            assert ni.idle_loop.call_count == 1
+
+        assert o.display_data.called
+        assert o.display_data.call_count == 1 #One in to_foreground
+        assert o.display_data.call_args[0] == ('Test:', '', '', '', '', '', '', ' Cancel   OK   Erase ')
+
+    def test_shows_data_on_graphical_screen(self):
+        """Tests whether the NumpadCharInput outputs data on a graphical screen when it's ran"""
+        i = get_mock_input()
+        o = get_mock_graphical_output()
         ni = self.cls(i, o, message="Test:", name=ni_name)
 
         def scenario():
