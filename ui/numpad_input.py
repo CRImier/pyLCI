@@ -94,7 +94,6 @@ class NumpadCharInput(BaseViewMixin, BaseUIElement):
 
         """
         BaseUIElement.__init__(self, i, o, name)
-        BaseViewMixin.__init__(self, config=config)
         self.message = message
         self.value = value
         self.position = len(self.value)
@@ -105,6 +104,7 @@ class NumpadCharInput(BaseViewMixin, BaseUIElement):
             self.mapping = copy(self.default_mapping)
         self.value_lock = Lock()
         self.value_accepted = False
+        BaseViewMixin.__init__(self, config=config)
 
     def generate_views_dict(self):
         return {"TextView": TextView}
