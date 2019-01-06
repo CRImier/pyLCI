@@ -143,7 +143,7 @@ class FunctionOverlay(HelpOverlay):
         ui_el.set_default_keymap()
 
     def draw_icon(self, c):
-        half_line_length = c.o.cols/self.num_keys
+        half_line_length = c.o.cols/len(self.labels)
         last_line = "".join([label.center(half_line_length) for label in self.labels])
         c.clear((self.right_offset, str(-self.bottom_offset), c.width-self.right_offset, c.height))
         c.text(last_line, (self.right_offset, str(-self.bottom_offset)), font=self.font)
