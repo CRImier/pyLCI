@@ -136,6 +136,7 @@ def launch(name=None, **kwargs):
         # Load all apps
         app_menu = app_man.load_all_apps()
         runner = app_menu.activate
+        cm.switch_to_start_context()
     else:
         # If using autocompletion from main folder, it might
         # append a / at the name end, which isn't acceptable
