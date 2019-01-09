@@ -64,7 +64,14 @@ class InputDevice(InputSkeleton):
             logger.error("Failed HID")
             return False
         else:
-            self.device.grab() #Can throw exception if already grabbed
+            try:
+                self.device.grab() #Can throw exception if already grabbed
+            except IOError as e:
+                logger.exception("Device already grabbed? IOError, errno={}".format(e.errno))
+                if e.errno == 16:
+                    # Busy - likely already grabbed
+                    return False
+                return False
             return True
 
     def runner(self):
@@ -78,7 +85,7 @@ class InputDevice(InputSkeleton):
                     if value == 0 and self.enabled:
                         self.send_key(key)
                 sleep(0.01)
-        except IOError as e: 
+        except IOError as e:
             if e.errno == 11:
                 #raise #Uncomment only if you have nothing better to do - error seems to appear at random
                 pass
