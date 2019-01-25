@@ -280,7 +280,6 @@ def set_keymap():
     i.listen()
 
 def show(lines):
-    o.clear()
     if len(lines) < 4:
         return
     c = Canvas(o)
