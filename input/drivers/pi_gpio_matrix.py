@@ -29,13 +29,14 @@ class InputDevice(InputSkeleton):
     def init_hw(self):
         import RPi.GPIO as GPIO #Doing that because I couldn't mock it for ReadTheDocs
         self.GPIO = GPIO
-        GPIO.setmode(GPIO.BCM) 
+        GPIO.setmode(GPIO.BCM)
         for pin_num in self.rows:
             GPIO.setup(pin_num, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         for pin_num in self.cols:
             GPIO.setup(pin_num, GPIO.OUT)
             GPIO.output(pin_num, True)
         self.button_states = [[False for u in range(len(self.cols))] for i in range(len(self.rows))]
+        return None # Status reading not available
 
     def runner(self):
         """Polling loop. Stops when ``stop_flag`` is set to True."""

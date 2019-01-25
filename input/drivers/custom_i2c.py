@@ -55,16 +55,11 @@ class InputDevice(InputSkeleton):
         self.addr = addr
         self.int_pin = int_pin
         InputSkeleton.__init__(self, **kwargs)
-        self.connected = True
 
     def init_hw(self):
-        try:
-            self.bus = smbus.SMBus(self.bus_num)
-            self.bus.read_byte(self.addr)
-        except IOError:
-            return True
-        else:
-            return False
+        self.bus = smbus.SMBus(self.bus_num)
+        self.bus.read_byte(self.addr)
+        return True
 
     def runner(self):
         """Runs either interrupt-driven or polling loop."""
@@ -86,13 +81,13 @@ class InputDevice(InputSkeleton):
                     data = self.bus.read_byte(self.addr)
                     logger.debug("Received {:#010b}".format(data))
                 except IOError:
-                    if self.connected:
+                    if self.connected.isSet():
                         logger.error("Can't get data from keypad!")
-                        self.connected = False
+                        self.connected.clear()
                 else:
-                    if not self.connected:
+                    if not self.connected.isSet():
                         logger.info("Receiving data from keypad again!")
-                        self.connected = True
+                        self.connected.set()
                     if data != 0:
                         data -= 1
                         if data in range(len(self.mapping)):

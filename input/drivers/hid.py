@@ -5,6 +5,7 @@ from helpers import setup_logger
 from skeleton import InputSkeleton
 
 logger = setup_logger(__name__, "warning")
+
 def get_input_devices():
     """Returns list of all the available InputDevices"""
     devices = []
@@ -54,41 +55,41 @@ class InputDevice(InputSkeleton):
             raise IOError("Device not found")
         self.path = path
         self.name = name
-        self.init_hw()
         InputSkeleton.__init__(self, mapping = [], **kwargs)
 
     def init_hw(self):
-        try:
-            self.device = HID(self.path)
-        except OSError:
-            logger.error("Failed HID")
-            return False
-        else:
-            try:
-                self.device.grab() #Can throw exception if already grabbed
-            except IOError as e:
-                logger.exception("Device already grabbed? IOError, errno={}".format(e.errno))
-                if e.errno == 16:
-                    # Busy - likely already grabbed
-                    return False
-                return False
-            return True
+        self.device = HID(self.path)
+        self.device.grab() #Can throw exception if already grabbed
 
     def runner(self):
         """Blocking event loop which just calls supplied callbacks in the keymap."""
-        try:
-            while not self.stop_flag:
+        while not self.stop_flag:
+            if not self.check_connection():
+                # Looping while the driver is not found
+                sleep(self.connection_check_sleep)
+                continue
+            try:
                 event = self.device.read_one()
-                if event is not None and event.type == ecodes.EV_KEY:
-                    key = ecodes.keys[event.code]
-                    value = event.value
-                    if value == 0 and self.enabled:
-                        self.send_key(key)
+            except IOError as e:
+                logger.exception("IOError while reading from the HID device {}!".format(self.path))
+                if e.errno == 11:
+                    #raise #Uncomment only if you have nothing better to do - error seems to appear at random
+                    continue
+                else:
+                    self.connected.clear()
+            except Exception as e:
+                logger.exception("Error while reading from the HID device {}!".format(self.path))
+                self.connected.clear()
+            else:
+                self.process_event(event)
                 sleep(0.01)
-        except IOError as e:
-            if e.errno == 11:
-                #raise #Uncomment only if you have nothing better to do - error seems to appear at random
-                pass
+
+    def process_event(self, event):
+        if event is not None and event.type == ecodes.EV_KEY:
+            key = ecodes.keys[event.code]
+            value = event.value
+            if value == 0 and self.enabled:
+                self.send_key(key)
 
     def atexit(self):
         InputSkeleton.atexit(self)
@@ -96,7 +97,6 @@ class InputDevice(InputSkeleton):
             self.device.ungrab()
         except:
             pass
-
 
 
 if __name__ == "__main__":

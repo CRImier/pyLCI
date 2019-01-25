@@ -6,7 +6,7 @@ logger = setup_logger(__name__, "warning")
 
 class InputSkeleton(object):
     """Base class for input devices. Expectations from children:
-    
+
     * ``self.default_mapping`` variable to be set unless you're always going to pass mapping as argument in config
     * ``self.runner`` to be set to a function that'll run in backround, scanning for button presses and sending events to send_key
     * main thread to stop sending keys if self.enabled is False
@@ -15,19 +15,32 @@ class InputSkeleton(object):
     enabled = True
     stop_flag = False
     available_keys = None
+    status_available = False
 
-    def __init__(self, mapping=None, threaded=True):
+    def __init__(self, mapping=None, threaded=True, conn_check_sleep=1):
+        self.connection_check_sleep = conn_check_sleep
+        self.connected = threading.Event()
         if mapping is not None:
             self.mapping = mapping
         else:
             self.mapping = self.default_mapping
-        try:
-            self.init_hw()
-        except AttributeError:
-            logger.error("{}: init_hw function not found!".format(self.__class__))
+        self.connect(initial=True)
         self.set_available_keys()
         if threaded:
             self.start_thread()
+
+    def try_init_hardware(self, initial=False):
+        try:
+            return self.init_hw()
+        except IOError:
+            if self.connected.isSet() or initial:
+                logger.exception("Cannot find hardware")
+            return False
+        except AttributeError:
+            raise
+        except Exception as e:
+            logger.exception("Unexpected exception while setting up hardware")
+            return False
 
     def start(self):
         """Sets the ``enabled`` for loop functions to start sending keycodes."""
@@ -66,6 +79,36 @@ class InputSkeleton(object):
         self.thread = threading.Thread(target=self.runner)
         self.thread.daemon = True
         self.thread.start()
+
+    def is_connected(self):
+        if self.status_available:
+            return None
+        return self.connected.isSet()
+
+    def check_connection(self):
+        if self.status_available:
+            status = self.connected.isSet()
+            if not status:
+                return self.connect()
+            return True
+        return True
+
+    def connect(self, initial=False):
+        status = None
+        try:
+            status = self.try_init_hardware(initial=False)
+            if status is not None:
+                self.status_available = True
+        except AttributeError:
+            logger.error("{}: init_hw function not found!".format(self.__class__))
+        if status is not None and self.status_available:
+            if status:
+                self.connected.set()
+                return True
+            else:
+                self.connected.clear()
+                return False
+        return True
 
     def atexit(self):
         self.stop_flag = True
