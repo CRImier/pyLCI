@@ -121,7 +121,7 @@ oper2 = [Oper("1si", "sin", sin),           # 1, sin
 
 # globals
 mode = None
-todo = None
+state = None
 values = None
 add = None
 
@@ -147,16 +147,16 @@ class Values:
             return -1
 
     def clear_number(self):
-        global todo
+        global state
         index = self.get_index()
         if index >= 0: # number1,2
             self.number[index] = ""
         else: # operation
             self.page = oper2
-        todo = 1  # update
+        state = 1  # update
 
     def delete_digit(self):
-        global todo
+        global state
         index = self.get_index()
         if index >= 0: # number1,2
             s = str(self.number[index])
@@ -166,7 +166,7 @@ class Values:
                 self.number[index] = s[0:-1]
         else: # operation
             self.page = oper1
-        todo = 1  # update
+        state = 1  # update
 
     def add_digit(self, index, key):
         s = str(self.number[index])
@@ -192,24 +192,24 @@ class Values:
                     self.number[index] = s + '.'
 
     def save(self):
-        global todo
+        global state
         index = self.get_index()
         if index >= 0: # number1,2
             self.number[2] = self.number[index]  # memory
-            todo = 1 # update
+            state = 1 # update
 
     def load(self):
-        global todo
+        global state
         index = self.get_index()
         if index >= 0: # number1,2
             if self.number[2] != None:
                 self.number[index] = self.number[2]  # memory
-                todo = 1 # update
+                state = 1 # update
 
     def clear_memory(self):
-        global todo
+        global state
         self.number[2] = None
-        todo = 1 # update
+        state = 1 # update
 
 def help():
     #      0123456789abcdef
@@ -219,26 +219,26 @@ def help():
           "Pg^=S Pgv=L F2=C"])
 
 def exit():
-    global todo
+    global state
     choice = DialogBox("yn", i, o, message="Exit?").activate()
     if choice:
-        todo = -1  # exit
+        state = -1  # exit
     else:
-        todo = 1 # update
+        state = 1 # update
         set_keymap()
 
 def next_mode(where):
-    global mode, todo, add
+    global mode, state, add
     add = where
     mode += add # 0=number1, 1=operation, 2=number2
     if mode > 2:
         mode = 0
     elif mode < 0:
         mode = 2
-    todo = 1 # update
+    state = 1 # update
 
 def process_key(key):
-    global todo
+    global state
     index = values.get_index()
     if index >= 0:  # number1,2
         if key >= '0' and key <= '9':
@@ -260,7 +260,7 @@ def process_key(key):
             next_mode(add) # continue
         else:
             next_mode(-add)  # return to previous
-    todo = 1  # update
+    state = 1  # update
 
 def set_keymap():
     keymap = {"KEY_ENTER": lambda: exit(), # exit
@@ -368,7 +368,7 @@ def get_lines():
             "  {} {} {}".format(values.page[9].short, values.page[10].short, values.page[11].short),]
 
 def init():
-    global columns, char_height, font1, mode, add, todo, values
+    global columns, char_height, font1, mode, add, state, values
     getcontext().prec =  16 - len('0.1E+zz') # results has all 16 digits: xx.yyE+zz
     columns = 15  # display width in chars without * - current line
     char_height = int(o.height / 4)
@@ -376,16 +376,16 @@ def init():
     font1 = c1.load_font("Fixedsys62.ttf", char_height)
     mode = 0  # number1
     add = +1 # move down
-    todo = 0  # run
+    state = 0  # run
     values = Values()
 
 def callback():
-    global todo
+    global state
     init()
     help()
     set_keymap()
-    while todo != -1: # exit
-        if todo == 1: # update
-            todo = 0 # run
+    while state != -1: # exit
+        if state == 1: # update
+            state = 0 # run
             lines = get_lines()
             show(lines)
