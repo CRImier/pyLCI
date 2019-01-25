@@ -4,6 +4,8 @@
  - Jez Boxall
  - Carl Wall
  - Sascha Trebbin
+ - Luca Fornasari
+ - Timothée Floure
  - Phil
  - Jimmy Trost
  - Dillon Nichols
