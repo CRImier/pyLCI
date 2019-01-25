@@ -266,8 +266,8 @@ def set_keymap():
               "KEY_RIGHT": lambda: values.clear_number(),  # clear number/next page
               "KEY_UP": lambda: next_mode(-1),  # prev
               "KEY_DOWN": lambda: next_mode(+1),  # next
-              "KEY_PGUP": lambda: values.save(),  # save to memory
-              "KEY_PGDOWN": lambda: values.load(),  # load from memory
+              "KEY_PAGEUP": lambda: values.save(),  # save to memory
+              "KEY_PAGEDOWN": lambda: values.load(),  # load from memory
               "KEY_F2": lambda: values.clear_memory(),  # clear memory
               "KEY_F1": lambda: help(),  # help
               "KEY_1": lambda: process_key('1'),
