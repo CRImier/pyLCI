@@ -27,6 +27,7 @@ config_paths.append(local_path('config.json'))
 config_paths.append(local_path('default_config.json'))
 
 input_processor = None
+input_device_manager = None
 screen = None
 cm = None
 config = None
@@ -77,7 +78,7 @@ files_to_store = log_config["files_to_store"]
 def init():
     """Initialize input and output objects"""
 
-    global input_processor, screen, cm, config, config_path
+    global input_processor, input_device_manager, screen, cm, config, config_path
     config, config_path = load_config()
 
     if config is None:
@@ -97,7 +98,7 @@ def init():
     # Initialize input
     try:
         # Now we can show errors on the display
-        input_processor = input.init(config["input"], cm)
+        input_processor, input_device_manager = input.init(config["input"], cm)
     except:
         logging.exception('Failed to initialize the input object')
         logging.exception(traceback.format_exc())

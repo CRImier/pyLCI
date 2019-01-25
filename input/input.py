@@ -1,14 +1,15 @@
-from traceback import format_exc
 from threading import Thread, Event
+from traceback import format_exc
 from time import sleep
 from copy import copy
 import importlib
-
+import inspect
 import atexit
 import Queue
+
 from helpers import setup_logger
 
-import inspect
+from hotplug import DeviceManager
 
 logger = setup_logger(__name__, "warning")
 
@@ -449,7 +450,9 @@ def init(driver_configs, context_manager):
             counter += 1
             name = "{}-{}".format(driver_name, counter)
         drivers[name] = driver
-    return InputProcessor(drivers, context_manager)
+    i = InputProcessor(drivers, context_manager)
+    dm = DeviceManager(i)
+    return i, dm
 
 if __name__ == "__main__":
     import doctest
