@@ -261,28 +261,20 @@ def process_key(key):
     do_update.set()
 
 def set_keymap():
-    keymap = {"KEY_ENTER": lambda: exit(), # exit
-              "KEY_LEFT": lambda: values.delete_digit(),  # delete last digit/prev page
-              "KEY_RIGHT": lambda: values.clear_number(),  # clear number/next page
+    keymap = {"KEY_ENTER": exit,
+              "KEY_LEFT": values.delete_digit,  # delete last digit/prev page
+              "KEY_RIGHT": values.clear_number,  # clear number/next page
               "KEY_UP": lambda: next_mode(-1),  # prev
               "KEY_DOWN": lambda: next_mode(+1),  # next
-              "KEY_PAGEUP": lambda: values.save(),  # save to memory
-              "KEY_PAGEDOWN": lambda: values.load(),  # load from memory
-              "KEY_F2": lambda: values.clear_memory(),  # clear memory
-              "KEY_F1": lambda: help(),  # help
-              "KEY_1": lambda: process_key('1'),
-              "KEY_2": lambda: process_key('2'),
-              "KEY_3": lambda: process_key('3'),
-              "KEY_4": lambda: process_key('4'),
-              "KEY_5": lambda: process_key('5'),
-              "KEY_6": lambda: process_key('6'),
-              "KEY_7": lambda: process_key('7'),
-              "KEY_8": lambda: process_key('8'),
-              "KEY_9": lambda: process_key('9'),
+              "KEY_PAGEUP": values.save,  # save to memory
+              "KEY_PAGEDOWN": values.load,  # load from memory
+              "KEY_F2": values.clear_memory,
+              "KEY_F1": help,
               "KEY_*": lambda: process_key('-'),
-              "KEY_0": lambda: process_key('0'),
               "KEY_#": lambda: process_key('.'),
               }
+    for a in range(10):
+        keymap["KEY_{}".format(a)] = lambda x=a: process_key(x)
     i.stop_listen()
     i.set_keymap(keymap)
     i.listen()
