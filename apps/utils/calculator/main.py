@@ -3,6 +3,8 @@ import operator
 import math
 from decimal import *
 
+from time import sleep
+from threading import Event
 from ui import Canvas, DialogBox
 
 menu_name = "Calculator"
@@ -119,9 +121,12 @@ oper2 = [Oper("1si", "sin", sin),           # 1, sin
          Oper("#e ", "e", e, 0),            # *, e
          ]
 
+# constants
+exit_app = Event()
+do_update = Event()
+
 # globals
 mode = None
-state = None
 values = None
 add = None
 
@@ -147,16 +152,14 @@ class Values:
             return -1
 
     def clear_number(self):
-        global state
         index = self.get_index()
         if index >= 0: # number1,2
             self.number[index] = ""
         else: # operation
             self.page = oper2
-        state = 1  # update
+        do_update.set()
 
     def delete_digit(self):
-        global state
         index = self.get_index()
         if index >= 0: # number1,2
             s = str(self.number[index])
@@ -166,7 +169,7 @@ class Values:
                 self.number[index] = s[0:-1]
         else: # operation
             self.page = oper1
-        state = 1  # update
+        do_update.set()
 
     def add_digit(self, index, key):
         s = str(self.number[index])
@@ -192,24 +195,21 @@ class Values:
                     self.number[index] = s + '.'
 
     def save(self):
-        global state
         index = self.get_index()
         if index >= 0: # number1,2
             self.number[2] = self.number[index]  # memory
-            state = 1 # update
+        do_update.set()
 
     def load(self):
-        global state
         index = self.get_index()
         if index >= 0: # number1,2
             if self.number[2] != None:
                 self.number[index] = self.number[2]  # memory
-                state = 1 # update
+                do_update.set()
 
     def clear_memory(self):
-        global state
         self.number[2] = None
-        state = 1 # update
+        do_update.set()
 
 def help():
     #      0123456789abcdef
@@ -219,26 +219,24 @@ def help():
           "Pg^=S Pgv=L F2=C"])
 
 def exit():
-    global state
     choice = DialogBox("yn", i, o, message="Exit?").activate()
     if choice:
-        state = -1  # exit
+        exit_app.set()
     else:
-        state = 1 # update
+        do_update.set()
         set_keymap()
 
 def next_mode(where):
-    global mode, state, add
+    global mode, add
     add = where
     mode += add # 0=number1, 1=operation, 2=number2
     if mode > 2:
         mode = 0
     elif mode < 0:
         mode = 2
-    state = 1 # update
+    do_update.set()
 
 def process_key(key):
-    global state
     index = values.get_index()
     if index >= 0:  # number1,2
         if key >= '0' and key <= '9':
@@ -260,7 +258,7 @@ def process_key(key):
             next_mode(add) # continue
         else:
             next_mode(-add)  # return to previous
-    state = 1  # update
+    do_update.set()
 
 def set_keymap():
     keymap = {"KEY_ENTER": lambda: exit(), # exit
@@ -368,7 +366,7 @@ def get_lines():
             "  {} {} {}".format(values.page[9].short, values.page[10].short, values.page[11].short),]
 
 def init():
-    global columns, char_height, font1, mode, add, state, values
+    global columns, char_height, font1, mode, add, values
     getcontext().prec =  16 - len('0.1E+zz') # results has all 16 digits: xx.yyE+zz
     columns = 15  # display width in chars without * - current line
     char_height = int(o.height / 4)
@@ -376,16 +374,17 @@ def init():
     font1 = c1.load_font("Fixedsys62.ttf", char_height)
     mode = 0  # number1
     add = +1 # move down
-    state = 0  # run
     values = Values()
 
 def callback():
-    global state
     init()
     help()
     set_keymap()
-    while state != -1: # exit
-        if state == 1: # update
-            state = 0 # run
+    exit_app.clear()
+    do_update.clear()
+    while not exit_app.isSet():
+        if do_update.isSet():
             lines = get_lines()
+            do_update.clear()
             show(lines)
+        sleep(0.01)
