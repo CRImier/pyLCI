@@ -5,7 +5,7 @@ from decimal import *
 
 from ui import Canvas, DialogBox
 
-menu_name = "Calc2"
+menu_name = "Calculator"
 
 i = None # Input device
 o = None # Output device
