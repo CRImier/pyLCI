@@ -21,6 +21,8 @@ emulator_flag_filename = "emulator"
 local_path = local_path_gen(__name__)
 is_emulator = emulator_flag_filename in os.listdir(".")
 
+rconsole_port = 9377
+
 config_paths = ['/boot/zpui_config.json', '/boot/pylci_config.json'] if not is_emulator else []
 config_paths.append(local_path('config.json'))
 #Using the .example config as a last resort
@@ -196,6 +198,21 @@ def dump_threads(*args):
             logger.critical(frame)
 
 
+def spawn_rconsole(*args):
+    """
+    USR2-activated debug console
+    """
+    try:
+        from rfoo.utils import rconsole
+    except ImportError:
+        logger.exception("can't import rconsole - python-rfoo not installed?")
+        return False
+    try:
+        rconsole.spawn_server(port=rconsole_port)
+    except:
+        logger.exception("Can't spawn rconsole!")
+
+
 if __name__ == '__main__':
     """
     Parses arguments, initializes logging, launches ZPUI
@@ -203,6 +220,7 @@ if __name__ == '__main__':
 
     # Signal handler for debugging
     signal.signal(signal.SIGUSR1, dump_threads)
+    signal.signal(signal.SIGUSR2, spawn_rconsole)
     signal.signal(signal.SIGHUP, helpers.logger.on_reload)
 
     # Setup argument parsing
