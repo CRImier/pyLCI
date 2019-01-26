@@ -46,20 +46,33 @@ class InputDevice(InputSkeleton):
 
         """
         if not name and not path: #No necessary arguments supplied
-            raise TypeError("Expected at least path or name; got nothing. =(")
-        if not path:
-            path = get_path_by_name(name)
-        if not name:
-            name = get_name_by_path(path)
-        if not name and not path: #Seems like nothing was found by get_input_devices
-            raise IOError("Device not found")
+            raise TypeError("HID device driver: expected at least path or name; got nothing. =(")
         self.path = path
         self.name = name
         InputSkeleton.__init__(self, mapping = [], **kwargs)
+        self.hid_device_error_filter = False
+
+    @property
+    def status_available(self):
+        return True
+
+    @status_available.setter
+    def status_available(self, value):
+        pass
+
+    def detect_device_path(self):
+        if not self.path:
+            self.path = get_path_by_name(self.name)
+        if not self.name:
+            self.name = get_name_by_path(self.path)
+        if not self.name and not self.path: #Seems like nothing was found by get_input_devices
+            raise IOError("Device not found by path and no name was provided")
 
     def init_hw(self):
+        self.detect_device_path()
         self.device = HID(self.path)
         self.device.grab() #Can throw exception if already grabbed
+        return True
 
     def runner(self):
         """Blocking event loop which just calls supplied callbacks in the keymap."""
@@ -70,9 +83,12 @@ class InputDevice(InputSkeleton):
                 continue
             try:
                 event = self.device.read_one()
-            except IOError as e:
-                logger.exception("IOError while reading from the HID device {}!".format(self.path))
-                if e.errno == 11:
+                self.hid_device_error_filter = False
+            except (IOError, AttributeError) as e:
+                if not self.hid_device_error_filter:
+                    logger.exception("Error while reading from the HID device {}!".format(self.path))
+                    self.hid_device_error_filter = True
+                if isinstance(e, IOError) and e.errno == 11:
                     #raise #Uncomment only if you have nothing better to do - error seems to appear at random
                     continue
                 else:

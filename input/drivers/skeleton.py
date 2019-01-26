@@ -28,10 +28,14 @@ class InputSkeleton(object):
         self.set_available_keys()
         if threaded:
             self.start_thread()
+        # A flag that avoids littering the logs when probing the device fails
+        self.init_hw_error_msg_filter = False
 
     def try_init_hardware(self, initial=False):
         try:
-            return self.init_hw()
+            value = self.init_hw()
+            self.init_hw_error_msg_filter = False
+            return value
         except IOError:
             if self.connected.isSet() or initial:
                 logger.exception("Cannot find hardware")
@@ -39,7 +43,9 @@ class InputSkeleton(object):
         except AttributeError:
             raise
         except Exception as e:
-            logger.exception("Unexpected exception while setting up hardware")
+            if not self.init_hw_error_msg_filter:
+                logger.exception("Unexpected exception while setting up hardware")
+                self.init_hw_error_msg_filter = True
             return False
 
     def start(self):
@@ -97,8 +103,6 @@ class InputSkeleton(object):
         status = None
         try:
             status = self.try_init_hardware(initial=False)
-            if status is not None:
-                self.status_available = True
         except AttributeError:
             logger.error("{}: init_hw function not found!".format(self.__class__))
         if status is not None and self.status_available:
