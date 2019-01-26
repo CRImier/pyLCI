@@ -274,7 +274,7 @@ def set_keymap():
               "KEY_#": lambda: process_key('.'),
               }
     for a in range(10):
-        keymap["KEY_{}".format(a)] = lambda x=a: process_key(x)
+        keymap["KEY_{}".format(a)] = lambda x=a: process_key(str(x))
     i.stop_listen()
     i.set_keymap(keymap)
     i.listen()
