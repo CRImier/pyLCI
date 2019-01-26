@@ -22,15 +22,14 @@ class DeviceManager():
         return self.driver_storage
 
     def add_driver(self, path=None, name=None, dtype="hid"):
-        if dtype in ["hid"]:
+        if dtype not in ["hid"]:
             raise ValueError("Types other than 'hid' are not supported- asked for {}!".format(dtype))
         if dtype == "hid":
             from drivers.hid import InputDevice as HIDDriver
             driver = HIDDriver(path=path, name=name)
-            name = "hid"
-        self.i.attach_driver(driver, name)
-        self.driver_storage[name] = driver
-        return name
+        dname = self.i.attach_driver(driver)
+        self.driver_storage[dname] = driver
+        return dname
 
     def remove_driver(self, name):
         driver = self.driver_storage.pop(name)

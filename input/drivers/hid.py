@@ -36,7 +36,9 @@ def get_name_by_path(path):
 class InputDevice(InputSkeleton):
     """ A driver for HID devices. As for now, supports keyboards and numpads."""
 
-    def __init__(self, path=None, name=None, **kwargs):
+    default_keycode_mapping = {"KEY_KPENTER":"KEY_ENTER"}
+
+    def __init__(self, path=None, name=None, keycode_mapping=None, **kwargs):
         """Initialises the ``InputDevice`` object.
 
         Kwargs:
@@ -46,20 +48,52 @@ class InputDevice(InputSkeleton):
 
         """
         if not name and not path: #No necessary arguments supplied
-            raise TypeError("Expected at least path or name; got nothing. =(")
-        if not path:
-            path = get_path_by_name(name)
-        if not name:
-            name = get_name_by_path(path)
-        if not name and not path: #Seems like nothing was found by get_input_devices
-            raise IOError("Device not found")
+            raise TypeError("HID device driver: expected at least path or name; got nothing. =(")
         self.path = path
         self.name = name
+        self.keycode_mapping = keycode_mapping if keycode_mapping else self.default_keycode_mapping
+        self.setup_keycode_mapping()
         InputSkeleton.__init__(self, mapping = [], **kwargs)
+        self.hid_device_error_filter = False
+
+    def setup_keycode_mapping(self):
+        # Making sure that, even if the keycode mapping is supplied by user,
+        # the default keys stay unless overridden by the user explicitly
+        # this is done so that users don't have to copy default mappings
+        # to config.json and then keep them up-to-date.
+        for k, v in self.default_keycode_mapping.items():
+            if k not in self.keycode_mapping:
+                self.keycode_mapping[k] = v
+
+    @property
+    def status_available(self):
+        return True
+
+    @status_available.setter
+    def status_available(self, value):
+        pass
+
+    def set_available_keys(self):
+        if hasattr(self, 'device'):
+            keys = [ecodes.keys[x] for x in self.device.capabilities()[ecodes.EV_KEY] \
+                             if isinstance(ecodes.keys[x], basestring) ]
+            self.available_keys = keys
+        else:
+            self.available_keys = None
+
+    def detect_device_path(self):
+        if not self.path:
+            self.path = get_path_by_name(self.name)
+        if not self.name:
+            self.name = get_name_by_path(self.path)
+        if not self.name and not self.path: #Seems like nothing was found by get_input_devices
+            raise IOError("Device not found by path and no name was provided")
 
     def init_hw(self):
+        self.detect_device_path()
         self.device = HID(self.path)
         self.device.grab() #Can throw exception if already grabbed
+        return True
 
     def runner(self):
         """Blocking event loop which just calls supplied callbacks in the keymap."""
@@ -70,9 +104,12 @@ class InputDevice(InputSkeleton):
                 continue
             try:
                 event = self.device.read_one()
-            except IOError as e:
-                logger.exception("IOError while reading from the HID device {}!".format(self.path))
-                if e.errno == 11:
+                self.hid_device_error_filter = False
+            except (IOError, AttributeError) as e:
+                if not self.hid_device_error_filter:
+                    logger.exception("Error while reading from the HID device {}!".format(self.path))
+                    self.hid_device_error_filter = True
+                if isinstance(e, IOError) and e.errno == 11:
                     #raise #Uncomment only if you have nothing better to do - error seems to appear at random
                     continue
                 else:
@@ -89,6 +126,7 @@ class InputDevice(InputSkeleton):
             key = ecodes.keys[event.code]
             value = event.value
             if value == 0 and self.enabled:
+                key = self.keycode_mapping.get(key, key)
                 self.send_key(key)
 
     def atexit(self):
