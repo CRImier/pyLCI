@@ -52,8 +52,8 @@ class InputDevice(InputSkeleton):
         self.path = path
         self.name = name
         self.keycode_mapping = keycode_mapping if keycode_mapping else self.default_keycode_mapping
-        self.setup_keycode_mapping()
         InputSkeleton.__init__(self, mapping = [], **kwargs)
+        self.setup_keycode_mapping()
         self.hid_device_error_filter = False
 
     def setup_keycode_mapping(self):
