@@ -1,7 +1,6 @@
 from ui import Menu
 from helpers import setup_logger
 
-from drivers.hid import InputDevice as HIDDriver
 
 from evdev import list_devices
 
@@ -24,11 +23,13 @@ class DeviceManager():
     def get_drivers(self):
         return self.driver_storage
 
-    def add_driver(self, path=None, name=None, type="hid"):
-        if type != "hid":
-            raise ValueError("Types other than 'hid' are not supported- asked for {}!".format(type))
-        driver = HIDDriver(path=path, name=name)
-        name = "hid"
+    def add_driver(self, path=None, name=None, dtype="hid"):
+        if dtype in ["hid"]:
+            raise ValueError("Types other than 'hid' are not supported- asked for {}!".format(dtype))
+        if dtype == "hid":
+            from drivers.hid import InputDevice as HIDDriver
+            driver = HIDDriver(path=path, name=name)
+            name = "hid"
         self.i.attach_driver(driver, name)
         self.driver_storage[name] = driver
         return name
