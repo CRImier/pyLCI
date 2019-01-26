@@ -1,13 +1,11 @@
 from ui import Menu
 from helpers import setup_logger
 
-
-from evdev import list_devices
-
 logger = setup_logger(__name__, "warning")
 
 def get_input_devices():
     """Returns list of all the available InputDevices"""
+    from evdev import list_devices
     devices = []
     for fn in list_devices():
         try:
