@@ -11,8 +11,8 @@ logger = setup_logger(__name__, "warning")
 
 mapping = {'KEY_RETURN':'KEY_ENTER',
            'KEY_KP_ENTER':'KEY_ENTER',
-           'KEY_KP_MULTIPLY':'KEY_ASTERISK',
-           'KEY_KP_DIVIDE':'KEY_HASH',
+           'KEY_KP_MULTIPLY':'KEY_*',
+           'KEY_KP_DIVIDE':'KEY_#',
            'KEY_MINUS':'KEY_HANGUP',
            'KEY_KP_MINUS':'KEY_HANGUP',
            'KEY_EQUALS':'KEY_ANSWER',
