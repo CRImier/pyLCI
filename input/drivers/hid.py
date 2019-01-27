@@ -99,7 +99,7 @@ class InputDevice(InputSkeleton):
         """Blocking event loop which just calls supplied callbacks in the keymap."""
         while not self.stop_flag:
             if not self.check_connection():
-                # Looping while the driver is not found
+                # Looping while the device is not found
                 sleep(self.connection_check_sleep)
                 continue
             try:

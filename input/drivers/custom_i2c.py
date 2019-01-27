@@ -39,6 +39,8 @@ class InputDevice(InputSkeleton):
     "KEY_CAMERA"
     ]
 
+    status_available = True
+
     def __init__(self, addr = 0x12, bus = 1, int_pin = 16, **kwargs):
         """Initialises the ``InputDevice`` object.
 
@@ -75,6 +77,10 @@ class InputDevice(InputSkeleton):
         GPIO.setmode(GPIO.BCM) # Broadcom pin-numbering scheme
         GPIO.setup(self.int_pin, GPIO.IN)
         while not self.stop_flag:
+            if not self.check_connection():
+                # Looping while the device is not found
+                sleep(self.connection_check_sleep)
+                continue
             while GPIO.input(self.int_pin) == False and self.enabled:
                 logger.debug("GPIO low, reading data")
                 try:
