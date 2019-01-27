@@ -6,6 +6,7 @@
  - Sascha Trebbin
  - Luca Fornasari
  - Timothée Floure
+ - Chris Steele
  - Phil
  - Jimmy Trost
  - Dillon Nichols
