@@ -9,6 +9,7 @@ duplicate_contributors = ["ahub",
                           "crimier",
                           "none",
                           "kylemoran138",
+                          "Ser2808",
                           "CrunchBang LiveUser"]
 
 replace_contributors = {"CRImier": "CRImier (Arsenijs)",
