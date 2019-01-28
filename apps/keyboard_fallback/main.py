@@ -12,7 +12,6 @@ from __main__ import input_device_manager as device_manager
 
 from zerophone_hw import USB_DCDC
 
-dcdc = USB_DCDC()
 
 class KeyboardFallbackApp(ZeroApp):
 
@@ -56,7 +55,11 @@ class KeyboardFallbackApp(ZeroApp):
             self.c.centered_text("USB kb connected")
         elif event == "custom_i2c_disconnected":
             self.c.centered_text("Keypad not found!")
-            dcdc.on()
+            try:
+                dcdc = USB_DCDC()
+                dcdc.on()
+            except:
+                logger.exception("Can't turn the ZP USB DC-DC on!")
         elif event == "looking_for_usb_keyboard":
             self.c.centered_text("Keypad not found!", ch=16)
             self.c.centered_text("Looking for USB kb")
