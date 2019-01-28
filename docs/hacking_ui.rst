@@ -79,7 +79,12 @@ ZPUI to launch the console:
 
     ``kill -USR2 74856`` (where ``74856`` is your PID number)
 
-Then, launch a Python interpreter:
+Then, launch a Python interpreter and run the following commands:
+
+.. code-block:: python
+
+    from rfoo.utils import rconsole
+    rconsole.interact(port=9377)
 
 .. code-block:: console
 
