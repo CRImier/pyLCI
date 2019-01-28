@@ -47,7 +47,7 @@ class DeviceManager():
             try:
                 cb(event)
             except:
-                logging.exception("Callback {} ({}) failed to receive event!".format(cb, cb.__name__))
+                logger.exception("Callback {} ({}) failed to receive event!".format(cb, cb.__name__))
 
     def get_drivers(self):
         return self.driver_storage
