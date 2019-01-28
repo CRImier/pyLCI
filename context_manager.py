@@ -106,7 +106,7 @@ class Context(object):
         """
         wrapped_target = context_target_wrapper(self, self.target)
         if self.thread: del self.thread
-        self.thread = Thread(target=wrapped_target)
+        self.thread = Thread(target=wrapped_target, name="Thread for context {} (target: {})".format(self.name, self.target.__name__))
         self.thread.daemon = True
         self.thread.start()
 

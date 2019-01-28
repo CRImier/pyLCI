@@ -57,7 +57,7 @@ class BaseLoadingIndicator(Refresher):
     def run_in_background(self):
         if self.t is not None or self.in_foreground:
             raise Exception("BaseLoadingIndicator already running!")
-        self.t = Thread(target=self.activate)
+        self.t = Thread(target=self.activate, name="Background thread for LoadingIndicator {}".format(self.name))
         self.t.daemon = True
         self.t.start()
 

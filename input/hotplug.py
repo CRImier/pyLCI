@@ -75,7 +75,8 @@ class DeviceManager():
             self.start_ukouk_thread()
 
     def start_ukouk_thread(self):
-        self.ukouk_thread = Thread(target=self.connect_usb_keyboard_on_unresponsive_keypad_loop)
+        self.ukouk_thread = Thread(target=self.connect_usb_keyboard_on_unresponsive_keypad_loop, \
+                                name="'connect USB keyboard on unresponsive keypad' monitor thread")
         self.ukouk_thread.daemon = True
         self.ukouk_thread.start()
 
