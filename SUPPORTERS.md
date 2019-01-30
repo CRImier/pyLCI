@@ -7,6 +7,7 @@
  - Luca Fornasari
  - Timothée Floure
  - Chris Steele
+ - Dekedro
  - Phil
  - Jimmy Trost
  - Dillon Nichols
