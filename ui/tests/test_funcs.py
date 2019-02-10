@@ -7,7 +7,7 @@ from mock import patch, Mock
 from PIL import Image, ImageFont, ImageChops
 
 try:
-    from ui import ellipsize, format_for_screen as ffs, replace_filter_ascii as rfa, add_character_replacement
+    from ui import ellipsize, format_for_screen as ffs, replace_filter_ascii as rfa, add_character_replacement, format_values_into_text_grid as fvitg
 except ImportError:
     print("Absolute imports failed, trying relative imports")
     os.sys.path.append(os.path.dirname(os.path.abspath('.')))
@@ -23,7 +23,7 @@ except ImportError:
         return orig_import(name, *args)
 
     with patch('__builtin__.__import__', side_effect=import_mock):
-        from funcs import ellipsize, format_for_screen as ffs, replace_filter_ascii as rfa, add_character_replacement
+        from funcs import ellipsize, format_for_screen as ffs, replace_filter_ascii as rfa, add_character_replacement, format_values_into_text_grid as fvitg
 
 
 c_name = "Test funcs"
@@ -53,6 +53,13 @@ class TestFuncs(unittest.TestCase):
         text = "ooooooo"
         assert (ellipsize(text, 5) == "oo...")
         assert (ellipsize(text, 16) == text)
+
+    def test_fvitg(self):
+        """Tests format_values_into_text_grid"""
+        o = Mock()
+        o.configure_mock(cols=20, rows=8)
+        assert fvitg(range(100), o) == ['0  8 16 24 32 40 48 56', '1  9 17 25 33 41 49 57', '2 10 18 26 34 42 50 58', '3 11 19 27 35 43 51 59', '4 12 20 28 36 44 52 60', '5 13 21 29 37 45 53 61', '6 14 22 30 38 46 54 62', '7 15 23 31 39 47 55 63']
+        assert fvitg(range(10), o) == ['0 8', '1 9', '2', '3', '4', '5', '6', '7']
 
 if __name__ == '__main__':
     unittest.main()
