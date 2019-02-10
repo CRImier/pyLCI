@@ -1,7 +1,7 @@
 menu_name = "I2C tools"
 
 from subprocess import call
-from ui import Menu, Printer, DialogBox, LoadingIndicator, UniversalInput, Refresher, IntegerAdjustInput
+from ui import Menu, Printer, DialogBox, LoadingIndicator, UniversalInput, Refresher, IntegerAdjustInput, fvitg
 from helpers import setup_logger, read_or_create_config, local_path_gen, write_config
 
 from collections import OrderedDict
@@ -80,7 +80,6 @@ def i2c_read_ui(address, reg=None):
         reg = int(reg, 16)
 
     last_values = []
-    values_on_screen = o.cols
 
     def read_value(): # A helper function to read a value and format it into a list
         global last_values
@@ -90,14 +89,13 @@ def i2c_read_ui(address, reg=None):
             else:
                 answer = hex(current_bus.read_byte(address))
         except IOError:
-            answer = "{} error".format(reg) if reg else "error"
+            answer = "{} err".format(reg) if reg else "err"
         last_values.append(answer)
-        last_values = last_values[:values_on_screen]
-        return list(reversed(last_values))
+        return fvitg(list(reversed(last_values)), o)
 
-    r = Refresher(read_value, i, o)
+    r = Refresher(read_value, i, o, refresh_interval=0.5)
     def change_interval(): # A helper function to adjust the Refresher's refresh interval while it's running
-        new_interval = IntegerAdjustInput(r.refresh_interval, i, o, message="Refresh interval:").activate()
+        new_interval = IntegerAdjustInput(int(r.refresh_interval), i, o, message="Refresh interval:").activate()
         if new_interval is not None:
             r.set_refresh_interval(new_interval)
     r.update_keymap({"KEY_RIGHT":change_interval})
