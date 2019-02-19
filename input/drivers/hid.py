@@ -36,9 +36,9 @@ def get_name_by_path(path):
 class InputDevice(InputSkeleton):
     """ A driver for HID devices. As for now, supports keyboards and numpads."""
 
-    default_keycode_mapping = {"KEY_KPENTER":"KEY_ENTER"}
+    default_name_mapping = {"KEY_KPENTER":"KEY_ENTER"}
 
-    def __init__(self, path=None, name=None, keycode_mapping=None, **kwargs):
+    def __init__(self, path=None, name=None, **kwargs):
         """Initialises the ``InputDevice`` object.
 
         Kwargs:
@@ -51,19 +51,9 @@ class InputDevice(InputSkeleton):
             raise TypeError("HID device driver: expected at least path or name; got nothing. =(")
         self.path = path
         self.name = name
-        self.keycode_mapping = keycode_mapping if keycode_mapping else self.default_keycode_mapping
         InputSkeleton.__init__(self, mapping = [], **kwargs)
         self.setup_keycode_mapping()
         self.hid_device_error_filter = False
-
-    def setup_keycode_mapping(self):
-        # Making sure that, even if the keycode mapping is supplied by user,
-        # the default keys stay unless overridden by the user explicitly
-        # this is done so that users don't have to copy default mappings
-        # to config.json and then keep them up-to-date.
-        for k, v in self.default_keycode_mapping.items():
-            if k not in self.keycode_mapping:
-                self.keycode_mapping[k] = v
 
     @property
     def status_available(self):
@@ -127,7 +117,7 @@ class InputDevice(InputSkeleton):
             value = event.value
             if value == 0 and self.enabled:
                 key = self.keycode_mapping.get(key, key)
-                self.send_key(key)
+                self.map_and_send_key(key)
 
     def atexit(self):
         InputSkeleton.atexit(self)

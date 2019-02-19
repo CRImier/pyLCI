@@ -55,7 +55,7 @@ class InputDevice(InputSkeleton):
                 if button_state != self.button_states[i]:
                     if button_state == False and self.enabled:
                         key = self.mapping[i]
-                        self.send_key(key)
+                        self.map_and_send_key(key)
                     self.button_states[i] = button_state
             sleep(0.01)
 

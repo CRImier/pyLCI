@@ -17,13 +17,18 @@ class InputSkeleton(object):
     available_keys = None
     status_available = False
 
-    def __init__(self, mapping=None, threaded=True, conn_check_sleep=1):
+    default_name_mapping = {}
+
+    def __init__(self, mapping=None, threaded=True, name_mapping=None, conn_check_sleep=1):
         self.connection_check_sleep = conn_check_sleep
         self.connected = threading.Event()
         if mapping is not None:
             self.mapping = mapping
         else:
             self.mapping = self.default_mapping
+        self.name_mapping = copy(self.default_name_mapping)
+        if name_mapping:
+            self.name_mapping.update(name_mapping)
         self.connect(initial=True)
         self.set_available_keys()
         if threaded:
@@ -75,6 +80,14 @@ class InputSkeleton(object):
     def stop(self):
         """Unsets the ``enabled`` for loop functions to stop sending keycodes."""
         self.enabled = False
+
+    def map_and_send_key(self, key):
+        """
+        When used instead of ``send_key``, allows remapping the key using
+        the keyname-to-keyname mapping before passing it to ``send_key``.
+        """
+        key = self.name_mapping.get(key, key)
+        self.send_key(key)
 
     def send_key(self, key):
         """A hook to be overridden by ``InputListener``. Otherwise, prints out key names as soon as they're pressed so is useful for debugging (to test things, just launch the driver as ``python driver.py``)"""

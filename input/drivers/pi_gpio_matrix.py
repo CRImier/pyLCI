@@ -54,7 +54,7 @@ class InputDevice(InputSkeleton):
                         prev_state = self.button_states[row_num][col_num]
                         if state == True and prev_state == False:
                             key = self.mapping[row_num][col_num]
-                            self.send_key(key)
+                            self.map_and_send_key(key)
                         self.button_states[row_num][col_num] = state
                     for col in self.cols: self.GPIO.output(col, True)
             sleep(0.01)

@@ -9,15 +9,6 @@ from skeleton import InputSkeleton
 logger = setup_logger(__name__, "warning")
 
 
-mapping = {'KEY_RETURN':'KEY_ENTER',
-           'KEY_KP_ENTER':'KEY_ENTER',
-           'KEY_KP_MULTIPLY':'KEY_*',
-           'KEY_KP_DIVIDE':'KEY_#',
-           'KEY_MINUS':'KEY_HANGUP',
-           'KEY_KP_MINUS':'KEY_HANGUP',
-           'KEY_EQUALS':'KEY_ANSWER',
-           'KEY_KP_PLUS':'KEY_ANSWER'
-           }
 USED_KEYS = [
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
     'KP0', 'KP1', 'KP2', 'KP3', 'KP4', 'KP5', 'KP6', 'KP7', 'KP8', 'KP9',
@@ -38,6 +29,17 @@ KEY_MAP = dict([
 
 class InputDevice(InputSkeleton):
     """ A driver for pygame-based keyboard key detection."""
+
+    default_name_mapping = { \
+                    'KEY_RETURN':'KEY_ENTER',
+                    'KEY_KP_ENTER':'KEY_ENTER',
+                    'KEY_KP_MULTIPLY':'KEY_*',
+                    'KEY_KP_DIVIDE':'KEY_#',
+                    'KEY_MINUS':'KEY_HANGUP',
+                    'KEY_KP_MINUS':'KEY_HANGUP',
+                    'KEY_EQUALS':'KEY_ANSWER',
+                    'KEY_KP_PLUS':'KEY_ANSWER'
+                   }
 
     def __init__(self, **kwargs):
         InputSkeleton.__init__(self, mapping=[], **kwargs)
@@ -71,13 +73,12 @@ class InputDevice(InputSkeleton):
                 continue
 
             key_name = 'KEY_' + KEY_MAP[key]
-            key_name = mapping.get(key_name, key_name)
 
             if 'KP' in key_name:
                 key_name = 'KEY_' + KEY_MAP[key].replace('KP', '')
             logger.debug('Mapped key %s' % key_name)
 
-            self.send_key(key_name.upper())
+            self.map_and_send_key(key_name.upper())
 
         self.emulator.quit()
 

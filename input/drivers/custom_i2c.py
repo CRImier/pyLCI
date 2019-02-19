@@ -99,7 +99,7 @@ class InputDevice(InputSkeleton):
                         if data in range(len(self.mapping)):
                             key_name = self.mapping[data]
                             logger.debug("Maps to valid key: {}".format(key_name))
-                            self.send_key(key_name)
+                            self.map_and_send_key(key_name)
                         else:
                             logger.info("Unknown data arrived: {}".format(data))
                     else:
