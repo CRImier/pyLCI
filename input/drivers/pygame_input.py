@@ -59,7 +59,7 @@ class InputDevice(InputSkeleton):
         """
         #TODO: debug and fix race condition
         while not hasattr(self, "emulator"):
-            logger.debug("Input emulator not yet ready (a bug, TOFIX)")
+            logger.debug("Input emulator not yet ready, waiting (a bug, TOFIX)")
             sleep(0.1)
 
         while not self.stop_flag:
@@ -74,9 +74,10 @@ class InputDevice(InputSkeleton):
 
             key_name = 'KEY_' + KEY_MAP[key]
 
-            if 'KP' in key_name:
-                key_name = 'KEY_' + KEY_MAP[key].replace('KP', '')
-            logger.debug('Mapped key %s' % key_name)
+            kp_m = "KEY_KP" # KP marker to catch KEY_KPx number keys
+            if key_name.startswith(kp_m) and key_name[len(kp_m):].isdigit():
+                key_name = 'KEY_' + key_name[len(kp_m):]
+                logger.debug('Mapped key {} to {}'.format(key, key_name))
 
             self.map_and_send_key(key_name.upper())
 
