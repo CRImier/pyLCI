@@ -24,7 +24,7 @@ def needs_i2c_gpio_expander(func):
     def wrapper(self, *args, **kwargs):
         if not self.expander_ok:
             self.test_i2c_gpio()
-        if not self.expander_ok:
+        if self.expander_ok:
             return func(self, *args, **kwargs)
         else: # Won't execute the function at all if expander is not found
             return False
@@ -34,7 +34,7 @@ def needs_i2c_gpio_expander(func):
 class ZPTestApp(ZeroApp):
 
     menu_name = "Test ZeroPhone"
-    url = "http://wiki.zerophone.org/images/b/b5/Otis_McMusic.mp3"
+    music_url = "http://wiki.zerophone.org/images/b/b5/Otis_McMusic.mp3"
     br = None
 
     expander_ok = False
@@ -43,7 +43,7 @@ class ZPTestApp(ZeroApp):
         ZeroApp.__init__(self, *args, **kwargs)
         if music_filename not in os.listdir(local_path('.')):
             self.br = BackgroundRunner(self.download_music)
-            self.br.run
+            self.br.run()
 
     def download_music(self):
        logger.debug("Downloading music for hardware test app!")
@@ -147,15 +147,16 @@ class ZPTestApp(ZeroApp):
     def test_charger(self):
         #Testing charging detection
         PrettyPrinter("Testing charger detection", self.i, self.o, 1)
-        from zerophone_hw import is_charging
-        eh = ExitHelper(i, ["KEY_LEFT", "KEY_ENTER"]).start()
-        if is_charging():
+        from zerophone_hw import Charger
+        charger = Charger()
+        eh = ExitHelper(self.i, ["KEY_LEFT", "KEY_ENTER"]).start()
+        if charger.connected():
             PrettyPrinter("Charging, unplug charger to continue \n Enter to bypass", None, self.o, 0)
-            while is_charging() and eh.do_run():
+            while charger.connected() and eh.do_run():
                 sleep(1)
         else:
             PrettyPrinter("Not charging, plug charger to continue \n Enter to bypass", None, self.o, 0)
-            while not is_charging() and eh.do_run():
+            while not charger.connected() and eh.do_run():
                 sleep(1)
 
     @needs_i2c_gpio_expander
@@ -171,7 +172,7 @@ class ZPTestApp(ZeroApp):
     @needs_i2c_gpio_expander
     def test_usb_port(self):
         from zerophone_hw import USB_DCDC
-        eh = ExitHelper(i, ["KEY_LEFT", "KEY_ENTER"]).start()
+        eh = ExitHelper(self.i, ["KEY_LEFT", "KEY_ENTER"]).start()
         PrettyPrinter("Press Enter to test USB", None, self.o, 0)
         counter = 5
         for x in range(50):
@@ -217,7 +218,7 @@ class ZPTestApp(ZeroApp):
             elif self.br.failed:
                 PrettyPrinter("Failed to download test music!", self.i, self.o, 1)
         disclaimer = ["Track used:" "", "Otis McDonald", "-", "Otis McMusic", "YT AudioLibrary"]
-        Printer([s.center(o.cols) for s in disclaimer], self.i, self.o, 3)
+        Printer([s.center(self.o.cols) for s in disclaimer], self.i, self.o, 3)
         PrettyPrinter("Press C1 to restart music, C2 to continue testing", self.i, self.o)
         import pygame
         pygame.mixer.init()
@@ -232,8 +233,8 @@ class ZPTestApp(ZeroApp):
         def stop():
             pygame.mixer.music.stop()
             continue_event.set()
-        i.clear_keymap()
-        i.set_callback("KEY_F1", restart)
-        i.set_callback("KEY_F2", stop)
-        i.set_callback("KEY_ENTER", stop)
+        self.i.clear_keymap()
+        self.i.set_callback("KEY_F1", restart)
+        self.i.set_callback("KEY_F2", stop)
+        self.i.set_callback("KEY_ENTER", stop)
         continue_event.wait()
