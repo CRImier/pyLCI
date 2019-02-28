@@ -149,7 +149,7 @@ class GraphicalView(TextView):
         formatted_message = ffs(self.el.message, self.o.cols)
         for line in formatted_message:
                 c.text(line, (0, chunk_y))
-                chunk_y += 10
+                chunk_y += self.o.char_height + 2
         c.text(self.displayed_label, (2, chunk_y))
 
         #Calculating the cursor dimensions
