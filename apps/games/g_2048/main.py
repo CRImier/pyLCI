@@ -3,7 +3,7 @@ from time import sleep
 
 from apps import ZeroApp
 from ui import DialogBox, ffs
-from helpers import ExitHelper
+from helpers import ExitHelper, local_path_gen
 
 from logic import GameOf2048
 
@@ -15,12 +15,21 @@ class GameApp(ZeroApp):
     menu_name = "2048"
 
     def on_start(self):
-        with open("apps/games/g_2048/score.txt", "r+") as f:
-            prev_score = f.readline()
-            if prev_score == '':
+        self.local_path = local_path_gen(__name__)
+        try:
+            with open(self.local_path("score.txt"), "r") as f:
+                # read the highscore from score.txt (integer on first line)
+                # if it doesn't exist, it's set to 0.
+                prev_score = f.readline()
+                if prev_score == '':
+                    self.prev_score = 0
+                else:
+                    self.prev_score = int(prev_score)
+        except IOError:
+            with open(self.local_path("score.txt"), "w") as f:
+                f.write('0')
                 self.prev_score = 0
-            else:
-                self.prev_score = int(prev_score)
+
         self.do_exit = Event()
         self.moving = Lock()
         if self.game is None:
@@ -58,12 +67,12 @@ class GameApp(ZeroApp):
                 choices = ["y", ["Restart", "restart"], "n"]
             choice = DialogBox(choices, self.i, self.o, message="Exit the game?").activate()
             if choice == "restart":
-                self.write_score()
+                self.write_score()  # write score if user restarts
                 self.start_new_game()
                 self.set_keymap()
                 self.refresh()
             elif choice is True:
-                self.write_score()
+                self.write_score()  # write score if user exits
                 self.do_exit.set()
             else:
                 self.set_keymap()
@@ -81,6 +90,8 @@ class GameApp(ZeroApp):
         while self.game.get_game_state() == 'not over' and not self.do_exit.isSet():
             sleep(1)
         if self.do_exit.isSet():
+            self.write_score()
+
             return
         # Waiting for player to click any of five primary keys
         # Then, prompting to restart the game
@@ -91,10 +102,10 @@ class GameApp(ZeroApp):
         if do_restart is None:  # Cancel, leaving the playing field as-is
             return
         elif do_restart is False:  # No, not restarting, thus exiting the game
+            self.write_score()  # write score if user exits
             self.do_exit.set()
-            self.write_score()
         else:
-            self.write_score()
+            self.write_score()  # write score if user restarts
             self.start_new_game()  # Yes, restarting (game_loop will be entered once more from on_start() )
 
     def display_field(self, field):
@@ -122,7 +133,9 @@ class GameApp(ZeroApp):
         self.o.display_data(*displayed_field)
 
     def write_score(self):
-        with open("apps/games/g_2048/score.txt", "w") as f:
-            if self.game.score > self.prev_score:
-                f.write(str(self.game.score))
-                self.prev_score = self.game.score
+        # overwrite score file if current score is higher than the previous highscore
+        # the previous highscore is determined in on_start()
+        if self.game.score > self.prev_score:
+            with open(self.local_path("score.txt"), "w") as f:
+                    f.write(str(self.game.score))
+                    self.prev_score = self.game.score
