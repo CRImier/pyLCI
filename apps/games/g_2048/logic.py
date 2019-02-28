@@ -28,7 +28,7 @@ class GameOf2048(object):
     matrix = None
 
     def __init__(self, x_dim=4, y_dim=4):
-        self.has_won = False
+        self.has_won = False  # to remember if the player has already got a 2048 tile once
         self.score = 0  # keep the score
         self.x_dim = x_dim
         self.y_dim = y_dim
@@ -56,11 +56,12 @@ class GameOf2048(object):
         while self.matrix[a][b] != 0:
             a = randint(0, self.y_dim - 1)
             b = randint(0, self.x_dim - 1)
-        digit = 512 if random() < 0.9 else 4
+        digit = 2 if random() < 0.9 else 4
         self.matrix[a][b] = digit
 
     def get_game_state(self):
         if any([cell == 2048 for cell in flatten(self.matrix)]) and not self.has_won:
+            # remember that user has already got a 2048 tile, to avoid displaying 'you won' each time.
             self.has_won = True
             return 'win'
         # If there are empty fields, the game isn't over yet
@@ -78,6 +79,7 @@ class GameOf2048(object):
             if self.matrix[j][len(self.matrix) - 1] == self.matrix[j + 1][len(self.matrix) - 1]:
                 return 'not over'
         if self.has_won:
+            # this happens if the field is full but the user got a 2048 tile once.
             return 'win'
         return 'lose'
 
