@@ -1,5 +1,6 @@
 from time import sleep
 from helpers import setup_logger
+from funcs import format_for_screen as ffs
 
 from base_ui import BaseUIElement
 from canvas import Canvas
@@ -143,26 +144,20 @@ class GraphicalView(TextView):
 
     def get_image(self):
         c = Canvas(self.o)
-
         #Drawing text
-        choice_position = 10
         chunk_y = 0
-        rendered_message = []
-        while self.el.message:
-                rendered_message.append(self.el.message[:self.el.o.cols])
-                self.el.message = self.el.message[self.el.o.cols:]
-                choice_position += 10
-        for chunk in rendered_message:
-                c.text(chunk, (0, chunk_y))
+        formatted_message = ffs(self.el.message, self.o.cols)
+        for line in formatted_message:
+                c.text(line, (0, chunk_y))
                 chunk_y += 10
-        c.text(self.displayed_label, (2, choice_position))
+        c.text(self.displayed_label, (2, chunk_y))
 
         #Calculating the cursor dimensions
         first_char_position = self.positions[self.el.selected_option]
         option_length = len( self.el.values[self.el.selected_option][0] )
         c_x1 = first_char_position * self.o.char_width
         c_x2 = c_x1 + option_length * self.o.char_width
-        c_y1 = choice_position #second line
+        c_y1 = chunk_y #second line
         c_y2 = c_y1 + self.o.char_height
         #Some readability adjustments
         cursor_dims = ( c_x1, c_y1, c_x2 + 2, c_y2 + 2 )
