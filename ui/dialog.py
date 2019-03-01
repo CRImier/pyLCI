@@ -147,11 +147,11 @@ class GraphicalView(TextView):
         #Drawing text
         chunk_y = 0
         formatted_message = ffs(self.el.message, self.o.cols)
+	if len(formatted_message)*(self.o.char_height+2) > self.o.height - self.o.char_height - 2:
+                raise ValueError("DialogBox {}: message is too long to fit on the screen".format(self.el.name))
         for line in formatted_message:
                 c.text(line, (0, chunk_y))
                 chunk_y += self.o.char_height + 2
-		if chunk_y > self.o.height - self.o.char_height - 2:
-                        raise ValueError("DialogBox {}: message is too long to fit on the screen".format(self.el.name))
         c.text(self.displayed_label, (2, chunk_y))
 
         #Calculating the cursor dimensions
