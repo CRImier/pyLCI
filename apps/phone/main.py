@@ -8,7 +8,7 @@ from subprocess import call as os_call
 from time import sleep
 import traceback
 
-from ui import Refresher, Menu, Printer, PrettyPrinter, DialogBox, ffs
+from ui import Refresher, Menu, Printer, PrettyPrinter, DialogBox
 from ui.experimental import NumberKeypadInputLayer
 from helpers import BackgroundRunner, ExitHelper
 
@@ -54,9 +54,9 @@ def call(number):
     try:
         phone.call(number)
     except ATError as e:
-        Printer(ffs("Calling fail! "+repr(e), o.cols), i, o, 0)
+        PrettyPrinter("Calling fail! "+repr(e), i, o, 0)
     logger.error("Function stopped executing")
- 
+
 def call_view():
     keymap = {"KEY_ANSWER":[call, "value"]}
     NumberKeypadInputLayer(i, o, "Call number", keymap, name="Phone call layer").activate()
