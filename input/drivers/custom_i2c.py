@@ -39,6 +39,8 @@ class InputDevice(InputSkeleton):
     "KEY_CAMERA"
     ]
 
+    status_available = True
+
     def __init__(self, addr = 0x12, bus = 1, int_pin = 16, **kwargs):
         """Initialises the ``InputDevice`` object.
 
@@ -55,16 +57,11 @@ class InputDevice(InputSkeleton):
         self.addr = addr
         self.int_pin = int_pin
         InputSkeleton.__init__(self, **kwargs)
-        self.connected = True
 
     def init_hw(self):
-        try:
-            self.bus = smbus.SMBus(self.bus_num)
-            self.bus.read_byte(self.addr)
-        except IOError:
-            return True
-        else:
-            return False
+        self.bus = smbus.SMBus(self.bus_num)
+        self.bus.read_byte(self.addr)
+        return True
 
     def runner(self):
         """Runs either interrupt-driven or polling loop."""
@@ -80,25 +77,29 @@ class InputDevice(InputSkeleton):
         GPIO.setmode(GPIO.BCM) # Broadcom pin-numbering scheme
         GPIO.setup(self.int_pin, GPIO.IN)
         while not self.stop_flag:
+            if not self.check_connection():
+                # Looping while the device is not found
+                sleep(self.connection_check_sleep)
+                continue
             while GPIO.input(self.int_pin) == False and self.enabled:
                 logger.debug("GPIO low, reading data")
                 try:
                     data = self.bus.read_byte(self.addr)
                     logger.debug("Received {:#010b}".format(data))
                 except IOError:
-                    if self.connected:
+                    if self.connected.isSet():
                         logger.error("Can't get data from keypad!")
-                        self.connected = False
+                        self.connected.clear()
                 else:
-                    if not self.connected:
+                    if not self.connected.isSet():
                         logger.info("Receiving data from keypad again!")
-                        self.connected = True
+                        self.connected.set()
                     if data != 0:
                         data -= 1
                         if data in range(len(self.mapping)):
                             key_name = self.mapping[data]
                             logger.debug("Maps to valid key: {}".format(key_name))
-                            self.send_key(key_name)
+                            self.map_and_send_key(key_name)
                         else:
                             logger.info("Unknown data arrived: {}".format(data))
                     else:

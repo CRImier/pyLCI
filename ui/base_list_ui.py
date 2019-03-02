@@ -573,7 +573,6 @@ class EightPtView(TextView):
             )
             c.invert_rect(cursor_dims)
 
-    @to_be_foreground
     def get_displayed_image(self):
         """Generates the displayed data for a canvas-based output device. The output of this function can be fed to the o.display_image function.
         |Doesn't support partly-rendering entries yet."""
@@ -609,7 +608,6 @@ class MainMenuTripletView(SixteenPtView):
         SixteenPtView.__init__(self, *args, **kwargs)
         self.charheight = self.o.height / 3
 
-    @to_be_foreground
     def get_displayed_image(self):
         # This view doesn't have a cursor, instead, the entry that's currently active is in the display center
         contents = self.el.get_displayed_contents()

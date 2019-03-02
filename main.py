@@ -21,12 +21,15 @@ emulator_flag_filename = "emulator"
 local_path = local_path_gen(__name__)
 is_emulator = emulator_flag_filename in os.listdir(".")
 
+rconsole_port = 9377
+
 config_paths = ['/boot/zpui_config.json', '/boot/pylci_config.json'] if not is_emulator else []
 config_paths.append(local_path('config.json'))
 #Using the .example config as a last resort
 config_paths.append(local_path('default_config.json'))
 
 input_processor = None
+input_device_manager = None
 screen = None
 cm = None
 config = None
@@ -77,7 +80,7 @@ files_to_store = log_config["files_to_store"]
 def init():
     """Initialize input and output objects"""
 
-    global input_processor, screen, cm, config, config_path
+    global input_processor, input_device_manager, screen, cm, config, config_path
     config, config_path = load_config()
 
     if config is None:
@@ -97,7 +100,7 @@ def init():
     # Initialize input
     try:
         # Now we can show errors on the display
-        input_processor = input.init(config["input"], cm)
+        input_processor, input_device_manager = input.init(config["input"], cm)
     except:
         logging.exception('Failed to initialize the input object')
         logging.exception(traceback.format_exc())
@@ -136,6 +139,7 @@ def launch(name=None, **kwargs):
         # Load all apps
         app_menu = app_man.load_all_apps()
         runner = app_menu.activate
+        cm.switch_to_start_context()
     else:
         # If using autocompletion from main folder, it might
         # append a / at the name end, which isn't acceptable
@@ -187,11 +191,28 @@ def dump_threads(*args):
     """
 
     logger.critical('\nSIGUSR received, dumping threads!\n')
+    for i, th in enumerate(threading.enumerate()):
+        logger.critical("{} - {}".format(i, th))
     for th in threading.enumerate():
         logger.critical(th)
         log = traceback.format_stack(sys._current_frames()[th.ident])
         for frame in log:
             logger.critical(frame)
+
+
+def spawn_rconsole(*args):
+    """
+    USR2-activated debug console
+    """
+    try:
+        from rfoo.utils import rconsole
+    except ImportError:
+        logger.exception("can't import rconsole - python-rfoo not installed?")
+        return False
+    try:
+        rconsole.spawn_server(port=rconsole_port)
+    except:
+        logger.exception("Can't spawn rconsole!")
 
 
 if __name__ == '__main__':
@@ -201,6 +222,7 @@ if __name__ == '__main__':
 
     # Signal handler for debugging
     signal.signal(signal.SIGUSR1, dump_threads)
+    signal.signal(signal.SIGUSR2, spawn_rconsole)
     signal.signal(signal.SIGHUP, helpers.logger.on_reload)
 
     # Setup argument parsing

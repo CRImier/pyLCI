@@ -56,6 +56,45 @@ def format_for_screen(data, screen_width, break_words=False, linebreak=None):
 
 ffs = format_for_screen
 
+def format_values_into_text_grid(values, o):
+    # Formats values in a grid that uses as much of a screen space as possible
+    # going like this:
+    # 1 3  5 11  13
+    # 2 4 10 12 101
+    vals = [str(el) for el in values]
+    x_off = 0
+    col_i = 0
+    cols = [] # columns of text
+    for i, val in enumerate(vals):
+        div, mod = divmod(i, o.rows)
+        if len(cols) <= div:
+            cols.append([])
+        if len(cols[col_i]) < o.rows:
+            cols[col_i].append(val)
+        else:
+            row = [len(x) for x in cols[col_i]]
+            prev_row_width = max(row) if row else 0
+            x_off += prev_row_width+1
+            if x_off > o.cols:
+                break
+            col_i += 1
+            cols[col_i].append(val)
+    # filtering empty cols
+    cols = filter(None, cols)
+    # padding string values
+    for a, col in enumerate(cols):
+        max_len = max([len(x) for x in col])
+        for b, el in enumerate(col):
+            if len(el) < max_len:
+                cols[a][b] = " "*(max_len-len(el))+el
+    # creating the actual strings to be sent to display_data
+    screen_data = []
+    for i in range(o.rows):
+        vals = [col[i] for col in cols if len(col)>i]
+        screen_data.append(" ".join(vals))
+    return screen_data
+
+fvitg = format_values_into_text_grid
 
 def add_character_replacement(character, replacement):
     """

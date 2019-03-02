@@ -21,10 +21,13 @@ Guides:
 References:
 ===========
 
-* :doc:`UI elements <ui>`
-* :doc:`Helper functions <helpers>`
-* :doc:`Input system <input>`
-* :doc:`Output system <output>`
+- :doc:`UI elements <ui>`
+- :doc:`Helper functions <helpers>`
+- :doc:`Input system <input>`
+
+  - :doc:`Keymaps <keymap>`
+
+- :doc:`Output system <output>`
 
 
 :doc:`Development plans <plans>`
@@ -43,6 +46,7 @@ References:
    howto.rst
    ui.rst
    helpers.rst
+   keymap.rst
    hacking_ui.rst
    logging.rst
    app_mgmt.rst

@@ -106,7 +106,7 @@ class Context(object):
         """
         wrapped_target = context_target_wrapper(self, self.target)
         if self.thread: del self.thread
-        self.thread = Thread(target=wrapped_target)
+        self.thread = Thread(target=wrapped_target, name="Thread for context {} (target: {})".format(self.name, self.target.__name__))
         self.thread.daemon = True
         self.thread.start()
 
@@ -223,7 +223,8 @@ class ContextManager(object):
     exclusive_context = None
     fallback_context = "main"
     initial_contexts = ["main"]
-    allowed_exclusive_contexts = ["apps/lockscreen"]
+    start_context = "main"
+    allowed_exclusive_contexts = ["apps.lockscreen"]
 
     def __init__(self):
         self.contexts = {}
@@ -247,6 +248,14 @@ class ContextManager(object):
         for context_alias in self.initial_contexts:
             c = self.create_context(context_alias)
             c.threaded = False
+
+    def switch_to_start_context(self):
+        """
+        Switches to the defined start context - usually "main",
+        but could also be some other context defined by someone
+        integrating ZPUI into their workflow.
+        """
+        self.unsafe_switch_to_context(self.start_context, do_raise=False)
 
     def get_context_names(self):
         """
@@ -290,7 +299,7 @@ class ContextManager(object):
                 else:
                     return True
 
-    def unsafe_switch_to_context(self, context_alias):
+    def unsafe_switch_to_context(self, context_alias, do_raise=True):
         """
         This is a non-thread-safe context switch function. Not to be used directly
         - is only for internal usage. In case an exception is raised, sets things as they
@@ -309,10 +318,12 @@ class ContextManager(object):
             except:
                 logger.exception("Also couldn't activate IO for the previous context: {}!".format(previous_context))
                 self.failsafe_switch_to_fallback_context()
-                raise
+                if do_raise:
+                    raise
             self.current_context = previous_context
             # Passing the exception back to the caller
-            raise
+            if do_raise:
+                raise
         # Activating the context - restoring everything if it fails
         try:
             self.contexts[context_alias].activate()
@@ -324,17 +335,20 @@ class ContextManager(object):
             except:
                 logger.exception("Also couldn't activate IO for the previous context: {}!".format(previous_context))
                 self.failsafe_switch_to_fallback_context()
-                raise
+                if do_raise:
+                    raise
             # Activating the previous context itself
             try:
                 self.contexts[previous_context].activate()
             except:
                 logger.exception("Also couldn't activate context for the previous context: {}!".format(previous_context))
                 self.failsafe_switch_to_fallback_context()
-                raise
+                if do_raise:
+                    raise
             self.current_context = previous_context
             # Passing the exception back to the caller
-            raise
+            if do_raise:
+                raise
         else:
             logger.debug("Switched to {} context!".format(context_alias))
 

@@ -146,7 +146,7 @@ class BackgroundRunner(object):
         """Starts a thread that will run the callable."""
         if self.running:
             return
-        self.thread = Thread(target=self.threaded_runner)
+        self.thread = Thread(target=self.threaded_runner, name="BackgroundRunner for {}".format(self.func.__name__))
         self.thread.daemon=daemonize
         self.thread.start()
 

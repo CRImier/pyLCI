@@ -7,6 +7,7 @@ logger = setup_logger(__name__, "info")
 class MTKDownloadProcess(object):
     state = "not_started"
     output = ""
+    returncode = None
 
     def __init__(self, port, fw_dir, path="mtkdownload", callback=None):
         self.mtkdownload_path = path
@@ -41,6 +42,7 @@ class MTKDownloadProcess(object):
             p.poll(read_type="readall_or_until", read_kw={"until":"\r"})
             if not p.is_ongoing():
                 rc = p.get_return_code()
+                self.returncode = rc
                 if rc != 0:
                     self.state = "failed"
                 else:
@@ -83,7 +85,7 @@ class MTKDownloadProcess(object):
     def get_state(self):
         s_d = {"state":self.state, "output":self.output}
         if self.state == "failed":
-            s_d["returncode"] = self.p.get_return_code()
+            s_d["returncode"] = self.returncode
         elif self.state == "flashing":
             s_d["progress"] = self.progress
         return s_d

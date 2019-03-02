@@ -172,9 +172,8 @@ class TestDrivers(unittest.TestCase):
         with patch.object(main_py, 'load_config') as mocked:
             mocked.return_value = (config, "test_config.json")
             i, o = main_py.init()
-        name = "test_input-1"
         assert(len(main_py.input_processor.drivers) == 1)
-        main_py.input_processor.attach_driver(test_input.InputDevice(), name)
+        name = main_py.input_processor.attach_driver(test_input.InputDevice())
         assert(len(main_py.input_processor.drivers) == 2)
         main_py.input_processor.detach_driver(name)
         assert(len(main_py.input_processor.drivers) == 1)

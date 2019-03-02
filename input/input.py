@@ -1,14 +1,15 @@
-from traceback import format_exc
 from threading import Thread, Event
+from traceback import format_exc
 from time import sleep
 from copy import copy
 import importlib
-
+import inspect
 import atexit
 import Queue
+
 from helpers import setup_logger
 
-import inspect
+from hotplug import DeviceManager
 
 logger = setup_logger(__name__, "warning")
 
@@ -30,15 +31,16 @@ class InputProcessor(object):
     proxy_attrs = ["available_keys"]
     proxies = []
 
-    def __init__(self, initial_drivers, context_manager):
+    def __init__(self, init_drivers, context_manager):
         self.global_keymap = {}
-        self.initial_drivers = initial_drivers
         self.cm = context_manager
         self.queue = Queue.Queue()
         self.available_keys = {}
         self.drivers = {}
-        for name, driver in self.initial_drivers.items():
-            self.attach_driver(driver, name)
+        self.initial_drivers = {}
+        for driver in init_drivers:
+            name = self.attach_driver(driver)
+            self.initial_drivers[name] = driver
         atexit.register(self.atexit)
 
     def receive_key(self, key):
@@ -51,10 +53,17 @@ class InputProcessor(object):
         except:
             raise #Just collecting possible exceptions for now
 
-    def attach_driver(self, driver, name):
+    def attach_driver(self, driver):
         """
         Attaches the driver to ``InputProcessor``.
         """
+        # Generating an unique yet human-readable name
+        counter = 0
+        driver_name = driver.__module__.rsplit('.', 1)[-1]
+        name = "{}-{}".format(driver_name, counter)
+        while name in self.drivers:
+            counter += 1
+            name = "{}-{}".format(driver_name, counter)
         logger.info("Attaching driver: {}".format(name))
         self.drivers[name] = driver
         driver._old_send_key = driver.send_key
@@ -63,6 +72,7 @@ class InputProcessor(object):
         self.available_keys[name] = driver.available_keys
         self.update_all_proxy_attrs()
         driver.start()
+        return name
 
     def detach_driver(self, name):
         """
@@ -244,7 +254,8 @@ class InputProcessor(object):
                 callback()
         except Exception as e:
             locals = inspect.trace()[-1][0].f_locals
-            logger.error("Exception {} caused by callback {} when key {} was received".format(e.__str__() or e.__class__, callback, key))
+            context_alias = getattr(self.get_current_proxy(), "context_alias", None)
+            logger.error("Exception {} caused by callback {} when key {} was received, context: {}".format(e.__str__() or e.__class__, callback, key, context_alias))
             logger.error(format_exc())
             logger.error("Locals of the callback:")
             logger.error(locals)
@@ -434,21 +445,17 @@ def init(driver_configs, context_manager):
     """ This function is called by main.py to read the input configuration,
     pick the corresponding drivers and initialize InputProcessor. Returns
     the InputProcessor instance created.`"""
-    drivers = {}
+    drivers = []
     for driver_config in driver_configs:
         driver_name = driver_config["driver"]
         driver_module = importlib.import_module("input.drivers."+driver_name)
         args = driver_config.get("args", [])
         kwargs = driver_config.get("kwargs", {})
         driver = driver_module.InputDevice(*args, **kwargs)
-        # Generating an unique yet human-readable name
-        counter = 0
-        name = "{}-{}".format(driver_name, counter)
-        while name in drivers:
-            counter += 1
-            name = "{}-{}".format(driver_name, counter)
-        drivers[name] = driver
-    return InputProcessor(drivers, context_manager)
+        drivers.append(driver)
+    i = InputProcessor(drivers, context_manager)
+    dm = DeviceManager(i)
+    return i, dm
 
 if __name__ == "__main__":
     import doctest

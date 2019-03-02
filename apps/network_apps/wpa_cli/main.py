@@ -77,7 +77,7 @@ etdn_thread = None #Well-hidden global
 def enable_temp_disabled_networks():
     global etdn_thread
     if not etdn_thread:
-        etdn_thread = Thread(target=etdn_runner)
+        etdn_thread = Thread(target=etdn_runner, name="Runner for wpa_cli app's EnableTempDisabledNetworks function")
         etdn_thread.daemon = True
         etdn_thread.start()
 

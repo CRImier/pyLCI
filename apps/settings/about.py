@@ -4,7 +4,7 @@
 import string
 printable_characters = set(string.printable)
 
-from ui import Menu, TextReader
+from ui import Menu, TextReader, replace_filter_ascii as rfa
 from helpers import setup_logger
 
 i = None
@@ -25,7 +25,8 @@ License: Apache 2.0, with MIT components."""
 
 def about():
     mc = [["About ZPUI", about_zpui],
-          ["Contributors", about_contributors]]
+          ["Contributors", about_contributors],
+          ["Supporters", about_supporters]]
     Menu(mc, i, o, name="Settings-About menu").activate()
 
 def about_zpui():
@@ -43,10 +44,14 @@ def about_contributors():
     with open("CONTRIBUTORS.md", 'r') as f:
         contributors_md = f.read()
     lines = contributors_md.split('\n')[2:]
-    contributor_names = "\n".join([line[3:] for line in lines])
+    contributor_names = "\n".join([rfa(line[3:]) for line in lines])
     text = "ZPUI contributors:\n\n"+contributor_names
-    filtered_characters = {"ö":"o"}
-    for character, replacement in filtered_characters.items():
-        text = text.replace(character, replacement)
-    text = filter(lambda x: x in printable_characters, text).strip('\n')
     TextReader(text, i, o, name="About contributors TextReader").activate()
+
+def about_supporters():
+    with open("SUPPORTERS.md", 'r') as f:
+        supporters_md = f.read()
+    lines = supporters_md.split('\n')[2:]
+    supporter_names = "\n".join([rfa(line[3:]) for line in lines])
+    text = "ZeroPhone supporters:\n\n"+supporter_names
+    TextReader(text, i, o, name="About supporters TextReader").activate()
