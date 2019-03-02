@@ -5,7 +5,7 @@ from helpers import setup_logger
 
 menu_name = "UPnP/SSDP scan"
 
-from ui import Menu, Printer, IntegerAdjustInput, format_for_screen as ffs
+from ui import Menu, Printer, IntegerAdjustInput, PrettyPrinter
 from helpers import read_or_create_config, write_config, local_path_gen
 
 from collections import OrderedDict
@@ -54,7 +54,7 @@ def run_scan():
         else:
             ip_str = "{}:{}".format(*addr)
             found_devices[ip_str] = data
-    
+
     if not found_devices:
         Printer("No devices found", i, o, 2)
     else:
@@ -62,7 +62,7 @@ def run_scan():
         Menu(data, i, o).activate()
 
 def read_info(ip_str, data):
-    Printer(ffs("[+] {}\n{}".format(ip_str, data), o.cols), i, o, 5)
+    PrettyPrinter("[+] {}\n{}".format(ip_str, data), o.cols), i, o, 5)
 
 def adjust_timeout():
     global config
@@ -71,7 +71,7 @@ def adjust_timeout():
         config["timeout"] = timeout
         write_config(config, config_path)
     elif not timeout > 0:
-        Printer(ffs("Timeout has to be larger than 0!", o.cols), i, o)
+        PrettyPrinter("Timeout has to be larger than 0!", o.cols), i, o)
 
 main_menu_contents = [
 ["Scan", run_scan],
