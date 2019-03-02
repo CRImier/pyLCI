@@ -62,7 +62,7 @@ def run_scan():
         Menu(data, i, o).activate()
 
 def read_info(ip_str, data):
-    PrettyPrinter("[+] {}\n{}".format(ip_str, data), o.cols), i, o, 5)
+    PrettyPrinter("[+] {}\n{}".format(ip_str, data), i, o, 5)
 
 def adjust_timeout():
     global config
@@ -71,7 +71,7 @@ def adjust_timeout():
         config["timeout"] = timeout
         write_config(config, config_path)
     elif not timeout > 0:
-        PrettyPrinter("Timeout has to be larger than 0!", o.cols), i, o)
+        PrettyPrinter("Timeout has to be larger than 0!", i, o)
 
 main_menu_contents = [
 ["Scan", run_scan],
