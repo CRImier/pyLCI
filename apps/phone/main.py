@@ -54,7 +54,7 @@ def call(number):
     try:
         phone.call(number)
     except ATError as e:
-        PrettyPrinter("Calling fail! "+repr(e), o.cols), i, o, 0)
+        PrettyPrinter("Calling fail! "+repr(e), i, o, 0)
     logger.error("Function stopped executing")
 
 def call_view():
