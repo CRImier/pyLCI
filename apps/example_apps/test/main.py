@@ -8,7 +8,7 @@ o = None
 
 def callback():
     """A function that's called when the app is selected in the menu"""
-    PrettyPrinter("Hello and welcome to Aperture Science computer aided enrichment center", o.cols), i, o, sleep_time=5, skippable=True)
+    PrettyPrinter("Hello and welcome to Aperture Science computer aided enrichment center", i, o, sleep_time=5, skippable=True)
 
 def init_app(input, output):
     """A function called once when ZPUI loads, to pass all the variables to the app"""
