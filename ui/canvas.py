@@ -489,6 +489,24 @@ class Canvas(object):
 
         self.display_if_interactive()
 
+    def rotate(self, degrees, expand=0):
+	"""
+	Rotates the image clockwise by the given amount of degrees
+	"""
+
+	self.image.rotate(degrees, expand=expand)
+
+    def paste(self, image_to_paste, coords=None):
+	"""
+	Pastes the supplied image onto the supplied base image
+        """
+
+	if isinstance(image_to_paste, basestring):
+            paste_image = PIL.Image.open(image_to_paste)
+    	else:
+            paste_image = image_to_paste
+	self.image.paste(paste_image, box=coords)
+
     def display_if_interactive(self):
         if self.interactive:
             self.display()
