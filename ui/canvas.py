@@ -495,6 +495,7 @@ class Canvas(object):
 	"""
 
 	self.image.rotate(degrees, expand=expand)
+	self.size = image.size
 
     def paste(self, image_to_paste, coords=None):
 	"""
