@@ -206,13 +206,13 @@ class TestCanvas(unittest.TestCase):
 	assert(imgs_are_equal(c.get_image(), test_image.convert("RGB")))
 
     def test_paste(self):
-	# test_image = get_image("canvas_13.png")
+	test_image = get_image("canvas_13.png")
 	o = get_mock_output(mode="RGB")
 	c = Canvas(o, name=c_name)
 	c.text("Hello world", (16, 16))
 	c.paste("canvas_14.png")
-	image = c.get_image()
-	image.save("canvas_13.png")
+	assert(c.get_image().mode == o.device_mode)
+	assert(imgs_are_equal(c.get_image(), test_image.convert("RGB")))
 
 def imgs_are_equal(i1, i2):
     return ImageChops.difference(i1, i2).getbbox() is None
