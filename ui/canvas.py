@@ -502,10 +502,10 @@ class Canvas(object):
         """
 
 	if isinstance(image_to_paste, basestring):
-            paste_image = PIL.Image.open(image_to_paste)
+            paste_image = Image.open(image_to_paste)
     	else:
             paste_image = image_to_paste
-	self.image = self.image.paste(paste_image, box=coords)
+	self.image.paste(paste_image, box=coords)
 
     def display_if_interactive(self):
         if self.interactive:
