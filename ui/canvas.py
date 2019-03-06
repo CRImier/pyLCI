@@ -491,14 +491,21 @@ class Canvas(object):
 
     def rotate(self, degrees, expand=True):
 	"""
-	Rotates the image clockwise by the given amount of degrees
+	Rotates the image clockwise by the given amount of degrees. If
+	expand is set to False part of the original image may be cut
+	off.
 	"""
 
 	self.image = self.image.rotate(degrees, expand=expand)
 
     def paste(self, image_to_paste, coords=None):
 	"""
-	Pastes the supplied image onto the supplied base image
+	Pastes the image supplied onto the current image. If coords
+	is kept as None, the image will be pasted in the top left
+	corner. Also, coords can be a 2-tuple giving the upper left
+	corner or a 4-tuple defining the left, upper, right and lower
+	pixel coordinate. If a 4-tuple is given the size of the pasted
+	image must match the size of the region.
         """
 
 	if isinstance(image_to_paste, basestring):
