@@ -207,10 +207,11 @@ class TestCanvas(unittest.TestCase):
 
     def test_paste(self):
 	test_image = get_image("canvas_13.png")
+	image_to_paste = get_image("canvas_14.png")
 	o = get_mock_output(mode="RGB")
 	c = Canvas(o, name=c_name)
 	c.text("Hello world", (16, 16))
-	c.paste("canvas_14.png")
+	c.paste(image_to_paste)
 	assert(c.get_image().mode == o.device_mode)
 	assert(imgs_are_equal(c.get_image(), test_image.convert("RGB")))
 
