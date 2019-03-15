@@ -59,6 +59,7 @@ class Canvas(object):
         self.interactive = interactive
 
     def load_image(self, image):
+        assert(image.size == self.size)
         self.image = image.copy()
         self.draw = ImageDraw.Draw(self.image)
 
