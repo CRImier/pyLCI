@@ -3,7 +3,8 @@ from time import sleep
 from threading import Lock
 from functools import wraps
 
-from helpers import setup_logger, remove_left_failsafe
+from helpers import setup_logger, remove_left_failsafe, cb_needs_key_state, \
+                    KEY_PRESSED, KEY_RELEASED, KEY_HELD
 from utils import to_be_foreground, check_value_lock
 from base_ui import BaseUIElement
 
@@ -136,13 +137,44 @@ class NumpadCharInput(BaseUIElement):
         self.value_accepted = True
         self.deactivate()
 
-    #Functions processing user input.
+    # Functions processing user input.
 
+    # @cb_needs_key_state can't be applied on top since it will get applied to
+    # check_value_lock and set a flag on it (which will result in a confusing bug)
     @check_value_lock
-    def process_streaming_keycode(self, key_name, *args):
-        #This function processes all keycodes - both number keycodes and action keycodes
+    @cb_needs_key_state
+    def process_streaming_keycode(self, key_name, state, *args):
+        # This function processes all keycodes - both number keycodes and action keycodes
         header = "KEY_"
         key = key_name[len(header):]
+        if state == KEY_RELEASED:
+            # We don't do anything on "key released" for now
+            return
+        elif state == KEY_HELD:
+            # "Key held" behaviour: pick a character out of the mapping and advancing input
+            # That is, if the character is in the mapping at all, action keys are still
+            # processed by this loop (for whatever reason, I thought I split them out?)
+            if self.pending_character and key in self.mapping:
+                self.pending_character = None
+                self.pending_counter = self.pending_counter_start
+                # Picking a "suitable" character
+                if key in list(self.mapping[key]) and not self.mapping[key].startswith(key):
+                    # If a keypad character name (0-9*# range in case of ZeroPhone)
+                    # is in the mapping, but isn't the beginning of it, change current
+                    # character to it
+                    letter = key
+                else:
+                    # Otherwise, use the last character
+                    letter = self.mapping[key][-1]
+                # Letter picked, adding and advancing
+                self.update_letter_in_value(letter)
+                self.position += 1
+                self.refresh()
+            return
+        if state not in (None, KEY_PRESSED):
+            logger.error("Unknown key state: {}! Can't process".format(key))
+            return
+        # Further code processes "key pressed" situation
         logger.debug("Received "+key_name)
         if key in self.action_keys:
             #Is one of the action keys
