@@ -143,7 +143,7 @@ class NumpadCharInput(BaseUIElement):
     # check_value_lock and set a flag on it (which will result in a confusing bug)
     @check_value_lock
     @cb_needs_key_state
-    def process_streaming_keycode(self, key_name, state, *args):
+    def process_streaming_keycode(self, key_name, state=None, *args):
         # This function processes all keycodes - both number keycodes and action keycodes
         header = "KEY_"
         key = key_name[len(header):]

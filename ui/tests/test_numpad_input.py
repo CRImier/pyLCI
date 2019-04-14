@@ -14,7 +14,9 @@ except ImportError:
 
     def import_mock(name, *args):
         if name in ['helpers']:
-            return Mock()
+            m = Mock()
+            m.configure_mock(cb_needs_key_state=lambda x:x, KEY_PRESSED=1, KEY_RELEASED=0, KEY_HELD=2)
+            return m
         elif name == 'ui.utils':
             import utils
             return utils
