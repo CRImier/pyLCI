@@ -61,7 +61,7 @@ Streaming callbacks also receive the key name:
 
     @cb_needs_key_state
     def state_cb(key, state):
-        state_name = {KEY_PRESSED:"down", KEY_HELD:"hold", KEY_RELEASED:"up"}[state]
+        state_name = {KEY_PRESSED:"down", KEY_HELD:"hold", KEY_RELEASED:"up", None:"down"}[state]
         print("{} - {}".format(key, state_name))
     
     i.set_streaming(key_state_cb)
