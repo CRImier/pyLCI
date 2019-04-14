@@ -21,6 +21,7 @@ class InputSkeleton(object):
     available_keys = None
     status_available = False
     supports_key_states = False
+    supports_held_state = False
 
     default_name_mapping = {}
 

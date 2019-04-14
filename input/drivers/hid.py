@@ -38,6 +38,7 @@ class InputDevice(InputSkeleton):
 
     default_name_mapping = {"KEY_KPENTER":"KEY_ENTER"}
     supports_key_states = True
+    supports_held_state = True
 
     def __init__(self, path=None, name=None, **kwargs):
         """Initialises the ``InputDevice`` object.

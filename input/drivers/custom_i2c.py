@@ -41,6 +41,7 @@ class InputDevice(InputSkeleton):
 
     status_available = True
     supports_key_states = True
+    supports_held_state = True
     state_mapping = {0:KEY_PRESSED, 1:KEY_HELD, 2:KEY_RELEASED}
 
     def __init__(self, addr = 0x12, bus = 1, int_pin = 16, **kwargs):
