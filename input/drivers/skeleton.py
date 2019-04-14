@@ -4,6 +4,10 @@ from copy import copy
 from helpers import setup_logger
 logger = setup_logger(__name__, "warning")
 
+KEY_PRESSED = 1
+KEY_RELEASED = 0
+KEY_HELD = 2
+
 class InputSkeleton(object):
     """Base class for input devices. Expectations from children:
 
@@ -16,6 +20,7 @@ class InputSkeleton(object):
     stop_flag = False
     available_keys = None
     status_available = False
+    supports_key_states = False
 
     default_name_mapping = {}
 
@@ -81,17 +86,20 @@ class InputSkeleton(object):
         """Unsets the ``enabled`` for loop functions to stop sending keycodes."""
         self.enabled = False
 
-    def map_and_send_key(self, key):
+    def map_and_send_key(self, key, state = None):
         """
         When used instead of ``send_key``, allows remapping the key using
         the keyname-to-keyname mapping before passing it to ``send_key``.
         """
         key = self.name_mapping.get(key, key)
-        self.send_key(key)
+        self.send_key(key, state = state)
 
-    def send_key(self, key):
+    def send_key(self, key, state = None):
         """A hook to be overridden by ``InputListener``. Otherwise, prints out key names as soon as they're pressed so is useful for debugging (to test things, just launch the driver as ``python driver.py``)"""
-        logger.debug(key)
+        if state != None:
+            logger.debug("{} {}".format(key, state))
+        else:
+            logger.debug(key)
 
     def start_thread(self):
         """Starts a thread with ``start`` function as target."""

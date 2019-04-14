@@ -37,6 +37,7 @@ class InputDevice(InputSkeleton):
     """ A driver for HID devices. As for now, supports keyboards and numpads."""
 
     default_name_mapping = {"KEY_KPENTER":"KEY_ENTER"}
+    supports_key_states = True
 
     def __init__(self, path=None, name=None, **kwargs):
         """Initialises the ``InputDevice`` object.
@@ -115,9 +116,9 @@ class InputDevice(InputSkeleton):
         if event is not None and event.type == ecodes.EV_KEY:
             key = ecodes.keys[event.code]
             value = event.value
-            if value == 0 and self.enabled:
+            if self.enabled:
                 key = self.keycode_mapping.get(key, key)
-                self.map_and_send_key(key)
+                self.map_and_send_key(key, state = value)
 
     def atexit(self):
         InputSkeleton.atexit(self)
