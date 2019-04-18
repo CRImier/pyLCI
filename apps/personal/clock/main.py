@@ -9,7 +9,7 @@ from dateutil.zoneinfo import getzoneinfofile_stream, ZoneInfoFile
 from subprocess import check_output, CalledProcessError
 
 from apps import ZeroApp
-from ui import Menu, Refresher, Canvas, IntegerAdjustInput, Listbox, LoadingBar
+from ui import Menu, Refresher, Canvas, IntegerAdjustInput, Listbox, LoadingBar, PrettyPrinter as Printer
 
 from helpers import read_or_create_config, local_path_gen, setup_logger
 
@@ -22,10 +22,20 @@ class ClockApp(ZeroApp, Refresher):
         super(ClockApp, self).__init__(i, o)
         self.menu_name = "Clock"
         self.countdown = None
-        self.refresher = Refresher(self.on_refresh, i, o, keymap={"KEY_RIGHT":self.countdown_settings})
+        self.refresher = Refresher(self.on_refresh, i, o, keymap={"KEY_RIGHT":self.countdown_settings, "KEY_DOWN":self.force_sync_time})
         default_config = '{}'
         config_filename = "config.json"
         self.config = read_or_create_config(local_path(config_filename), default_config, self.menu_name+" app")
+
+    def force_sync_time(self):
+        Printer("Syncing time", self.i, self.o, 0)
+        try:
+            output = check_output(["sntp", "-S", "pool.ntp.org"])
+        except CalledProcessError:
+            logger.exception("Failed to sync time!")
+            Printer("Failed to sync time!", self.i, self.o, 1)
+        else:
+            Printer("Synced time successfully!", self.i, self.o, 1)
 
     def format_countdown(self):
         if not self.countdown: return None
