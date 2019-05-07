@@ -202,7 +202,7 @@ class InputProcessor(object):
         if isinstance(data, (tuple, list)) and len(data) == 2:
             key, state = data
             logger.debug("Received key: {}, state: {}".format(key, state))
-        elif isinstance(key, basestring):
+        elif isinstance(data, basestring):
             key = data
             logger.debug("Received key: {}".format(key))
         else:
