@@ -59,6 +59,8 @@ class NumpadCharInput(BaseUIElement):
                "#":"#/()[]<>",
               }
 
+    held_mapping = {str(i):str(i) for i in range(10)}
+
     action_keys = {
                "KEY_ENTER":"accept_value",
                "KEY_F1":"deactivate",
@@ -158,7 +160,9 @@ class NumpadCharInput(BaseUIElement):
                 self.pending_character = None
                 self.pending_counter = self.pending_counter_start
                 # Picking a "suitable" character
-                if key in list(self.mapping[key]) and not self.mapping[key].startswith(key):
+                if hasattr(self, "held_mapping") and key in self.held_mapping:
+                    letter = self.held_mapping[key]
+                elif key in list(self.mapping[key]) and not self.mapping[key].startswith(key):
                     # If a keypad character name (0-9*# range in case of ZeroPhone)
                     # is in the mapping, but isn't the beginning of it, change current
                     # character to it
