@@ -60,11 +60,11 @@ class NumpadCharInput(BaseUIElement):
               }
 
     action_keys = {
-               "ENTER":"accept_value",
-               "F1":"deactivate",
-               "LEFT":"deactivate_if_first",
-               "RIGHT":"skip",
-               "F2":"backspace",
+               "KEY_ENTER":"accept_value",
+               "KEY_F1":"deactivate",
+               "KEY_LEFT":"deactivate_if_first",
+               "KEY_RIGHT":"skip",
+               "KEY_F2":"backspace",
               }
 
     bottom_row_buttons = ["Cancel", "OK", "Erase"]
@@ -176,10 +176,6 @@ class NumpadCharInput(BaseUIElement):
             return
         # Further code processes "key pressed" situation
         logger.debug("Received "+key_name)
-        if key in self.action_keys:
-            #Is one of the action keys
-            getattr(self, self.action_keys[key])()
-            return
         if key in self.mapping:
             #It's one of the keys we can process
             #NO INSERT IN MIDDLE/START SUPPORT
@@ -304,12 +300,11 @@ class NumpadCharInput(BaseUIElement):
     #Functions that set up the input listener
 
     def generate_keymap(self):
-        return {}
+        return copy(self.action_keys)
 
     @to_be_foreground
     def configure_input(self):
-        self.i.clear_keymap()
-        remove_left_failsafe(self.i)
+        BaseUIElement.configure_input(self)
         self.i.set_streaming(self.process_streaming_keycode)
 
     #Functions that are responsible for input to display
@@ -420,12 +415,12 @@ class NumpadKeyboardInput(NumpadCharInput):
     keys = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 
     action_keys = {
-       "ENTER":"accept_value",
-       "F1":"deactivate",
-       "LEFT":"deactivate_if_first",
-       "RIGHT":"skip",
-       "F2":"backspace",
-       "BACKSPACE": "backspace"
+       "KEY_ENTER":"accept_value",
+       "KEY_F1":"deactivate",
+       "KEY_LEFT":"deactivate_if_first",
+       "KEY_RIGHT":"skip",
+       "KEY_F2":"backspace",
+       "KEY_BACKSPACE": "backspace"
     }
 
     for c in keys:
