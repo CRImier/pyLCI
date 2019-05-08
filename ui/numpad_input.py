@@ -1,6 +1,6 @@
 from copy import copy
 from time import sleep
-from threading import Lock
+from threading import Lock, Event
 from functools import wraps
 
 from helpers import setup_logger, remove_left_failsafe, cb_needs_key_state, \
@@ -363,8 +363,25 @@ class NumpadPasswordInput(NumpadCharInput):
     as NumpadCharInput, but hiding all characters except the one that's currently being typed.
     """
 
+    def __init__(self, *a, **k):
+        NumpadCharInput.__init__(self, *a, **k)
+        self.pw_value_displayed = Event()
+
+    def generate_keymap(self):
+        km = NumpadCharInput.generate_keymap(self)
+        km["KEY_UP"] = self.toggle_pw_display
+        return km
+
+    def toggle_pw_display(self):
+        if self.pw_value_displayed.isSet():
+            self.pw_value_displayed.clear()
+        else:
+            self.pw_value_displayed.set()
+
     def get_displayed_value(self):
         if self.value:
+            if self.pw_value_displayed.isSet():
+                return self.value
             masked_string = "*"*len(self.value)
             if self.pending_character:
                 masked_string = masked_string[:-1] + self.value[-1] # unmask the last character
