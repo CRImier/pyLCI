@@ -39,7 +39,6 @@ class Refresher(BaseUIElement):
 
             * ``refresh_interval``: Time between display refreshes (and, accordingly, ``refresh_function`` calls).
             * ``keymap``: Keymap entries you want to set while Refresher is active.
-              * If set to a string
               * By default, KEY_LEFT deactivates the Refresher, if you want to override it, make sure that user can still exit the Refresher.
             * ``name``: Refresher name which can be used internally and for debugging.
 
