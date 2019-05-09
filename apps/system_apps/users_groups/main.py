@@ -31,7 +31,7 @@ def change_user_password():
         logger.warning("Can't detect any users! Changing root password instead")
         usernames = ["root"]
     for name in usernames:
-        db = DialogBox("Change password for \"{}\"?".format(name), i, o, name="FB; User&pw app dialogbox for {} pw change".format(name))
+        db = DialogBox("yn", i, o, message="Change password for \"{}\"?".format(name), name="FB; User&pw app dialogbox for {} pw change".format(name))
         choice = db.activate()
         if choice:
             result = change_password(name)
