@@ -10,9 +10,10 @@
  - Jon Maier
  - Björn Pettersson
  - Gnu-Bricoleur
- - Patrick Schneeweis
  - KyleMoran138
+ - Patrick Schneeweis
+ - Johannes Kool
  - Brian Dunlay
  - Beauregard Slim
- - i5heu
  - Sam Kaufman
+ - i5heu
