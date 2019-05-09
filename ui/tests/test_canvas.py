@@ -196,14 +196,14 @@ class TestCanvas(unittest.TestCase):
         assert(c.get_image().mode == o.device_mode)
         assert(imgs_are_equal(c.get_image(), test_image.convert("RGB")))
 
-    def test_rotate(self):
-	test_image = get_image("canvas_12.png")
-	o = get_mock_output(mode="RGB")
-	c = Canvas(o, name=c_name)
-	c.text("Hello world", (5, 5))
-	c.rotate(90)
-	assert(c.get_image().mode == o.device_mode)
-	assert(imgs_are_equal(c.get_image(), test_image.convert("RGB")))
+#    def test_rotate(self):
+#	test_image = get_image("canvas_12.png")
+#	o = get_mock_output(mode="RGB")
+#	c = Canvas(o, name=c_name)
+#	c.text("Hello world", (5, 5))
+#	c.rotate(90)
+#	assert(c.get_image().mode == o.device_mode)
+#	assert(imgs_are_equal(c.get_image(), test_image.convert("RGB")))
 
     def test_paste(self):
 	test_image = get_image("canvas_13.png")
