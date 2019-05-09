@@ -204,6 +204,7 @@ class InputProcessor(object):
             logger.debug("Received key: {}, state: {}".format(key, state))
         elif isinstance(data, basestring):
             key = data
+            state = None
             logger.debug("Received key: {}".format(key))
         else:
             raise ValueError("Received unsupported object in place of a key/key+state: {}".format(data))
