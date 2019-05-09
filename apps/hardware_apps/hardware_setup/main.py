@@ -8,6 +8,7 @@ from time import sleep
 
 from ui import Menu, PrettyPrinter as Printer, DialogBox, LoadingIndicator, PathPicker, Listbox, ProgressBar
 from helpers import setup_logger, read_or_create_config, local_path_gen, write_config, save_config_gen
+from actions import FirstBootAction
 
 import smbus
 import gpio
@@ -28,10 +29,16 @@ save_config = save_config_gen(config_path)
 
 i = None
 o = None
+context = None
 
 versions = {"gamma":"Gamma", "delta":"Delta", "delta-b":"Delta-B"}
 unknown_version_str = "Unknown version"
-yet_unknown_version_str = "Unknown version"
+yet_unknown_version_str = "Yet unknown version"
+
+def set_context(c):
+    global context
+    context = c
+    c.register_firstboot_action(FirstBootAction("set_hardware_version", hw_version_ui, depends=None))
 
 def hw_version_ui():
     def get_contents():

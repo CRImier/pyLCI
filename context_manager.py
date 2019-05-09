@@ -202,6 +202,13 @@ class Context(object):
         d['args'] = args
         return self.event_cb(self.name, "register_action", dict=d)
 
+    def register_firstboot_action(self, action):
+        """
+        Allows an app to register an action that shall be run on ZP first boot.
+        """
+        # Mock for now as it's not yet working
+        return False #return self.event_cb(self.name, "register_firstboot_action", action)
+
     def get_actions(self):
         return self.event_cb(self.name, "get_actions")
 
@@ -482,6 +489,9 @@ class ContextManager(object):
             d["app_name"] = context_alias
             d["full_name"] = "{}-{}".format(context_alias, d["name"])
             self.am.register_action(**d)
+        elif event == "register_firstboot_action":
+            action = args[0]
+            self.am.register_firstboot_action(context_alias, action)
         elif event == "request_exclusive":
             if self.exclusive_context and self.exclusive_context != context_alias:
                 logger.warning("Context {} requested exclusive switch but {} already got it".format(context_alias, self.exclusive_context))

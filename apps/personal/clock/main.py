@@ -9,6 +9,7 @@ from dateutil.zoneinfo import getzoneinfofile_stream, ZoneInfoFile
 from subprocess import check_output, CalledProcessError
 
 from apps import ZeroApp
+from actions import FirstBootAction
 from ui import Menu, Refresher, Canvas, IntegerAdjustInput, Listbox, LoadingBar, PrettyPrinter as Printer
 
 from helpers import read_or_create_config, local_path_gen, setup_logger
@@ -26,6 +27,11 @@ class ClockApp(ZeroApp, Refresher):
         default_config = '{}'
         config_filename = "config.json"
         self.config = read_or_create_config(local_path(config_filename), default_config, self.menu_name+" app")
+
+    def set_context(self, c):
+        self.context = c
+        c.register_firstboot_action(FirstBootAction("set_timezone", self.set_timezone, depends=None))
+        c.register_firstboot_action(FirstBootAction("force_sync_time", self.force_sync_time, depends=["set_timezone"]))
 
     def force_sync_time(self):
         Printer("Syncing time", self.i, self.o, 0)

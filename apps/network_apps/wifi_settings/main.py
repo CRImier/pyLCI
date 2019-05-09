@@ -1,4 +1,5 @@
 from apps import ZeroApp
+from actions import FirstBootAction
 from ui import Menu, Listbox, LoadingBar, PrettyPrinter as Printer, rfa
 
 from time import sleep
@@ -11,6 +12,10 @@ class WifiCountry(ZeroApp):
 
 	def __init__(self, *args, **kwargs):
 	 	ZeroApp.__init__(self, *args, **kwargs)
+
+	def set_context(self, c):
+		self.context = c
+		c.register_firstboot_action(FirstBootAction("change_wifi_country", self.change_wifi_country, depends=None))
 
 	def get_current_wifi_country(self):
 		return pyw.regget()
