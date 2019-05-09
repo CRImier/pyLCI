@@ -209,7 +209,11 @@ class AppManager(object):
             app_class = get_zeroapp_class_in_module(app)
             app = app_class(i, o)
         else:
-            app.init_app(i, o)
+            if hasattr(app, 'init_app'):
+                app.init_app(i, o)
+            else: #init_app-less function-based app
+                app.i = i
+                app.o = o
         self.pass_context_to_app(app, app_path, context)
         return app
 
