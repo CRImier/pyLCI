@@ -172,11 +172,11 @@ The right way
 ``process_output`` function gets output from the process and sets the status.
 
 .. note:: Why is the ``status`` variable actually a list? First of all, because we add
-all unrecognized output to it so that it can be returned later. However, if we didn't 
-have this function, it'd still have to be a list. The reason is simple - you can't easily
-reassign a variable from inside a function and have the changes actually apply, but you can
-do operations on mutable objects (say, add/remove/change list items, or change attributes
-of an object. If you 
+          all unrecognized output to it so that it can be returned later. However, if
+          we didn't have this function, it'd still have to be a list. The reason is simple -
+          you can't easily reassign a variable from inside a function and have the changes
+          actually apply outside, but you can do operations on mutable objects (say,
+          add/remove/change list items, or change attributes of an object).
 
 Testing and understanding the limitations
 +++++++++++++++++++++++++++++++++++++++++
