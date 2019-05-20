@@ -39,7 +39,6 @@ class Refresher(BaseUIElement):
 
             * ``refresh_interval``: Time between display refreshes (and, accordingly, ``refresh_function`` calls).
             * ``keymap``: Keymap entries you want to set while Refresher is active.
-              * If set to a string
               * By default, KEY_LEFT deactivates the Refresher, if you want to override it, make sure that user can still exit the Refresher.
             * ``name``: Refresher name which can be used internally and for debugging.
 
@@ -96,6 +95,8 @@ class Refresher(BaseUIElement):
         """Allows setting Refresher's refresh intervals after it's been initialized"""
         #interval for checking the in_background property in the activate()
         #when refresh_interval is small enough, is the same as refresh_interval
+        if new_interval == 0:
+            raise ValueError("Refresher refresh_interval can't be 0 ({})".format(self.name))
         self.refresh_interval = new_interval
         self.sleep_time = 0.1 if new_interval > 0.1 else new_interval
         self.calculate_intervals()

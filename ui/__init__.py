@@ -8,7 +8,7 @@ from ui import UIElement
 from char_input import CharArrowKeysInput
 from checkbox import Checkbox
 from dialog import DialogBox
-from funcs import ellipsize, format_for_screen, ffs, replace_filter_ascii, rfa, add_character_replacement, acr
+from funcs import ellipsize, format_for_screen, ffs, replace_filter_ascii, rfa, add_character_replacement, acr, format_values_into_text_grid, fvitg
 from input import UniversalInput
 from listbox import Listbox
 from menu import Menu, MenuExitException, MessagesMenu

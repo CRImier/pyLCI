@@ -5,12 +5,15 @@
  - monsieur_h
  - Louis Parkerson
  - Unnamed contributor
- - Björn Pettersson
+ - Timothée Floure
+ - Serge Spraiter
  - Jon Maier
+ - Björn Pettersson
  - Gnu-Bricoleur
- - Brian Dunlay
  - KyleMoran138
  - Patrick Schneeweis
+ - Johannes Kool
+ - Brian Dunlay
  - Beauregard Slim
  - Sam Kaufman
  - i5heu

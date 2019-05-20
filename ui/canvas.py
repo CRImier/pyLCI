@@ -61,6 +61,7 @@ class Canvas(object):
         self.interactive = interactive
 
     def load_image(self, image):
+        assert(image.size == self.size)
         self.image = image.copy()
         self.draw = ImageDraw.Draw(self.image)
 
@@ -427,6 +428,38 @@ class Canvas(object):
         self.image.paste(image_subset, (coords[0], coords[1]))
 
         self.display_if_interactive()
+
+#    def rotate(self, degrees, expand=True):
+#	"""
+#	Rotates the image clockwise by the given amount of degrees. If
+#	expand is set to False part of the original image may be cut
+#	off.
+#
+#	TODO: define behaviour and goals of this function better.
+#	For now, doesn't recalculate the canvas size, regenerate the
+#	``ImageDraw`` object or impose any restrictions.
+#	"""
+#
+#	self.image = self.image.rotate(degrees, expand=expand)
+
+    def paste(self, image_or_path, coords=None):
+	"""
+	Pastes the supplied image onto the canvas, with optional
+	coordinates. Otherwise, you can supply a string path to an image
+        that will be opened and pasted.
+
+	If ``coords`` is not supplied, the image will be pasted in the top left
+	corner. ``coords`` can be a 2-tuple giving the upper left
+	corner or a 4-tuple defining the left, upper, right and lower
+	pixel coordinate. If a 4-tuple is given, the size of the pasted
+	image must match the size of the region.
+	"""
+
+        if coords is not None:
+            coords = self.check_coordinates(coords)
+	if isinstance(image_or_path, basestring):
+            image_or_path = Image.open(image_or_path)
+	self.image.paste(image_or_path, box=coords)
 
     def display_if_interactive(self):
         if self.interactive:

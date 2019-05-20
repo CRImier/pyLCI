@@ -14,7 +14,9 @@ except ImportError:
 
     def import_mock(name, *args):
         if name in ['helpers']:
-            return Mock()
+            m = Mock()
+            m.configure_mock(cb_needs_key_state=lambda x:x, KEY_PRESSED=1, KEY_RELEASED=0, KEY_HELD=2)
+            return m
         elif name == 'ui.utils':
             import utils
             return utils
@@ -31,10 +33,19 @@ def get_mock_output(rows=8, cols=21):
     m.configure_mock(rows=rows, cols=cols, type=["char"])
     return m
 
+
 def get_mock_graphical_output(width=128, height=64, mode="1", **kwargs):
     m = get_mock_output(**kwargs)
     m.configure_mock(width=width, height=height, device_mode=mode, type=["char", "b&w-pixel"])
     return m
+
+def execute_key_sequence(ni, key_sequence):
+    for key in key_sequence:
+        key = "KEY_{}".format(key)
+        if key in ni.action_keys:
+            ni.keymap[key]()
+        else:
+            ni.process_streaming_keycode(key)
 
 ni_name = "Test NumpadCharInput"
 
@@ -96,11 +107,7 @@ class TestNumpadCharInput(unittest.TestCase):
         expected_output = "hello"
 
         def scenario():
-            for key in key_sequence:
-                if len(str(key)) > 1:
-                    ni.keymap["KEY_{}".format(key)]()
-                else:
-                    ni.process_streaming_keycode("KEY_{}".format(key))
+            execute_key_sequence(ni, key_sequence)
             assert not ni.in_foreground  # Should not be active
 
         with patch.object(ni, 'idle_loop', side_effect=scenario) as p:
@@ -115,11 +122,7 @@ class TestNumpadCharInput(unittest.TestCase):
         key_sequence = [4, 4, 1, "F2", 3, 3, "F2", 3, 3, 5, 5, 5, "RIGHT", 1, "F2", 5, 5, 5, 6, 6, 6, 1, 1, "ENTER"]
         expected_output = "hello!"
         def scenario():
-            for key in key_sequence:
-                if len(str(key)) > 1:
-                    ni.keymap["KEY_{}".format(key)]()
-                else:
-                    ni.process_streaming_keycode("KEY_{}".format(key))
+            execute_key_sequence(ni, key_sequence)
             assert not ni.in_foreground  # Should not be active
 
         with patch.object(ni, 'idle_loop', side_effect=scenario) as p:

@@ -2,19 +2,23 @@ menu_name = "Hardware setup"
 
 import os
 import sys
+import signal
 import traceback
 from time import sleep
 
 from ui import Menu, PrettyPrinter as Printer, DialogBox, LoadingIndicator, PathPicker, Listbox, ProgressBar
 from helpers import setup_logger, read_or_create_config, local_path_gen, write_config, save_config_gen
+from actions import FirstBootAction
 
 import smbus
 import gpio
+import zerophone_hw
 sys.excepthook = sys.__excepthook__
 gpio.log.setLevel(gpio.logging.INFO)
 
 from mtkdownload import MTKDownloadProcess, collect_fw_folders
 
+hw_version = zerophone_hw.hw_version
 local_path = local_path_gen(__name__)
 logger = setup_logger(__name__, "warning")
 default_gsm_fw_path = "/lib/firmware/"
@@ -25,6 +29,48 @@ save_config = save_config_gen(config_path)
 
 i = None
 o = None
+context = None
+
+versions = {"gamma":"Gamma", "delta":"Delta", "delta-b":"Delta-B"}
+unknown_version_str = "Unknown version"
+yet_unknown_version_str = "Yet unknown version"
+
+def set_context(c):
+    global context
+    context = c
+    c.register_firstboot_action(FirstBootAction("set_hardware_version", hw_version_ui, depends=None))
+
+def hw_version_ui():
+    def get_contents():
+       if hw_version.version_unknown():
+           version_str = unknown_version_str
+       else:
+           version = versions.get(hw_version.string(), yet_unknown_version_str)
+           version_str = "Version: {}".format(version)
+       menu_contents = [
+          [version_str],
+          ["Change version", set_hw_version]]
+       return menu_contents
+    Menu([], i, o, contents_hook=get_contents, name="ZP hardware version menu").activate()
+
+def set_hw_version(offer_zpui_restart=True):
+    lbc = sorted([list(reversed(x)) for x in versions.items()])
+    choice = Listbox(lbc, i, o, name="ZP hardware version choose listbox").activate()
+    if choice:
+        try:
+            result = hw_version.set_version(choice)
+        except:
+            logger.exception("Exception while setting hardware version")
+            result = False
+        if result:
+            Printer("Success!", i, o)
+            if offer_zpui_restart:
+                needs_restart = DialogBox('yn', i, o, message="Restart ZPUI?").activate()
+                if needs_restart:
+                    os.kill(os.getpid(), signal.SIGTERM)
+        else:
+            Printer("Failed to set the version =( Please send a bugreport", i, o, 7)
+        return result
 
 def change_settings():
     menu_contents = [
@@ -169,6 +215,7 @@ def init_app(input, output):
 
 def callback():
     main_menu_contents = [
+      ["Hardware version", hw_version_ui],
       ["Flash GSM modem", flash_image_ui],
       ["Settings", change_settings]]
     Menu(main_menu_contents, i, o, "ZP hardware setup menu").activate()

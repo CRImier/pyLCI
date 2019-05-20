@@ -55,9 +55,9 @@ class BaseLoadingIndicator(Refresher):
         self.refresh()
 
     def run_in_background(self):
-        if self.t is not None or self.in_foreground:
+        if self.t is not None or self.is_active:
             raise Exception("BaseLoadingIndicator already running!")
-        self.t = Thread(target=self.activate)
+        self.t = Thread(target=self.activate, name="Background thread for LoadingIndicator {}".format(self.name))
         self.t.daemon = True
         self.t.start()
 
@@ -67,6 +67,7 @@ class BaseLoadingIndicator(Refresher):
 
     def __enter__(self):
         self.run_in_background()
+        self.wait_for_active()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -104,10 +105,9 @@ class Throbber(BaseLoadingIndicator):
         self.message = kwargs.pop("message", None)
         BaseLoadingIndicator.__init__(self, i, o, refresh_interval=0.01, *args, **kwargs)
 
-    def activate(self):
+    def before_activate(self):
         self.start_time = time()
         self.counter.start()
-        return Refresher.activate(self)
 
     @to_be_foreground
     def refresh(self):

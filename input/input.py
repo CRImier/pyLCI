@@ -1,14 +1,15 @@
-from traceback import format_exc
 from threading import Thread, Event
+from traceback import format_exc
 from time import sleep
 from copy import copy
 import importlib
-
+import inspect
 import atexit
 import Queue
-from helpers import setup_logger
 
-import inspect
+from helpers import setup_logger, KEY_RELEASED, KEY_HELD, KEY_PRESSED
+
+from hotplug import DeviceManager
 
 logger = setup_logger(__name__, "warning")
 
@@ -30,15 +31,16 @@ class InputProcessor(object):
     proxy_attrs = ["available_keys"]
     proxies = []
 
-    def __init__(self, initial_drivers, context_manager):
+    def __init__(self, init_drivers, context_manager):
         self.global_keymap = {}
-        self.initial_drivers = initial_drivers
         self.cm = context_manager
         self.queue = Queue.Queue()
         self.available_keys = {}
         self.drivers = {}
-        for name, driver in self.initial_drivers.items():
-            self.attach_driver(driver, name)
+        self.initial_drivers = {}
+        for driver in init_drivers:
+            name = self.attach_driver(driver)
+            self.initial_drivers[name] = driver
         atexit.register(self.atexit)
 
     def receive_key(self, key):
@@ -51,10 +53,17 @@ class InputProcessor(object):
         except:
             raise #Just collecting possible exceptions for now
 
-    def attach_driver(self, driver, name):
+    def attach_driver(self, driver):
         """
         Attaches the driver to ``InputProcessor``.
         """
+        # Generating an unique yet human-readable name
+        counter = 0
+        driver_name = driver.__module__.rsplit('.', 1)[-1]
+        name = "{}-{}".format(driver_name, counter)
+        while name in self.drivers:
+            counter += 1
+            name = "{}-{}".format(driver_name, counter)
         logger.info("Attaching driver: {}".format(name))
         self.drivers[name] = driver
         driver._old_send_key = driver.send_key
@@ -63,6 +72,7 @@ class InputProcessor(object):
         self.available_keys[name] = driver.available_keys
         self.update_all_proxy_attrs()
         driver.start()
+        return name
 
     def detach_driver(self, name):
         """
@@ -131,13 +141,16 @@ class InputProcessor(object):
             raise CallbackException(4, "Global callback for {} can't be set because it's already in the keymap!".format(key_name))
         self.global_keymap[key] = callback
 
-    def receive_key(self, key):
+    def receive_key(self, key, state = None):
         """
         This is the method that receives keypresses from drivers and puts
         them into ``self.queue``, to be processed by ``self.event_loop``
         Will block with full queue until the queue has a free spot.
         """
-        self.queue.put(key)
+        if state is not None:
+            self.queue.put((key, state))
+        else:
+            self.queue.put(key)
 
     def event_loop(self, index):
         """
@@ -157,7 +170,7 @@ class InputProcessor(object):
         while not stop_flag.isSet():
             if self.get_current_proxy() is not None:
                 try:
-                    key = self.queue.get(False, 0.1)
+                    data = self.queue.get(False, 0.1)
                 except Queue.Empty:
                     # here an active event_loop spends most of the time
                     sleep(0.1)
@@ -166,13 +179,13 @@ class InputProcessor(object):
                     pass
                 else:
                     # here event_loop is usually busy
-                    self.process_key(key)
+                    self.process_key(data)
             else:
                 # No current proxy set yet, not processing anything
                 sleep(0.1)
         logger.debug("Stopping event loop "+str(index))
 
-    def process_key(self, key):
+    def process_key(self, data):
         """
         This function receives a keyname, finds the corresponding callback/action
         and handles it. The lookup order is as follows:
@@ -186,27 +199,35 @@ class InputProcessor(object):
 
         As soon as a match is found, processes the associated callback and returns.
         """
+        if isinstance(data, (tuple, list)) and len(data) == 2:
+            key, state = data
+            logger.debug("Received key: {}, state: {}".format(key, state))
+        elif isinstance(data, basestring):
+            key = data
+            state = None
+            logger.debug("Received key: {}".format(key))
+        else:
+            raise ValueError("Received unsupported object in place of a key/key+state: {}".format(data))
         # Global and nonmaskable callbacks are supposed to work
         # even when the screen backlight is off
         #
         # First, querying global callbacks - they're more important than
         # even the current proxy nonmaskable callbacks
-        logger.debug("Received key: {}".format(key))
         if key in self.global_keymap:
             callback = self.global_keymap[key]
-            self.handle_callback(callback, key, type="global")
+            self.handle_callback(callback, key, state, type="global")
             return
         # Now, all the callbacks are either proxy callbacks or backlight-related
         # Saving a reference to current_proxy, in case it changes during the lookup
         current_proxy = self.get_current_proxy()
         if key in current_proxy.nonmaskable_keymap:
             callback = current_proxy.nonmaskable_keymap[key]
-            self.handle_callback(callback, key, type="nonmaskable", context_name=current_proxy.context_alias)
+            self.handle_callback(callback, key, state, type="nonmaskable", context_name=current_proxy.context_alias)
             return
         # Checking backlight state, turning it on if necessary
         if callable(self.backlight_cb):
             try:
-                # backlight_cb turns on the backligth as a side effect
+                # backlight_cb turns on the backlight as an (expected) side effect
                 backlight_was_off = self.backlight_cb()
             except:
                 logger.exception("Exception while calling the backlight check callback!")
@@ -218,34 +239,51 @@ class InputProcessor(object):
         # Simple callbacks
         if key in current_proxy.keymap:
             callback = current_proxy.keymap[key]
-            self.handle_callback(callback, key, context_name=current_proxy.context_alias)
+            self.handle_callback(callback, key, state, context_name=current_proxy.context_alias)
         #Maskable callbacks
         elif key in current_proxy.maskable_keymap:
             callback = current_proxy.maskable_keymap[key]
-            self.handle_callback(callback, key, type="maskable", context_name=current_proxy.context_alias)
+            self.handle_callback(callback, key, state, type="maskable", context_name=current_proxy.context_alias)
         #Keycode streaming
         elif callable(current_proxy.streaming):
-            self.handle_callback(current_proxy.streaming, key, pass_key=True, type="streaming", context_name=current_proxy.context_alias)
+            self.handle_callback(current_proxy.streaming, key, state, pass_key=True, type="streaming", context_name=current_proxy.context_alias)
         else:
             logger.debug("Key {} has no handlers - ignored!".format(key))
             pass #No handler for the key
 
-    def handle_callback(self, callback, key, pass_key=False, type="simple", context_name=None):
+    def handle_callback(self, callback, key, state, pass_key=False, type="simple", context_name=None):
         try:
             if context_name:
-                logger.info("Processing a {} callback for key {}, context {}".format(type, key, context_name))
+                logger.info("Processing a {} callback for key {} with state {}, context {}".format(type, key, state, context_name))
             else:
                 logger.info("Processing a {} callback for key {}".format(type, key))
             logger.debug("pass_key = {}".format(pass_key))
             logger.debug("callback name: {}".format(callback.__name__))
-            if pass_key:
-                callback(key)
+            # Checking whether the callback wants key state
+            keystate_cb_name = "zpui_icb_pass_key_state"
+            if hasattr(callback, "__func__"):
+                cb_needs_state = getattr(callback.__func__, keystate_cb_name, False)
             else:
-                callback()
+                cb_needs_state = getattr(callback, keystate_cb_name, False)
+            # 4 calling conventions - need to pick the right one
+            if cb_needs_state is True:
+                if pass_key:
+                    callback(key, state)
+                else:
+                    callback(state)
+            else:
+                # We might also get None for a state if an input driver doesn't support states
+                if state == KEY_PRESSED or state is None:
+                    if pass_key:
+                        callback(key)
+                    else:
+                        callback()
+                else:
+                    pass # Not calling the callback if the key is held or released
         except Exception as e:
             locals = inspect.trace()[-1][0].f_locals
             context_alias = getattr(self.get_current_proxy(), "context_alias", None)
-            logger.error("Exception {} caused by callback {} when key {} was received, context: {}".format(e.__str__() or e.__class__, callback, key, context_alias))
+            logger.error("Exception {} caused by callback {} when key {}  with state {} was received, context: {}".format(e.__str__() or e.__class__, callback, key, state, context_alias))
             logger.error(format_exc())
             logger.error("Locals of the callback:")
             logger.error(locals)
@@ -435,21 +473,17 @@ def init(driver_configs, context_manager):
     """ This function is called by main.py to read the input configuration,
     pick the corresponding drivers and initialize InputProcessor. Returns
     the InputProcessor instance created.`"""
-    drivers = {}
+    drivers = []
     for driver_config in driver_configs:
         driver_name = driver_config["driver"]
         driver_module = importlib.import_module("input.drivers."+driver_name)
         args = driver_config.get("args", [])
         kwargs = driver_config.get("kwargs", {})
         driver = driver_module.InputDevice(*args, **kwargs)
-        # Generating an unique yet human-readable name
-        counter = 0
-        name = "{}-{}".format(driver_name, counter)
-        while name in drivers:
-            counter += 1
-            name = "{}-{}".format(driver_name, counter)
-        drivers[name] = driver
-    return InputProcessor(drivers, context_manager)
+        drivers.append(driver)
+    i = InputProcessor(drivers, context_manager)
+    dm = DeviceManager(i)
+    return i, dm
 
 if __name__ == "__main__":
     import doctest

@@ -23,7 +23,7 @@ class AvrdudeApp(ZeroApp):
     #   Especially since "arduino" requires to use a serial port
     #   and we don't yet have a way to set it
     # 2. make sense on ZeroPhone (LPT and COM programmers are out)
-    supported_programmers = ["usbasp", "linuxspi", "usbasp-clone", "usbtiny", "pickit2"]
+    supported_programmers = ["usbasp", "avrisp2", "usbasp-clone", "usbtiny", "pickit2"]
     # These are the fuse types that will, by default, be offered for read/
     # autodetected for write
     fuse_types = ["hfuse", "lfuse", "efuse"]

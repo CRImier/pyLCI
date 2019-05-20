@@ -1,13 +1,17 @@
 from time import sleep
 
-from skeleton import InputSkeleton
+from skeleton import InputSkeleton, KEY_PRESSED, KEY_RELEASED
 
 class InputDevice(InputSkeleton):
     """ A driver for pushbuttons attached to Raspberry Pi GPIO.
     It uses RPi.GPIO library. Button's first pin has to be attached
-    to ground, second pin has to be attached to the GPIO pin and
-    pulled up to 3.3V with a 1-10K resistor. It's also possible to use
-    internal pullups of Raspberry Pi GPIO."""
+    to ground, second pin has to be attached to the GPIO pin. Pullups
+    are expected - by default, internal pullups of Raspberry Pi GPIO
+    are enabled. If internal pullups are not desired, supply
+    `"pullups":false` in config.json and provide your own pullups."""
+
+    supports_key_states = True
+    supports_held_state = False
 
     default_mapping = [
     "KEY_UP",
@@ -20,23 +24,22 @@ class InputDevice(InputSkeleton):
     "KEY_PROG1"]
 
     def __init__(self, button_pins=[], pullups=True, **kwargs):
-        """Initialises the ``InputDevice`` object. 
+        """Initialises the ``InputDevice`` object.
 
         Kwargs:
-        
+
         * ``button_pins``: GPIO numbers which to treat as buttons (GPIO.BCM numbering)
         * ``pullups``: if True, enables pullups on all pins, if False, doesn't. Default: True
         * ``debug``: enables printing button press and release events when set to True
         """
         self.button_pins = button_pins
         self.pullups = pullups
-        self.init_hw()
         InputSkeleton.__init__(self, **kwargs)
 
     def init_hw(self):
         import RPi.GPIO as GPIO #Doing that because I couldn't mock it for ReadTheDocs
         self.GPIO = GPIO
-        GPIO.setmode(GPIO.BCM) 
+        GPIO.setmode(GPIO.BCM)
         for pin_num in self.button_pins:
             if self.pullups:
                 GPIO.setup(pin_num, GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -45,6 +48,7 @@ class InputDevice(InputSkeleton):
         self.button_states = []
         for i, pin_num in enumerate(self.button_pins):
             self.button_states.append(GPIO.input(pin_num))
+        return None # Status not available
 
     def runner(self):
         """Polling loop. Stops when ``stop_flag`` is set to True."""
@@ -52,9 +56,10 @@ class InputDevice(InputSkeleton):
             for i, pin_num in enumerate(self.button_pins):
                 button_state = self.GPIO.input(pin_num)
                 if button_state != self.button_states[i]:
-                    if button_state == False and self.enabled:
+                    if self.enabled:
                         key = self.mapping[i]
-                        self.send_key(key)
+                        state = KEY_RELEASED if button_state else KEY_PRESSED
+                        self.map_and_send_key(key, state=state)
                     self.button_states[i] = button_state
             sleep(0.01)
 

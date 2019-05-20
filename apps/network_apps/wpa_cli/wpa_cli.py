@@ -1,5 +1,5 @@
-
 from subprocess import check_output, CalledProcessError
+from ast import literal_eval
 from time import sleep
 
 from helpers import setup_logger
@@ -47,7 +47,7 @@ def connect_new_network(network_info):
     #Else, there's not enough implemented as for now
     if not network_found:
         logger.warning("Hell, I dunno.")
-        return False  
+        return False
 
 def is_open_network(network_info):
     #Might be an approach which doesn't take some things into account
@@ -65,7 +65,7 @@ def parse_network_flags(flag_string):
     #Flags go each after another, enclosed in "[]" braces
     flags = [flag.strip('[]') for flag in flag_string.split('][')] #If anybody knows a better way, do commit
     return flags
-        
+
 #wpa_cli commands
 
 def get_interfaces():
@@ -77,7 +77,7 @@ def set_active_interface(interface_name):
     #TODO output check
     output = process_output(wpa_cli_command("interface", interface_name))
     #if output == "Connected to interface '{}'".format(interface_name):
-        
+
 def get_current_interface():
     #TODO: check without wireless adapter plugged in
     output = process_output(wpa_cli_command("ifname"))
@@ -116,15 +116,21 @@ def save_config():
 
 def disable_network(network_id):
     return ok_fail_command("disable_network", str(network_id))
-    
+
 def initiate_scan():
     return ok_fail_command("scan")
-    
+
+def parse_ssid_from_cli(ssid):
+    return literal_eval("'{}'".format(ssid))
+
 def get_scan_results():
     #Currently I know of no way to know if the scan results got updated since last time scan was initiated
     output = process_output(wpa_cli_command("scan_results"))
     #As of wpa_supplicant 2.3-1, header elements are ['bssid', 'frequency', 'signal level', 'flags', 'ssid']
     networks = process_table(output[0], output[1:])
+    # Filtering SSIDs to allow for using Unicode SSIDs
+    for network in networks:
+        network["ssid"] = parse_ssid_from_cli(network["ssid"])
     return networks
 
 def add_network():
@@ -132,6 +138,8 @@ def add_network():
 
 def set_network(network_id, param_name, value):
     #Might fail if the wireless dongle gets unplugged or something
+    if param_name == "ssid":
+        value = 'P'+value
     return ok_fail_command("set_network", str(network_id), param_name, value)
 
 
@@ -144,14 +152,14 @@ def ok_fail_command(command_name, *args):
         return True
     else:
         raise WPAException(command_name, output[0], args)
-    
+
 def int_fail_command(command_name, *args):
     output = process_output(wpa_cli_command(command_name, *[str(arg) for arg in args]))
     try:
         return int(output[0])
     except:
         raise WPAException(command_name, output[0], args)
-    
+
 def process_table(header, contents):
     #Takes a tab-separated table and returns a list of dicts, each dict representing a row and having column_name:value mappings
     table = []
@@ -187,5 +195,5 @@ if __name__ == "__main__":
         print(get_scan_results())
     print(initiate_scan())
     print(initiate_scan())
-    
+
 

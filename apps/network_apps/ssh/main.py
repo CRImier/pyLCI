@@ -7,6 +7,7 @@ from datetime import datetime
 
 from helpers import read_or_create_config, local_path_gen, save_config_gen, setup_logger
 from ui import Menu, PrettyPrinter as Printer, LoadingIndicator
+from actions import FirstBootAction
 from libs import systemctl
 
 import psutil
@@ -24,11 +25,25 @@ logger = setup_logger(__name__, "info")
 
 i = None
 o = None
+context = None
 
 def init_app(input_obj, output_obj):
     global i, o
     i = input_obj
     o = output_obj
+
+def set_context(self, c):
+    self.context = c
+    c.register_firstboot_action(FirstBootAction("ssh_setup", setup_ssh, depends=[None], before=["wifi_setup"]))
+
+def setup_ssh():
+    regenerate_ssh_keys()
+    choice = DialogBox("ync", i, o, message="Enable SSH?").activate()
+    if choice is not None:
+        if choice:
+            enable_ssh()
+        else:
+            disable_ssh()
 
 def regenerate_ssh_keys():
     try:
