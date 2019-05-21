@@ -225,4 +225,6 @@ class TestProHelper(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    import sys
+    if sys.argv[-1] != "play":
+        unittest.main()
