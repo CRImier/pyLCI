@@ -1,8 +1,8 @@
 import psutil
 import os
 
-def is_running_under_systemd():
+def zpui_running_as_service():
     if psutil.Process(os.getpid()).ppid() == 1:
-        return true;
+        return True;
     else:
-        return false;
+        return False;

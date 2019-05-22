@@ -11,16 +11,20 @@ from logging.handlers import RotatingFileHandler
 
 from apps.app_manager import AppManager
 from context_manager import ContextManager
-from helpers import read_config, local_path_gen, logger, env, read_or_create_config
+from helpers import read_config, local_path_gen, logger, env, read_or_create_config, \
+                    zpui_running_as_service
 from input import input
 from output import output
 from ui import Printer
+import pidcheck
 
 emulator_flag_filename = "emulator"
 local_path = local_path_gen(__name__)
 is_emulator = emulator_flag_filename in os.listdir(".")
 
 rconsole_port = 9377
+
+pid_path = '/run/zpui_pid.pid'
 
 config_paths = ['/boot/zpui_config.json', '/boot/pylci_config.json'] if not is_emulator else []
 config_paths.append(local_path('config.json'))
@@ -222,7 +226,7 @@ if __name__ == '__main__':
     # Signal handler for debugging
     signal.signal(signal.SIGUSR1, dump_threads)
     signal.signal(signal.SIGUSR2, spawn_rconsole)
-    signal.signal(signal.SIGHUP, helpers.logger.on_reload)
+    signal.signal(signal.SIGHUP, logger.on_reload)
 
     # Setup argument parsing
     parser = argparse.ArgumentParser(description='ZPUI runner')
@@ -268,62 +272,9 @@ if __name__ == '__main__':
     if args.ignore_pid:
         logger.info("Skipping PID check");
     else:
-        logger.info("Checking if another instance of ZPUI is running.");
-        PID_PATH= '/run/zpui.pid'
-
-        if os.path.isfile(PID_PATH):
-            if os.access(PID_PATH, os.R_OK):
-                try:
-                    PID_FILE = int(open(PID_PATH, 'r').read().strip());
-                except:
-                    logger.critical(PID_PATH + " isn't in a standard format");
-
-                    print ("\nWhat do you want to do?\n\n(C)ontinue and rewrite PID file\n(S)top/(Q)uit\n");
-                    #TODO setup a Timed delay of 10 seconds if they don't press a key
-                    if rlist:
-                        if sys.stdin.read(1) in ["s", "S", "q", "Q"]:
-                            sys.exit(1);
-                        else:
-                            #TODO clean this up and say you need to type one of the following
-                            print("Ok, Moving on...");
-                    else:
-                        print("No input. Moving on...");
-                if os.getpid() == PID_FILE:
-                    logger.info("SystemD created a PID file for this instance");
-                else:
-                    try:
-                        os.kill(PID_FILE, 0);
-                    except OSError:
-                        logger.warning("PID file is left behind but nothing is running, might be due to a unsafe shutdown!");
-                    else:
-                        logger.critical(PID_PATH + " is pointing to another running program with PID, and its not this instance!");
-                        print("\nWhat do you want to do?\n\n(C)ontinue and rewrite PID file\n(S)top/(Q)uit\n(K)ill other process and try to start again", rlist, _, _ = select([sys.stdin], [], [], 10));
-                        #TODO setup a Timed delay of 10 seconds if they don't press a key
-                        if false:
-                            if sys.stdin.readline(1) == "s" or sys.stdin.readline() == "S" or sys.stdin.readline() == "q" or sys.stdin.readline() == "Q":
-                                sys.exit(1);
-                            elif sys.stdin.read(1) == "k" or sys.stdin.readline() == "K":
-                                print("Ok gonna try to kill it")
-                                try:
-                                    os.kill(PID_FILE, 15);
-                                except OSError:
-                                    print("Didn't work, quitting...")
-                                    sys.exit(1);
-
-                            else:
-                                #TODO clean this up and say you need to type one of the following
-                                print("Ok, Moving on...")
-                        else:
-                            print("No input. Moving on...");
-                logger.info("Overwriting PID file");
-                with open(PID_PATH, 'w') as file:
-                    file.write(str(os.getpid()) + "\n");
-            else:
-                logger.critical("/run/zpui.pid is not readable");
-        else:
-            logger.info("No currently running ZPUI instances, starting this one!");
-            with open(PID_PATH, 'w') as file:
-                file.write(str(os.getpid()) + "\n");
+        is_interactive = not zpui_running_as_service()
+        do_kill = zpui_running_as_service()
+        pidcheck.check_and_create_pid(pid_path, interactive=is_interactive, kill_not_stop=do_kill)
 
     # Launch ZPUI
     launch(**vars(args))
