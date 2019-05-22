@@ -10,6 +10,7 @@
  - Jon Maier
  - Björn Pettersson
  - Gnu-Bricoleur
+ - piajesse
  - KyleMoran138
  - Patrick Schneeweis
  - Johannes Kool

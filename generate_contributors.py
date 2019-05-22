@@ -18,7 +18,7 @@ replace_contributors =   {"CRImier": "CRImier (Arsenijs)",
                           "Louis Pi": "Louis Parkerson"}
 
 
-add_contributors = [[10, "Serge Spraiter"]]
+add_contributors = [[10, "Serge Spraiter"], [5, "piajesse"]]
 
 output = check_output(["git", "shortlog", "--numbered", "--summary", "--all"])
 lines = filter(None, [line.strip() for line in output.split('\n')])
