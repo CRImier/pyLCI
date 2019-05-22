@@ -1,10 +1,17 @@
+import psutil
 import os
 import sys
+
+def is_running_under_systemd():
+    if psutil.Process(os.getpid()).ppid() == 1:
+        return true;
+    else:
+        return false;
 
 
 def local_path_gen(_name_):
     """This function generates a ``local_path`` function you can use
-    in your scripts to get an absolute path to a file in your app's 
+    in your scripts to get an absolute path to a file in your app's
     directory. You need to pass ``__name__`` to ``local_path_gen``. Example usage:
 
     .. code-block:: python
