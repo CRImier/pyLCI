@@ -21,14 +21,12 @@ In ``app/main.py``:
 .. code-block:: python
 
     menu_name = "Skeleton app"
-    
+
+    # These two variables will be automatically assigned by init_app
+    # unless you define your own init_app. However, you do need to define them
+    # - for now, just for readability.
     i = None #Input device
     o = None #Output device
-    
-    def init_app(input, output):
-        #Gets called when app is loaded
-        global i, o
-        i = input; o = output
     
     def callback():
         #Gets called when app is selected from menu
@@ -755,8 +753,10 @@ with other apps.
 
 .. code-block:: python
 
-    def init_app(i, o):
-        ...
+    def init_app(input, output):
+        # if we define our own init_app, we need to do this
+        global i, o
+        i = input; o = output
         init_hardware() #Your task - short enough to run while app is being loaded
 
 .. warning:: If there's a chance that the task will take a long time, use one
