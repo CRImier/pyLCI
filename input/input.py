@@ -462,11 +462,13 @@ class InputProxy(object):
                 self.sanity_check_cb(key_name, callback)
         self.keymap = new_keymap
 
-    def update_keymap(self, new_keymap):
+    def update_keymap(self, new_keymap, silent=False):
         """
         Updates the InputProxy keymap with entries from another keymap.
         Will add/replace callbacks for keys in the new keymap,
-        but will leave the existing keys that are not in new keymap intact
+        but will leave the existing keys that are not in new keymap intact.
+        The ``silent`` kwarg can be set so that the callback is not sanity checked
+        (warnings shown in the logs).
 
         >>> i = InputProxy("test")
         >>> i.set_keymap({"KEY_LEFT":lambda:1, "KEY_DOWN":lambda:2})
@@ -482,7 +484,10 @@ class InputProxy(object):
         >>> i.keymap["KEY_1"]()
         4
         """
-        self.keymap.update(new_keymap)
+        keymap_replacement = {}
+        keymap_replacement.update(self.keymap)
+        keymap_replacement.update(new_keymap)
+        self.set_keymap(keymap_replacement, silent=silent)
 
     def clear_keymap(self):
         """Removes all the callbacks set."""
