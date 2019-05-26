@@ -28,11 +28,11 @@ class VerticalScrollbar(object):
 
     def get_coords(self, c):
         height_px = c.height * self.size
-        height_px = max(height_px, self.min_size)  # so we always have something to show
+        height_px = min(c.height, max(height_px, self.min_size))  # so we always have something to show, but not beyond height
         y_pos = self.progress * c.height
-        rect = (
-            self.margin, y_pos,
-            self.margin + self._width, y_pos + height_px
+        rect = ( # remove any float
+            int(self.margin), int(y_pos),
+            int(self.margin + self._width), int(y_pos + height_px)
         )
         return rect
 
@@ -54,11 +54,11 @@ class HorizontalScrollbar(VerticalScrollbar):
 
     def get_coords(self, c):
         width_px = c.width * self.size
-        width_px = max(width_px, self.min_size)
+        width_px = min(c.width, max(width_px, self.min_size)) # not beyond width
         x_pos = self.progress * c.width
-        rect = (
-            x_pos, c.height - self._width - self.margin,
-            x_pos + width_px, c.height - self.margin
+        rect = ( # remove any float
+            int(x_pos), int(c.height - self._width - self.margin),
+            int(x_pos + width_px), int(c.height - self.margin)
         )
         return rect
 
@@ -203,7 +203,8 @@ class TextReader(object):
             "KEY_PAGEDOWN": lambda: self.page_down(),
             "KEY_LEFT": lambda: self.move_left(),
             "KEY_RIGHT": lambda: self.move_right(),
-            "KEY_ENTER": lambda: self.deactivate()
+            "KEY_ENTER": lambda: self.deactivate(),
+            "KEY_F1": lambda: self.deactivate(), # similar to script exec
         }
 
     def to_foreground(self):
@@ -228,9 +229,8 @@ class TextReader(object):
         self.after_move()
 
     def move_left(self):
-        if self.v_scroll_index == 0:
-            self.deactivate()
-
+        # if self.v_scroll_index == 0: # OK,F1 = deactivate
+        #     self.deactivate()
         self.v_scroll_index -= self.scroll_speed
         self.after_move()
 
