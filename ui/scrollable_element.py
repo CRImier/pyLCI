@@ -199,8 +199,8 @@ class TextReader(object):
         self.keymap = {
             "KEY_UP": lambda: self.move_up(),
             "KEY_DOWN": lambda: self.move_down(),
-            "KEY_PAGEUP": lambda: self.page_up(),
-            "KEY_PAGEDOWN": lambda: self.page_down(),
+            "KEY_F3": lambda: self.page_up(),
+            "KEY_F4": lambda: self.page_down(),
             "KEY_LEFT": lambda: self.move_left(),
             "KEY_RIGHT": lambda: self.move_right(),
             "KEY_ENTER": lambda: self.deactivate()

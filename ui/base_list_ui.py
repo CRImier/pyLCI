@@ -256,8 +256,8 @@ class BaseListUIElement(BaseUIElement):
         return {
             "KEY_UP": "move_up",
             "KEY_DOWN": "move_down",
-            "KEY_PAGEUP": "page_up",
-            "KEY_PAGEDOWN": "page_down",
+            "KEY_F3": "page_up",
+            "KEY_F4": "page_down",
             "KEY_ENTER": "select_entry",
             "KEY_RIGHT": "process_right_press"
         }

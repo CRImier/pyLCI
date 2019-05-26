@@ -19,8 +19,8 @@ class InputDevice(InputSkeleton):
     "KEY_LEFT",
     "KEY_RIGHT",
     "KEY_ENTER",
-    "KEY_PAGEUP",
-    "KEY_PAGEDOWN",
+    "KEY_F3",
+    "KEY_F4",
     "KEY_PROG1"]
 
     def __init__(self, button_pins=[], pullups=True, **kwargs):

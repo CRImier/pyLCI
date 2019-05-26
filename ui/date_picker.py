@@ -108,8 +108,8 @@ class DatePicker(BaseUIElement):
 			"KEY_UP": "move_up",
 			"KEY_DOWN": "move_down",
 			"KEY_ENTER": "accept_value",
-			"KEY_PAGEUP": "move_to_previous_month",
-			"KEY_PAGEDOWN": "move_to_next_month",
+			"KEY_F3": "move_to_previous_month",
+			"KEY_F4": "move_to_next_month",
 			"KEY_F1": "deactivate"
 		}
 

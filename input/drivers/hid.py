@@ -36,7 +36,7 @@ def get_name_by_path(path):
 class InputDevice(InputSkeleton):
     """ A driver for HID devices. As for now, supports keyboards and numpads."""
 
-    default_name_mapping = {"KEY_KPENTER":"KEY_ENTER"}
+    default_name_mapping = {"KEY_KPENTER":"KEY_ENTER", "KEY_PAGEUP":"KEY_F3", "KEY_PAGEDOWN":"KEY_F4"}
     supports_key_states = True
     supports_held_state = True
 

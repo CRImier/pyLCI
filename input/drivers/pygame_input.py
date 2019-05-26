@@ -14,7 +14,7 @@ USED_KEYS = [
     'KP0', 'KP1', 'KP2', 'KP3', 'KP4', 'KP5', 'KP6', 'KP7', 'KP8', 'KP9',
     'UP', 'DOWN', 'LEFT', 'RIGHT', 'RETURN', 'PAGEUP', 'PAGEDOWN',
     'ASTERISK', 'HASH', 'PLUS', 'MINUS', 'EQUALS', 'F1', 'F2', 'F5', 'F6',
-    'KP_MULTIPLY', 'KP_DIVIDE', 'KP_PLUS', 'KP_MINUS',
+    'KP_MULTIPLY', 'KP_DIVIDE', 'KP_PLUS', 'KP_MINUS', 'F3', 'F4',
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o',
     'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
     'SPACE', 'BACKSPACE'
@@ -38,7 +38,9 @@ class InputDevice(InputSkeleton):
                     'KEY_MINUS':'KEY_HANGUP',
                     'KEY_KP_MINUS':'KEY_HANGUP',
                     'KEY_EQUALS':'KEY_ANSWER',
-                    'KEY_KP_PLUS':'KEY_ANSWER'
+                    'KEY_KP_PLUS':'KEY_ANSWER',
+                    'KEY_PAGEUP':'KEY_F3',
+                    'KEY_PAGEDOWN':'KEY_F4'
                    }
 
     def __init__(self, **kwargs):

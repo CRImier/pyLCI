@@ -87,8 +87,8 @@ Most UI elements (specifically, BaseUIElement-based-ones) allow you to add and o
         "KEY_RIGHT":'reset',
         "KEY_UP":'increment',
         "KEY_DOWN":'decrement',
-        "KEY_PAGEUP":lambda: self.increment(multiplier=10),
-        "KEY_PAGEDOWN":lambda: self.decrement(multiplier=10),
+        "KEY_F3":lambda: self.increment(multiplier=10),
+        "KEY_F4":lambda: self.decrement(multiplier=10),
         "KEY_ENTER":'select_number',
         "KEY_LEFT":'exit'
         }

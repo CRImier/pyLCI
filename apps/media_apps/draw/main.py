@@ -262,7 +262,7 @@ class DrawingBoard(BaseUIElement):
             "KEY_LEFT": "move_left",
             "KEY_RIGHT": "move_right",
             "KEY_ENTER": "on_enter",
-            "KEY_PAGEUP": self.tool_settings,
+            "KEY_F3": self.tool_settings,
             "KEY_F1": "back",
             "KEY_F2": self.pick_tools}
 
