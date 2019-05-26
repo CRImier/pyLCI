@@ -349,6 +349,7 @@ class InputProcessor(object):
 
 class InputProxy(object):
     reserved_keys = ["KEY_LEFT", "KEY_RIGHT", "KEY_UP", "KEY_DOWN", "KEY_ENTER"]
+    deprecated_keys = ["KEY_PAGEUP", "KEY_PAGEDOWN"]
 
     def __init__(self, context_alias):
         self.keymap = {}
@@ -381,9 +382,9 @@ class InputProxy(object):
         """
         self.streaming = None
 
-    def set_callback(self, key_name, callback):
+    def set_callback(self, key_name, callback, silent=False):
         """
-        Sets a single callback.
+        Sets a single callback. The ``silent`` kwarg can be set so that the callback is not sanity checked (warnings shown in the logs).
 
         >>> i = InputProxy("test")
         >>> i.clear_keymap()
@@ -391,7 +392,16 @@ class InputProxy(object):
         >>> "KEY_ENTER" in i.keymap
         True
         """
+        if not silent:
+            self.sanity_check_cb(key_name, callback)
         self.keymap[key_name] = callback
+
+    def sanity_check_cb(self, key_name, callback):
+        """ Checks the keyname and callback. Can be turned off by ``silent=True`` passed to ``set_keymap``/``set_callback``/etc. """
+        if not callable(callback):
+            logger.warning("Proxy {} - supplied callback for key {} is not callable - is {}".format(self.context_alias, key_name, callback))
+        if key_name in self.deprecated_keys:
+            logger.warning("Proxy {} - key {} is deprecated in ZPUI, use with caution.".format(self.context_alias, key_name))
 
     def check_special_callback(self, key_name):
         """Raises exceptions upon setting of a special callback on a reserved/taken keyname."""
@@ -405,7 +415,7 @@ class InputProxy(object):
             #Key is already used in a maskable callback
             raise CallbackException(3, "Special callback for {} can't be set because it's already set as maskable".format(key_name))
 
-    def set_maskable_callback(self, key_name, callback):
+    def set_maskable_callback(self, key_name, callback, silent=False):
         """Sets a single maskable callback. Raises ``CallbackException``
         if the callback is one of the reserved keys or already is in maskable/nonmaskable
         keymap.
@@ -413,17 +423,21 @@ class InputProxy(object):
         A maskable callback is global (can be cleared) and will be called upon a keypress
         unless a callback for the same keyname is already set in ``keymap``."""
         self.check_special_callback(key_name)
+        if not silent:
+            self.sanity_check_cb(key_name, callback)
         self.maskable_keymap[key_name] = callback
 
-    def set_nonmaskable_callback(self, key_name, callback):
+    def set_nonmaskable_callback(self, key_name, callback, silent=False):
         """Sets a single nonmaskable callback. Raises ``CallbackException``
         if the callback is one of the reserved keys or already is in maskable/nonmaskable
-        keymap.
+        keymap. The ``silent`` kwarg can be set so that the callback is not sanity checked (warnings shown in the logs).
 
         A nonmaskable callback is global (never cleared) and will be called upon a keypress
         even if a callback for the same keyname is already set in ``keymap``
         (callback from the ``keymap`` won't be called)."""
         self.check_special_callback(key_name)
+        if not silent:
+            self.sanity_check_cb(key_name, callback)
         self.nonmaskable_keymap[key_name] = callback
 
     def remove_callback(self, key_name):
@@ -438,8 +452,14 @@ class InputProxy(object):
         """Returns the current keymap."""
         return self.keymap
 
-    def set_keymap(self, new_keymap):
-        """Sets all the callbacks supplied, removing the previously set keymap completely."""
+    def set_keymap(self, new_keymap, silent=False):
+        """
+        Sets all the callbacks supplied, removing the previously set keymap completely.
+        The ``silent`` kwarg can be set so that the callback is not sanity checked (warnings shown in the logs).
+        """
+        if not silent:
+            for key_name, callback in new_keymap.items():
+                self.sanity_check_cb(key_name, callback)
         self.keymap = new_keymap
 
     def update_keymap(self, new_keymap):
