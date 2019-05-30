@@ -1,36 +1,35 @@
 menu_name = "Systemctl"
 
-config_filename = "config.json" 
-default_config = '{"allowed_types":["service","target"], "pinned_units":["pylci.service"]}'
+config_filename = "config.json"
+default_config = '{"allowed_types":["service","target"], "pinned_units":["zpui.service"]}'
 
 callback = None
-
-main_menu = None
 i = None
 o = None
 
 from time import sleep
 
-from helpers import read_config, write_config
-from ui import Menu, Printer, Checkbox, MenuExitException
-
-import systemctl
-
-import os,sys
-current_module_path = os.path.dirname(sys.modules[__name__].__file__)
-
-config_path = os.path.join(current_module_path, config_filename)
+from ui import Menu, Printer, PrettyPrinter, Checkbox, MenuExitException
 
 try:
-    config = read_config(config_path)
-    if "pinned_values" not in config:
-        config["pinned_values"] = []
-        write_config(config, config_path)
-except (ValueError, IOError):
-    print("Systemctl app: broken config, restoring with defaults...")
-    with open(config_path, "w") as f:
-        f.write(default_config)
-    config = read_config(config_path)
+    from libs import systemctl
+except ImportError as e:
+    try: # Are we missing gi.repository?
+        import gi.repository
+    except ImportError: # Yep, that's the case - let's disable the library so we can notify the user
+        systemctl = None
+    else: # Nope, it's something else - re-raising
+        raise e
+
+from helpers import read_or_create_config, write_config, local_path_gen
+local_path = local_path_gen(__name__)
+config_path = local_path(config_filename)
+config = read_or_create_config(config_path, default_config, menu_name+" app")
+
+#Migrating config in case it's preserved from older app versions
+if "pinned_units" not in config:
+    config["pinned_units"] = ["zpui.service"]
+    write_config(config, config_path)
 
 def change_filters():
     global config
@@ -48,33 +47,34 @@ def change_filters():
     checkbox_contents = []
     for type in all_types:
         checkbox_contents.append([type[0], type[1], type[1] in config["allowed_types"]])
-    states = Checkbox(checkbox_contents, i, o).activate()
-    config["allowed_types"] = [state for state in states if states[state]] 
+    states = Checkbox(checkbox_contents, i, o, final_button_name="Save").activate()
+    if states is None: return None
+    config["allowed_types"] = [state for state in states if states[state]]
     write_config(config, config_path)
-    
+
 def all_units():
     menu_contents = []
     units = systemctl.list_units()
-    for unit in units: 
-        menu_contents.append([unit["basename"], lambda x=unit["name"]: unit_menu(x)])
-    Menu(menu_contents, i, o, "All unit list menu").activate()
+    for unit in units:
+        menu_contents.append([unit["name"], lambda x=unit: unit_menu(x)])
+    Menu(menu_contents, i, o, "Systemctl: all unit list menu").activate()
 
 def pinned_units():
     menu_contents = []
-    units = systemctl.list_units()
-    for unit_name in config["pinned_units"]:
-        menu_contents.append([unit_name, lambda x=unit_name: unit_menu(x)])
+    units = systemctl.list_units("name", config["pinned_units"])
+    for unit in units:
+        menu_contents.append([unit["name"], lambda x=unit["name"]: unit_menu({"name":x}, in_pinned=True)])
     Menu(menu_contents, i, o, "Pinned unit list menu").activate()
 
 def filtered_units():
     menu_contents = []
-    units = systemctl.list_units()
-    for unit in units: 
-        if unit["type"] in config["allowed_types"]:
-            menu_contents.append([unit["basename"], lambda x=unit["name"]: unit_menu(x)])
-    Menu(menu_contents, i, o, "All unit list menu").activate()
+    units = systemctl.list_units("unit_type", config["allowed_types"])
+    for unit in units:
+        menu_contents.append([unit["name"], lambda x=unit: unit_menu(x)])
+    Menu(menu_contents, i, o, "Systemctl: filtered unit list menu").activate()
 
-def unit_menu(name):
+def unit_menu(unit, in_pinned=False):
+    name = unit["name"]
     unit_menu_contents = [
     ["Full name", lambda x=name: Printer(x, i, o)],
     ["Start unit", lambda x=name: start_unit(x)],
@@ -82,70 +82,88 @@ def unit_menu(name):
     ["Restart unit", lambda x=name: restart_unit(x)],
     ["Reload unit", lambda x=name: reload_unit(x)],
     ["Enable unit", lambda x=name: enable_unit(x)],
-    ["Disable unit", lambda x=name: disable_unit(x)],
-    ["Pin unit", lambda x=name: pin_unit(x)]]
+    ["Disable unit", lambda x=name: disable_unit(x)]]
+    if in_pinned:
+        unit_menu_contents.append(["Unpin unit", lambda x=name: unpin_unit(x)])
+    else:
+        unit_menu_contents.append(["Pin unit", lambda x=name: pin_unit(x)])
     Menu(unit_menu_contents, i, o, "{} unit menu".format(name)).activate()
 
 def pin_unit(name):
     global config
     config["pinned_units"].append(name)
     write_config(config, config_path)
-    Printer(["Pinned unit", name], i, o, 1)
+    PrettyPrinter("Pinned unit {}".format(name), i, o, 1)
+
+def unpin_unit(name):
+    global config
+    if name in config["pinned_units"]:
+        config["pinned_units"].remove(name)
+        write_config(config, config_path)
+        PrettyPrinter("Unpinned unit {}".format(name), i, o, 1)
+    else:
+        PrettyPrinter("Error: unit {} not pinned!".format(name), i, o, 1)
+
+#Those functions might benefit from being turned into one generic function, I think
 
 def start_unit(name):
     status = systemctl.action_unit("start", name)
     if status:
-        Printer(["Started unit", name], i, o, 1)
+        PrettyPrinter("Started unit {}".format(name), i, o, 1)
     else:
-        Printer(["Can't start", name], i, o, 1)
+        PrettyPrinter("Can't start {}".format(name), i, o, 1)
     raise MenuExitException
 
 def stop_unit(name):
     status = systemctl.action_unit("stop", name)
     if status:
-        Printer(["Stopped unit", name], i, o, 1)
+        PrettyPrinter("Stopped unit {}".format(name), i, o, 1)
     else:
-        Printer(["Can't stop", name], i, o, 1)
+        PrettyPrinter("Can't stop {}".format(name), i, o, 1)
     raise MenuExitException
 
 def restart_unit(name):
     status = systemctl.action_unit("restart", name)
     if status:
-        Printer(["Restarted unit", name], i, o, 1)
+        PrettyPrinter("Restarted unit {}".format(name), i, o, 1)
     else:
-        Printer(["Can't restart", name], i, o, 1)
+        PrettyPrinter("Can't restart {}".format(name), i, o, 1)
     raise MenuExitException
 
 def reload_unit(name):
     status = systemctl.action_unit("reload", name)
     if status:
-        Printer(["Reloaded unit", name], i, o, 1)
+        PrettyPrinter("Reloaded unit {}".format(name), i, o, 1)
     else:
-        Printer(["Can't reload", name], i, o, 1)
+        PrettyPrinter("Can't reload {}".format(name), i, o, 1)
     raise MenuExitException
 
 def enable_unit(name):
     status = systemctl.action_unit("enable", name)
     if status:
-        Printer(["Enabled unit", name], i, o, 1)
+        PrettyPrinter("Enabled unit {}".format(name), i, o, 1)
     else:
-        Printer(["Can't enable", name], i, o, 1)
+        PrettyPrinter("Can't enable {}".format(name), i, o, 1)
     raise MenuExitException
 
 def disable_unit(name):
     status = systemctl.action_unit("disable", name)
     if status:
-        Printer(["Disabled unit", name], i, o, 1)
+        PrettyPrinter("Disabled unit {}".format(name), i, o, 1)
     else:
-        Printer(["Can't disable", name], i, o, 1)
+        PrettyPrinter("Can't disable {}".format(name), i, o, 1)
     raise MenuExitException
 
-def launch():
+
+def callback():
+    if systemctl is None:
+       PrettyPrinter("python-gi not found! Please install it using 'apt-get install python-gi' ", i, o, 5)
+       return
     try:
        systemctl.list_units()
     except OSError as e:
        if e.errno == 2:
-           Printer(["Do you use", "systemctl?"], i, o, 3, skippable=True)
+           PrettyPrinter("Do you use systemctl?", i, o, 3, skippable=True)
            return
        else:
            raise e
@@ -157,8 +175,6 @@ def launch():
     main_menu = Menu(main_menu_contents, i, o, "systemctl main menu")
     main_menu.activate()
 
-
 def init_app(input, output):
-    global callback, main_menu, i, o
+    global i, o
     i = input; o = output
-    callback = launch

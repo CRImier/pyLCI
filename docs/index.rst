@@ -1,62 +1,54 @@
-Welcome to pyLCI's documentation!
+Welcome to ZPUI documentation!
 =================================
 
-pyLCI stands for Python-based Linux Control Interface. It's an external interface for configuration of your Linux devices in an easy and quick way. 
+ZPUI stands for ZeroPhone UI, it's the official user interface for ZeroPhone (installed on ZeroPhone official SD card images). It allows you to interact with your ZeroPhone, using the 1.3" OLED and the 30-button numpad.
 
-It can be used on:
-
-* Embedded devices (where dependency on Python isn't problematic to satisfy), such as OpenWRT-powered routers
-* Single-board computers, including, but not limited to Raspberry Pi, BeagleBone and many others 
-* Tablets and laptops
-* Servers
-* Desktop PCs and HTPCs
+ZPUI is based on pyLCI, a general-purpose UI for embedded devices. However, unlike pyLCI, 
+ZPUI is tailored for the ZeroPhone hardware, namely, the 1.3" monochrome OLED 
+and 30-key numpad (though it still retains input&output drivers from pyLCI), and 
+it also ships with ZeroPhone-specific applications.
 
 Guides:
-=================================
+=======
 
-* :doc:`Hardware guide <hardware>`
-* :doc:`Setup and configuration guide <setup>`
-* :doc:`Debugging issues <debugging>`
-* :doc:`Managing and developing applications <app_mgmt>`
+* :doc:`Installing and updating ZPUI <setup>`
+* :ref:`Installing ZPUI emulator <emulator>`
+* :doc:`App development - how to ... ? <howto>`
+* :doc:`ZPUI configuration files <config>`
+* :doc:`Hacking on UI <hacking_ui>`
+* :doc:`Logging configuration <logging>`
 
-pyLCI system - the software part (pyLCI daemon) and the hardware part - typically consisting of a character LCD and a keypad of some sort. 
+References:
+===========
 
-The pyLCI daemon consists of 5 parts:
+- :doc:`UI elements <ui>`
+- :doc:`Helper functions <helpers>`
+- :doc:`Input system <input>`
 
-#. :doc:`Input system <input>`
-#. :doc:`Output system <output>`
-#. :doc:`UI elements <ui>`
-#. :doc:`Applications <apps>`
-#. Glue logic (mostly main.py launcher)
+  - :doc:`Keymaps <keymap>`
+
+- :doc:`Output system <output>`
 
 
 :doc:`Development plans <plans>`
 
-:doc:`FAQ&contacts <faq_contact>`
+:doc:`Contact us <contact>`
 
+:doc:`Working on documentation <docs_development>`
 
 
 .. toctree::
    :maxdepth: 1
    :hidden:
 
-   hardware.rst
    setup.rst
-   debugging.rst
-   input.rst
-   output.rst
+   config.rst
+   howto.rst
    ui.rst
-   apps.rst
+   helpers.rst
+   keymap.rst
+   hacking_ui.rst
+   logging.rst
    app_mgmt.rst
-   plans.rst
-   faq_contact.rst
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-
+   docs_development.rst
+   contact.rst

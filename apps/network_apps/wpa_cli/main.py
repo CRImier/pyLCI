@@ -1,19 +1,28 @@
+from helpers import setup_logger
+
 menu_name = "Wireless"
 
 i = None
 o = None
 
 from time import sleep
+from threading import Thread
+from traceback import format_exc
 
-from ui import Menu, Printer, MenuExitException, CharArrowKeysInput, Refresher, DialogBox
+from ui import Menu, Printer, MenuExitException, UniversalInput, Refresher, DialogBox, ellipsize
 
 import wpa_cli
 
+logger = setup_logger(__name__, "warning")
 def show_scan_results():
     network_menu_contents = []
     networks = wpa_cli.get_scan_results()
     for network in networks:
-        network_menu_contents.append([network['ssid'], lambda x=network: network_info_menu(x)])
+        if network["ssid"] == '':
+            ssid = '[Hidden]'
+        elif network["ssid"]:
+            ssid = network["ssid"]
+        network_menu_contents.append([ssid, lambda x=network: network_info_menu(x)])
     network_menu = Menu(network_menu_contents, i, o, "Wireless network menu")
     network_menu.activate()
 
@@ -48,7 +57,7 @@ def connect_to_network(network_info):
         raise MenuExitException
     #Offering to enter a password
     else:
-        input = CharArrowKeysInput(i, o, message="Password:", name="WiFi password enter UI element")
+        input = UniversalInput(i, o, message="Password:", name="WiFi password enter UI element", charmap="password")
         password = input.activate()
         if password is None:
             return False
@@ -63,32 +72,100 @@ def connect_to_network(network_info):
         raise MenuExitException
     #No WPS PIN input possible yet and I cannot yet test WPS button functionality.
         
+etdn_thread = None #Well-hidden global
 
-def scan():
+def enable_temp_disabled_networks():
+    global etdn_thread
+    if not etdn_thread:
+        etdn_thread = Thread(target=etdn_runner, name="Runner for wpa_cli app's EnableTempDisabledNetworks function")
+        etdn_thread.daemon = True
+        etdn_thread.start()
+
+def etdn_runner():
+    global etdn_thread
+    saved_networks = wpa_cli.list_configured_networks()
+    for network in saved_networks:
+        if network["flags"] == "[TEMP-DISABLED]":
+            logger.warning("Network {} is temporarily disabled, re-enabling".format(network["ssid"]))
+            try:
+                enable_network(network["network_id"])
+            except Exception as e:
+                logger.error(format_exc())
+                logger.exception(e)
+    etdn_thread = None
+
+def scan(delay = True, silent = False):
+    delay = 1 if delay else 0
     try:
         wpa_cli.initiate_scan()
+        enable_temp_disabled_networks()
     except wpa_cli.WPAException as e:
         if e.code=="FAIL-BUSY":
-            Printer("Still scanning...", i, o, 1)
+            if not silent:
+                Printer("Still scanning...", i, o, 1)
         else:
             raise
     else:
-        Printer("Scanning...", i, o, 1)
+        if not silent:
+            Printer("Scanning...", i, o, 1)
     finally:
-        sleep(1)
+        sleep(delay)
+
+def reconnect():
+    try:
+        w_status = wpa_cli.connection_status()
+    except:
+        return ["wpa_cli fail".center(o.cols)]
+    ip = w_status.get('ip_address', None)
+    ap = w_status.get('ssid', None)
+    if not ap:
+        Printer("Not connected!", i, o, 1)
+        return False
+    id = w_status.get('id', None)
+    if not id:
+        logger.error("Current network {} is not in configured network list!".format(ap))
+        return False
+    disable_network(id)
+    scan()
+    enable_network(id)
+    return True
 
 def status_refresher_data():
     try:
         w_status = wpa_cli.connection_status()
     except:
-        return ["wpa_cli fail"]
+        return ["wpa_cli fail".center(o.cols)]
+    #Getting data
     state = w_status['wpa_state']
-    ip = w_status['ip_address'] if 'ip_address' in w_status else 'None'
-    ap = w_status['ssid'] if 'ssid' in w_status else 'None'
-    return [ap.rjust(o.cols), ip.rjust(o.cols)]    
+    ip = w_status.get('ip_address', 'None')
+    ap = w_status.get('ssid', 'None')
+
+    #Formatting strings for screen width
+    if len(ap) > o.cols: #AP doesn't fit on the screen
+        ap = ellipsize(ap, o.cols)
+    if o.cols >= len(ap) + len("SSID: "):
+        ap = "SSID: "+ap
+    ip_max_len = 15 #3x4 digits + 3 dots
+    if o.cols >= ip_max_len+4: #disambiguation fits on the screen
+        ip = "IP: "+ip
+    data = [ap.center(o.cols), ip.center(o.cols)]    
+
+    #Formatting strings for screen height
+    #Additional state info
+    if o.rows > 2:
+       data.append(("St: "+state).center(o.cols))
+    #Button usage tips - we could have 3 rows by now, can we add at least 3 more?
+    if o.rows >= 6:
+       empty_rows = o.rows-6 #ip, ap, state and two rows we'll add
+       for i in range(empty_rows): data.append("") #Padding
+       data.append("ENTER: more info".center(o.cols))
+       data.append("UP: reconnect".center(o.cols))
+       data.append("RIGHT: rescan".center(o.cols))
+
+    return data
 
 def status_monitor():
-    keymap = {"KEY_ENTER":wireless_status, "KEY_KPENTER":wireless_status}
+    keymap = {"KEY_ENTER":wireless_status, "KEY_RIGHT":lambda: scan(False), "KEY_UP":lambda: reconnect()}
     refresher = Refresher(status_refresher_data, i, o, 0.5, keymap, "Wireless monitor")
     refresher.activate()
 
@@ -173,7 +250,7 @@ def saved_network_menu(network_info):
     ["BSSID", lambda x=bssid: Printer(x, i, o, 5, skippable=True)]]
     network_info_menu = Menu(network_info_contents, i, o, "Wireless network info", catch_exit=False)
     network_info_menu.activate() 
-    #After menu exits, we'll request the status again and update the 
+    #After menu exits, we'll request the status again and update the network list
     saved_networks = wpa_cli.list_configured_networks()
 
 def select_network(id):
@@ -217,7 +294,7 @@ def remove_network(id):
         raise MenuExitException
 
 def set_password(id):    
-    input = CharArrowKeysInput(i, o, message="Password:", name="WiFi password enter UI element")
+    input = UniversalInput(i, o, message="Password:", name="WiFi password enter UI element")
     password = input.activate()
     if password is None:
         return False

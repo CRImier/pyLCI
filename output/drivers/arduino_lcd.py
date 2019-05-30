@@ -1,7 +1,13 @@
+
+
 from serial import Serial
 from time import sleep
 
 #Firmware: TODO
+from helpers import setup_logger
+from output.output import OutputDevice
+
+logger = setup_logger(__name__, "warning")
 
 def delay(time):
     sleep(time/1000.0)
@@ -11,7 +17,7 @@ def delayMicroseconds(time):
 
 from hd44780 import HD44780
 
-class Screen(HD44780):
+class Screen(HD44780, OutputDevice):
     """A driver for MCP23008-based I2C LCD backpacks. The one tested had "WIDE.HK" written on it."""
 
     def __init__(self, port=None, speed=9600, debug=False **kwargs):
@@ -34,7 +40,7 @@ class Screen(HD44780):
     def write_byte(self, byte, char_mode=False):
         """Takes a byte and sends the high nibble, then the low nibble (as per HD44780 doc). Passes ``char_mode`` to ``self.write4bits``."""
         if self.debug and not char_mode:        
-            print(hex(byte))
+            logger.debug(hex(byte))
         if char_mode:                    
             self.serial.write(str(bytearray([0xfe, byte])))
         else:

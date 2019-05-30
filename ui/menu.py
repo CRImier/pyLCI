@@ -1,374 +1,249 @@
-from time import sleep
-from copy import copy
-import logging
 from threading import Event
+from time import sleep
 
-def to_be_foreground(func): #A safety check wrapper so that certain checks don't get called if menu is not the one active
-    def wrapper(self, *args, **kwargs):
-        if self.in_foreground:
-            return func(self, *args, **kwargs)
-        else:
-            return False
-    return wrapper
+from base_list_ui import BaseListUIElement, to_be_foreground
+from loading_indicators import LoadingBar
+from utils import clamp, clamp_list_index
+from entry import Entry
+
+from helpers import setup_logger
+
+logger = setup_logger(__name__, "warning")
+
 
 class MenuExitException(Exception):
-    """An exception that you can throw from a menu callback to exit the menu that callback was called from"""
+    """An exception that you can throw from a menu callback to exit the menu that
+       the callback was called from (and underlying menus, if necessary)"""
     pass
 
 
-class Menu():
-    """Implements a menu which can be used to navigate through your application, output a list of values or select actions to perform. Is one of the most used elements, used both in system core and in most of the applications.
+class Menu(BaseListUIElement):
+    """Implements a menu which can be used to navigate through your application,
+    output a list of values or select actions to perform. Is one of the most used
+    UI elements, used both in system core and in most of the applications."""
 
-    Attributes:
-
-    * ``contents``: list of menu elements which was passed either to ``Menu`` constructor or to ``menu.set_contents()``.
-       
-      Menu element structure is a list, where:
-         * ``element[0]`` (element's representation) is either a string, which simply has the element's value as it'll be displayed, such as "Menu element 1", or, in case of entry_height > 1, can be a list of strings, each of which represents a corresponding display row occupied by the element.
-         * ``element[1]`` (element's callback) is a function which is called when menu's element is activated (such as pressing ENTER button when menu's element is selected). 
-           * Can be omitted if you don't need to have any actions taken upon activation of the element.
-           * Can be specified as 'exit' if you want a menu element that exits the menu upon activation.
-
-      *If you want to set contents after the initalisation, please, use set_contents() method.*
-    * ``_contents``: "Working copy" of menu contents, basically, a ``contents`` attribute which has been processed by ``self.process_contents``. 
-    * ``pointer``: currently selected menu element's number in ``self._contents``.
-    * ``in_background``: a flag which indicates if menu is currently active, either if being displayed or being in background (for example, if a sub-menu of this menu is currently active)
-    * ``in_foreground`` : a flag which indicates if menu is currently displayed. If it's not active, inhibits any of menu's actions which can interfere with other menu or UI element being displayed.
-    * ``first_displayed_entry`` : Internal pointer which points to the number of ``self._contents`` element which is at the topmost position of the menu as it's currently displayed on the screen
-    * ``last_displayed_entry`` : Internal pointer which points to the number of ``self._contents`` element which is at the lowest position of the menu as it's currently displayed on the screen
-    * ``no_entry_message`` : The entry displayed in case menu has no elements
-
-    """
-    contents = []
-    _contents = []
-    pointer = 0
-    in_foreground = False
-    exit_flag = False
-    name = ""
-    first_displayed_entry = 0
-    last_displayed_entry = None
+    pointer = 0  #: number of currently selected menu entry, starting from 0.
+    in_background = False  #: flag which indicates whether menu is currently active, either being displayed or just waiting in background (for example, when you go into a sub-menu, the parent menu will still be considered active).
+    in_foreground = False  #: flag which indicates whether menu is currently displayed.
     exit_exception = False
-    no_entry_message = "No menu entries"
 
-    def __init__(self, contents, i, o, name="Menu", entry_height=1, append_exit=True, catch_exit=True, exitable=True, contents_hook=None, scrolling=True):
+    def __init__(self, *args, **kwargs):
         """Initialises the Menu object.
-        
+
         Args:
 
-            * ``contents``: a list of values, which can be constructed as described in the Menu object's docstring.
+            * ``contents``: list of menu entries which was passed either to ``Menu`` constructor or to ``menu.set_contents()``.
+
+              Simplest ``Menu`` entry is a list, where:
+                 * ``entry[0]`` (entry label) is usually a string which will be displayed in the UI, such as "Menu entry 1". If ``entry_height`` > 1, can be a list of strings, each of those strings will be shown on a separate display row.
+                 * ``entry[1]`` (entry callback) is a function which is called when the user presses Enter.
+
+                   * Can be omitted if you don't need to have any actions taken upon activation of the entry.
+                   * You can supply 'exit' (a string, not a function) if you want a menu entry that exits the menu when the user presses Enter.
+
+                 * ``entry[2]`` (entry second callback) is a callback for the right key press.
+
+              You can also pass ``Entry`` objects as entries - ``text`` will be used as label, ``cb`` will be used as first callback and ``cb2`` will be used as the second callback.
+
+              If you want to set contents after the initialisation, please, use set_contents() method.*
             * ``i``, ``o``: input&output device objects
 
         Kwargs:
 
             * ``name``: Menu name which can be used internally and for debugging.
-            * ``entry_height``: number of display rows one menu element occupies.
-            * ``append_exit``: Appends an "Exit" alement to menu elements. Doesn't do it if any of elements has callback set as 'exit'.
+            * ``entry_height``: number of display rows one menu entry occupies.
+            * ``append_exit``: Appends an "Exit" element to menu contents.
             * ``catch_exit``: If ``MenuExitException`` is received and catch_exit is False, it passes ``MenuExitException`` to the parent menu so that it exits, too. If catch_exit is True, MenuExitException is not passed along.
-            * ``exitable``: Decides if menu can exit at all by pressing ``KEY_LEFT``. Set by default and disables ``KEY_LEFT`` callback if unset. Is used for pyLCI main menu, not advised to be used in other settings.
+            * ``exitable``: Decides if menu can exit by pressing ``KEY_LEFT``. Set by default and disables ``KEY_LEFT`` callback if unset. Is used for ZPUI main menu, not advised to be used in other settings.
+            * ``contents_hook``: A function that is called every time menu goes in foreground that returns new menu contents. Allows to almost-dynamically update menu contents.
 
         """
-        self.i = i
-        self.o = o
-        self.entry_height = entry_height
-        self.name = name
-        self.append_exit = append_exit
-        self.contents_hook = contents_hook
-        self.scrolling={"enabled":scrolling,
-                        "current_finished":False,
-                        "current_scrollable":False,
-                        "counter":0,
-                        "pointer":0}
-        self.set_contents(contents)
-        self.catch_exit = catch_exit
-        self.exitable = exitable
-        self.generate_keymap()
-        self._in_background = Event()
+        self.catch_exit = kwargs.pop("catch_exit", True)
+        self.contents_hook = kwargs.pop("contents_hook", None)
+        BaseListUIElement.__init__(self, *args, **kwargs)
 
-    @property
-    def in_background(self):
-        return self._in_background.isSet()
-
-    @in_background.setter
-    def in_background(self, value):
-        if value == True:
-            self._in_background.set()
-        elif value == False:
-            self._in_background.clear()
-
-    def to_foreground(self):
-        """ Is called when menu's ``activate()`` method is used, sets flags and performs all the actions so that menu can display its contents and receive keypresses. Also, updates the output device with rendered currently displayed menu elements."""
-        logging.info("menu {0} enabled".format(self.name))    
-        if callable(self.contents_hook):
-            new_contents = self.contents_hook()
-            old_contents = self._contents
-            self.set_contents(new_contents)
-        self.scrolling["counter"] = 0
-        self.in_background = True
-        self.in_foreground = True
-        self.refresh()
-        self.set_keymap()
-
-    @to_be_foreground
-    def to_background(self):
-        """ Signals ``activate`` to finish executing """
-        self.in_foreground = False
-        logging.info("menu {0} disabled".format(self.name))    
-
-    def activate(self):
-        """ A method which is called when menu needs to start operating. Is blocking, sets up input&output devices, renders the menu and waits until self.in_background is False, while menu callbacks are executed from the input device thread.
-        This method also raises MenuExitException if menu exited due to it and ``catch_exit`` is set to False."""
-        logging.info("menu {0} activated".format(self.name))    
+    def before_activate(self):
+        # Clearing flags before the menu is activated
         self.exit_exception = False
-        self.to_foreground() 
-        while self.in_background: #All the work is done in input callbacks
-            sleep(0.1)
-            self.scroll()
+
+    def before_foreground(self):
+        if callable(self.contents_hook):
+            self.set_contents(self.contents_hook())
+
+    def get_return_value(self):
         if self.exit_exception:
-            if self.catch_exit == False:
+            if not self.catch_exit:
+                logger.info("{} received MenuExitException, raising it further".format(self.name))
                 raise MenuExitException
-        logging.debug(self.name+" exited")
-        return True
 
-    def deactivate(self):
-        """ Deactivates the menu completely, exiting it. As for now, pointer state is preserved through menu activations/deactivations """
-        self.in_foreground = False
-        self.in_background = False
-        logging.info("menu {0} deactivated".format(self.name))    
-
-    @to_be_foreground
-    def scroll(self):
-        if self.scrolling["enabled"] and not self.scrolling["current_finished"] and self.scrolling["current_scrollable"]:
-            self.scrolling["counter"] += 1
-            if self.scrolling["counter"] == 10:
-                self.scrolling["pointer"] += 1
-                self.scrolling["counter"] = 0
-                self.refresh()
-            
-    def reset_scrolling(self):
-        self.scrolling["current_finished"] = False
-        self.scrolling["pointer"] = 0
-        self.scrolling["counter"] = 0
-
-    def print_contents(self):
-        """ A debug method. Useful for hooking up to an input event so that you can see the representation of menu's contents. """
-        logging.info(self._contents)
-
-    def print_name(self):
-        """ A debug method. Useful for hooking up to an input event so that you can see which menu is currently processing input events. """
-        logging.info("Active menu is {0}".format(self.name))    
+    def get_callback_from_entry(self, entry, callback_number=1):
+        if isinstance(entry, Entry):
+            attr_names = [None, "cb", "cb2"]
+            attr_name = attr_names[callback_number]
+            return getattr(entry, attr_name, None)
+        else:
+            if len(entry) > callback_number:
+                return entry[callback_number]
+            else:
+                return None
 
     @to_be_foreground
-    def move_down(self):
-        """ Moves the pointer one element down, if possible. 
-        |Is typically used as a callback from input event processing thread.
-        |TODO: support going from bottom to top when pressing "down" with last menu element selected."""
-        if self.pointer < (len(self._contents)-1):
-            logging.debug("moved down")
-            self.pointer += 1  
-            self.reset_scrolling()
-            self.refresh()    
-            return True
-        else: 
-            return False
-
-    @to_be_foreground
-    def page_down(self):
-        """ Moves the pointer 5 elements down, if possible. If not possible, moves as far as it can"""
-        counter = 5
-        while counter != 0 and self.pointer < (len(self._contents)-1):
-            logging.debug("moved down")
-            self.pointer += 1  
-            counter -= 1
-        self.refresh()    
-        self.reset_scrolling()
-        return True
-
-    @to_be_foreground
-    def move_up(self):
-        """ Moves the pointer one element up, if possible. 
-        |Is typically used as a callback from input event processing thread.
-        |TODO: support going from top to bottom when pressing "up" with first menu element selected."""
-        if self.pointer != 0:
-            logging.debug("moved up")
-            self.pointer -= 1
-            self.refresh()
-            self.reset_scrolling()
-            return True
-        else: 
-            return False
-
-    @to_be_foreground
-    def page_up(self):
-        """ Moves the pointer 5 elements down, if possible. If not possible, moves as far as it can"""
-        counter = 5
-        while counter != 0 and self.pointer != 0:
-            logging.debug("moved down")
-            self.pointer -= 1  
-            counter -= 1
-        self.refresh()    
-        self.reset_scrolling()
-        return True
-
-    @to_be_foreground
-    def select_element(self):
-        """ Gets the currently specified element's description from self._contents and executes the callback, if set.
+    def select_entry(self, callback_number=1, entry_index=None):
+        """ Gets the currently specified entry's description from self.contents and executes the callback, if set.
         |Is typically used as a callback from input event processing thread.
         |After callback's execution is finished, sets the keymap again and refreshes the screen.
-        |If menu has no elements, exits the menu.
-        |If MenuExitException is returned from the callback, exits menu, too."""
-        logging.debug("element selected")
+        |If MenuExitException is returned from the callback, exits menu."""
+        logger.debug("entry selected")
         self.to_background()
-        if len(self._contents) == 0:
+        if entry_index != None:
+            entry = self.contents[entry_index]
+        else:
+            entry = self.contents[self.pointer]
+        if entry == self.exit_entry:
+            # It's the exit entry, exiting
             self.deactivate()
-        elif len(self._contents[self.pointer]) > 1:
+            return
+        callback = self.get_callback_from_entry(entry, callback_number=callback_number)
+        if callback:
+            # Current menu entry has a valid callback
             try:
-                self._contents[self.pointer][1]()
+                callback()
             except MenuExitException:
                 self.exit_exception = True
             finally:
-                self.reset_scrolling()
                 if self.exit_exception:
-                    self.deactivate() 
-                elif self.in_background: #This check is in place so that you can have an 'exit' element
+                    self.deactivate()
+                    return
+                else:
+                    self.reset_scrolling()
                     self.to_foreground()
         else:
+            self.reset_scrolling()
             self.to_foreground()
 
-    def generate_keymap(self):
-        """Sets the keymap. In future, will allow per-system keycode-to-callback tweaking using a config file. """
-        keymap = {
-            "KEY_RIGHT":lambda: self.print_name(),
-            "KEY_UP":lambda: self.move_up(),
-            "KEY_DOWN":lambda: self.move_down(),
-            "KEY_PAGEUP":lambda: self.page_up(),
-            "KEY_PAGEDOWN":lambda: self.page_down(),
-            "KEY_KPENTER":lambda: self.select_element(),
-            "KEY_ENTER":lambda: self.select_element()
-            }
-        if self.exitable:
-            keymap["KEY_LEFT"] = lambda: self.deactivate()
-        self.keymap = keymap
+    def process_right_press(self):
+        """Calls the second callback on the right button press."""
+        self.select_entry(callback_number=2)
 
-    def set_contents(self, contents):
-        """Sets the menu contents, as well as additionally re-sets ``last`` & ``first_displayed_entry`` pointers and calculates the value for ``last_displayed_entry`` pointer."""
-        self.contents = contents
-        self.process_contents()
-        #Calculating the pointer to last element displayed
-        if len(self._contents) == 0:
-            self.last_displayed_entry = 0
-            self.first_displayed_entry = 0
+
+class MenuRenderingMixin(object):
+    """A mixin to add Menu-specific rendering to views.
+    If you're making your own view for BaseListUIElements and want it to
+    work with menu UI elements, you will probably want to use this mixin,
+    like this:
+
+    .. code-block:: python
+
+        class MeEightPtView(MenuRenderingMixin, EightPtView):
+            pass
+
+    """
+
+    def has_second_callback(self, entry):
+        if isinstance(entry, Entry):
+            if callable(entry.cb2):
+               return True
+        elif len(entry) > 2 and callable(entry[2]):
             return True
-        full_entries_shown = self.o.rows/self.entry_height
-        entry_count = len(self._contents)
-        self.first_displayed_entry = 0
-        if full_entries_shown > entry_count: #Display is capable of showing more entries than we have, so the last displayed entry is the last menu entry
-            #print("There are more display rows than entries can take, correcting")
-            self.last_displayed_entry = entry_count-1
-        else:
-            #print("There are no empty spaces on the display")
-            self.last_displayed_entry = full_entries_shown-1 #We start numbering elements with 0, so 4-row screen would show elements 0-3
-        #print("First displayed entry is {}".format(self.first_displayed_entry))
-        #print("Last displayed entry is {}".format(self.last_displayed_entry))
+        return False
 
-    def process_contents(self):
-        """Processes contents for custom callbacks. Currently, only 'exit' calbacks are supported.
+    def draw_triangle(self, c, index):
+        contents_entry = self.el.contents[self.first_displayed_entry + index/self.el.entry_height]
+        if self.has_second_callback(contents_entry):
+            tw, th = self.charwidth / 2, self.charheight / 2
+            right_offset = 1
+            top_offset = (self.charheight - th) / 2
+            coords = (
+                (str(-1*(right_offset+tw)), index * self.charheight + top_offset),
+                (str(-1*(right_offset+tw)), index * self.charheight + top_offset + th),
+                (str(-1*(right_offset)), index * self.charheight + th),
+            )
+            c.polygon(coords, fill=c.default_color)
 
-        If ``self.append_exit`` is set, it goes through the menu and removes every callback which either is ``self.deactivate`` or is just a string 'exit'. 
-        |Then, it appends a single ["Exit", 'exit'] element at the end of menu contents. It makes dynamically appending elements to menu easier and makes sure there's only one "Exit" callback, at the bottom of the menu."""
-        #Let's fix the pointer if it needs to be fixed
-        old_contents = self._contents
-        self._contents = self.contents
-        if len(self._contents) < len(old_contents) and self.pointer > len(self._contents)-1:
-            if len(self._contents) > 0:
-                self.pointer = len(self._contents) - 1 #Pointer went too far, setting it to last entry available
-            else:
-                self.pointer = 0 #No elements, pointer should be 0
-        if self.append_exit: 
-            element_callbacks = [element[1] if len(element)>1 else None for element in copy(self._contents)]
-            for index, callback in enumerate(element_callbacks):
-                if callback == 'exit' or callback == self.deactivate:
-                    self._contents.pop(index)
-            self._contents.append(["Exit", 'exit'])
-        for entry in self._contents:
-            if len(entry) > 1:
-                if entry[1] == "exit":
-                    entry[1] = self.deactivate
-        logging.debug("{}: menu contents processed".format(self.name))
+    def draw_menu_text(self, c, menu_text, left_offset):
+        for i, line in enumerate(menu_text):
+            y = (i * self.charheight - 1) if i != 0 else 0
+            c.text(line, (left_offset, y), font=self.font)
+            if "b&w-pixel" in self.o.type:
+                self.draw_triangle(c, i)
 
-    @to_be_foreground
-    def set_keymap(self):
-        """Generate and sets the input device's keycode-to-callback mapping. Re-starts the input device because ofpassing-variables-between-threads issues."""
-        self.generate_keymap()
-        self.i.stop_listen()
-        self.i.clear_keymap()
-        self.i.keymap = self.keymap
-        self.i.listen()
 
-    def get_displayed_data(self):
-        """Generates the displayed data in a way that the output device accepts. The output of this function can be fed in the o.display_data function.
-        |Corrects last&first_displayed_entry pointers if necessary, then gets the currently displayed elements' numbers, renders each one of them and concatenates them into one big list which it returns.
-        |Doesn't support partly-rendering entries yet."""
-        displayed_data = []
-        if len(self._contents) == 0:
-            return [self.no_entry_message]
-        if self.pointer < self.first_displayed_entry:
-            #print("Pointer went too far to top, correcting")
-            self.last_displayed_entry -=  self.first_displayed_entry - self.pointer #The difference will mostly be 1 but I guess it might be more in case of concurrency issues
-            self.first_displayed_entry = self.pointer
-            #print("First displayed entry is {}".format(self.first_displayed_entry))
-            #print("Last displayed entry is {}".format(self.last_displayed_entry))
-        if self.pointer > self.last_displayed_entry:
-            #print("Pointer went too far to bottom, correcting")
-            self.first_displayed_entry += self.pointer - self.last_displayed_entry 
-            self.last_displayed_entry = self.pointer
-            #print("First displayed entry is {}".format(self.first_displayed_entry))
-            #print("Last displayed entry is {}".format(self.last_displayed_entry))
-        disp_entry_positions = range(self.first_displayed_entry, self.last_displayed_entry+1)
-        #print("Displayed entries: {}".format(disp_entry_positions))
-        for entry_num in disp_entry_positions:
-            is_active = entry_num == self.pointer
-            displayed_entry = self.render_displayed_entry(entry_num, active=is_active)
-            displayed_data += displayed_entry
-        #print("Displayed data: {}".format(displayed_data))
-        return displayed_data
+Menu.view_mixin = MenuRenderingMixin
 
-    def render_displayed_entry(self, entry_num, active=False):
-        """Renders a menu element by its position number in self._contents, determined also by display width, self.entry_height and element's representation type.
-        If element's representation is a string, splits it into parts as long as the display's width in characters.
-           If active flag is set, appends a "*" as the first entry's character. Otherwise, appends " ".
-           TODO: omit " " and "*" if element height matches the display's row count.
-        If element's representation is a list, it returns that list as the rendered entry, trimming its elements down or padding the list with empty strings to match the element's height as defined.
-        """
-        rendered_entry = []
-        entry_content = self._contents[entry_num][0]
-        display_columns = self.o.cols
-        if type(entry_content) in [str, unicode]: 
-            if active:
-                #Scrolling only works with strings for now
-                avail_display_chars = (self.o.cols*self.entry_height)-1 #1 char for "*"/" "
-                self.scrolling["current_scrollable"] = len(entry_content) > avail_display_chars
-                self.scrolling["current_finished"] = len(entry_content)-self.scrolling["pointer"] < avail_display_chars
-                if self.scrolling["current_scrollable"] and not self.scrolling["current_finished"]:
-                    entry_content = entry_content[self.scrolling["pointer"]:]
-                rendered_entry.append("*"+entry_content[:display_columns-1]) #First part of string displayed
-                entry_content = entry_content[display_columns-1:] #Shifting through the part we just displayed
-            else:
-                rendered_entry.append(" "+entry_content[:display_columns-1])
-                entry_content = entry_content[display_columns-1:]
-            for row_num in range(self.entry_height-1): #First part of string done, if there are more rows to display, we give them the remains of string
-                rendered_entry.append(entry_content[:display_columns])
-                entry_content = entry_content[display_columns:]
-        elif type(entry_content) == list:
-            entry_content = entry_content[:self.entry_height] #Can't have more arguments in the list argument than maximum entry height
-            while len(entry_content) < self.entry_height: #Can't have less either, padding with empty strings if necessary
-                entry_content.append('')
-            return [str(element) for element in entry_content]
-        else:
-            raise Exception("Entries may contain either strings or lists of strings as their representations")
-        #print("Rendered entry: {}".format(rendered_entry))
-        return rendered_entry
+
+class MessagesMenu(Menu):
+    """A modified version of the Menu class for displaying a list of messages and loading new ones"""
+
+    load_more_possible = True
+    load_more_marker = ["Load more"]
+
+    def __init__(self, *args, **kwargs):
+        self.load_more_callback = kwargs.pop("load_more_callback", None)
+        self.load_more_trigger_point = kwargs.pop("load_more_trigger_point", 0)
+        self.load_more_allow_refresh = Event()
+        self.load_more_allow_refresh.set()
+
+        Menu.__init__(self, *args, **kwargs)
+
+    def before_activate(self):
+        Menu.before_activate(self)
+        self.pointer = clamp(len(self.contents) - 2, 0, len(self.contents)-1)
+        if self.contents: # Not empty
+		self.add_load_more_marker()
+
+    def add_load_more_marker(self):
+	if [self.load_more_marker] not in self.contents:
+	        self.contents = [self.load_more_marker] + self.contents
+
+    def remove_load_more_marker(self):
+        while self.load_more_marker in self.contents:
+            self.contents.remove(self.load_more_marker)
+
+    def load_more(self):
+        self.load_more_allow_refresh.clear()
+        before = len(self.contents)
+	self.remove_load_more_marker()
+	has_loaded_more_events = True
+	contents_added = False
+        counter = 0
+        li = None
+	while has_loaded_more_events and not contents_added:
+                if counter == 5: # the user is let down, let's at least show them stuff is happening
+                    li = LoadingBar(self.i, self.o, message="Loading messages", name="{} - load_more() LoadingBar")
+                    li.run_in_background()
+	        has_loaded_more_events = self.load_more_callback()
+                logger.debug("Loaded more events!")
+		if has_loaded_more_events:
+			self.remove_load_more_marker()
+			self.add_load_more_marker()
+		        after = len(self.contents)
+			difference = after-before
+			if difference > 0:
+				contents_added = True
+				logger.info("Loaded {} messages".format(difference))
+			        self.pointer += (after-before)+1
+			else:
+				logger.info("Loaded events but no messages, retrying")
+			self.pointer = clamp_list_index(self.pointer, self.contents)
+		else:
+			self.remove_load_more_marker()
+                counter += 1
+        if li: # LoadingBar fired up, need to stop it now
+            li.stop()
+            sleep(0.5) # until it actually stops =D
+            self.activate_input() #reset keymap back to normal
+        self.load_more_allow_refresh.set()
+        self.refresh()
 
     @to_be_foreground
     def refresh(self):
-        logging.debug("{0}: refreshed data on display".format(self.name))
-        self.o.display_data(*self.get_displayed_data())
+        if not self.load_more_allow_refresh.isSet():
+            return
+        Menu.refresh(self)
+
+    @to_be_foreground
+    def move_up(self):
+        Menu.move_up(self)
+
+        if self.pointer <= self.load_more_trigger_point:
+            self.load_more()

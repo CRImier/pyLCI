@@ -1,34 +1,26 @@
 menu_name = "Volume control"
 
 config_filename = "config.json"
-default_config = '{"card":0, "channel":"Master", "adjust_amount":5, "adjust_type":"%"}'
+default_config = '{"card":0, "channel":"PCM", "adjust_amount":1, "adjust_type":"dB"}'
 
 i = None
 o = None
 callback = None
 
-from helpers import read_config, write_config
+from helpers import read_or_create_config, write_config, local_path_gen
+local_path = local_path_gen(__name__)
+config_path = local_path(config_filename)
+config = read_or_create_config(config_path, default_config, menu_name+" app")
 
-import os,sys
-current_module_path = os.path.dirname(sys.modules[__name__].__file__)
-
-config_path = os.path.join(current_module_path, config_filename)
-
-try:
-    config = read_config(config_path)
-except (ValueError, IOError): #damn braces
-    print("Volume app: broken config, restoring with defaults...")
-    with open(config_path, "w") as f:
-        f.write(default_config)
-    config = read_config(config_path)
-
+import os
 from subprocess import call, check_output
 
 from ui import Menu, IntegerAdjustInput, Listbox, ellipsize
 
 #amixer commands
 def amixer_command(command):
-    return call(['amixer'] + list(command))
+    with open(os.devnull, "w") as f:
+        return call(['amixer'] + list(command), stdout=f)
 
 def amixer_get_channels():
     controls = []
@@ -106,9 +98,15 @@ def change_adjust_amount():
     config["adjust_amount"] = value
     write_config(config, config_path)
 
+def set_global_callbacks():
+    import __main__ #HHHHHAAAAAAAAAAAXXXX
+    __main__.input_processor.set_global_callback("KEY_VOLUMEUP", plus_volume)
+    __main__.input_processor.set_global_callback("KEY_VOLUMEDOWN", minus_volume)
+
 def init_app(input, output):
     global i, o, callback
     i = input; o = output
+    set_global_callbacks()
     main_menu_contents = [ 
     ["Increase volume", plus_volume],
     ["Decrease volume", minus_volume],

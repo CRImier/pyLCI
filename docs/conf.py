@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# pyLCI documentation build configuration file, created by
+# ZPUI documentation build configuration file, created by
 # sphinx-quickstart on Mon Mar 28 01:03:08 2016.
 #
 # This file is execfile()d with the current directory set to its
@@ -50,9 +50,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'pyLCI'
-copyright = u'2016, Arsenijs Picugins (CRImier)'
-author = u'Arsenijs Picugins (CRImier)'
+project = u'ZPUI'
+copyright = u'2017, ZeroPhone Project'
+author = u'Arsenijs Picugins (CRImier) and ZeroPhone Project contributors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -203,7 +203,7 @@ html_static_path = ['_static']
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'pyLCIdoc'
+htmlhelp_basename = 'ZPUIdoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -225,8 +225,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'pyLCI.tex', u'pyLCI Documentation',
-     u'Arsenijs Picugins (CRImier)', 'manual'),
+    (master_doc, 'ZPUI.tex', u'ZPUI Documentation',
+     u'ZeroPhone Project contributors', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -255,7 +255,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'pylci', u'pyLCI Documentation',
+    (master_doc, 'ZPUI', u'ZPUI Documentation',
      [author], 1)
 ]
 
@@ -269,8 +269,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'pyLCI', u'pyLCI Documentation',
-     author, 'pyLCI', 'One line description of project.',
+    (master_doc, 'ZPUI', u'ZPUI Documentation',
+     author, 'ZPUI', 'One line description of project.',
      'Miscellaneous'),
 ]
 
@@ -286,6 +286,8 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
+autodoc_member_order = 'bysource'
+autodoc_mock_imports = ['evdev', 'smbus', 'pifacecad', 'RPi', 'RPi.GPIO' 'serial', 'luma', 'luma.core', 'luma.core.render']
 
 sys.path.insert(0,os.path.abspath("../"))
 
@@ -295,14 +297,3 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     import sphinx_rtd_theme
     html_theme = "sphinx_rtd_theme"
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
-
-
-from mock import Mock as MagicMock
-
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-            return Mock()
-
-MOCK_MODULES = ['evdev', 'smbus', 'pifacecad', 'RPi', 'RPi.GPIO' 'serial']
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)

@@ -1,0 +1,62 @@
+#ATMegaboot
+
+pro8: $(PROGRAM)_pro_8MHz.hex
+pro8_isp: HFUSE = DD
+pro8_isp: LFUSE = C6
+pro8_isp: EFUSE = 00
+
+diecimila: $(PROGRAM)_diecimila.hex
+diecimila_isp: HFUSE = DD
+diecimila_isp: LFUSE = FF
+diecimila_isp: EFUSE = 00
+
+ng: $(PROGRAM)_ng.hex
+ng_isp: HFUSE = DD
+ng_isp: LFUSE = FF
+ng_isp: EFUSE = 00
+
+atmega328: $(PROGRAM)_atmega328.hex
+atmega328_isp: HFUSE = DA
+atmega328_isp: LFUSE = FF
+atmega328_isp: EFUSE = 05
+
+atmega328_pro8: $(PROGRAM)_atmega328_pro_8MHz.hex
+atmega328_pro8_isp: HFUSE = DA
+atmega328_pro8_isp: LFUSE = FF
+atmega328_pro8_isp: EFUSE = 05
+
+mega: $(PROGRAM)_atmega1280.hex
+mega_isp: HFUSE = DA
+mega_isp: LFUSE = FF
+mega_isp: EFUSE = F5
+
+#Optiboot
+
+atmega168: $(PROGRAM)_atmega168.hex
+atmega168_isp: HFUSE = DD
+atmega168_isp: LFUSE = FF
+atmega168_isp: EFUSE = 04
+
+diecimila: $(PROGRAM)_diecimila.hex
+diecimila_isp: HFUSE = DD
+diecimila_isp: LFUSE = FF
+diecimila_isp: EFUSE = 04
+
+atmega328: $(PROGRAM)_atmega328.hex
+atmega328_isp: HFUSE = DE
+atmega328_isp: LFUSE = FF
+atmega328_isp: EFUSE = 05
+
+mega: $(PROGRAM)_atmega1280.hex
+mega_isp: HFUSE = DE
+mega_isp: LFUSE = FF
+mega_isp: EFUSE = 05
+
+atmega8: $(PROGRAM)_atmega8.hex
+atmega8_isp: HFUSE = CC
+atmega8_isp: LFUSE = BF
+
+atmega328_pro8: $(PROGRAM)_atmega328_pro_8MHz.hex
+atmega328_pro8_isp: HFUSE = DE
+atmega328_pro8_isp: LFUSE = FF
+atmega328_pro8_isp: EFUSE = 05

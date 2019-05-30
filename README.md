@@ -1,10 +1,15 @@
-# pyLCI
-Python-based Linux Control Interface
+# ZPUI
+[![Build Status](https://travis-ci.org/ZeroPhone/ZPUI.svg?branch=master)](https://travis-ci.org/ZeroPhone/ZPUI)
+[![codecov](https://codecov.io/gh/ZeroPhone/ZPUI/branch/devel/graph/badge.svg)](https://codecov.io/gh/ZeroPhone/ZPUI)
 
-This is an external interface for Linux systems, designed to make configuration easier and more accessible. 
+Default ZeroPhone UI framework (based on [pyLCI](http://pylci.rtfd.io))
 
-[Project description on Hackaday](https://hackaday.io/project/10001)
+ZPUI is licensed under Apache 2.0 license, with 3rd party components under MIT - see LICENSE and LICENSE-3RD-PARTY for details
 
-[Project documentation](http://pylci.readthedocs.org/en/latest/)
+[Project description on Hackaday](https://hackaday.io/project/19035)
 
-[Setup instructions](http://pylci.readthedocs.org/en/latest/setup.html)
+[Project documentation](http://zpui.readthedocs.org/en/latest/)
+
+[Setup instructions](http://zpui.readthedocs.org/en/latest/setup.html)
+
+[Emulator setup](http://zpui.readthedocs.org/en/latest/setup.html#emulator)

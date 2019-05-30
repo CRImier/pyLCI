@@ -12,25 +12,35 @@ and initialising them, passing your UI element contents and parameters, as well 
 
 UI elements:
 
+   * :ref:`ui_canvas`
    * :ref:`ui_menu`
    * :ref:`ui_printer`
-   * :ref:`ui_refresher`
+   * :ref:`ui_listbox`
+   * :ref:`ui_path_picker`
    * :ref:`ui_checkbox`
+   * :ref:`ui_dialogbox`
+   * :ref:`ui_refresher`
    * :ref:`ui_number_input`
    * :ref:`ui_char_input`
+   * :ref:`ui_utils`
+
+More about UI elements:
+
+  * :ref:`ui_internals`
 
 .. toctree::
    :maxdepth: 1
    :hidden:
 
+   ui/canvas.rst
    ui/menu.rst
    ui/printer.rst
-   ui/refresher.rst
+   ui/listbox.rst
+   ui/path_picker.rst
    ui/checkbox.rst
+   ui/dialogbox.rst
+   ui/refresher.rst
    ui/number_input.rst
    ui/char_input.rst
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+   ui/utils.rst
+   ui_internals.rst

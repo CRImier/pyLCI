@@ -13,7 +13,7 @@ o = None
 
 storage = None
 
-class TaskStorage():
+class TaskStorage(object):
     
     tasks = []
     file_contents = None

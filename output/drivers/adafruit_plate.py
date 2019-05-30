@@ -1,5 +1,13 @@
+
+
 import smbus
 from time import sleep
+
+from helpers import setup_logger
+from output.output import OutputDevice
+
+
+logger = setup_logger(__name__, "warning")
 
 def delay(time):
     sleep(time/1000.0)
@@ -10,7 +18,7 @@ def delayMicroseconds(time):
 from hd44780 import HD44780
 from backlight import *
 
-class Screen(HD44780, BacklightManager):
+class Screen(HD44780, BacklightManager, OutputDevice):
     """A driver for Adafruit-developed Raspberry Pi character LCD&button shields based on MCP23017, either Adafruit-made or Chinese-made.
        Has workarounds for Chinese plates with LED instead of RGB backlight and LCD backlight on a separate I2C GPIO expander pin.
        
@@ -50,7 +58,7 @@ class Screen(HD44780, BacklightManager):
     def write_byte(self, byte, char_mode=False):
         """Takes a byte and sends the high nibble, then the low nibble (as per HD44780 doc). Passes ``char_mode`` to ``self.write4bits``."""
         if self.debug and not char_mode:        
-            print(hex(byte))                    
+            logger.debug(hex(byte))
         self.write4bits(byte >> 4, char_mode)   
         self.write4bits(byte & 0x0F, char_mode) 
 

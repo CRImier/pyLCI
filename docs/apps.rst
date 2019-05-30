@@ -2,8 +2,8 @@
 Applications
 ==================
 
-Applications are layer between user's goals and same goals accomplished. pyLCI applications are similar to desktop applications, each of them is mean to perform one function/set of similar functions, and perform it well.
-There can be an application for any task you want to use pyLCI for - in the worst case, you can write one ;-)
+Applications are layer between user's goals and same goals accomplished. ZPUI applications are similar to desktop applications, each of them is mean to perform one function/set of similar functions, and perform it well.
+There can be an application for any task you want to use ZPUI for - in the worst case, you can write one ;-)
 
 Applications bundled with the default install are:
 
@@ -26,6 +26,7 @@ Some information on maintaining and writing applications:
 
    * :ref:`Developing and managing applications <app_mgmt>`
    * :ref:`Skeleton application <skeleton_app>`
+   * :ref:`Class-based skeleton application <class_skeleton_app>`
 
 .. toctree::
    :maxdepth: 1
@@ -40,13 +41,10 @@ Some information on maintaining and writing applications:
    apps/scripts.rst
    apps/shutdown.rst
    apps/skeleton.rst
+   apps/class_based_skeleton.rst
    apps/system_info.rst
    apps/systemctl.rst
    apps/tvservice.rst
    apps/update.rst
    apps/volume.rst
    apps/wpa_cli.rst
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

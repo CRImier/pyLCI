@@ -9,19 +9,26 @@
 
 from time import sleep
 
+from helpers import setup_logger
+from output.output import OutputDevice
+
+
+logger = setup_logger(__name__, "warning")
+
 def delayMicroseconds(microseconds):
     seconds = microseconds / float(1000000)  # divide microseconds by 1 million for seconds
     sleep(seconds)
 
 try:
     import RPi.GPIO as GPIO
-except:
-    print("Couldn't mock that one for ReadTheDocs")
-    print("Or maybe it's a user who just doesn't have that installed?")
+except Exception as e:
+    logger.error("Couldn't mock that one for ReadTheDocs")
+    logger.error("Or maybe it's a user who just doesn't have that installed?")
+    logger.exception(e)
 
 from hd44780 import HD44780
 
-class Screen(HD44780):
+class Screen(HD44780, OutputDevice):
     """Driver for using HD44780 displays connected to Raspberry Pi GPIO. Presumes the R/W line is tied to ground. Also, doesn't yet control backlight. """
 
     def __init__(self, pins = [], rs_pin = None, en_pin = None, debug = False, **kwargs):
@@ -53,7 +60,7 @@ class Screen(HD44780):
     def write_byte(self, byte, char_mode=False):
         """Takes a byte and sends the high nibble, then the low nibble (as per HD44780 doc). Passes ``char_mode`` to ``self.write4bits``."""
         if self.debug and not char_mode:        
-            print(hex(byte))                    
+            logger.debug(hex(byte))
         self.write4bits(byte >> 4, char_mode)   
         self.write4bits(byte & 0x0F, char_mode) 
 

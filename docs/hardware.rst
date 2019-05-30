@@ -18,7 +18,7 @@ Some remarks:
 
 .. rubric :: Ways to connect your hardware:
 
-* Is it a shield pyLCI supports? Great, plug it on top of your Raspberry Pi and you're done!
+* Is it a shield ZPUI supports? Great, plug it on top of your Raspberry Pi and you're done!
 * If all you have is the character display and some buttons, you can:
 
   * Connect them over GPIO (works for both screen and buttons) (only Raspberry Pi GPIO supported at the moment)
@@ -26,7 +26,7 @@ Some remarks:
 
 * When assembling the hardware yourself, you can easily combine connection methods - for example, connect your LCD over I2C and buttons over GPIO, or use a shield for LCD and use a USB numpad.
 
-Afterwards, follow to the :doc:`pyLCI setup <setup>` part.
+Afterwards, follow to the :doc:`ZPUI setup <setup>` part.
 
 Buying/choosing guide
 =====================
@@ -34,11 +34,3 @@ Buying/choosing guide
 * Want something cheap and minimum effort? Get a "LCD RGB KEYPAD ForRPI" shield. It's 6$, you can find it on eBay just by searching "Raspberry Pi LCD shield" and sorting the list by "Lowest price first". It'll take its time to arrive, but it's a great value for the price.
 * Want something quickly and minimum effort? Get a PiFaceCAD shield, or an Adafruit one. They're sold by distributors in UK/USA, and will arrive quickly. Moreover, they're nicely made.
 * Want something quickly and cheaply? You can assemble your own hardware from what you have. I2C expanders come in handy when you need to save pins, but connecting things through GPIO is a good alternative.
-
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-
-

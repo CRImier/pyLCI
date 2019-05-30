@@ -1,8 +1,11 @@
+
 from datetime import datetime, date
 import re
 
 #from qtodotxt.lib.task_htmlizer import TaskHtmlizer
+from helpers import setup_logger
 
+logger = setup_logger(__name__, "warning")
 
 class Task(object):
     """
@@ -80,12 +83,12 @@ class Task(object):
                 if word.startswith('due:'):
                     self.due = self._parseDate(word[4:])
                     if not self.due:
-                        print("Error parsing due date '{}'".format(word))
+                        logger.error("Error parsing due date '{}'".format(word))
                         self.due_error = word[4:]
                 elif word.startswith('t:'):
                     self.threshold = self._parseDate(word[2:])
                     if not self.threshold:
-                        print("Error parsing threshold '{}'".format(word))
+                        logger.error("Error parsing threshold '{}'".format(word))
                         self.threshold_error = word[2:]
                     else:
                         if self.threshold > date.today():

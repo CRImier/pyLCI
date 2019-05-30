@@ -76,12 +76,9 @@ def umount(path, lazy=False):
 def status_menu():
     pass
 
-#Some globals for pyLCI
 callback = None
-#Some globals for us
 i = None
 o = None
-
 
 def init_app(input, output):
     global i, o, callback

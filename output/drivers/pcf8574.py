@@ -1,7 +1,14 @@
+
+
 import smbus
 from time import sleep
 
 from hd44780 import HD44780
+from helpers import setup_logger
+from output.output import OutputDevice
+
+
+logger = setup_logger(__name__, "warning")
 
 def delay(time):
     sleep(time/1000.0)
@@ -10,7 +17,7 @@ def delayMicroseconds(time):
     sleep(time/1000000.0)
 
 
-class Screen(HD44780):
+class Screen(HD44780, OutputDevice):
     """A driver for PCF8574-based I2C LCD backpacks."""
 
     enable_mask = 1<<2
@@ -49,7 +56,7 @@ class Screen(HD44780):
     def write_byte(self, data, char_mode = False):
         """Takes a byte and sends the high nibble, then the low nibble (as per HD44780 doc). Passes ``char_mode`` to ``self.write4bits``."""
         if self.debug and not char_mode:
-            print(hex(data))
+            logger.debug(hex(data))
         self.write4bits((data & 0xF0), char_mode)
         self.write4bits((data << 4), char_mode)
 

@@ -3,7 +3,11 @@ import pifacecad
 
 from time import sleep
 
-class InputDevice():
+from helpers import setup_logger
+
+logger = setup_logger(__name__, "warning")
+
+class InputDevice(object):
     """ A driver for PiFace Control and Display Raspberry Pi shields. It has 5 buttons, one single-axis joystick with a pushbutton, a 16x2 HD44780 screen and an IR receiver (not used yet)."""
     mapping = [
     "KEY_LEFT",
@@ -11,7 +15,7 @@ class InputDevice():
     "KEY_HOME",
     "KEY_END",
     "KEY_DELETE",
-    "KEY_KPENTER",
+    "KEY_ENTER",
     "KEY_UP",
     "KEY_DOWN"]
     stop_flag = False
@@ -49,7 +53,7 @@ class InputDevice():
 
     def send_key(self, keycode):
         """A hook to be overridden by ``InputListener``. Otherwise, prints out key names as soon as they're pressed so is useful for debugging."""
-        print(keycode)
+        logger.info(keycode)
 
     def stop(self):
         """Sets the ``stop_flag`` for loop function."""

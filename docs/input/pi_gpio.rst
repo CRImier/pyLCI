@@ -25,8 +25,3 @@ Sample config.json:
 .. autoclass:: InputDevice
     :members:
     :special-members:
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-

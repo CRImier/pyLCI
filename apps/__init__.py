@@ -1,6 +1,10 @@
 _ordering = [
 "personal", 
-"network_apps", 
+"network_apps",
+"phone",
+"hardware_apps",
+"games",
+"privacy_apps",
 "system_apps", 
 "media_apps", 
 "raspberrypi", 
@@ -9,3 +13,6 @@ _ordering = [
 "scripts", 
 "clock", 
 "update"]
+
+
+from zero_app import ZeroApp
