@@ -25,7 +25,9 @@ class InputSkeleton(object):
 
     default_name_mapping = {}
 
-    def __init__(self, mapping=None, threaded=True, name_mapping=None, conn_check_sleep=1):
+    def __init__(self, mapping=None, threaded=True, name_mapping=None, conn_check_sleep=1, filter_held_keys=True):
+        self.filter_held_keys = True
+        self.held_keys = []
         self.connection_check_sleep = conn_check_sleep
         self.connected = threading.Event()
         if mapping is not None:
@@ -91,8 +93,23 @@ class InputSkeleton(object):
         """
         When used instead of ``send_key``, allows remapping the key using
         the keyname-to-keyname mapping before passing it to ``send_key``.
+
+        Also, adds held key filtering - only the first KEY_HELD event
+        will pass through to the InputProcessor (useful for HID and pygame
+        drivers).
         """
         key = self.name_mapping.get(key, key)
+        # Held key filtering
+        if self.filter_held_keys:
+            if state == KEY_HELD:
+                if key in self.held_keys:
+                    return
+                else:
+                    self.held_keys.append(key)
+            else:
+                # What if errors happen? ;-)
+                while key in self.held_keys:
+                    self.held_keys.remove(key)
         self.send_key(key, state = state)
 
     def send_key(self, key, state = None):
