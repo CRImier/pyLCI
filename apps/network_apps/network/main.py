@@ -14,7 +14,11 @@ from if_info import parse_ip_addr
 
 def show_ifc_data(ifc_name, ifc_data):
     if ifc_data['addr'] is not None:
-        ip, mask = str(ifc_data['addr']).rsplit('/', 1)
+        if "/" in ifc_data['addr']:
+            ip, mask = str(ifc_data['addr']).rsplit('/', 1)
+        else:
+            ip = ifc_data['addr']
+            mask = "32"
     else:
         ip = "None"
         mask = "0"
