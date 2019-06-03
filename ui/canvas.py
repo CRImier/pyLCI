@@ -307,6 +307,31 @@ class Canvas(object):
         self.draw.ellipse(coords, outline=outline, fill=fill, **kwargs)
         self.display_if_interactive()
 
+    def arc(self, coords, start, end, **kwargs):
+        """
+        Draw an arc on the canvas. Coordinates are expected in
+        ``(x1, y1, x2, y2)`` format, where ``x1`` & ``y1`` are coordinates
+        of the top left corner, and ``x2`` & ``y2`` are coordinates
+        of the bottom right corner. ``start`` and ``end`` angles are
+        measured in degrees (360 is a full circle), start at 0 (3 o'clock)
+        and increase *clockwise*.
+
+        .. code_block:: python
+                270
+              225  315
+            180      0
+              135  45
+                 90
+
+        Keyword arguments:
+
+          * ``fill``: text color (default: white, as default canvas color)
+        """
+        coords = self.check_coordinates(coords)
+        fill = kwargs.pop("fill", self.default_color)
+        self.draw.arc(coords, start, end, fill=fill, **kwargs)
+        self.display_if_interactive()
+
     def get_image(self):
         """
         Get the current ``PIL.Image`` object.
