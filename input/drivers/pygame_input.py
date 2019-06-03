@@ -70,6 +70,7 @@ class InputDevice(InputSkeleton):
                 continue
 
             key = event['key']
+            state = event['state']
             if key not in KEY_MAP:
                 logger.debug('Ignoring key %s' % key)
                 continue
@@ -81,7 +82,7 @@ class InputDevice(InputSkeleton):
                 key_name = 'KEY_' + key_name[len(kp_m):]
                 logger.debug('Mapped key {} to {}'.format(key, key_name))
 
-            self.map_and_send_key(key_name.upper())
+            self.map_and_send_key(key_name.upper(), state=state)
 
         self.emulator.quit()
 

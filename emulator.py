@@ -22,7 +22,7 @@ import luma.emulator.device
 import pygame
 from luma.core.render import canvas
 
-from helpers import setup_logger
+from helpers import setup_logger, KEY_PRESSED, KEY_RELEASED, KEY_HELD
 from output.output import GraphicalOutputDevice, CharacterOutputDevice
 
 logger = setup_logger(__name__, "warning")
@@ -117,6 +117,9 @@ class Emulator(object):
         self.cursor_pos = [0, 0]
         self._quit = False
 
+        self.key_delay = 1000
+        self.key_interval = 1000
+
         self.emulator_attributes = {
             'display': 'pygame',
             'width': self.width,
@@ -124,12 +127,14 @@ class Emulator(object):
         }
 
         self.busy_flag = Lock()
+        self.pressed_keys = []
         self.init_hw()
         self.runner()
 
     def init_hw(self):
         Device = getattr(luma.emulator.device, self.emulator_attributes['display'])
         self.device = Device(**self.emulator_attributes)
+        pygame.key.set_repeat(self.key_delay, self.key_interval)
 
     def runner(self):
         try:
@@ -144,8 +149,19 @@ class Emulator(object):
 
     def _poll_input(self):
         event = pygame.event.poll()
-        if event.type == pygame.KEYDOWN:
-            self.child_conn.send({'key': event.key})
+        if event.type in [pygame.KEYDOWN, pygame.KEYUP]:
+            key = event.key
+            state = {pygame.KEYDOWN: KEY_PRESSED, \
+                     pygame.KEYUP: KEY_RELEASED} \
+                               [event.type]
+            # Some filtering logic to add KEY_HELD and keep track of pressed keys
+            if state == KEY_PRESSED and key in self.pressed_keys:
+                state = KEY_HELD
+            elif state == KEY_PRESSED:
+                self.pressed_keys.append(key)
+            elif state == KEY_RELEASED:
+                self.pressed_keys.remove(key)
+            self.child_conn.send({'key': key, 'state':state})
 
     def _poll_parent(self):
         if self.child_conn.poll() is True:
