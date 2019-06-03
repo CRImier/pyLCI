@@ -20,7 +20,7 @@ from refresher import Refresher, RefresherExitException
 from scrollable_element import TextReader
 from loading_indicators import ProgressBar, LoadingBar, TextProgressBar, GraphicalProgressBar, CircularProgressBar, IdleDottedMessage, Throbber
 from numbered_menu import NumberedMenu
-from canvas import Canvas, MockOutput
+from canvas import Canvas, MockOutput, crop
 from date_picker import DatePicker
 from time_picker import TimePicker
 from grid_menu import GridMenu

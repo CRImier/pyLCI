@@ -579,6 +579,22 @@ class MockOutput(object):
     def display_image(self, *args):
         return True
 
+def crop(image, min_width=None, min_height=None, align=None):
+    bbox = image.getbbox()
+    print(bbox)
+    if bbox is None:
+        return Image.new(image.mode, (0, 0))
+    image = image.crop(bbox)
+    border = [0, 0, 0, 0]
+    if min_width and image.width<min_width:
+        border[0 if align == "right" else 2]=min_width-image.width
+    if min_height and image.height<min_height:
+        border[1 if align == "bottom" else 3]=min_height-image.height
+    print(border)
+    if border != [0, 0, 0, 0]:
+        image = ImageOps.expand(image, border=tuple(border), fill=Canvas.background_color)
+    return image
+
 def convert_flat_list_into_pairs(l):
     pl = []
     for i in range(len(l)/2):
