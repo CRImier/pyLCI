@@ -66,18 +66,18 @@ class Refresher(BaseUIElement):
         printing things on the screen. Refreshes the screen when it's called.
         """
         if not self.in_foreground:
-            self.in_foreground = True
-            self.activate_input()
-            self.refresh()
+            self.to_foreground()
 
     def background_if_inactive(self):
         """
         If the UI element hasn't been launched yet, launches it in background
-        and waits until it's fully running.
+        and waits until it's fully running. Otherwise, resumes the UI element.
         """
         if not self.is_active:
             self.run_in_background()
             self.wait_for_active()
+        else:
+            self.resume()
 
     def wait_for_active(self, timeout=100):
         """
