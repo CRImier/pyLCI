@@ -44,7 +44,8 @@ class AppManager(object):
         self.cm = context_manager
         self.i, self.o = self.cm.get_io_for_context("main")
         self.config = config if config else {}
-        if default_plugins:
+        logger.warning(self.config)
+        if default_plugins and self.config.get("default_overlays", True):
             self.register_default_plugins()
 
     def create_main_menu(self, menu_name, contents):
