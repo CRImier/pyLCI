@@ -160,7 +160,8 @@ class Emulator(object):
             elif state == KEY_PRESSED:
                 self.pressed_keys.append(key)
             elif state == KEY_RELEASED:
-                self.pressed_keys.remove(key)
+                if key in self.pressed_keys:
+                    self.pressed_keys.remove(key)
             self.child_conn.send({'key': key, 'state':state})
 
     def _poll_parent(self):
