@@ -53,14 +53,16 @@ class HelpOverlay(BaseOverlayWithTimeout):
     t_top_offset = -2
     t_right_offset = -1
 
-    def __init__(self, callback, key = "KEY_F5", **kwargs):
+    def __init__(self, callback, key = "KEY_F5", wrap_view=True, **kwargs):
         self.callbacks = [callback]
         self.key = key
+        self.do_wrap_view = wrap_view
         BaseOverlayWithTimeout.__init__(self, **kwargs)
 
     def apply_to(self, ui_el):
         self.wrap_generate_keymap(ui_el)
-        self.wrap_view(ui_el)
+        if self.do_wrap_view:
+            self.wrap_view(ui_el)
         BaseOverlayWithTimeout.apply_to(self, ui_el)
 
     def wrap_generate_keymap(self, ui_el):
@@ -122,7 +124,7 @@ class FunctionOverlay(HelpOverlay):
     default_keys = ["KEY_F1", "KEY_F2"]
     num_keys = len(default_keys)
 
-    def __init__(self, keymap, labels=["Exit", "Options"], **kwargs):
+    def __init__(self, keymap, labels=["Exit", "Options"], wrap_view=True, **kwargs):
         if isinstance(keymap, (list, tuple)):
             # Can also pass a list of functions instead of a keymap dict
             # The list will then be mapped to the default keys
@@ -134,6 +136,7 @@ class FunctionOverlay(HelpOverlay):
         else:
             self.keymap = keymap
         self.labels = labels
+        self.do_wrap_view = wrap_view
         BaseOverlayWithTimeout.__init__(self, **kwargs)
 
     def wrap_generate_keymap(self, ui_el):
