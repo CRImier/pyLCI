@@ -5,8 +5,8 @@
  - monsieur_h
  - Louis Parkerson
  - Unnamed contributor
- - Timothée Floure
  - Serge Spraiter
+ - Timothée Floure
  - Jon Maier
  - Björn Pettersson
  - Gnu-Bricoleur
