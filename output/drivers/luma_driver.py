@@ -71,6 +71,7 @@ class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager)
             self.port = port
             self.address = address
             self.serial = Mock(unsafe=True)
+            kwargs["gpio"] = Mock()
         else:
             raise ValueError("Unknown interface type: {}".format(hw))
         self.busy_flag = Lock()

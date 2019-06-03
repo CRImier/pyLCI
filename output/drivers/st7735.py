@@ -18,7 +18,8 @@ class Screen(LumaScreen, OutputDevice):
       self.v_offset = kwargs.pop("v_offset", self.default_v_offset)
       width = self.height if self.rotate%2==1 else self.width
       height = self.width if self.rotate%2==1 else self.height
-      self.device = st7735(self.serial, width=width, height=height, bgr=True, rotate=self.rotate, h_offset=self.h_offset, v_offset=self.v_offset)
+      gpio = kwargs.pop("gpio", None)
+      self.device = st7735(self.serial, width=width, height=height, bgr=True, rotate=self.rotate, h_offset=self.h_offset, v_offset=self.v_offset, gpio=gpio)
 
   def enable_backlight(self, *args, **kwargs):
       BacklightManager.enable_backlight(self, *args, **kwargs)
