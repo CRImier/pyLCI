@@ -32,9 +32,9 @@ def init_app(input_obj, output_obj):
     i = input_obj
     o = output_obj
 
-def set_context(self, c):
-    self.context = c
-    c.register_firstboot_action(FirstBootAction("ssh_setup", setup_ssh, depends=[None], before=["wifi_setup"]))
+def set_context(c):
+    context = c
+    c.register_firstboot_action(FirstBootAction("ssh_setup", setup_ssh, depends=None, before=["wifi_setup"]))
 
 def setup_ssh():
     regenerate_ssh_keys()
