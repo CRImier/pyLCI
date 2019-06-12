@@ -1,5 +1,6 @@
 from input.input import InputProxy
 from output.output import OutputProxy
+from actions import ContextSwitchAction
 from action_manager import ActionManager
 
 from functools import wraps
@@ -183,24 +184,12 @@ class Context(object):
         """
         return self.event_cb(self.name, "get_previous_context_image")
 
-    def register_action(self, name, cb, menu_name_cb, description="", aux_cb = None, documentation='', *args, **kwargs):
+    def register_action(self, action):
         """
         Allows an app to register an 'action' that can be used by other apps -
         for example, ZeroMenu.
-
-        Arguments:
-
-          * ``name``: software-friendly name
-          * ``cb``: the main callback, which will be called when the action is called. Should expect no parameters.
-          * ``menu_name_cb``: the callback that will be called to get the menu name. Can be a string instead.
-          * ``description``: the user-friendly description of the action, one sentence or more
-          * ``aux_cb``: the auxiliary callback. For example, ZeroMenu will have that mapped to the right click.
-          * ``documentation``: documentation for the callback/auxiliary callback usage
         """
-        d = {'name':name, 'cb':cb, 'menu_name_cb':menu_name_cb, 'description':description, 'aux_cb':aux_cb, 'documentation':documentation}
-        d.update(kwargs)
-        d['args'] = args
-        return self.event_cb(self.name, "register_action", dict=d)
+        return self.event_cb(self.name, "register_action", action)
 
     def register_firstboot_action(self, action):
         """
@@ -485,10 +474,12 @@ class ContextManager(object):
         elif event == "is_active":
             return context_alias == self.current_context
         elif event == "register_action":
-            d = kwargs["dict"]
-            d["app_name"] = context_alias
-            d["full_name"] = "{}-{}".format(context_alias, d["name"])
-            self.am.register_action(**d)
+            action = args[0]
+            action.full_name = "{}-{}".format(context_alias, action.name)
+            action.context = context_alias
+            if isinstance(action, ContextSwitchAction) and action.target_context is None:
+                action.target_context = context_alias
+            self.am.register_action(action)
         elif event == "register_firstboot_action":
             action = args[0]
             self.am.register_firstboot_action(context_alias, action)

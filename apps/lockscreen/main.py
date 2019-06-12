@@ -2,8 +2,9 @@ from time import sleep
 from threading import Event
 
 from ui import Canvas
-from ui.base_ui import BaseUIElement
 from apps import ZeroApp
+from ui.base_ui import BaseUIElement
+from actions import ContextSwitchAction
 from helpers import ExitHelper, setup_logger, remove_left_failsafe, read_or_create_config, local_path_gen, save_config_method_gen
 
 local_path = local_path_gen(__name__)
@@ -18,7 +19,7 @@ class LockApp(ZeroApp):
         self.context = c
         c.threaded = True
         c.set_target(self.activate_lockscreen)
-        c.register_action("lock_screen", c.request_switch, "Lock screen", description="Switches to the lockscreen app")
+        c.register_action(ContextSwitchAction("lock_screen", c.request_switch, menu_name="Lock screen", description="Switches to the lockscreen app"))
 
     def get_screens(self):
         return {"KeyScreen": KeyScreen,

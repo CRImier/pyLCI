@@ -15,6 +15,7 @@ from helpers import read_config, local_path_gen, logger, env, read_or_create_con
                     zpui_running_as_service, is_emulator
 from input import input
 from output import output
+from actions import ContextSwitchAction
 from ui import Printer
 import pidcheck
 
@@ -96,7 +97,6 @@ def init():
 
     # Initialize the context manager
     cm = ContextManager()
-
     # Initialize input
     try:
         # Now we can show errors on the display
@@ -111,6 +111,8 @@ def init():
     if hasattr(screen, "set_backlight_callback"):
         screen.set_backlight_callback(input_processor)
     cm.init_io(input_processor, screen)
+    c = cm.contexts["main"]
+    c.register_action(ContextSwitchAction("switch_main_menu", None, menu_name="Main menu"))
     cm.switch_to_context("main")
     i, o = cm.get_io_for_context("main")
 
