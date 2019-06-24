@@ -25,7 +25,8 @@ from date_picker import DatePicker
 from time_picker import TimePicker
 from grid_menu import GridMenu
 from order_adjust import OrderAdjust
-from overlays import HelpOverlay, FunctionOverlay, GridMenuLabelOverlay, GridMenuSidebarOverlay
+from overlays import HelpOverlay, FunctionOverlay, GridMenuLabelOverlay, \
+                     GridMenuSidebarOverlay, GridMenuNavOverlay
 from utils import fit_image_to_screen
 from entry import Entry
 

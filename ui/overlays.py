@@ -2,7 +2,7 @@ from functools import wraps
 from threading import Event
 
 from canvas import Canvas
-from utils import Rect
+from utils import Rect, clamp
 from entry import Entry
 
 from PIL import Image
@@ -296,3 +296,69 @@ class GridMenuLabelOverlay(HelpOverlay):
         text_coords, clear_coords = self.get_text_position(c, ui_el, entry_text)
         c.clear(clear_coords)
         c.text(entry_text, text_coords, font=self.font)
+
+
+class BaseNumpadOverlay(object):
+    def __init__(self, default_cb, keys=None, callbacks=None):
+        self.keys = list(range(10))+["*", "#"]
+        if keys is not None:
+            self.keys += keys
+        self.callbacks = callbacks if callbacks is not None else {}
+
+    def get_callback_for_key(self, key):
+        return self.callbacks.get(key, self.default_callback)
+
+    def get_keymap(self, ui_el):
+        keynames = ["KEY_{}".format(i) for i in self.keys]
+        d = {}
+        for name in keynames:
+            cb_fun = self.get_callback_for_key(name)
+            cb = lambda x=name: cb_fun(ui_el, x)
+            d[name] = cb
+        return d
+
+    def apply_to(self, ui_el):
+        self.wrap_generate_keymap(ui_el)
+
+    def wrap_generate_keymap(self, ui_el):
+        generate_keymap = ui_el.generate_keymap
+        @wraps(generate_keymap)
+        def wrapper(*args, **kwargs):
+            keymap = generate_keymap(*args, **kwargs)
+            keymap.update(self.get_keymap(ui_el))
+            return keymap
+        ui_el.generate_keymap = wrapper
+        # Apply the changes
+        ui_el.set_default_keymap()
+        # apply_to is usually called after the UI element's __init__
+        # has executed, so we need to call set_default_keymap once again
+
+
+class GridMenuNavOverlay(BaseNumpadOverlay):
+    def __init__(self, go_instantly=True, keys=None, callbacks=None):
+        self.go_instantly = go_instantly
+        self.nav_order = self.get_nav_order()
+        BaseNumpadOverlay.__init__(self, lambda *a: True, keys=keys, callbacks=callbacks)
+
+    def get_callback_for_key(self, key):
+        return self.move_on_key
+
+    def get_nav_order(self):
+        nav_order_str = "123456789*0#"
+        nav_order = ["KEY_{}".format(k) for k in nav_order_str]
+        return nav_order
+
+    def move_on_key(self, ui_el, key):
+        if key not in self.nav_order:
+            pass # Weird, nav order does not contain a key
+        index = self.nav_order.index(key)
+        if ui_el.pointer == index or self.go_instantly:
+            if self.go_instantly:
+                ui_el.pointer = clamp(index, 0, len(ui_el.contents) - 1)
+            # Moving to the same item that's already selected
+            # let's interpret this as KEY_ENTER
+            ui_el.select_entry(bypass_to_be_foreground=True)
+            return
+        ui_el.pointer = clamp(index, 0, len(ui_el.contents) - 1)
+        ui_el.refresh()
+
