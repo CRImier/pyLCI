@@ -4,7 +4,8 @@ import traceback
 
 import zero_app
 from helpers import setup_logger
-from ui import Printer, Menu, HelpOverlay, TextReader, GridMenu, Entry, GridMenuLabelOverlay, GridMenuSidebarOverlay
+from ui import Printer, Menu, HelpOverlay, TextReader, GridMenu, Entry, \
+               GridMenuLabelOverlay, GridMenuSidebarOverlay, GridMenuNavOverlay
 
 from PIL import Image, ImageOps
 
@@ -79,6 +80,7 @@ class AppManager(object):
         HelpOverlay(tr.activate).apply_to(menu)
         GridMenuLabelOverlay().apply_to(menu)
         GridMenuSidebarOverlay(self.sidebar_cb).apply_to(menu)
+        GridMenuNavOverlay().apply_to(menu)
 
     def register_default_plugins(self):
         self.subdir_menu_creators["apps"] = self.create_main_menu
