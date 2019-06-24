@@ -16,7 +16,11 @@ def to_be_foreground(func):
     if UI element is not the one active"""
     @wraps(func)
     def wrapper(self, *args, **kwargs):
-        if self.in_foreground:
+        bypass = False
+        if "bypass_to_be_foreground" in kwargs:
+            if kwargs.pop("bypass_to_be_foreground"):
+                bypass  = True
+        if bypass or self.in_foreground:
             return func(self, *args, **kwargs)
         else:
             data = (self.__class__.__name__, func.__name__, getattr(self, "name", None))
