@@ -304,6 +304,7 @@ class BaseNumpadOverlay(object):
         if keys is not None:
             self.keys += keys
         self.callbacks = callbacks if callbacks is not None else {}
+        self.default_callback = default_cb
 
     def get_callback_for_key(self, key):
         return self.callbacks.get(key, self.default_callback)
