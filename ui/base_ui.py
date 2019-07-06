@@ -1,6 +1,7 @@
 from threading import Event
 from time import sleep
 from functools import wraps
+from traceback import print_exc
 
 import PIL
 
@@ -171,10 +172,16 @@ class BaseUIElement(object):
         @wraps(func)
         def wrapper(*args, **kwargs):
             self.to_background()
-            func(*args, **kwargs)
+            e = None
+            try:
+                func(*args, **kwargs)
+            except Exception as e:
+                print_exc()
             logger.debug("{}: executed wrapped function: {}".format(self.name, func.__name__))
             if self.in_background:
                 self.to_foreground()
+            if e:
+                raise e
         return wrapper
 
     def process_keymap(self, keymap):
