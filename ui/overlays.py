@@ -351,7 +351,7 @@ class GridMenuNavOverlay(BaseNumpadOverlay):
 
     def move_on_key(self, ui_el, key):
         if key not in self.nav_order:
-            pass # Weird, nav order does not contain a key
+            return # Weird, nav order does not contain a key
         index = self.nav_order.index(key)
         if ui_el.pointer == index or self.go_instantly:
             if self.go_instantly:
