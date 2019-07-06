@@ -363,3 +363,31 @@ class GridMenuNavOverlay(BaseNumpadOverlay):
         ui_el.pointer = clamp(index, 0, len(ui_el.contents) - 1)
         ui_el.refresh()
 
+
+class IntegerAdjustInputOverlay(BaseNumpadOverlay):
+    def __init__(self):
+        BaseNumpadOverlay.__init__(self, self.process_numpad_input, keys=None, callbacks=None)
+        self.keys = list(range(10))
+        self.input_order = {"KEY_{}".format(i):i for i in range(10)}
+
+    def apply_to(self, ui_el):
+        BaseNumpadOverlay.apply_to(self, ui_el)
+        ui_el.numpad_input_has_started = Event()
+
+    def process_numpad_input(self, ui_el, key):
+        if key not in self.input_order:
+            return # Weird, nav order does not contain a key
+        digit = self.input_order[key]
+        if ui_el.numpad_input_has_started.isSet():
+            if ui_el.number is not None:
+                number_str = str(ui_el.number)
+                number_str += str(digit)
+                ui_el.number = int(number_str)
+            else:
+                ui_el.number = digit
+        else:
+            ui_el.numpad_input_has_started.set()
+            ui_el.number = digit
+        ui_el.clamp()
+        ui_el.refresh(bypass_to_be_foreground=True)
+
