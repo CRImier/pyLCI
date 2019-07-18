@@ -1,12 +1,19 @@
+from actions import ContextSwitchAction
+
 class ActionManager(object):
     action_name_delimiter = "%"
 
-    def __init__(self):
+    def __init__(self, cm):
         self.actions = {}
+        self.cm = cm
 
     def register_action(self, action):
         name = action.full_name
         self.actions[name] = action
+        # Setting a usable callback for ContextSwitchActions
+        if isinstance(action, ContextSwitchAction) \
+          and getattr(action, "func", None) is None:
+            action.func = lambda x=action.target_context: self.cm.switch_to_context(x)
 
     def register_firstboot_action(self, context_alias, action):
         name = action.name

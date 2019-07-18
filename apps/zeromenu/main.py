@@ -96,10 +96,7 @@ def wrap_cb_in_context_switch(action, cb):
 
 def get_cb(action):
     if getattr(action, "func", None) is None:
-        if isinstance(action, ContextSwitchAction):
-            cb = lambda x=action.target_context: context.request_switch(x)
-        else:
-            return None
+        return None
     else:
         cb = action.func
         if action.will_context_switch:
