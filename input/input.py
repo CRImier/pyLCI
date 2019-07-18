@@ -186,6 +186,29 @@ class InputProcessor(object):
                 sleep(0.1)
         logger.debug("Stopping event loop "+str(index))
 
+    def global_key_processed_by_proxy(self, key, state, global_cb):
+        """
+        Checks whether the global callback execution should be skipped in favor
+        of a proxy callback. For example, globally, pressing the green ("ANSWER")
+        button should switch you into the "make a call" menu, in other words,
+        switch context into the Phone app. However, once you're there, that key should
+        not cause a context switch yet again, but instead trigger the "call the
+        entered number" action from the proxy keymap!
+
+        At the moment, this mechanism does involve setting non-maskable callbacks
+        in the proxy, though.
+        """
+        current_proxy = self.get_current_proxy()
+        # Key force-processed globally
+        if isinstance(global_cb, Action):
+            if getattr(global_cb, "force_global_key_processing", False):
+                return False
+        # No proxy set at the moment, weird but OK
+        if not current_proxy:
+            return False
+        if key in current_proxy.nonmaskable_keymap:
+            return True
+
     def process_key(self, data):
         """
         This function receives a keyname, finds the corresponding callback/action
@@ -212,11 +235,11 @@ class InputProcessor(object):
         # Global and nonmaskable callbacks are supposed to work
         # even when the screen backlight is off
         #
-        # First, querying global callbacks - they're more important than
-        # even the current proxy nonmaskable callbacks
+        # First, checking whether the global callbacks apply.
         if key in self.global_keymap:
-            callback = self.global_keymap[key]
-            self.handle_callback(callback, key, state, type="global")
+            global_cb = self.global_keymap[key]
+            if not self.global_key_processed_by_proxy(key, state, global_cb):
+                self.handle_callback(global_cb, key, state, type="global")
             return
         # Now, all the callbacks are either proxy callbacks or backlight-related
         # Saving a reference to current_proxy, in case it changes during the lookup
