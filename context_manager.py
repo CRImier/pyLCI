@@ -226,7 +226,7 @@ class ContextManager(object):
         self.contexts = {}
         self.previous_contexts = {}
         self.switching_contexts = Lock()
-        self.am = ActionManager()
+        self.am = ActionManager(self)
 
     def init_io(self, input_processor, screen):
         """
