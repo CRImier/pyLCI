@@ -7,6 +7,7 @@ import inspect
 import atexit
 import Queue
 
+from actions import Action
 from helpers import setup_logger, KEY_RELEASED, KEY_HELD, KEY_PRESSED
 
 from hotplug import DeviceManager
@@ -260,6 +261,8 @@ class InputProcessor(object):
             logger.debug("pass_key = {}".format(pass_key))
             logger.debug("callback name: {}".format(callback.__name__))
             # Checking whether the callback wants key state
+            if isinstance(callback, Action):
+                callback = callback.cb
             keystate_cb_name = "zpui_icb_pass_key_state"
             if hasattr(callback, "__func__"):
                 cb_needs_state = getattr(callback.__func__, keystate_cb_name, False)
