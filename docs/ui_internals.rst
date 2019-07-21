@@ -32,3 +32,17 @@ When writing child UI elements based on ``BaseUIElement``:
   * You can also override functions like ``idle_loop`` (used in ``Refresher`` and tests),
     in that case, make sure to call the original function too (and read its code to check
     for side effects).
+
+How does the input processing work?
+
+.. image:: diagrams/ui_element_threading.png
+
+Notes:
+
+  * Simple example - all the  move_up/move_down calls in i.e. a Menu are actually
+    executed from a different thread - not the one where ``activate()`` runs, but
+    a thread that was launched by ``activate()``.
+  * The input thread will only check the exit flag between callback invocations. So,
+    when you signal the input thread to exit (by using stop_listen), it will not
+    exit while it's still in the middle of processing a callback - only after it's
+    finished processing it.
