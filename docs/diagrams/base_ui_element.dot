@@ -40,5 +40,5 @@ digraph {
 
   end[label="Execution returns to your code"];
 
-  label="\nBasic UI element workflow (no __init__ or input processing shown)"
+  label="\nBasic UI element workflow (no __init__ or input processing shown) v1.0"
 }
