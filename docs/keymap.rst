@@ -75,6 +75,8 @@ Streaming callbacks also receive the key name:
              Also, not all drivers support "key held" state - but the default ZP keypad
              driver and the HID driver do.
 
+.. _keymap_for_custom_ui:
+
 Changing UI elements' keymaps in your own apps
 ==============================================
 
