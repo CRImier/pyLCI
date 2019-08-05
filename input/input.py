@@ -244,7 +244,7 @@ class InputProcessor(object):
         # Now, all the callbacks are either proxy callbacks or backlight-related
         # Saving a reference to current_proxy, in case it changes during the lookup
         current_proxy = self.get_current_proxy()
-        if key in current_proxy.nonmaskable_keymap:
+        if current_proxy and key in current_proxy.nonmaskable_keymap:
             callback = current_proxy.nonmaskable_keymap[key]
             self.handle_callback(callback, key, state, type="nonmaskable", context_name=current_proxy.context_alias)
             return
@@ -261,15 +261,15 @@ class InputProcessor(object):
                     return
         # Now, all the other callbacks of the proxy:
         # Simple callbacks
-        if key in current_proxy.keymap:
+        if current_proxy and key in current_proxy.keymap:
             callback = current_proxy.keymap[key]
             self.handle_callback(callback, key, state, context_name=current_proxy.context_alias)
         #Maskable callbacks
-        elif key in current_proxy.maskable_keymap:
+        elif current_proxy and key in current_proxy.maskable_keymap:
             callback = current_proxy.maskable_keymap[key]
             self.handle_callback(callback, key, state, type="maskable", context_name=current_proxy.context_alias)
         #Keycode streaming
-        elif callable(current_proxy.streaming):
+        elif current_proxy and callable(current_proxy.streaming):
             self.handle_callback(current_proxy.streaming, key, state, pass_key=True, type="streaming", context_name=current_proxy.context_alias)
         else:
             logger.debug("Key {} has no handlers - ignored!".format(key))
