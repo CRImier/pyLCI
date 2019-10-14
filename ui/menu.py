@@ -169,7 +169,14 @@ class MenuRenderingMixin(object):
         return False
 
     def draw_graphic(self, c, index):
-        contents_entry = self.el.contents[self.first_displayed_entry + index]
+        # c is the canvas object
+        # draw_graphic is called for each line of text - not menu entry!
+        # so, index is the "line number" - assuming 4 lines/display,
+        # for entry_height=1, each index will correspond to a menu entry
+        # for entry_height=2, indices 0-1 will be used for the first menu entry
+        # and 2-3 will be used for the second menu entry
+        # hence, the /self.entry_height part
+        contents_entry = self.el.contents[self.first_displayed_entry + index/self.entry_height]
         if self.has_second_callback(contents_entry):
             tw, th = self.charwidth / 2, self.charheight / 2
             right_offset = 1

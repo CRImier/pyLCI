@@ -6,9 +6,9 @@ class NetworkMenuRenderingMixin(MenuRenderingMixin):
 
     def draw_graphic(self, c, index):
         # c is the canvas
-        # index is the number of the entry shown on the screen
-        # so, for a 4-entry screen, it's 0, 1, 2 or 3
-        entry = self.el.contents[self.first_displayed_entry + index]
+        # index is the number of the text line shown on the screen
+        # refer to ui/menu.py:MenuRenderingMixin.draw_graphic for more info
+        entry = self.el.contents[self.first_displayed_entry + index/self.entry_height]
         if isinstance(entry, Entry) \
           and hasattr(entry, "network_secured") \
           and hasattr(entry, "network_known"):
