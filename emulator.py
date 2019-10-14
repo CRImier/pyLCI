@@ -168,7 +168,10 @@ class Emulator(object):
         if self.child_conn.poll() is True:
             event = self.child_conn.recv()
             func = getattr(self, event['func_name'])
-            func(*event['args'], **event['kwargs'])
+            try:
+                func(*event['args'], **event['kwargs'])
+            except:
+                import traceback; traceback.print_exc()
 
     def _event_loop(self):
         while self._quit is False:
