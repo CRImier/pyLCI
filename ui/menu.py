@@ -56,10 +56,14 @@ class Menu(BaseListUIElement):
             * ``catch_exit``: If ``MenuExitException`` is received and catch_exit is False, it passes ``MenuExitException`` to the parent menu so that it exits, too. If catch_exit is True, MenuExitException is not passed along.
             * ``exitable``: Decides if menu can exit by pressing ``KEY_LEFT``. Set by default and disables ``KEY_LEFT`` callback if unset. Is used for ZPUI main menu, not advised to be used in other settings.
             * ``contents_hook``: A function that is called every time menu goes in foreground that returns new menu contents. Allows to almost-dynamically update menu contents.
+            * ``on_contents_hook_fail``: A function that is called when ``contents_hook`` raises an exception or returns None. Will be passed two arguments: 1) arg ``self`` (``Menu`` object) 2) kwarg ``exception=bool`` (``True`` or ``False``, whether ``contents_hook`` raised an exception or not).
 
         """
         self.catch_exit = kwargs.pop("catch_exit", True)
         self.contents_hook = kwargs.pop("contents_hook", None)
+        ochf = kwargs.pop("on_contents_hook_fail", None)
+        if ochf:
+            self.on_contents_hook_fail = ochf
         BaseListUIElement.__init__(self, *args, **kwargs)
 
     def before_activate(self):
@@ -68,7 +72,24 @@ class Menu(BaseListUIElement):
 
     def before_foreground(self):
         if callable(self.contents_hook):
-            self.set_contents(self.contents_hook())
+            try:
+                new_contents = self.contents_hook()
+            except:
+                logger.exception("{}: contents hook raised an exception!".format(self.name))
+                if callable(self.on_contents_hook_fail):
+                    self.on_contents_hook_fail(self, exception=True)
+                else:
+                    # Just making the menu exit by deactivating
+                    self.deactivate()
+            else:
+                if new_contents is not None:
+                    self.set_contents(new_contents)
+                else:
+                    if callable(self.on_contents_hook_fail):
+                        self.on_contents_hook_fail(self, exception=False)
+                    else:
+                        logger.error("{}: contents hook returned None, on_contents_hook_fail not set - deactivating".format(self.name))
+                        self.deactivate()
 
     def get_return_value(self):
         if self.exit_exception:

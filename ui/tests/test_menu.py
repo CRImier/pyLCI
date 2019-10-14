@@ -106,6 +106,40 @@ class TestMenu(unittest.TestCase):
         with patch.object(mu, 'idle_loop', side_effect=scenario) as p:
             mu.activate()
 
+    def test_contents_hook_2(self):
+        """
+        Tests whether menu contents hook is executed
+        and whether on_contents_hook_fail works when
+        it is supposed to work.
+        """
+        self.test_contents_hook_2_counter = 0
+        contentss = [[["True"]], [["False"]], None]
+        def gen_contents():
+            if len(contentss) <= self.test_contents_hook_2_counter:
+                raise Exception
+            contents = contentss[self.test_contents_hook_2_counter]
+            self.test_contents_hook_2_counter += 1
+            return contents
+        ochf = Mock()
+        mu = Menu([], get_mock_input(), get_mock_output(), name=mu_name,
+                  contents_hook=gen_contents, on_contents_hook_fail=ochf, config={})
+
+        def scenario():
+            assert mu.contents[0][0] == "True"
+            mu.select_entry()
+            assert mu.contents[0][0] == "False"
+            mu.select_entry()
+            assert ochf.called
+            assert ochf.call_count == 1 # first because contents_hook returned None
+            mu.set_contents([])
+            mu.before_foreground()
+            assert ochf.call_count == 2 # second because of the exception raised
+            mu.deactivate()
+            assert not mu.in_foreground
+
+        with patch.object(mu, 'idle_loop', side_effect=scenario) as p:
+            mu.activate()
+
     def test_left_key_returns_none(self):
         """ A Menu is never supposed to return anything other than None"""
         num_elements = 3
