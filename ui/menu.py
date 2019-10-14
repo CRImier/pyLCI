@@ -61,9 +61,7 @@ class Menu(BaseListUIElement):
         """
         self.catch_exit = kwargs.pop("catch_exit", True)
         self.contents_hook = kwargs.pop("contents_hook", None)
-        ochf = kwargs.pop("on_contents_hook_fail", None)
-        if ochf:
-            self.on_contents_hook_fail = ochf
+        self.on_contents_hook_fail = kwargs.pop("on_contents_hook_fail", None)
         BaseListUIElement.__init__(self, *args, **kwargs)
 
     def before_activate(self):
