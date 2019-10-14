@@ -153,7 +153,11 @@ class OutputProxy(CharacterOutputDevice, GraphicalOutputDevice):
     def __init__(self, context_alias):
         self.context_alias = context_alias
 
-    def _display_image(self, image):
+    def _display_image(self, image, **kwargs):
+        """
+        **kwargs here is because the backlight driver (or other overlays)
+        can be passed other arguments
+        """
         self.current_image = image
 
     def _clear(self):
