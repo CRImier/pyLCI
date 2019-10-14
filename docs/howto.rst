@@ -963,7 +963,7 @@ start with:
     import smbus # external library, needs to be installed
     ...
 
-A more readable way to arrange imports is:
+ZPUI-proposed way to arrange imports is:
 
 * Built-in libraries
 * ZPUI libraries
@@ -971,7 +971,7 @@ A more readable way to arrange imports is:
 * Local imports (something in the same folder as your ``main.py``
 
 It's best if you separate these groups with a single empty line. This is especially
-helpful once your app grows big. Here's an example:
+helpful once your app grows big. Here's an example of the end result:
 
 .. code-block:: python
 
