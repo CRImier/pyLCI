@@ -4,11 +4,12 @@ from time import sleep
 from threading import Thread
 from traceback import format_exc
 
-from ui import Menu, PrettyPrinter as Printer, MenuExitException, UniversalInput, Refresher, DialogBox, ellipsize
+from ui import Menu, PrettyPrinter as Printer, MenuExitException, UniversalInput, Refresher, DialogBox, ellipsize, Entry
 from helpers import setup_logger
-
 from libs.linux import wpa_cli
 from libs.linux.wpa_monitor import WpaMonitor
+
+import net_ui
 
 from pyric import pyw
 
@@ -27,24 +28,41 @@ current_interface = None
 
 logger = setup_logger(__name__, "warning")
 
-def show_scan_results():
+
+class NetMenu(Menu):
+    """ Menu to show currently available networks """
+    view_mixin = net_ui.NetworkMenuRenderingMixin
+
+def get_scan_results_contents():
     network_menu_contents = []
     networks = wpa_cli.get_scan_results()
     for network in networks:
         if network["ssid"] == '':
             ssid = '[Hidden]'
-        elif network["ssid"]:
+        else:
             ssid = network["ssid"]
-        network_menu_contents.append([ssid, lambda x=network: network_info_menu(x)])
-    network_menu = Menu(network_menu_contents, i, o, "Wireless network menu")
-    network_menu.activate()
+        cb = lambda x=network: network_info_menu(x)
+        network_cache = wpa_cli.list_configured_networks()
+        network_names = [n["ssid"] for n in network_cache]
+        network_is_known = network["ssid"] in network_names
+        network_is_secured = False if wpa_cli.is_open_network(network) else True
+        network_menu_contents.append(Entry(ssid, cb=cb, \
+                                           network_secured=network_is_secured, \
+                                           network_known=network_is_known
+                                           ))
+    return network_menu_contents
+
+def show_scan_results():
+    NetMenu([], i, o, name="Wireless network menu", \
+            contents_hook=get_scan_results_contents).activate()
 
 def network_info_menu(network_info):
     network_info_contents = [
-    ["Connect", lambda x=network_info: connect_to_network(x)],
-    ["BSSID", lambda x=network_info['bssid']: Printer(x, i, o, 5, skippable=True)],
-    ["Frequency", lambda x=network_info['frequency']: Printer(x, i, o, 5, skippable=True)],
-    ["Open" if wpa_cli.is_open_network(network_info) else "Secured", lambda x=network_info['flags']: Printer(x, i, o, 5, skippable=True)]]
+      ["Connect", lambda x=network_info: connect_to_network(x)],
+      ["BSSID", lambda x=network_info['bssid']: Printer(x, i, o, 5, skippable=True)],
+      ["Frequency", lambda x=network_info['frequency']: Printer(x, i, o, 5, skippable=True)],
+      ["Open" if wpa_cli.is_open_network(network_info) else "Secured", lambda x=network_info['flags']: Printer(x, i, o, 5, skippable=True)]
+    ]
     network_info_menu = Menu(network_info_contents, i, o, "Wireless network info", catch_exit=False)
     network_info_menu.activate()
 
@@ -147,6 +165,8 @@ def status_refresher_data():
         w_status = wpa_cli.connection_status()
     except:
         return ["wpa_cli fail".center(o.cols)]
+    # This function is tailored for 16-character screen width
+    # so, if you're wondering why there are magic numbers, there's why =)
     #Getting data
     state = w_status['wpa_state']
     ip = w_status.get('ip_address', 'None')
@@ -240,7 +260,7 @@ def save_changes():
     else:
         Printer('Saved changes', i, o, skippable=True)
 
-def get_manage_networks_mc():
+def get_saved_networks_mc():
     global network_cache
     network_cache = wpa_cli.list_configured_networks()
     network_menu_contents = []
@@ -252,9 +272,9 @@ def get_manage_networks_mc():
         ])
     return network_menu_contents
 
-def manage_networks():
+def saved_networks():
     Menu([], i, o, name="Saved network menu",
-         contents_hook=get_manage_networks_mc, catch_exit=False).activate()
+         contents_hook=get_saved_networks_mc, catch_exit=False).activate()
 
 def get_saved_network_menu_contents(network_id):
     network_cache = wpa_cli.list_configured_networks()
@@ -390,11 +410,13 @@ def callback():
         # i.e. the ESP-12 based WiFi is guaranteed to be the first
     def get_contents():
         # A function for main menu to be able to dynamically update
-        return [["Status", status_monitor],
-        ["Current: {}".format(current_interface), change_interface],
-        ["Scan", scan],
-        ["Networks", show_scan_results],
-        ["Saved networks", manage_networks]]
+        return [
+          ["Status", status_monitor],
+          ["Current: {}".format(current_interface), change_interface],
+          ["Scan", scan],
+          ["Networks", show_scan_results],
+          ["Saved networks", saved_networks]
+        ]
     # Testing if we actually can connect
     try:
         wpa_cli.set_active_interface(current_interface)
