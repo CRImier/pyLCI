@@ -171,6 +171,14 @@ class Context(object):
         else:
             return self.event_cb(self.name, "request_switch")
 
+    def request_context_start(self, context_alias):
+        """
+        Asks ContextManager to start a context in the background.
+        Useful for i.e. a lockscreen starting an app that it'll grab images
+        from so that they can be displayed on the lockscreen's idle screen.
+        """
+        return self.event_cb(self.name, "request_context_start", context_alias)
+
     def is_active(self):
         """
         Tells whether this context is the one active.
@@ -546,6 +554,9 @@ class ContextManager(object):
             new_context = args[0]
             logger.info("Context switch to {} requested by {} app".format(new_context, context_alias))
             return self.switch_to_context(new_context)
+        elif event == "request_context_start":
+            context_alias = args[0]
+            return self.contexts[context_alias].activate()
         elif event == "request_global_keymap":
             results = {}
             keymap = args[0]
