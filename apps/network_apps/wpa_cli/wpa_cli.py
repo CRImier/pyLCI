@@ -6,10 +6,15 @@ from helpers import setup_logger
 
 logger = setup_logger(__name__, "warning")
 
+current_interface = None
+
 #wpa_cli related functions and objects
 def wpa_cli_command(*command):
+    run = ["wpa_cli"]
+    if current_interface:
+        run += ["-i"+current_interface]
     try:
-        return check_output(['wpa_cli'] + list(command))
+        return check_output(run + list(command))
     except CalledProcessError as e:
         raise WPAException(command[0], e.returncode, output=e.output, args=command[1:])
 
@@ -74,8 +79,19 @@ def get_interfaces():
     return output
 
 def set_active_interface(interface_name):
-    #TODO output check
-    output = process_output(wpa_cli_command("interface", interface_name))
+   #TODO output check
+    global current_interface
+    # try to set the module's interface variable, then check status
+    # if status check fails, set the variable back to what it was
+    # and re-raise the exception
+    last_interface = current_interface
+    try:
+        current_interface = interface_name
+        output = process_output(wpa_cli_command("status"))
+    except:
+        current_interface = last_interface
+        raise
+    # else: all went well
     #if output == "Connected to interface '{}'".format(interface_name):
 
 def get_current_interface():
@@ -176,11 +192,10 @@ def process_table(header, contents):
 
 def process_output(output):
     #First line of output of wpa_cli (almost?) always says "Selected interface: $INT"
-    #In future, we might need to keep that value somewhere, so this function could be a perfect hook to update that.
-    #Not now.
+    # but only if the interface is not passed using "wpa_cli -iinterface".
     lines = output.split('\n')
-    #print(lines)
-    lines = lines[1:] #First line has the "Selected interface: $INT"
+    if not current_interface:
+        lines = lines[1:] #First line has the "Selected interface: $INT"
     return [line.strip(' ') for line in lines if line] #Removing all whitespace and not counting empty lines
 
 
@@ -195,5 +210,3 @@ if __name__ == "__main__":
         print(get_scan_results())
     print(initiate_scan())
     print(initiate_scan())
-
-
