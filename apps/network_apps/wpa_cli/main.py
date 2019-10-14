@@ -219,7 +219,7 @@ def change_interface():
     Menu(menu_contents, i, o, "Interface change menu").activate()
 
 def change_current_interface(interface):
-    global current_interface
+    global current_interface, last_interface
     try:
         wpa_cli.set_active_interface(interface)
     except wpa_cli.WPAException:
@@ -228,6 +228,7 @@ def change_current_interface(interface):
         Printer('Changed to '+interface, i, o, skippable=True)
         restart_monitor(interface=interface)
         current_interface = interface
+        last_interface = interface
     finally:
         raise MenuExitException
 
