@@ -10,6 +10,7 @@ from libs.linux import wpa_cli
 from libs.linux.wpa_monitor import WpaMonitor
 
 import net_ui
+import read_conf_data
 
 from pyric import pyw
 
@@ -117,7 +118,6 @@ def etdn_runner():
         if network["flags"] == "[TEMP-DISABLED]":
             logger.warning("Network {} is temporarily disabled, re-enabling".format(network["ssid"]))
             try:
-                print(network)
                 enable_network(network["network id"], silent=True)
             except Exception as e:
                 logger.error(format_exc())
@@ -293,7 +293,7 @@ def get_saved_network_menu_contents(network_id):
       ["Enable", lambda x=id: enable_network(x)],
       ["Disable", lambda x=id: disable_network(x)],
       ["Remove", lambda x=id: remove_network(x)],
-      ["Set password", lambda x=id: set_password(x)],
+      ["Edit password", lambda x=id: edit_password(x)],
       ["BSSID", lambda x=bssid: Printer(x, i, o, 5, skippable=True)]
     ]
     return network_info_contents
@@ -352,8 +352,34 @@ def remove_network(net_id):
         Printer('Removed network '+str(net_id), i, o, skippable=True)
         raise MenuExitException
 
-def set_password(net_id):
-    input = UniversalInput(i, o, message="Password:", name="WiFi password enter UI element")
+def edit_password(net_id):
+    conf_fail = False
+    try:
+        conf_data = read_conf_data.read_data()
+    except:
+        conf_data = {}
+        conf_fail = True
+    ssid = wpa_cli.get_network(net_id, "ssid")
+    conf = conf_data.get(ssid, None)
+    if not conf:
+        if conf_fail:
+            Printer("Configuration file can't be read, can't get current password!", i, o)
+        else:
+            Printer("Network not found in the configuration file, can't get current password!", i, o)
+        psk = ""
+    else:
+        psk = conf.get("psk", "")
+        if not psk:
+            if conf.get("key_mgmt", None) == "NONE":
+                result = DialogBox("yn", i, o, message="Is open, edit?").activate()
+                if not result:
+                    return
+                psk = ""
+            else:
+                # weird, no psk in file
+                # using an empty string for now
+                psk = ""
+    input = UniversalInput(i, o, value=psk, message="Password:", name="WiFi password enter UI element")
     password = input.activate()
     if password is None:
         return False
