@@ -184,6 +184,12 @@ class Context(object):
         """
         return self.event_cb(self.name, "get_previous_context_image")
 
+    def get_context_image(self, context_alias):
+        """
+        Useful for showing images from other contexts - i.e. lockscreen.
+        """
+        return self.event_cb(self.name, "get_context_image", context_alias)
+
     def register_action(self, action):
         """
         Allows an app to register an 'action' that can be used by other apps -
@@ -471,6 +477,11 @@ class ContextManager(object):
             # if there's a better way to express this.
             previous_context = self.get_previous_context(context_alias)
             return self.contexts[previous_context].get_io()[1].get_current_image()
+        elif event == "get_context_image":
+            # This is a special-case function for lockscreens. I'm wondering
+            # if there's a better way to express this.
+            context = args[0]
+            return self.contexts[context].get_io()[1].get_current_image()
         elif event == "is_active":
             return context_alias == self.current_context
         elif event == "register_action":
