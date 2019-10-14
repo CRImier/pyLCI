@@ -163,12 +163,12 @@ class MenuRenderingMixin(object):
     def has_second_callback(self, entry):
         if isinstance(entry, Entry):
             if callable(entry.cb2):
-               return True
+                return True
         elif len(entry) > 2 and callable(entry[2]):
             return True
         return False
 
-    def draw_triangle(self, c, index):
+    def draw_graphic(self, c, index):
         contents_entry = self.el.contents[self.first_displayed_entry + index/self.el.entry_height]
         if self.has_second_callback(contents_entry):
             tw, th = self.charwidth / 2, self.charheight / 2
@@ -186,7 +186,7 @@ class MenuRenderingMixin(object):
             y = (i * self.charheight - 1) if i != 0 else 0
             c.text(line, (left_offset, y), font=self.font)
             if "b&w-pixel" in self.o.type:
-                self.draw_triangle(c, i)
+                self.draw_graphic(c, i)
 
 
 Menu.view_mixin = MenuRenderingMixin
