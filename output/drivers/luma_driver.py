@@ -3,6 +3,7 @@
 #luma.oled library used: https://github.com/rm-hull/luma.oled
 
 from mock import Mock
+from threading import Lock
 
 try:
     from luma.core.interface.serial import spi, i2c
@@ -10,11 +11,10 @@ except ImportError:
     #Compatilibity with older luma.oled version
     from luma.core.serial import spi, i2c
 from luma.core.render import canvas
+from PIL import ImageChops
 
-from threading import Lock
 
 from backlight import *
-
 from ..output import GraphicalOutputDevice, CharacterOutputDevice
 
 
@@ -94,12 +94,28 @@ class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager)
         self.device.hide()
 
     @activate_backlight_wrapper
-    def display_image(self, image):
+    def display_image(self, image, actually_output=False):
         """Displays a PIL Image object onto the display
         Also saves it for the case where display needs to be refreshed"""
         with self.busy_flag:
             self.current_image = image
             self._display_image(image)
+
+    def trigger_backlight_on_change(self, func_name, *args, **kwargs):
+        """
+        Hook that allows the backlight driver to determine whether the image has changed.
+        """
+        if func_name == "display_image":
+            image = args[0]
+            is_new_image = ImageChops.difference(image, self.current_image).getbbox() is None
+            return is_new_image
+        elif func_name == "display_data":
+            # Redundant, sorry =(
+            image = self.display_data_onto_image(*args)
+            is_new_image = ImageChops.difference(image, self.current_image).getbbox() is None
+            return is_new_image
+        else:
+            raise ValueError("Unknown function wrapped, wtf?")
 
     def _display_image(self, image):
         self.device.display(image)
