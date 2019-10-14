@@ -79,7 +79,7 @@ def get_interfaces():
     return output
 
 def set_active_interface(interface_name):
-   #TODO output check
+    #TODO output check
     global current_interface
     # try to set the module's interface variable, then check status
     # if status check fails, set the variable back to what it was
@@ -136,7 +136,7 @@ def disable_network(network_id):
 def initiate_scan():
     return ok_fail_command("scan")
 
-def parse_ssid_from_cli(ssid):
+def parse_string_from_cli(ssid):
     return literal_eval("'{}'".format(ssid))
 
 def get_scan_results():
@@ -146,17 +146,23 @@ def get_scan_results():
     networks = process_table(output[0], output[1:])
     # Filtering SSIDs to allow for using Unicode SSIDs
     for network in networks:
-        network["ssid"] = parse_ssid_from_cli(network["ssid"])
+        network["ssid"] = parse_string_from_cli(network["ssid"])
     return networks
 
 def add_network():
     return int_fail_command("add_network")
 
 def set_network(network_id, param_name, value):
-    #Might fail if the wireless dongle gets unplugged or something
     if param_name == "ssid":
         value = 'P'+value
     return ok_fail_command("set_network", str(network_id), param_name, value)
+
+def get_network(network_id, param_name):
+    output = wpa_cli_command("get_network", str(network_id), param_name)
+    value = process_output(output)[0]
+    if value.startswith("'") or value.startswith('"'):
+        value = literal_eval(value)
+    return value
 
 
 #Helper commands
