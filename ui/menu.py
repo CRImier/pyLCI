@@ -169,7 +169,7 @@ class MenuRenderingMixin(object):
         return False
 
     def draw_graphic(self, c, index):
-        contents_entry = self.el.contents[self.first_displayed_entry + index/self.el.entry_height]
+        contents_entry = self.el.contents[self.first_displayed_entry + index]
         if self.has_second_callback(contents_entry):
             tw, th = self.charwidth / 2, self.charheight / 2
             right_offset = 1
