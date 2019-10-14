@@ -110,6 +110,8 @@ class Menu(BaseListUIElement):
                 callback()
             except MenuExitException:
                 self.exit_exception = True
+            except Exception as exc:
+                logger.exception("{}: Callback raised an exception".format(self.name))
             finally:
                 if self.exit_exception:
                     self.deactivate()
