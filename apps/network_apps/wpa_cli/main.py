@@ -10,8 +10,8 @@ from threading import Thread
 from traceback import format_exc
 
 from ui import Menu, Printer, MenuExitException, UniversalInput, Refresher, DialogBox, ellipsize
+from libs.linux import wpa_cli
 
-import wpa_cli
 
 logger = setup_logger(__name__, "warning")
 def show_scan_results():
