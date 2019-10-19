@@ -71,7 +71,7 @@ class KeyScreen(BaseUIElement):
         self.reset_timeout()
         BaseUIElement.__init__(self, i, o, name="KeyScreen lockscreen")
 
-    def wait_loop(self, last_key):
+    def wait_loop(self, last_key=None):
         # some key was pressed before that
         self.eh = ExitHelper(self.i, keys="*").start()
         if last_key:
@@ -162,9 +162,13 @@ class PinScreen(object):
         self.active = Event()
         self.clear()
 
-    def wait_loop(self):
-        eh = ExitHelper(self.i, keys="*").start()
-        while eh.do_run():
+    def wait_loop(self, last_key=None):
+        # some key was pressed before that
+        self.eh = ExitHelper(self.i, keys="*").start()
+        if last_key:
+            self.eh.last_key = last_key
+            return
+        while self.eh.do_run():
             sleep(self.sleep_time)
 
     def activate(self):
@@ -291,7 +295,8 @@ class ContextWatcher(object):
         else: # "always"
             bl_on_new = False
         image = self.context.get_context_image(context_to_watch)
-        self.o.display_image(image, backlight_only_on_new=bl_on_new)
+        if image:
+            self.o.display_image(image, backlight_only_on_new=bl_on_new)
 
 class LockscreenSettings(object):
     menu_name = "Lockscreen"
