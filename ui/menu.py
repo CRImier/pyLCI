@@ -69,6 +69,26 @@ class Menu(BaseListUIElement):
         self.exit_exception = False
 
     def before_foreground(self):
+        self.exec_contents_hook()
+
+    def trigger_contents_hook(self):
+        """
+        External method to trigger Menu contents update if the contents_hook is set.
+        If contents_hook is not set, raises an AttributeError.
+        """
+        result = self.exec_contents_hook()
+        if result is None:
+            raise AttributeError("{}: contents_hook is not set!".format(self.name))
+
+    def exec_contents_hook(self):
+        """
+        Executes ``contents_hook`` and, if successful, sets new contents.
+        If ``contents_hook`` failed to execute (or returned ``None``), will see if
+        ``on_contents_hook_fail`` attribute is callable and, if it is, calls it.
+        Otherwise, deactivates the ``Menu``.
+        Returns ``True`` if successful. If failed at any step, returns ``False``.
+        If contents_hook is not set, returns ``None``.
+        """
         if callable(self.contents_hook):
             try:
                 new_contents = self.contents_hook()
@@ -79,15 +99,20 @@ class Menu(BaseListUIElement):
                 else:
                     # Just making the menu exit by deactivating
                     self.deactivate()
+                return False
             else:
                 if new_contents is not None:
                     self.set_contents(new_contents)
+                    return True
                 else:
                     if callable(self.on_contents_hook_fail):
                         self.on_contents_hook_fail(self, exception=False)
                     else:
                         logger.error("{}: contents hook returned None, on_contents_hook_fail not set - deactivating".format(self.name))
                         self.deactivate()
+                    return False
+        else:
+            return None
 
     def get_return_value(self):
         if self.exit_exception:
