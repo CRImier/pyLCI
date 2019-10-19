@@ -19,7 +19,9 @@ class WPAOException(WPAException):
 class WpaMonitor():
 
     started = True
+    event_cb = None
     default_path = "wpa_cli"
+    status_storage_len_limit = 500
     special_codes = {"CTRL-EVENT-CONNECTED":"process_ctrl_event_connected"}
 
     def __init__(self, path=None):
@@ -27,12 +29,13 @@ class WpaMonitor():
             self.default_path = path
         self.flush_status()
 
-    def start(self, interface=None):
+    def start(self, interface=None, event_cb=None):
         self.interface = interface
         self.started = True
         args = [self.default_path]
         if interface:
             args += ["-i"+interface]
+        self.event_cb = event_cb
         self.p = ProHelper(args, output_callback=self.process_output)
         #self.p.run()
         self.p.run_in_background()
@@ -41,6 +44,8 @@ class WpaMonitor():
         if not self.started:
             return
         #self.p.write("q\n")
+        self.event_cb = None
+        self.started = False
         self.p.kill_process()
 
     def process_output(self, output):
@@ -90,6 +95,11 @@ class WpaMonitor():
           and not status["code"].startswith("CTRL-EVENT-REGDOM"):
             print(status)
         self.add_status(status)
+        if self.event_cb:
+          try:
+            self.event_cb(status)
+          except:
+            logger.exception("Calling event_cb for if {} raised an exception".format(self.interface))
 
     def process_ctrl_event_connected(self, status):
         msg = status["msg"]
@@ -126,10 +136,22 @@ class WpaMonitor():
 
     def add_status(self, status):
         self.status_storage.append(status)
+        # avoid taking up too much memory
+        if len(self.status_storage) > self.status_storage_len_limit:
+            self.status_storage = self.status_storage[-self.status_storage_len_limit:]
 
     def get_status(self):
-        status = self.status_storage.pop(0, None)
-        return status
+        if len(self.status_storage) > 0:
+            return self.status_storage[0]
+        return None
+
+    def pop_status(self):
+        try:
+            status = self.status_storage.pop(0)
+        except IndexError:
+            return None
+        else:
+            return status
 
 """mon = None
 def main(interface='wlx40a5ef071806'):
