@@ -497,9 +497,10 @@ class EightPtView(TextView):
     x_scrollbar_offset = 5
     scrollbar_y_offset = 1
     font = None
+    default_full_width_cursor = False
 
     def __init__(self, *args, **kwargs):
-        self.full_width_cursor = kwargs.pop("full_width_cursor", False)
+        self.full_width_cursor = kwargs.pop("full_width_cursor", self.default_full_width_cursor)
         TextView.__init__(self, *args, **kwargs)
 
     def get_fow_width_in_chars(self):
@@ -560,7 +561,7 @@ class EightPtView(TextView):
         if cursor_y is not None:
             c_y = cursor_y * self.charheight + 1
             if self.full_width_cursor:
-                x2 = c.width-(left_offset-1)
+                x2 = c.width
             else:
                 menu_texts = menu_text[cursor_y:cursor_y+self.entry_height]
                 max_menu_text_len = max([len(t) for t in menu_texts])
