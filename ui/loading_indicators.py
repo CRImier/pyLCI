@@ -5,6 +5,7 @@ from time import time
 
 from canvas import Canvas
 from refresher import Refresher
+from helpers import setup_logger
 from utils import clamp, Chronometer, to_be_foreground, Rect
 
 """
@@ -19,6 +20,8 @@ These classes are based on `Refresher`.
 """
 
 # ========================= abstract classes =========================
+
+logger = setup_logger(__name__, "info")
 
 
 class Paused(object):
@@ -41,14 +44,25 @@ class Paused(object):
 class BaseLoadingIndicator(Refresher):
     """Abstract class for "loading indicator" elements."""
 
-    def __init__(self, i, o, *args, **kwargs):
+    def __init__(self, i, o, on_left=None, *args, **kwargs):
         self._progress = 0
+        self.on_left_cb = on_left
+        keymap = kwargs.get("keymap", {})
+        if "KEY_LEFT" not in keymap:
+            keymap["KEY_LEFT"] = "on_left"
+        kwargs["keymap"] = keymap
         Refresher.__init__(self, self.on_refresh, i, o, *args, **kwargs)
         self.t = None
         self.paused = Paused(self)
 
     def on_refresh(self):
         pass
+
+    def on_left(self):
+        if callable(self.on_left_cb):
+            self.on_left_cb()
+        else:
+            logger.warning("{}: User pressed LEFT but there's no LEFT handler, bad UX!".format(self.name))
 
     def set_message(self, new_message):
         self.message = new_message
