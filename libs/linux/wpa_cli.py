@@ -118,6 +118,14 @@ def list_configured_networks():
     networks = process_table(output[0], output[1:])
     return networks
 
+def dict_configured_networks_by_ssid():
+    networks = list_configured_networks()
+    return {n["ssid"]:n for n in networks}
+
+def dict_configured_networks_by_id():
+    networks = list_configured_networks()
+    return {n["network id"]:n for n in networks}
+
 def select_network(network_id):
     return ok_fail_command("select_network", str(network_id))
 
@@ -135,6 +143,12 @@ def disable_network(network_id):
 
 def initiate_scan():
     return ok_fail_command("scan")
+
+def disconnect():
+    return ok_fail_command("disconnect")
+
+def reconnect():
+    return ok_fail_command("reconnect")
 
 def parse_string_from_cli(ssid):
     return literal_eval("'{}'".format(ssid))
