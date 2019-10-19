@@ -168,7 +168,10 @@ class Emulator(object):
         if self.child_conn.poll() is True:
             event = self.child_conn.recv()
             func = getattr(self, event['func_name'])
-            func(*event['args'], **event['kwargs'])
+            try:
+                func(*event['args'], **event['kwargs'])
+            except:
+                import traceback; traceback.print_exc()
 
     def _event_loop(self):
         while self._quit is False:
@@ -191,9 +194,13 @@ class Emulator(object):
     def cursor(self):
         self.cursor_enabled = True
 
-    def display_image(self, image):
-        """Displays a PIL Image object onto the display
-        Also saves it for the case where display needs to be refreshed"""
+    def display_image(self, image, **kwargs):
+        """
+        Displays a PIL Image object onto the display
+        Also saves it for the case where display needs to be refreshed.
+        Accepts **kwargs but ignores them - hack, since other (i.e. backlight-enabled)
+        drivers can accept (and sometimes are sent) kwargs.
+        """
         with self.busy_flag:
             self.current_image = image
             self._display_image(image)
