@@ -2,6 +2,7 @@ from ui.menu import MenuRenderingMixin
 from ui import Entry
 
 class NetworkMenuRenderingMixin(MenuRenderingMixin):
+    default_full_width_cursor = True
     net_info_right_offset = 2
 
     def draw_graphic(self, c, index):
@@ -17,7 +18,7 @@ class NetworkMenuRenderingMixin(MenuRenderingMixin):
             if entry.network_known:
                 # draw "k" on the bottom
                 c.text("k", (x, y))
-            y += c.o.char_height
+            y += c.o.char_height - 2
             if entry.network_secured:
                 # draw "s" on the top
                 c.text("s", (x, y))

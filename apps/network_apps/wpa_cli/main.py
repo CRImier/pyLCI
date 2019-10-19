@@ -1,10 +1,11 @@
 menu_name = "Wireless"
 
-from time import sleep
-from threading import Thread
+from time import sleep, time
+from threading import Thread, Event
 from traceback import format_exc
 
-from ui import Menu, PrettyPrinter as Printer, MenuExitException, UniversalInput, Refresher, DialogBox, ellipsize, Entry
+from ui import Menu, PrettyPrinter as Printer, MenuExitException, UniversalInput, \
+               Refresher, DialogBox, ellipsize, Entry, LoadingBar
 from helpers import setup_logger
 from libs.linux import wpa_cli
 from libs.linux.wpa_monitor import WpaMonitor
@@ -27,7 +28,12 @@ last_interface = None
 # current interface used in the app
 current_interface = None
 
-logger = setup_logger(__name__, "warning")
+# global UI elements
+# NetworkMenu currently active
+# (global so that we can refresh it once new scan results come)
+net_menu = None
+
+logger = setup_logger(__name__, "info")
 
 
 class NetMenu(Menu):
@@ -39,45 +45,76 @@ def get_scan_results_contents():
     networks = wpa_cli.get_scan_results()
     for network in networks:
         if network["ssid"] == '':
-            ssid = '[Hidden]'
+            ui_ssid = '[Hidden]'
         else:
-            ssid = network["ssid"]
-        cb = lambda x=network: network_info_menu(x)
+            ui_ssid = network["ssid"]
         network_cache = wpa_cli.list_configured_networks()
         network_names = [n["ssid"] for n in network_cache]
         network_is_known = network["ssid"] in network_names
         network_is_secured = False if wpa_cli.is_open_network(network) else True
-        network_menu_contents.append(Entry(ssid, cb=cb, \
+        network["known"] = network_is_known
+        network["secured"] = network_is_secured
+        cb = lambda x=network: network_info_menu(x)
+        network_menu_contents.append(Entry(ui_ssid, cb=cb, \
                                            network_secured=network_is_secured, \
                                            network_known=network_is_known
                                            ))
     return network_menu_contents
 
 def show_scan_results():
-    NetMenu([], i, o, name="Wireless network menu", \
-            contents_hook=get_scan_results_contents).activate()
+    global net_menu
+    net_menu = NetMenu([], i, o, name="Wireless network menu", \
+                       contents_hook=get_scan_results_contents)
+    net_menu.activate()
 
-def network_info_menu(network_info):
-    network_info_contents = [
-      ["Connect", lambda x=network_info: connect_to_network(x)],
+def get_network_info_menu_contents(network_info):
+    # checking that the network is still known
+    # TODO re-get the network list to update the flags
+    kni = None
+    network_cache = wpa_cli.dict_configured_networks_by_ssid()
+    network_is_known = network_info["ssid"] in network_cache
+    if network_is_known:
+        kni = network_cache[network_info["ssid"]]
+    if kni:
+        network_status = kni["flags"] if kni["flags"] else "[ENABLED]"
+        id = kni["network id"]
+        network_info_contents = [
+          ["Connect ({})".format(network_status), lambda x=network_info: connect_to_network(x)],
+          ["Enable", lambda x=id: enable_network(x)],
+          ["Disable", lambda x=id: disable_network(x)],
+          ["Select", lambda x=id: select_network(x)],
+          ["Remove", lambda x=id: remove_network(x)],
+          ["Edit password", lambda x=id: edit_password(x)],
+        ]
+    else:
+        network_info_contents = [
+          ["Connect", lambda x=network_info: connect_to_network(x)]
+        ]
+    network_info_contents += [
       ["BSSID", lambda x=network_info['bssid']: Printer(x, i, o, 5, skippable=True)],
       ["Frequency", lambda x=network_info['frequency']: Printer(x, i, o, 5, skippable=True)],
       ["Open" if wpa_cli.is_open_network(network_info) else "Secured", lambda x=network_info['flags']: Printer(x, i, o, 5, skippable=True)]
     ]
-    network_info_menu = Menu(network_info_contents, i, o, "Wireless network info", catch_exit=False)
-    network_info_menu.activate()
+    return network_info_contents
+
+def network_info_menu(network_info):
+    gmc = lambda: get_network_info_menu_contents(network_info)
+    Menu([], i, o, "Wireless network info menu", contents_hook=gmc,
+         catch_exit=False).activate()
 
 def connect_to_network(network_info):
     #First, looking in the known networks
     configured_networks = wpa_cli.list_configured_networks()
+    connected = False  # flag that avoids going through the whole "enter password"
+                       # thing if the network is known
     for network in configured_networks:
         if network_info['ssid'] == network['ssid']:
             Printer(network_info['ssid'] + " known, connecting", i, o, 1)
             wpa_cli.enable_network(network['network id'])
             wpa_cli.save_config()
-            raise MenuExitException
+            connected = True
     #Then, if it's an open network, just connecting
-    if wpa_cli.is_open_network(network_info):
+    if not connected and wpa_cli.is_open_network(network_info):
         network_id = wpa_cli.add_network()
         Printer("Network is open, adding to known", i, o, 1)
         ssid = network_info['ssid']
@@ -86,9 +123,8 @@ def connect_to_network(network_info):
         Printer("Connecting to "+network_info['ssid'], i, o, 1)
         wpa_cli.enable_network(network_id)
         wpa_cli.save_config()
-        raise MenuExitException
     #Offering to enter a password
-    else:
+    elif not connected:
         input = UniversalInput(i, o, message="Password:", name="WiFi password enter UI element", charmap="password")
         password = input.activate()
         if password is None:
@@ -101,8 +137,92 @@ def connect_to_network(network_info):
         Printer("Connecting to "+network_info['ssid'], i, o, 1)
         wpa_cli.enable_network(network_id)
         wpa_cli.save_config()
-        raise MenuExitException
     #No WPS PIN input possible yet and I cannot yet test WPS button functionality.
+    status = wpa_cli.connection_status()
+    current_ssid = status.get('ssid', 'None')
+    # We might init a LoadingBar, here's a variable to refer to it later
+    lb = None
+    if current_ssid and current_ssid == network_info["ssid"]:
+        # We seem to be connected!
+        pass
+    else:
+        # Entering the "do something until we're actually connected" phase
+        # first - let's start a LoadingBar for user-friendliness
+        # and record the time we started connecting, for the same =)
+        do_exit = Event()
+        lb = LoadingBar(i, o, message="Connecting...", on_left=do_exit.set)
+        lb.run_in_background()
+        start_time = time()
+        # second - we'll be monitoring events, so that we're a bit more efficient
+        # and we don't need to go through a bunch of old events => flush
+        monitor.flush_status()
+        # third - let's check if we're currently connected to another network
+        # if so - we should disable it
+        connected = False
+        while not connected and not do_exit.isSet():
+          if current_ssid != network_info["ssid"]:
+            status = wpa_cli.connection_status()
+            current_ssid = status.get('ssid', None)
+            # what if a race condition happens?
+            # lol
+            while current_ssid not in [None, network_info["ssid"]]:
+                unwanted_net_id = status.get("id", None)
+                unwanted_net_ssid = status.get("ssid", None)
+                if unwanted_net_id is not None:
+                    logger.info("Disabling unwanted network: {}".format(unwanted_net_ssid))
+                    wpa_cli.disable_network(unwanted_net_id)
+                else:
+                    # connected to a network but id is not present in the status?
+                    # weird.
+                    logger.warning("Network connected but id is not available!")
+                    # calling the "disconnect" function
+                    # but first, let's check if we're really really not connected yet
+                    # we're in a weird place already
+                    try_scan()
+                    status = wpa_cli.connection_status()
+                    current_ssid = status.get('ssid', None)
+                    if current_ssid not in [None, network_info["ssid"]]:
+                      try:
+                        wpa_cli.disconnect()
+                      except:
+                        logger.exception("and we can't disconnect from the network, either")
+                    else:
+                        # all is good, it seems
+                        if current_ssid == network_info["ssid"]:
+                            connected = True
+                logger.info("Disconnecting from wrong network {}: trying scan".format(unwanted_net_ssid))
+                try_scan()
+                logger.info("Disconnecting from wrong network {}: getting status".format(unwanted_net_ssid))
+                status = wpa_cli.connection_status()
+                current_ssid = status.get('ssid', None)
+          # we might've gotten connected after the "while current_ssid is wrong" loop
+          if current_ssid == network_info["ssid"]:
+              connected = True
+              break
+          status = monitor.pop_status()
+          if status:
+              logger.info("Connecting: received status from monitor: {}".format(status))
+              code = status.get("code", "")
+              if code == "CTRL-EVENT-CONNECTED":
+                  net_id = status["data"].get("id", None)
+                  network_cache = wpa_cli.dict_configured_networks_by_id()
+                  print(network_cache)
+                  print(net_id)
+                  if network_cache[str(net_id)]["ssid"] == network_info["ssid"]:
+                      # yay!
+                      connected = True
+              #TODO: handle "wrong password" events
+        # fifth TODO - we should check if the network is still available - that is,
+        # can be found in scan results
+        # if network is available and we're not connected to anything,
+        # do "wpa_cli reconnect"
+        # and check for temp-disabled
+        # sixth TODO - we should check if we haven't timeouted yet, by any chance ;-P
+    if lb:
+        # LoadingBar was created, stopping it
+        print("stopping lb")
+        lb.stop()
+    raise MenuExitException
 
 def enable_temp_disabled_networks():
     global etdn_thread
@@ -141,6 +261,23 @@ def scan(delay = True, silent = False):
     finally:
         sleep(delay)
 
+def try_scan():
+    """
+    Initiates scan, doesn't fail on WPAError: FAIL-BUSY
+    still fails on other exception
+    """
+    try:
+        wpa_cli.initiate_scan()
+    except wpa_cli.WPAException as e:
+        if e.code=="FAIL-BUSY":
+            pass
+        else:
+            raise
+    except:
+        logger.exception("Tried to scan, failed for some reason")
+        raise
+
+
 def reconnect():
     try:
         w_status = wpa_cli.connection_status()
@@ -165,8 +302,9 @@ def status_refresher_data():
         w_status = wpa_cli.connection_status()
     except:
         return ["wpa_cli fail".center(o.cols)]
-    # This function is tailored for 16-character screen width
-    # so, if you're wondering why there are magic numbers, there's why =)
+    # This function is written for character displays
+    # so, if you're wondering why there are magic numbers and weird formatting,
+    # this is why =)
     #Getting data
     state = w_status['wpa_state']
     ip = w_status.get('ip_address', 'None')
@@ -389,6 +527,19 @@ def edit_password(net_id):
 
 # wpa_monitor control functions
 
+def receive_event(event):
+    # Hook for us to react on certain messages
+    logger.info("Received event: {}".format(event))
+    if event["code"] == "CTRL-EVENT-SCAN-RESULTS":
+        if net_menu and net_menu.is_active:
+            try:
+                net_menu.trigger_contents_hook()
+            except:
+                logger.exception("NetMenu contents_hook failed for some reason ;-(")
+            else:
+                if net_menu.in_foreground and net_menu.in_background:
+                    net_menu.refresh()
+
 def restart_monitor(interface=None):
     stop_monitor()
     if not interface:
@@ -402,7 +553,7 @@ def start_monitor(interface=None):
     if monitor:
         stop_monitor()
     monitor = WpaMonitor()
-    monitor.start(interface=interface)
+    monitor.start(interface=interface, event_cb=receive_event)
 
 def stop_monitor():
     global monitor
