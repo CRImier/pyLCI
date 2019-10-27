@@ -28,15 +28,13 @@ last_interface = None
 # current interface used in the app
 current_interface = None
 
-# global UI elements
-# NetworkMenu currently active
+# a global for NetworkMenu currently active
 # (global so that we can refresh it once new scan results come)
 net_menu = None
 
 logger = setup_logger(__name__, "info")
 
 connect_timeout = 10 # seconds
-
 
 class NetMenu(Menu):
     """ Menu to show currently available networks """
@@ -71,7 +69,6 @@ def show_scan_results():
 
 def get_network_info_menu_contents(network_info):
     # checking that the network is still known
-    # TODO re-get the network list to update the flags
     kni = None
     network_cache = wpa_cli.dict_configured_networks_by_ssid()
     network_is_known = network_info["ssid"] in network_cache
@@ -108,7 +105,7 @@ def connect_to_network(network_info):
     #First, looking in the known networks
     configured_networks = wpa_cli.list_configured_networks()
     known = False  # flag that avoids going through the whole "enter password"
-                       # thing if the network is known
+                   # thing if the network is known
     for network in configured_networks:
         if network_info['ssid'] == network['ssid']:
             Printer(network_info['ssid'] + " known, connecting", i, o, 1)
@@ -140,13 +137,23 @@ def connect_to_network(network_info):
         wpa_cli.enable_network(network_id)
         wpa_cli.save_config()
     #No WPS PIN input possible yet and I cannot yet test WPS button functionality.
+    # Setup finished. Now let's check if we're actually connected
+    # If we're not, we'll do stuff to try and ensure a connection
     status = wpa_cli.connection_status()
     current_ssid = status.get('ssid', 'None')
     # We might init a LoadingBar, here's a variable to refer to it later
     lb = None
+    # we might disable networks, need to re-enable them once we're connected
+    disabled_networks = []
+    # also, in the "WiFi wizard" menu, we need to return some kind of status
+    connect_status = {"connected":False,
+                      "reason":None}
     if current_ssid and current_ssid == network_info["ssid"]:
         # We seem to be connected!
         logger.info("right ssid in status instantly, seems like we're connected ")
+        connect_status["connected"] = True
+        connect_status["reason"] = "instant_connect"
+        logger.info("new connect_status: {}".format(connect_status))
     else:
         # Entering the "do something until we're actually connected" phase
         # first - let's start a LoadingBar for user-friendliness
@@ -155,10 +162,14 @@ def connect_to_network(network_info):
         lb = LoadingBar(i, o, message="Connecting...", on_left=do_exit.set)
         lb.run_in_background()
         start_time = time()
+        # don't want to waste time waiting for scan results
+        scan_has_been_initiated = False
         # second - we'll be monitoring events, so that we're a bit more efficient
         # and we don't need to go through a bunch of old events => flush
         monitor.flush_status()
-        # third - let's check if we're currently connected to another network
+        # third - let's do enable_temp_disabled_networks
+        enable_temp_disabled_networks()
+        # fourth - let's check if we're currently connected to another network
         # if so - we should disable it
         connected = False
         while not connected and not do_exit.isSet():
@@ -171,16 +182,18 @@ def connect_to_network(network_info):
                 unwanted_net_id = status.get("id", None)
                 unwanted_net_ssid = status.get("ssid", None)
                 if unwanted_net_id is not None:
-                    logger.info("Disabling unwanted network: {}".format(unwanted_net_ssid))
+                    logger.info("Disabling unwanted network: {} (id: {})".format(unwanted_net_ssid, unwanted_net_id))
                     wpa_cli.disable_network(unwanted_net_id)
+                    disabled_networks.append(unwanted_net_id)
                 else:
                     # connected to a network but id is not present in the status?
                     # weird.
-                    logger.warning("Network connected but id is not available!")
+                    logger.warning("Network connected but id is not available! Status: {}".format(status))
                     # calling the "disconnect" function
                     # but first, let's check if we're really really not connected yet
                     # we're in a weird place already
-                    try_scan()
+                    if try_scan():
+                        scan_has_been_initiated = True
                     status = wpa_cli.connection_status()
                     current_ssid = status.get('ssid', None)
                     if current_ssid not in [None, network_info["ssid"]]:
@@ -193,17 +206,21 @@ def connect_to_network(network_info):
                         if current_ssid == network_info["ssid"]:
                             connected = True
                             logger.info("ssid is set after 'disconnect', seems like we're connected")
+                            connect_status["connected"] = True
+                            connect_status["reason"] = "ssid_check_after_disconnect_unknown_id"
+                            logger.info("new connect_status: {}".format(connect_status))
+                            break
                 logger.info("Disconnecting from wrong network {}: trying scan".format(unwanted_net_ssid))
-                try_scan()
+                if try_scan():
+                    scan_has_been_initiated = True
                 logger.info("Disconnecting from wrong network {}: getting status".format(unwanted_net_ssid))
                 status = wpa_cli.connection_status()
                 current_ssid = status.get('ssid', None)
           # we might've gotten connected after the "while current_ssid is wrong" loop
           if current_ssid == network_info["ssid"]:
-              #connected = True
-              logger.info("ssid is set, seems like we're connected")
-              print(current_ssid, status)
-              #break
+              #connected = True # commented out because sometimes, when pw is wrong,
+                                # it will connect for a second and then disconnect
+              logger.info("ssid is set, we *might* be connected (ssid: {}, status: {})".format(current_ssid, status))
           net_status = monitor.pop_status()
           if net_status:
               logger.info("Connecting: received status from monitor: {}".format(net_status))
@@ -216,6 +233,9 @@ def connect_to_network(network_info):
                       # yay!
                       logger.info("received a CONNECTED event, seems like we're connected")
                       connected = True
+                      connect_status["connected"] = True
+                      connect_status["reason"] = "got_connected_status"
+                      logger.info("new connect_status: {}".format(connect_status))
                       break
               elif code == "CTRL-EVENT-DISCONNECTED":
                  reason = net_status["data"].get("reason", None)
@@ -229,10 +249,30 @@ def connect_to_network(network_info):
                  reason = net_status["data"].get("reason", None)
                  wanted_ssid = network_info["ssid"]
                  ssid = net_status["data"].get("ssid", None)
-                 print(reason, ssid, wanted_ssid)
+                 logger.info(" ".join([reason, ssid, wanted_ssid]))
                  if (ssid and ssid == wanted_ssid) and reason == "WRONG_KEY":
                      logger.info("received a SSID-TEMP-DISABLED event with what seems like a 'WRONG PASSWORD' reason")
                      wrong_pw = True
+              elif code == "CTRL-EVENT-SCAN-RESULTS":
+                  status = wpa_cli.connection_status()
+                  current_ssid = status.get('ssid', None)
+                  if current_ssid is None:
+                      # we're not connected to anything
+                      available_networks = wpa_cli.get_scan_results()
+                      for a_network in available_networks:
+                          if a_network["ssid"] == network_info["ssid"]:
+                          # desired network is present in the network search results
+                          # let's call "wpa_cli reconnect"
+                          # in hopes that triggers a connection
+                              logger.info("We're not connected but network is present in scan results, calling 'wpa_cli reconnect'")
+                              wpa_cli.reconnect()
+                              break
+                      else:
+                          # break didn't trigger - network is no longer there?
+                          connect_status["connected"] = False
+                          connect_status["reason"] = "network_lost"
+                          logger.info("new connect_status: {}".format(connect_status))
+                          break
               if wrong_pw:
                   lb.stop()
                   while lb.is_active:
@@ -240,12 +280,20 @@ def connect_to_network(network_info):
                   lb = None
                   logger.info("Wrong password, seems like we're not getting connected!")
                   Printer("Wrong password?", i, o, 3)
+                  connect_status["connected"] = False
+                  connect_status["reason"] = "wrong_password"
+                  logger.info("new connect_status: {}".format(connect_status))
                   break
-          # fifth TODO - we should check if the network is still available - that is,
+          # fifth - we should check if the network is still available - that is,
           # can be found in scan results
+          # so, let's trigger the scan and wait for the results to come
           # if network is available and we're not connected to anything,
-          # do "wpa_cli reconnect"
-          # and check for temp-disabled
+          # we'll receive CTRL-EVENT-SCAN-RESULTS and then do further action
+          # in the status processing code above
+          if not scan_has_been_initiated:
+              # this flag can be set in the "disabling other networks" code
+              if try_scan():
+                  scan_has_been_initiated = True
           # sixth - we should check if we haven't timeouted yet, by any chance ;-P
           now_time = time()
           if now_time - start_time > connect_timeout:
@@ -255,11 +303,20 @@ def connect_to_network(network_info):
               lb = None
               logger.info("Connection timeout, seems like we're not getting connected!")
               Printer("Connect timeout!", i, o, 3)
+              connect_status["connected"] = False
+              connect_status["reason"] = "timeout"
+              logger.info("new connect_status: {}".format(connect_status))
               break
     if lb:
         # LoadingBar was created, stopping it
-        print("stopping lb")
         lb.stop()
+    # re-enabling all the networks we previously disabled
+    for net_id in disabled_networks:
+        logger.info("Re-enabling network {} that was disabled during connection".format(net_id))
+        wpa_cli.enable_network(net_id)
+    if callable(wifi_connect_status_cb):
+        wifi_connect_status_cb(connect_status)
+    logger.info("end result connect_status: {}".format(connect_status))
     raise MenuExitException
 
 def enable_temp_disabled_networks():
@@ -302,18 +359,21 @@ def scan(delay = True, silent = False):
 def try_scan():
     """
     Initiates scan, doesn't fail on WPAError: FAIL-BUSY
-    still fails on other exception
+    Returns True if scan successfully initiated, False on FAIL-BUSY
+    Raises all the other exceptions
     """
     try:
         wpa_cli.initiate_scan()
     except wpa_cli.WPAException as e:
         if e.code=="FAIL-BUSY":
-            pass
+            return False
         else:
             raise
     except:
         logger.exception("Tried to scan, failed for some reason")
         raise
+    else:
+        return True
 
 
 def reconnect():
@@ -605,7 +665,7 @@ def callback():
     # thanks Raspbian developers, you broke a lot of decent WiFi setup tutorials
     # even if by accident =(
     # also needed to support proper multi-interface work for the app
-    global last_interface, current_interface
+    global last_interface, current_interface, wifi_connect_status_cb
     winterfaces = pyw.winterfaces()
     if not winterfaces:
         Printer("No wireless cards found, exiting", i, o, 3, skippable=True)
@@ -624,6 +684,9 @@ def callback():
         current_interface = winterfaces[0] # Simple, I know
         # Might add some ZP-specific logic here later, so that
         # i.e. the ESP-12 based WiFi is guaranteed to be the first
+    # clearing the connect status callback that might be left over
+    # after the WiFi connect wizard
+    wifi_connect_status_cb = None
     def get_contents():
         # A function for main menu to be able to dynamically update
         return [
