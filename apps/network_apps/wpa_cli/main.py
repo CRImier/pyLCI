@@ -220,7 +220,7 @@ def connect_to_network(network_info):
           if current_ssid == network_info["ssid"]:
               #connected = True # commented out because sometimes, when pw is wrong,
                                 # it will connect for a second and then disconnect
-              logger.info("ssid is set, we *might* be connected (ssid: {}, status: {})".format(current_ssid, status))
+              logger.debug("ssid is set, we *might* be connected (ssid: {}, status: {})".format(current_ssid, status))
           net_status = monitor.pop_status()
           if net_status:
               logger.info("Connecting: received status from monitor: {}".format(net_status))
@@ -316,7 +316,7 @@ def connect_to_network(network_info):
         wpa_cli.enable_network(net_id)
     if callable(wifi_connect_status_cb):
         wifi_connect_status_cb(connect_status)
-    logger.info("end result connect_status: {}".format(connect_status))
+    logger.info("end connect_status: {}".format(connect_status))
     raise MenuExitException
 
 def enable_temp_disabled_networks():
