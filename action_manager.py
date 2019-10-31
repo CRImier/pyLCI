@@ -1,4 +1,4 @@
-from actions import ContextSwitchAction
+from actions import ContextSwitchAction, FirstBootAction
 
 class ActionManager(object):
     action_name_delimiter = "%"
@@ -15,14 +15,14 @@ class ActionManager(object):
           and getattr(action, "func", None) is None:
             action.func = lambda x=action.target_context: self.cm.switch_to_context(x)
 
-    def register_firstboot_action(self, context_alias, action):
+    def register_firstboot_action(self, action, context_alias):
         name = action.name
         if context_alias:
-            name = "".join(context_alias, self.action_name_delimiter, name)
+            name = self.action_name_delimiter.join([context_alias, name])
         self.actions[name] = action
 
     def get_actions(self):
         return self.actions
 
     def get_firstboot_actions(self):
-        return dict([(name, action) for name, action in self.actions.items() if isinstance(action, FirstbootAction)])
+        return dict([(name, action) for name, action in self.actions.items() if isinstance(action, FirstBootAction)])

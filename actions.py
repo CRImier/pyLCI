@@ -38,7 +38,7 @@ class BackgroundAction(Action):
     default_will_context_switch = False
 
 class FirstBootAction(Action):
-    pass
+    depends = None
 
 class ContextSwitchAction(Action):
     def __init__(self, name, func, **kwargs):
