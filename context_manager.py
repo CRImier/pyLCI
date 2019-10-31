@@ -234,7 +234,7 @@ class ContextManager(object):
     fallback_context = "main"
     initial_contexts = ["main"]
     start_context = "main"
-    allowed_exclusive_contexts = ["apps.lockscreen"]
+    allowed_exclusive_contexts = ["apps.lockscreen", "apps.firstboot_wizard"]
 
     def __init__(self):
         self.contexts = {}
