@@ -9,6 +9,8 @@ class ActionManager(object):
 
     def register_action(self, action):
         name = action.full_name
+        while self.action_name_delimiter in name:
+            name = name.remove(self.action_name_delimiter)
         self.actions[name] = action
         # Setting a usable callback for ContextSwitchActions
         if isinstance(action, ContextSwitchAction) \
