@@ -6,7 +6,7 @@ from time import sleep
 from datetime import datetime
 
 from helpers import read_or_create_config, local_path_gen, save_config_gen, setup_logger
-from ui import Menu, PrettyPrinter as Printer, LoadingIndicator
+from ui import Menu, PrettyPrinter as Printer, LoadingIndicator, DialogBox
 from actions import FirstBootAction
 from libs import systemctl
 
