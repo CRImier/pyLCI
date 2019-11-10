@@ -60,14 +60,14 @@ class Context(object):
         """
         return self.i, self.o
 
-    def activate(self):
+    def activate(self, start_thread=True):
         """
         Starts the context - if it's threaded, starts the thread, otherwise it assumes
         that there's already a running thread and does nothing. In latter case, throws
         an exception if it detects that a supposedly non-threaded context has the ``threaded``
         flag set.
         """
-        if self.is_threaded():
+        if self.is_threaded() and start_thread:
             if not self.thread_is_active():
                 self.verify_target()
                 self.start_thread()
@@ -76,6 +76,8 @@ class Context(object):
         else:
             if self.name == "main":
                 logger.debug("Main context does not have thread target, that is to be expected")
+            elif not start_thread:
+                logger.info("Instructed not to start the thread for context {}".format(self.name))
             elif self.threaded:
                 logger.warning("Context {} does not have a target! Raising an exception".format(self.name))
                 raise ContextError("Context {} does not have a target!".format(self.name))
@@ -160,16 +162,16 @@ class Context(object):
         """
         return self.event_cb(self.name, "exclusive_status")
 
-    def request_switch(self, requested_context=None):
+    def request_switch(self, requested_context=None, start_thread=False):
         """
         Requests ContextManager to switch to the context in question. If switch is done,
         returns True, otherwise returns False. If a context name is supplied,
         will switch to that context.
         """
         if requested_context:
-            return self.event_cb(self.name, "request_switch_to", requested_context)
+            return self.event_cb(self.name, "request_switch_to", requested_context, start_thread=start_thread)
         else:
-            return self.event_cb(self.name, "request_switch")
+            return self.event_cb(self.name, "request_switch", start_thread=start_thread)
 
     def request_context_start(self, context_alias):
         """
@@ -292,7 +294,7 @@ class ContextManager(object):
         """
         self.contexts[context_alias].menu_name = menu_name
 
-    def switch_to_context(self, context_alias):
+    def switch_to_context(self, context_alias, start_thread=True):
         """
         Lets you switch to another context by its alias.
         """
@@ -301,7 +303,7 @@ class ContextManager(object):
             self.previous_contexts[context_alias] = self.current_context
             with self.switching_contexts:
                 try:
-                    self.unsafe_switch_to_context(context_alias)
+                    self.unsafe_switch_to_context(context_alias, start_thread=start_thread)
                 except ContextError:
                     logger.exception("A ContextError was caught")
                     self.previous_contexts.pop(context_alias)
@@ -309,11 +311,11 @@ class ContextManager(object):
                 else:
                     return True
 
-    def unsafe_switch_to_context(self, context_alias, do_raise=True):
+    def unsafe_switch_to_context(self, context_alias, do_raise=True, start_thread=True):
         """
         This is a non-thread-safe context switch function. Not to be used directly
         - is only for internal usage. In case an exception is raised, sets things as they
-        were before and re-raises the exception - in the worst case,
+        were before and re-raises the exception.
         """
         logger.info("Switching to {} context".format(context_alias))
         previous_context = self.current_context
@@ -336,7 +338,7 @@ class ContextManager(object):
                 raise
         # Activating the context - restoring everything if it fails
         try:
-            self.contexts[context_alias].activate()
+            self.contexts[context_alias].activate(start_thread=start_thread)
         except:
             logger.exception("Switching to the {} context failed - couldn't activate the context!".format(context_alias))
             # Activating IO of the previous context
@@ -553,7 +555,7 @@ class ContextManager(object):
                 return False
             new_context = args[0]
             logger.info("Context switch to {} requested by {} app".format(new_context, context_alias))
-            return self.switch_to_context(new_context)
+            return self.switch_to_context(new_context, start_thread=kwargs.get("start_thread", True))
         elif event == "request_context_start":
             context_alias = args[0]
             return self.contexts[context_alias].activate()
