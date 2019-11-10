@@ -157,8 +157,7 @@ class Context(object):
 
     def exclusive_status(self):
         """
-        Rescind exclusive context switch from the app. Will only work if such a context is
-        already requested.
+        Request whether there's an app that has grabbed exclusive context.
         """
         return self.event_cb(self.name, "exclusive_status")
 
@@ -545,14 +544,20 @@ class ContextManager(object):
             # As usecases appear, we will likely want to do some checks here
             logger.info("Context switch requested by {} app".format(context_alias))
             if self.exclusive_context:
-                return False
-            return self.switch_to_context(context_alias)
+                # If exclusive context is active, only an app that has it
+                # can initiate a switch.
+                if context_alias != self.exclusive_context:
+                    return False
+            return self.switch_to_context(context_alias, start_thread=kwargs.get("start_thread", True))
         elif event == "request_switch_to":
             # If app is not the one active, should we honor its request?
             # probably not, but we might want to do something about it
             # to be considered
             if self.exclusive_context:
-                return False
+                # If exclusive context is active, only an app that has it
+                # can initiate a switch to other context
+                if context_alias != self.exclusive_context:
+                    return False
             new_context = args[0]
             logger.info("Context switch to {} requested by {} app".format(new_context, context_alias))
             return self.switch_to_context(new_context, start_thread=kwargs.get("start_thread", True))
