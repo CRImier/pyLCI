@@ -18,7 +18,8 @@ USED_KEYS = [str(i) for i in numbers] + \
             [char for char in string.ascii_lowercase] + \
             ['UP', 'DOWN', 'LEFT', 'RIGHT', 'RETURN', 'PAGEUP', 'PAGEDOWN',
              'ASTERISK', 'HASH', 'PLUS', 'MINUS', 'EQUALS', 'BACKSPACE',
-             'KP_MULTIPLY', 'KP_DIVIDE', 'KP_PLUS', 'KP_MINUS', 'SPACE' ]
+             'KP_MULTIPLY', 'KP_DIVIDE', 'KP_PLUS', 'KP_MINUS', 'SPACE',
+             'HOME', 'END']
 
 KEY_MAP = dict([
     (getattr(pygame, 'K_' + key_name), key_name)
