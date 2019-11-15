@@ -38,7 +38,7 @@ yet_unknown_version_str = "Yet unknown version"
 def set_context(c):
     global context
     context = c
-    c.register_firstboot_action(FirstBootAction("set_hardware_version", hw_version_ui, depends=None))
+    c.register_firstboot_action(FirstBootAction("set_hardware_version", hw_version_ui, depends=None, not_on_emulator=True))
 
 def hw_version_ui():
     def get_contents():

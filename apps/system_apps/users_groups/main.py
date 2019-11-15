@@ -20,7 +20,7 @@ home_dir = "/home/"
 def set_context(c):
     global context
     context = c
-    c.register_firstboot_action(FirstBootAction("change_password", change_user_password, depends=None))
+    c.register_firstboot_action(FirstBootAction("change_password", change_user_password, depends=None, not_on_emulator=True))
 
 def change_user_password():
     """

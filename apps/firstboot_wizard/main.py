@@ -22,8 +22,7 @@ class FirstbootWizard(ZeroApp):
         self.context.threaded = False
 
     def execute_after_contexts(self):
-        if not is_emulator:
-            self.do_firstboot()
+        self.do_firstboot()
 
     def get_firstboot_file(self):
         """ Returns ``(filename, is_new_file)``, ``(None, False)`` on failure """
@@ -103,6 +102,10 @@ class FirstbootWizard(ZeroApp):
                 for action_fullname in non_completed_action_names:
                     _, action_name = get_prov_and_name(action_fullname)
                     action = firstboot_actions[action_fullname]
+                    # Skipping actions that shouldn't be run in an emulator
+                    if is_emulator:
+                        if action.not_on_emulator:
+                            continue
                     if action.depends:
                         has_unresolved_dependencies = False
                         for dependency in action.depends:

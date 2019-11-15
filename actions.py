@@ -39,6 +39,7 @@ class BackgroundAction(Action):
 
 class FirstBootAction(Action):
     depends = None
+    not_on_emulator = None
 
 class ContextSwitchAction(Action):
     def __init__(self, name, func, **kwargs):

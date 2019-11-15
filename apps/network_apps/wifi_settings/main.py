@@ -15,7 +15,7 @@ class WifiCountry(ZeroApp):
 
 	def set_context(self, c):
 		self.context = c
-		c.register_firstboot_action(FirstBootAction("change_wifi_country", self.change_wifi_country, depends=None))
+		c.register_firstboot_action(FirstBootAction("change_wifi_country", self.change_wifi_country, depends=None, not_on_emulator=True))
 
 	def get_current_wifi_country(self):
 		return pyw.regget()
