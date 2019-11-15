@@ -59,13 +59,13 @@ class FirstbootWizard(ZeroApp):
     def do_firstboot(self):
         firstboot_actions = cm.am.get_firstboot_actions()
         firstboot_action_names = list(firstboot_actions.keys())
-        file, is_new_file = self.get_firstboot_file()
-        if file is None:
+        firstboot_file, is_new_file = self.get_firstboot_file()
+        if firstboot_file is None:
             logger.error("Can't read/create a firstboot file, no sense for the firstboot application to continue")
             return
         completed_action_names = []
         if not is_new_file:
-            completed_action_names = self.get_completed_actions_from_file(file)
+            completed_action_names = self.get_completed_actions_from_file(firstboot_file)
         non_completed_action_names = [n for n in firstboot_action_names if n not in completed_action_names]
         if non_completed_action_names:
             if not completed_action_names: # Not the first boot - some actions have been completed before
@@ -151,6 +151,7 @@ class FirstbootWizard(ZeroApp):
                     logger.info("Dependencies resolved!")
                 # Now, executing actions one-by-one
                 failed_actions = []
+                log_completed_action_has_failed = False
                 for action_fullname, action in sorted_actions.items():
                     if action.depends:
                         if any([d in failed_actions for d in action.depends]):
@@ -164,4 +165,16 @@ class FirstbootWizard(ZeroApp):
                     except:
                         logger.exception("Action {} failed to execute!".format(action_fullname))
                         failed_actions.append(action_name)
+                    else:
+                        try:
+                          with open(firstboot_file, 'a') as f:
+                              f.write(action_fullname+'\n')
+                        except:
+                          # Avoid cluttering the logs - logger.exception writes the entire traceback into logs
+                          # while logger.error just writes the error message
+                          if not log_completed_action_has_failed:
+                              logger.exception("Can't write action {} into firstboot logfile {}!".format(action_fullname, firstboot_file))
+                              log_completed_action_has_failed = True
+                          else:
+                              logger.error("Can't write action {} into firstboot logfile {}!".format(action_fullname, firstboot_file))
                     self.context.request_switch()
