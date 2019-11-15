@@ -35,10 +35,15 @@ def change_user_password():
         choice = db.activate()
         if choice:
             result = change_password(name)
-            if result:
+            if result is None:
+                return None
+            elif result:
                 logger.info("Changed password for {}".format(name))
+                return True
             else:
                 logger.info("Failed changing password for {}".format(name))
+                return False
+        return None
 
 def get_nonroot_nonsystem_users(users = None):
     """
@@ -54,6 +59,8 @@ def get_all_other_users(existing_users, users=None):
 
 def change_password(name):
     password = UniversalInput(i, o, message="New password", charmap="password", name="User&pw app password input").activate()
+    if password is None:
+        return None
     result = passwd(name, password)
     if result[0] == True:
         Printer("Change successful", i, o, 3)

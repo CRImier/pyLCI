@@ -56,5 +56,8 @@ class WifiCountry(ZeroApp):
 				result = self.set_wifi_country(choice)
 			if result:
 				Printer("Changed the country successfully!", self.i, self.o)
+				return True
 			else:
 				Printer("Failed to change the country!", self.i, self.o)
+				return False
+		return None

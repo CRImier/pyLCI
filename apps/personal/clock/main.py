@@ -40,8 +40,14 @@ class ClockApp(ZeroApp, Refresher):
         except CalledProcessError:
             logger.exception("Failed to sync time!")
             Printer("Failed to sync time!", self.i, self.o, 1)
+            return False
+        except OSError:
+            logger.exception("Failed to sync time - sntp not installed!")
+            Printer("Failed to sync time (no sntp)!", self.i, self.o, 1)
+            return False
         else:
             Printer("Synced time successfully!", self.i, self.o, 1)
+            return True
 
     def format_countdown(self):
         if not self.countdown: return None
@@ -116,8 +122,12 @@ class ClockApp(ZeroApp, Refresher):
                 check_output(["timedatectl", "set-timezone", choice])
             except CalledProcessError as e:
                 logger.exception("Can't set timezone using timedatectl! Return code: {}, output: {}".format(e.returncode, repr(e.output)))
+                return False
             else:
                 logger.info("Set timezone successfully")
+                return True
+        else:
+            return None
 
     def draw_analog_clock(self, c, time, radius="min(*c.size) / 3", clock_x = "center_x+32", clock_y = "center_y+5", h_len = "radius / 2", m_len = "radius - 5", s_len = "radius - 3", **kwargs):
         """Draws the analog clock, with parameters configurable through config.json."""

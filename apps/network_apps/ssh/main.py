@@ -61,8 +61,10 @@ def regenerate_ssh_keys():
     except:
         logger.exception("Failed to regenerate keys!")
         Printer("Failed to regenerate keys!", i, o)
+        return False
     else:
         Printer("Regenerated keys!", i, o)
+        return True
 
 def disable_ssh():
     logger.info("Disabling SSH")
