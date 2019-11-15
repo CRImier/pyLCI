@@ -214,6 +214,8 @@ class GridMenuLabelOverlay(HelpOverlay):
         self.text_border = text_border
         self.font = font
         self.is_clear_refresh = Event()
+        self.last_pointer = 0
+        self.was_on_top = True
 
     def get_current_entry_text(self, ui_el):
         contents = ui_el.get_displayed_contents()
@@ -270,6 +272,7 @@ class GridMenuLabelOverlay(HelpOverlay):
         fde = ui_el.view.first_displayed_entry
         position = pointer-fde
         entries_per_screen = ui_el.view.get_entry_count_per_screen()
+        grid_rows = ui_el.rows
         text_bounds = c.get_text_bounds(text, font=self.font)
         # Calculating offset from left screen edge to the clear coord start
         left_offset = max(0, c.width/2-text_bounds[0])
@@ -282,18 +285,38 @@ class GridMenuLabelOverlay(HelpOverlay):
             left_offset = max(0, left_offset)
         # Generic calculations again
         # Calculating whether the label is show at the top or the bottom
-        if position / float(entries_per_screen) > 0.5:
+        text_y_offset = 0
+        top_clear_coords = (left_offset, 0, text_bounds[0]+left_offset, text_bounds[1])
+        bottom_clear_coords = (left_offset, c.height-text_bounds[1]-self.text_border, text_bounds[0]+left_offset, c.height-1)
+        last_row_start = (ui_el.rows-1)*ui_el.cols
+        top_bottom_entries = range(ui_el.cols) + range(last_row_start, last_row_start+ui_el.cols)
+        if grid_rows > 2 and position not in top_bottom_entries:
+            if pointer == self.last_pointer:
+                clear_coords = top_clear_coords if self.was_on_top else bottom_clear_coords
+            else:
+                if pointer > self.last_pointer:
+                    clear_coords = top_clear_coords
+                    self.was_on_top = True
+                else:
+                    self.was_on_top = False
+                    clear_coords = bottom_clear_coords
+        elif position / float(entries_per_screen) > 0.5:
             # label at the top
-            clear_coords = (left_offset, 0, text_bounds[0]+left_offset, text_bounds[1])
+            text_y_offset = -3
+            clear_coords = top_clear_coords
+            self.was_on_top = True
         else:
             # label at the bottom
-            clear_coords = (left_offset, c.height-text_bounds[1]-self.text_border, text_bounds[0]+left_offset, c.height-1)
-        text_coords = (clear_coords[0] + self.text_border, clear_coords[1] + self.text_border)
+            clear_coords = bottom_clear_coords
+            self.was_on_top = False
+        text_coords = (clear_coords[0] + self.text_border, clear_coords[1] + self.text_border + text_y_offset)
+        self.last_pointer = pointer
         return text_coords, clear_coords
 
     def draw_text(self, c, ui_el):
         entry_text = self.get_current_entry_text(ui_el)
         text_coords, clear_coords = self.get_text_position(c, ui_el, entry_text)
+        clear_coords = (0, clear_coords[1], ui_el.view.entry_width*ui_el.cols, clear_coords[3])
         c.clear(clear_coords)
         c.text(entry_text, text_coords, font=self.font)
 
