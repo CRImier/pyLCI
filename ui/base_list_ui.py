@@ -237,6 +237,30 @@ class BaseListUIElement(BaseUIElement):
         return True
 
     @to_be_foreground
+    def move_to_start(self, counter=None):
+        """ Goes to the first entry if not already there. """
+        if self.pointer != 0:
+            logger.debug("moved to start")
+            self.pointer = 0
+            self.refresh()
+            self.reset_scrolling()
+            return True
+        else:
+            return False
+
+    @to_be_foreground
+    def move_to_end(self):
+        """ Goes to the last entry if not already there. """
+        if self.pointer != len(self.contents)-1:
+            logger.debug("moved to end")
+            self.pointer = len(self.contents)-1
+            self.refresh()
+            self.reset_scrolling()
+            return True
+        else:
+            return False
+
+    @to_be_foreground
     def select_entry(self):
         """To be overridden by child UI elements. Is executed when ENTER is pressed
            in UI element."""
@@ -252,12 +276,13 @@ class BaseListUIElement(BaseUIElement):
 
     def generate_keymap(self):
         """Makes the keymap dictionary for the input device."""
-        # Has to be in a function because otherwise it will be a SyntaxError
         return {
             "KEY_UP": "move_up",
             "KEY_DOWN": "move_down",
             "KEY_F3": "page_up",
             "KEY_F4": "page_down",
+            "KEY_HOME": "move_to_start",
+            "KEY_END": "move_to_end",
             "KEY_ENTER": "select_entry",
             "KEY_RIGHT": "process_right_press"
         }
