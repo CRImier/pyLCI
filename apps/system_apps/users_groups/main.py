@@ -3,7 +3,7 @@ menu_name = "Users&groups"
 import os
 import pwd
 
-from ui import Menu, UniversalInput, PrettyPrinter as Printer
+from ui import Menu, UniversalInput, PrettyPrinter as Printer, DialogBox
 from actions import FirstBootAction
 from helpers import setup_logger
 
