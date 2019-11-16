@@ -316,7 +316,9 @@ class GridMenuLabelOverlay(HelpOverlay):
     def draw_text(self, c, ui_el):
         entry_text = self.get_current_entry_text(ui_el)
         text_coords, clear_coords = self.get_text_position(c, ui_el, entry_text)
-        clear_coords = (0, clear_coords[1], ui_el.view.entry_width*ui_el.cols, clear_coords[3])
+        entry_width = getattr(ui_el.view, "entry_width", 32)
+        if entry_width is None: entry_width = 32
+        clear_coords = (0, clear_coords[1], entry_width*ui_el.cols, clear_coords[3])
         c.clear(clear_coords)
         c.text(entry_text, text_coords, font=self.font)
 
