@@ -484,7 +484,7 @@ class ContextManager(object):
         elif event == "get_previous_context_image":
             # This is a special-case function for screenshots. I'm wondering
             # if there's a better way to express this.
-            previous_context = self.get_previous_context(context_alias)
+            previous_context = self.get_previous_context(self.current_context)
             return self.contexts[previous_context].get_io()[1].get_current_image()
         elif event == "get_context_image":
             # This is a special-case function for lockscreens. I'm wondering
