@@ -161,7 +161,7 @@ class Context(object):
         """
         return self.event_cb(self.name, "exclusive_status")
 
-    def request_switch(self, requested_context=None, start_thread=False):
+    def request_switch(self, requested_context=None, start_thread=True):
         """
         Requests ContextManager to switch to the context in question. If switch is done,
         returns True, otherwise returns False. If a context name is supplied,
