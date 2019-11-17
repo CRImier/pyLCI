@@ -2,9 +2,9 @@ menu_name = "ZeroMenu"
 
 import os
 
-from actions import Action, ContextSwitchAction
+from actions import Action, ContextSwitchAction, FirstBootAction
 from ui import Menu, PrettyPrinter, Checkbox, Listbox
-from helpers import read_or_create_config, local_path_gen, save_config_gen
+from helpers import read_or_create_config, local_path_gen, save_config_gen, setup_logger
 
 i = None
 o = None
@@ -18,10 +18,13 @@ local_path = local_path_gen(__name__)
 config = read_or_create_config(local_path(config_filename), default_config, menu_name+" app")
 save_config = save_config_gen(local_path(config_filename))
 
+logger = setup_logger(__name__, "warning")
+
 def set_context(received_context):
     global context
     context = received_context
     context.request_global_keymap({"KEY_PROG2":context.request_switch})
+    context.threaded = True
     context.set_target(zeromenu.activate)
 
 def set_ordering():
@@ -109,7 +112,9 @@ def init_app(input, output):
     def get_contents():
         mc = []
         for name, action in context.get_actions().items():
-            if name not in config["excluded_actions"]:
+            if isinstance(action, FirstBootAction):
+                logger.debug("Action {} is a firstboot action, ignoring".format(name))
+            elif name not in config["excluded_actions"]:
                 menu_name_or_cb = action.menu_name
                 menu_name = menu_name_or_cb() if callable(menu_name_or_cb) else menu_name_or_cb
                 cb = get_cb(action)
