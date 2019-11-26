@@ -94,7 +94,7 @@ class HelpOverlay(BaseOverlayWithTimeout):
             key, callback = self.get_key_and_callback()
             if isinstance(callback, basestring):
                 text = callback
-                callback = TextReader(text, ui_el.i, ui_el.o).activate
+                callback = TextReader(text, ui_el.i, ui_el.o, h_scroll=False).activate
             keymap[key] = ui_el.process_callback(callback)
             return keymap
         ui_el.generate_keymap = wrapper
