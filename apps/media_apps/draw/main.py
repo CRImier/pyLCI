@@ -2,7 +2,7 @@ from time import sleep
 from copy import copy
 from collections import OrderedDict
 
-from ui import Canvas, Listbox, PrettyPrinter, FunctionOverlay
+from ui import Canvas, Listbox, PrettyPrinter, FunctionOverlay, HelpOverlay
 from ui.base_ui import BaseUIElement
 from ui.utils import to_be_foreground
 from helpers import flatten, Singleton, is_emulator
@@ -312,6 +312,9 @@ class DrawingBoard(BaseUIElement):
         self.field.display()
 
 
+help_text = \
+"""Use 2/4/6/8 to move in 10-pixel distances."""
+
 class DrawingApp(ZeroApp):
     menu_name = "Draw"
 
@@ -319,4 +322,5 @@ class DrawingApp(ZeroApp):
         PrettyPrinter("No image saving implemented yet!", self.i, self.o, 3)
         board = DrawingBoard(self.i, self.o)
         FunctionOverlay(["back", board.pick_tools], labels=["Exit", "Tools"]).apply_to(board)
+        HelpOverlay(help_text).apply_to(board)
         board.activate()
