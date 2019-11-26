@@ -166,7 +166,7 @@ class AppManager(object):
             if interactive:
                 if self.failed_apps:
                     failed_app_names = [os.path.split(p)[1] for p in self.failed_apps.keys()]
-                    Printer(["Failed to load:"]+failed_app_names, self.i, self.o, 2)
+                    Printer(["Failed to load:"]+failed_app_names, self.i, self.o, 0.5)
             # execute after_context functions
             for app_path, app in after_contexts_apps.items():
                 try:
