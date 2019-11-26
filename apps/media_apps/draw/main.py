@@ -59,20 +59,16 @@ class DrawingTool(object):
         return self.modify_image(image)
 
     def modify_image(self, image):
-        if self.blink_on:
-            self.blink_on = False
-            image = self.draw_tool_position(image)
-            return image
-        else:
-            self.blink_on = True
-            return image
+        self.blink_on = not self.blink_on
+        image = self.draw_tool_position(image, blink_phase=self.blink_on)
+        return image
 
     # A tool needs to implement at least these two, at the very least
 
     def tool_down(self):
         raise NotImplementedError
 
-    def draw_tool_position(self, image):
+    def draw_tool_position(self, image, blink_phase=True):
         raise NotImplementedError
 
 
@@ -82,9 +78,10 @@ class PointTool(DrawingTool):
     def tool_down(self):
         self.board.update_image(self.draw_tool_position(self.board.field.get_image()))
 
-    def draw_tool_position(self, image):
+    def draw_tool_position(self, image, blink_phase=True):
         self.c.load_image(image)
-        self.c.point(self.board.coords)
+        color = self.c.default_color if blink_phase else self.c.background_color
+        self.c.point(self.board.coords, fill=color)
         return self.c.get_image()
 
 
@@ -101,57 +98,61 @@ class LineTool(DrawingTool):
         self.board.update_image(self.draw_tool_position(self.board.field.get_image()))
         self.start = None
 
-    def draw_tool_position(self, image):
+    def draw_tool_position(self, image, blink_phase=True):
         self.c.load_image(image)
+        color = self.c.default_color if blink_phase else self.c.background_color
         if self.start:
             coords = self.start + self.board.coords
-            self.c.line( coords )
+            self.c.line( coords , fill=color)
         else:
-            self.c.point(self.board.coords)
+            self.c.point(self.board.coords, fill=color)
         return self.c.get_image()
 
 
 class RectangleTool(LineTool):
     menu_name = "Rectangle"
 
-    def draw_tool_position(self, image):
+    def draw_tool_position(self, image, blink_phase=True):
         self.c.load_image(image)
+        color = self.c.default_color if blink_phase else self.c.background_color
         if self.start:
             coords = self.start + self.board.coords
-            self.c.rectangle( coords )
+            self.c.rectangle( coords , outline=color)
         else:
-            self.c.point(self.board.coords)
+            self.c.point(self.board.coords, fill=color)
         return self.c.get_image()
 
 
 class EllipseTool(LineTool):
     menu_name = "Ellipse"
 
-    def draw_tool_position(self, image):
+    def draw_tool_position(self, image, blink_phase=True):
         self.c.load_image(image)
+        color = self.c.default_color if blink_phase else self.c.background_color
         if self.start:
             coords = self.start + self.board.coords
-            self.c.ellipse( coords )
+            self.c.ellipse( coords , outline=color)
         else:
-            self.c.point(self.board.coords)
+            self.c.point(self.board.coords, fill=color)
         return self.c.get_image()
 
 
 class CircleTool(LineTool):
     menu_name = "Circle"
 
-    def draw_tool_position(self, image):
+    def draw_tool_position(self, image, blink_phase=True):
         self.c.load_image(image)
+        color = self.c.default_color if blink_phase else self.c.background_color
         if self.start:
             radius = max( [ abs(self.start[0]-self.board.coords[0]),
                             abs(self.start[1]-self.board.coords[1])] )
             if radius > 0:
                 coords = self.start + [radius]
-                self.c.circle( coords )
+                self.c.circle( coords , outline=color)
             else:
-                self.c.point(self.board.coords)
+                self.c.point(self.board.coords, fill=color)
         else:
-            self.c.point(self.board.coords)
+            self.c.point(self.board.coords, fill=color)
         return self.c.get_image()
 
 
@@ -169,17 +170,18 @@ class PolygonTool(DrawingTool):
         else:
             self.polygon_coords.append(copy(self.board.coords))
 
-    def draw_tool_position(self, image, final=False):
+    def draw_tool_position(self, image, final=False, blink_phase=True):
         pc = copy(self.polygon_coords)
         if not final: pc.append(copy(self.board.coords))
         self.c.load_image(image)
+        color = self.c.default_color if blink_phase else self.c.background_color
         if len(pc) > 2:
-            self.c.polygon( pc )
+            self.c.polygon( pc , outline=color)
         elif len(pc) == 2:
-            self.c.line( flatten(pc) )
+            self.c.line( flatten(pc) , fill=color)
         elif len(pc) == 1:
-            self.c.point( pc[0] )
-        self.c.point(self.board.coords)
+            self.c.point( pc[0] , fill=color)
+        self.c.point(self.board.coords, fill=color)
         return self.c.get_image()
 
 
