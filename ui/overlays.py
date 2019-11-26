@@ -8,15 +8,34 @@ from entry import Entry
 from PIL import Image
 Image = Image.Image
 
-class BaseOverlayWithTimeout(object):
+# Shorter code
+# from https://stackoverflow.com/questions/4984647/accessing-dict-keys-like-an-attribute/5021467#5021467
+class AttrDict(dict):
+    __getattr__ = dict.__getitem__
+    __setattr__ = dict.__setitem__
 
-    active = False
-    counter = 0
+class BaseOverlay(object):
+    # Idea: an overlay could be applied to multiple UI elements
+    # Implementation: all UI-element-specific data is stored by the UI element name
+    # Requirement: unique UI element names ;,-(
+    def __init__(self):
+        self.uie = {} # Stores AttrDict for each UI element to which the overlay is applied
+
+    def apply_to(self, ui_el):
+        n = ui_el.name
+        self.uie[n] = AttrDict()
+
+class BaseOverlayWithTimeout(BaseOverlay):
 
     def __init__(self, duration = 20):
+        BaseOverlay.__init__(self)
         self.duration = duration
 
     def apply_to(self, ui_el):
+        BaseOverlay.apply_to(self, ui_el)
+        n = ui_el.name
+        self.uie[n].active = False
+        self.uie[n].counter = 0
         self.wrap_before_foreground(ui_el)
         self.wrap_idle_loop(ui_el)
 
@@ -34,11 +53,12 @@ class BaseOverlayWithTimeout(object):
 
     def wrap_before_foreground(self, ui_el):
         before_foreground = ui_el.before_foreground
+        n = ui_el.name
         @wraps(before_foreground)
         def wrapper(*args, **kwargs):
             return_value = before_foreground(*args, **kwargs)
-            self.active = True
-            self.counter = 0
+            self.uie[n].active = True
+            self.uie[n].counter = 0
             return return_value
         ui_el.before_foreground = wrapper
 
@@ -90,17 +110,19 @@ class HelpOverlay(BaseOverlayWithTimeout):
         self.callbacks = self.callbacks[:-1]
 
     def update_state(self, ui_el):
-        if self.active:
-            self.counter += 1
-            if self.counter == self.duration:
-                self.active = False
+        n = ui_el.name
+        if self.uie[n].active:
+            self.uie[n].counter += 1
+            if self.uie[n].counter == self.duration:
+                self.uie[n].active = False
                 ui_el.refresh()
 
     def get_key_and_callback(self):
         return self.key, self.callbacks[-1]
 
     def modify_image_if_needed(self, ui_el, image):
-        if self.active:
+        n = ui_el.name
+        if self.uie[n].active:
             c = Canvas(ui_el.o, base_image=image)
             self.draw_icon(c)
             image = c.get_image()
@@ -156,9 +178,10 @@ class FunctionOverlay(HelpOverlay):
         c.text(last_line, (self.right_offset, str(-self.bottom_offset)), font=self.font)
 
 
-class GridMenuSidebarOverlay(object):
+class GridMenuSidebarOverlay(BaseOverlay):
 
     def __init__(self, sidebar_cb, top_o = None, bottom_o = None, left_o = None, right_o = None):
+        BaseOverlay.__init__(self)
         self.sidebar_cb = sidebar_cb
         self.top_o = top_o
         self.bottom_o = bottom_o
@@ -213,9 +236,6 @@ class GridMenuLabelOverlay(HelpOverlay):
         BaseOverlayWithTimeout.__init__(self, **kwargs)
         self.text_border = text_border
         self.font = font
-        self.is_clear_refresh = Event()
-        self.last_pointer = 0
-        self.was_on_top = True
 
     def get_current_entry_text(self, ui_el):
         contents = ui_el.get_displayed_contents()
@@ -226,16 +246,22 @@ class GridMenuLabelOverlay(HelpOverlay):
             return entry[0]
 
     def apply_to(self, ui_el):
+        BaseOverlay.apply_to(self, ui_el)
+        n = ui_el.name
+        self.uie[n].is_clear_refresh = Event()
+        self.uie[n].last_pointer = 0
+        self.uie[n].was_on_top = True
         self.wrap_view(ui_el)
         self.wrap_refresh(ui_el)
         self.wrap_idle_loop(ui_el)
 
     def update_state(self, ui_el):
-        if self.active:
-            self.counter += 1
-            if self.counter == self.duration:
-                self.active = False
-                self.is_clear_refresh.set()
+        n = ui_el.name
+        if self.uie[n].active:
+            self.uie[n].counter += 1
+            if self.uie[n].counter == self.duration:
+                self.uie[n].active = False
+                self.uie[n].is_clear_refresh.set()
                 ui_el.refresh()
 
     def wrap_view(self, ui_el):
@@ -247,20 +273,22 @@ class GridMenuLabelOverlay(HelpOverlay):
 
     def wrap_refresh(self, ui_el):
         refresh = ui_el.refresh
+        n = ui_el.name
         @wraps(refresh)
         def wrapper():
-            if self.is_clear_refresh.isSet():
+            if self.uie[n].is_clear_refresh.isSet():
                 # This refresh is internal and done to remove the label
-                self.is_clear_refresh.clear()
+                self.uie[n].is_clear_refresh.clear()
             else:
                 # This is the usual refresh - making sure we draw the label again
-                self.active = True
-                self.counter = 0
+                self.uie[n].active = True
+                self.uie[n].counter = 0
             return refresh()
         ui_el.refresh = wrapper
 
     def modify_image_if_needed(self, ui_el, image):
-        if not self.active:
+        n = ui_el.name
+        if not self.uie[n].active:
             return image
         c = Canvas(ui_el.o, base_image=image)
         self.draw_text(c, ui_el)
@@ -268,6 +296,7 @@ class GridMenuLabelOverlay(HelpOverlay):
         return image
 
     def get_text_position(self, c, ui_el, text):
+        n = ui_el.name
         pointer = ui_el.pointer
         fde = ui_el.view.first_displayed_entry
         position = pointer-fde
@@ -291,26 +320,26 @@ class GridMenuLabelOverlay(HelpOverlay):
         last_row_start = (ui_el.rows-1)*ui_el.cols
         top_bottom_entries = range(ui_el.cols) + range(last_row_start, last_row_start+ui_el.cols)
         if grid_rows > 2 and position not in top_bottom_entries:
-            if pointer == self.last_pointer:
-                clear_coords = top_clear_coords if self.was_on_top else bottom_clear_coords
+            if pointer == self.uie[n].last_pointer:
+                clear_coords = top_clear_coords if self.uie[n].was_on_top else bottom_clear_coords
             else:
-                if pointer > self.last_pointer:
+                if pointer > self.uie[n].last_pointer:
                     clear_coords = top_clear_coords
-                    self.was_on_top = True
+                    self.uie[n].was_on_top = True
                 else:
-                    self.was_on_top = False
+                    self.uie[n].was_on_top = False
                     clear_coords = bottom_clear_coords
         elif position / float(entries_per_screen) > 0.5:
             # label at the top
             text_y_offset = -3
             clear_coords = top_clear_coords
-            self.was_on_top = True
+            self.uie[n].was_on_top = True
         else:
             # label at the bottom
             clear_coords = bottom_clear_coords
-            self.was_on_top = False
+            self.uie[n].was_on_top = False
         text_coords = (clear_coords[0] + self.text_border, clear_coords[1] + self.text_border + text_y_offset)
-        self.last_pointer = pointer
+        self.uie[n].last_pointer = pointer
         return text_coords, clear_coords
 
     def draw_text(self, c, ui_el):
@@ -323,8 +352,9 @@ class GridMenuLabelOverlay(HelpOverlay):
         c.text(entry_text, text_coords, font=self.font)
 
 
-class BaseNumpadOverlay(object):
+class BaseNumpadOverlay(BaseOverlay):
     def __init__(self, default_cb, keys=None, callbacks=None):
+        BaseOverlay.__init__(self)
         self.keys = list(range(10))+["*", "#"]
         if keys is not None:
             self.keys += keys
@@ -344,6 +374,7 @@ class BaseNumpadOverlay(object):
         return d
 
     def apply_to(self, ui_el):
+        BaseOverlay.apply_to(self, ui_el)
         self.wrap_generate_keymap(ui_el)
 
     def wrap_generate_keymap(self, ui_el):
@@ -397,13 +428,15 @@ class IntegerAdjustInputOverlay(BaseNumpadOverlay):
 
     def apply_to(self, ui_el):
         BaseNumpadOverlay.apply_to(self, ui_el)
-        ui_el.numpad_input_has_started = Event()
+        n = ui_el.name
+        self.uie[n].numpad_input_has_started = Event()
 
     def process_numpad_input(self, ui_el, key):
         if key not in self.input_order:
             return # Weird, nav order does not contain a key
         digit = self.input_order[key]
-        if ui_el.numpad_input_has_started.isSet():
+        n = ui_el.name
+        if self.uie[n].numpad_input_has_started.isSet():
             if ui_el.number is not None:
                 number_str = str(ui_el.number)
                 number_str += str(digit)
@@ -411,7 +444,7 @@ class IntegerAdjustInputOverlay(BaseNumpadOverlay):
             else:
                 ui_el.number = digit
         else:
-            ui_el.numpad_input_has_started.set()
+            self.uie[n].numpad_input_has_started.set()
             ui_el.number = digit
         ui_el.clamp()
         ui_el.refresh(bypass_to_be_foreground=True)
