@@ -39,7 +39,7 @@ class FirstbootWizard(ZeroApp):
         c.text("press F5 to get help", (3, 19))
         c.text("Try now, or", (3, 28))
         c.text("press ENTER to skip", (3, 37))
-        if not is_emulator:
+        if not is_emulator():
             c.text("F5:", (5, 51))
             c.paste(local_path("f5_button_location.png"), (30, 50), invert=True)
         o.draw_icon(c)

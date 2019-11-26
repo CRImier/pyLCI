@@ -38,7 +38,7 @@ def set_context(c):
 
 def setup_ssh():
     regenerate_ssh_keys()
-    choice = DialogBox("ync", i, o, message="Enable SSH?").activate()
+    choice = DialogBox("ync", i, o, message="Enable SSH server?").activate()
     if choice is not None:
         if choice:
             enable_ssh()
