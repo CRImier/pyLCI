@@ -11,10 +11,11 @@ from __main__ import cm
 
 logger = setup_logger(__name__, "info")
 
+firstboot_filename = "zpui_firstboot.list"
 
-firstboot_file_locations = ["zpui_firstboot.list", "/tmp/zpui_firstboot.list"]
-if not is_emulator:
-    firstboot_file_locations = ["/boot/zpui_firstboot.list"]+firstboot_file_locations
+firstboot_file_locations = [firstboot_filename, "/tmp/"+firstboot_filename]
+if not is_emulator():
+    firstboot_file_locations = ["/boot/"+firstboot_filename]+firstboot_file_locations
 
 class FirstbootWizard(ZeroApp):
     def set_context(self, c):
@@ -68,7 +69,7 @@ class FirstbootWizard(ZeroApp):
     def do_firstboot(self):
         firstboot_actions = cm.am.get_firstboot_actions()
         # Skipping actions that shouldn't be run in an emulator
-        if is_emulator:
+        if is_emulator():
             firstboot_action_names = [name for name, action in firstboot_actions.items() if not action.not_on_emulator]
         else:
             firstboot_action_names = list(firstboot_actions.keys())
