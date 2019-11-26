@@ -4,8 +4,9 @@ from copy import copy
 from collections import OrderedDict
 
 from apps import ZeroApp
-from helpers import is_emulator, setup_logger, flatten
-from ui import DialogBox
+from actions import FirstBootAction as FBA
+from helpers import is_emulator, setup_logger, flatten, local_path_gen
+from ui import DialogBox, Canvas, HelpOverlay, Refresher, GraphicsPrinter, RefresherExitException
 
 from __main__ import cm
 
@@ -16,6 +17,8 @@ firstboot_filename = "zpui_firstboot.list"
 firstboot_file_locations = [firstboot_filename, "/tmp/"+firstboot_filename]
 if not is_emulator():
     firstboot_file_locations = ["/boot/"+firstboot_filename]+firstboot_file_locations
+
+local_path = local_path_gen(__name__)
 
 firstboot_action_ordering = \
 [
@@ -28,10 +31,33 @@ firstboot_action_ordering = \
 ]
 
 class FirstbootWizard(ZeroApp):
+    def show_help_wizard(self):
+        o = HelpOverlay("test")
+        c = Canvas(self.o)
+        c.text("See this icon?->", (1, 1))
+        c.text("When it appears,", (3, 10))
+        c.text("press F5 to get help", (3, 19))
+        c.text("Try now, or", (3, 28))
+        c.text("press ENTER to skip", (3, 37))
+        if not is_emulator:
+            c.text("F5:", (5, 51))
+            c.paste(local_path("f5_button_location.png"), (30, 50), invert=True)
+        o.draw_icon(c)
+        image = c.get_image()
+        Refresher(c.get_image, self.i, self.o, keymap={"KEY_ENTER":"deactivate", "KEY_F5":self.show_help}).activate()
+        return True
+
+    def show_help(self):
+        c = Canvas(self.o)
+        c.centered_text("Good job!\nThe button\nseems to work\n;-P")
+        GraphicsPrinter(c.get_image(), self.i, self.o, 3, invert=False)
+        raise RefresherExitException
+
     def set_context(self, c):
         self.context = c
         #self.context.set_target(self.do_firstboot)
         self.context.threaded = False
+        self.context.register_firstboot_action(FBA("show_help_wizard", self.show_help_wizard))
 
     def execute_after_contexts(self):
         self.do_firstboot()
