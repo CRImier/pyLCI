@@ -5,7 +5,7 @@ from collections import OrderedDict
 from ui import Canvas, Listbox, PrettyPrinter, FunctionOverlay
 from ui.base_ui import BaseUIElement
 from ui.utils import to_be_foreground
-from helpers import flatten, Singleton
+from helpers import flatten, Singleton, is_emulator
 from apps import ZeroApp
 
 
@@ -191,7 +191,8 @@ class DrawingBoard(BaseUIElement):
     def __init__(self, i, o):
         BaseUIElement.__init__(self, i, o, "Drawing app's drawing board", override_left=False)
         self.reset()
-        self.sleep_time = 0.01
+        # horrible hack that makes the refresh rate decent on both ZP and emulator ;-P
+        self.sleep_time = 0.1 if is_emulator() else 0.01
         self.view_wrappers = []
 
     def idle_loop(self):
