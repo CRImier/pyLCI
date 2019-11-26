@@ -186,6 +186,8 @@ class PolygonTool(DrawingTool):
 
 
 class DrawingBoard(BaseUIElement):
+    far_move_len = 10
+
     def __init__(self, i, o):
         BaseUIElement.__init__(self, i, o, "Drawing app's drawing board", override_left=False)
         self.reset()
@@ -245,6 +247,38 @@ class DrawingBoard(BaseUIElement):
             self.coords[0] = x + 1
             self.refresh()
 
+    def move_far_up(self):
+        y = self.coords[1]
+        if y > self.far_move_len:
+            self.coords[1] = y - self.far_move_len
+        else:
+            self.coords[1] = 0
+        self.refresh()
+
+    def move_far_down(self):
+        y = self.coords[1]
+        if y < self.field.height-(self.far_move_len+1):
+            self.coords[1] = y + self.far_move_len
+        else:
+            self.coords[1] = self.field_height-1
+        self.refresh()
+
+    def move_far_left(self):
+        x = self.coords[0]
+        if x > self.far_move_len:
+            self.coords[0] = x - self.far_move_len
+        else:
+            self.coords[0] = 0
+        self.refresh()
+
+    def move_far_right(self):
+        x = self.coords[0]
+        if x < self.field.width-(self.far_move_len+1):
+            self.coords[0] = x + self.far_move_len
+        else:
+            self.coords[0] = self.field_width-1
+        self.refresh()
+
     def tool_settings(self):
         pass
 
@@ -263,6 +297,10 @@ class DrawingBoard(BaseUIElement):
             "KEY_DOWN": "move_down",
             "KEY_LEFT": "move_left",
             "KEY_RIGHT": "move_right",
+            "KEY_2": "move_far_up",
+            "KEY_8": "move_far_down",
+            "KEY_4": "move_far_left",
+            "KEY_6": "move_far_right",
             "KEY_ENTER": "on_enter",
             "KEY_F3": self.tool_settings,
             "KEY_F1": "back",
