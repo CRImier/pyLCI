@@ -5,7 +5,7 @@ import unittest
 from mock import patch, Mock
 
 try:
-    from ui import BaseUIElement
+    from ui.base_ui import BaseUIElement
 except ImportError as e:
     print("Absolute imports failed, trying relative imports")
     os.sys.path.append(os.path.dirname(os.path.abspath('.')))
