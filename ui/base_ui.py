@@ -1,7 +1,9 @@
-from threading import Event
+import os
 from time import sleep
 from functools import wraps
+from threading import Event
 from traceback import print_exc
+from inspect import getframeinfo, stack
 
 import PIL
 
@@ -27,14 +29,42 @@ def internal_callback_in_background(method):
 
 class BaseUIElement(object):
 
-    def __init__(self, i, o, name, override_left=True, input_necessary=True):
+    def __init__(self, i, o, name=None, override_left=True, input_necessary=True):
         """
         Sets the most basic variables and checks whether the input object
         is supplied in case it's necessary. To be called by a child object.
         """
         self.i = i
         self.o = o
-        self.name = name
+        if name is not None:
+            self.name = name
+        else:
+            # Generating a random yet descriptive name
+            # The name being random is necessary for applying overlays
+            # the name will include the directory where the app is called from
+            cwd = os.getcwd()
+            st = stack()
+            last_filename = None
+            filename = None
+            lineno = None
+            for i, frame in enumerate(st):
+                caller = getframeinfo(frame[0])
+                filename = caller.filename
+                lineno = caller.lineno
+                if filename.startswith(cwd):
+                    filename = filename[len(cwd):].lstrip("/")
+                if filename.startswith("apps/"):
+                    # First frame that starts with 'apps' - likely is a frame from the app file
+                    break
+                elif not filename.startswith('ui') and last_filename and last_filename.startswith('ui'):
+                    # First frame that does not start with 'ui' - likely is a useful frame
+                    break
+                last_filename = filename
+            else:
+                # No suitable frame found? 0_0
+                logger.warning("No suitable frame found for UI element {} at {} while generating a name, overlays might not apply correctly!".format(self.__class__.__name__, id(self)))
+            self.name = "{} from {}:{}".format(self.__class__.__name__, filename, lineno)
+            logger.warning("No name supplied for an UI element {} at {}, generated a new name: {}".format(self.__class__.__name__, id(self), repr(self.name)))
         self._in_foreground = Event()
         self._in_background = Event()
         self._input_necessary = input_necessary
