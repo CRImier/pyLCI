@@ -1,6 +1,7 @@
 from functools import wraps
 from threading import Event
 
+from scrollable_element import TextReader
 from canvas import Canvas
 from utils import Rect, clamp
 from entry import Entry
@@ -91,6 +92,9 @@ class HelpOverlay(BaseOverlayWithTimeout):
         def wrapper(*args, **kwargs):
             keymap = generate_keymap(*args, **kwargs)
             key, callback = self.get_key_and_callback()
+            if isinstance(callback, basestring):
+                text = callback
+                callback = TextReader(text, ui_el.i, ui_el.o).activate
             keymap[key] = ui_el.process_callback(callback)
             return keymap
         ui_el.generate_keymap = wrapper
