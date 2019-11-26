@@ -5,7 +5,7 @@ import unittest
 from mock import patch, Mock
 
 try:
-    from ui import Menu, HelpOverlay, FunctionOverlay, GridMenu, GridMenuLabelOverlay
+    from ui import Menu, HelpOverlay, FunctionOverlay, GridMenu, GridMenuLabelOverlay, IntegerAdjustInputOverlay, IntegerAdjustInput
     from ui.base_list_ui import Canvas
     fonts_dir = "ui/fonts"
 except ImportError:
@@ -23,10 +23,11 @@ except ImportError:
         return orig_import(name, *args)
 
     with patch('__builtin__.__import__', side_effect=import_mock):
-        from overlays import HelpOverlay, FunctionOverlay, GridMenuLabelOverlay
+        from overlays import HelpOverlay, FunctionOverlay, GridMenuLabelOverlay, IntegerAdjustInputOverlay
         from menu import Menu
         from grid_menu import GridMenu
         from base_list_ui import Canvas
+        from number_input import IntegerAdjustInput
         fonts_dir = "../fonts"
 
 def get_mock_input():
@@ -42,10 +43,10 @@ def get_mock_graphical_output(width=128, height=64, mode="1", cw=6, ch=8):
     m.configure_mock(width=width, height=height, device_mode=mode, char_height=ch, char_width=cw, type=["b&w-pixel"])
     return m
 
-mu_name = "Overlay test menu"
+ui_name = "Overlay test UI element"
 
 
-class Testoverlays(unittest.TestCase):
+class TestOverlays(unittest.TestCase):
     """tests menu class"""
 
     def test_ho_constructor(self):
@@ -55,14 +56,14 @@ class Testoverlays(unittest.TestCase):
 
     def test_ho_apply(self):
         overlay = HelpOverlay(lambda: True)
-        mu = Menu([], get_mock_input(), get_mock_output(), name=mu_name, config={})
+        mu = Menu([], get_mock_input(), get_mock_output(), name=ui_name, config={})
         overlay.apply_to(mu)
         self.assertIsNotNone(overlay)
         self.assertIsNotNone(mu)
 
     def test_ho_keymap(self):
         overlay = HelpOverlay(lambda: True)
-        mu = Menu([], get_mock_input(), get_mock_output(), name=mu_name, config={})
+        mu = Menu([], get_mock_input(), get_mock_output(), name=ui_name, config={})
         overlay.apply_to(mu)
         self.assertIsNotNone(mu.keymap)
         assert("KEY_F5" in mu.keymap)
@@ -70,7 +71,7 @@ class Testoverlays(unittest.TestCase):
 
     def test_fo_keymap(self):
         overlay = FunctionOverlay([lambda: True, lambda: False])
-        mu = Menu([], get_mock_input(), get_mock_output(), name=mu_name, config={})
+        mu = Menu([], get_mock_input(), get_mock_output(), name=ui_name, config={})
         overlay.apply_to(mu)
         self.assertIsNotNone(mu.keymap)
         assert("KEY_F1" in mu.keymap)
@@ -79,7 +80,7 @@ class Testoverlays(unittest.TestCase):
 
     def test_fo_apply(self):
         overlay = FunctionOverlay([lambda: True, lambda: False])
-        mu = Menu([], get_mock_input(), get_mock_output(), name=mu_name, config={})
+        mu = Menu([], get_mock_input(), get_mock_output(), name=ui_name, config={})
         overlay.apply_to(mu)
         self.assertIsNotNone(overlay)
         self.assertIsNotNone(mu)
@@ -96,7 +97,7 @@ class Testoverlays(unittest.TestCase):
 
     def test_ho_text_redraw(self):
         overlay = HelpOverlay(lambda: True)
-        mu = Menu([["Hello"]], get_mock_input(), get_mock_output(), name=mu_name, config={})
+        mu = Menu([["Hello"]], get_mock_input(), get_mock_output(), name=ui_name, config={})
         overlay.apply_to(mu)
         def scenario():
             mu.deactivate()
@@ -111,7 +112,7 @@ class Testoverlays(unittest.TestCase):
     def test_ho_graphical_redraw(self):
         o = get_mock_graphical_output()
         overlay = HelpOverlay(lambda: True)
-        mu = Menu([], get_mock_input(), o, name=mu_name, config={})
+        mu = Menu([], get_mock_input(), o, name=ui_name, config={})
         Canvas.fonts_dir = fonts_dir
         overlay.apply_to(mu)
         # Exiting immediately, but we should get at least one redraw
@@ -127,7 +128,7 @@ class Testoverlays(unittest.TestCase):
     def test_fo_graphical_redraw(self):
         o = get_mock_graphical_output()
         overlay = FunctionOverlay([lambda: True, lambda: False])
-        mu = Menu([], get_mock_input(), o, name=mu_name, config={})
+        mu = Menu([], get_mock_input(), o, name=ui_name, config={})
         Canvas.fonts_dir = fonts_dir
         overlay.apply_to(mu)
         # Exiting immediately, but we should get at least one redraw
@@ -143,7 +144,7 @@ class Testoverlays(unittest.TestCase):
     def test_ho_graphical_icon_disappears(self):
         o = get_mock_graphical_output()
         overlay = HelpOverlay(lambda: True)
-        mu = Menu([], get_mock_input(), o, name=mu_name, config={})
+        mu = Menu([], get_mock_input(), o, name=ui_name, config={})
         mu.idle_loop = lambda *a, **k: True
         Canvas.fonts_dir = fonts_dir
         overlay.apply_to(mu)
@@ -169,7 +170,7 @@ class Testoverlays(unittest.TestCase):
     def test_fo_graphical_icon_disappears(self):
         o = get_mock_graphical_output()
         overlay = FunctionOverlay([lambda: True, lambda: False])
-        mu = Menu([], get_mock_input(), o, name=mu_name, config={})
+        mu = Menu([], get_mock_input(), o, name=ui_name, config={})
         mu.idle_loop = lambda *a, **k: True
         Canvas.fonts_dir = fonts_dir
         overlay.apply_to(mu)
@@ -194,7 +195,7 @@ class Testoverlays(unittest.TestCase):
 
     def test_gmlo_apply(self):
         overlay = GridMenuLabelOverlay()
-        mu = GridMenu([], get_mock_input(), get_mock_output(), name=mu_name, config={})
+        mu = GridMenu([], get_mock_input(), get_mock_output(), name=ui_name, config={})
         overlay.apply_to(mu)
         self.assertIsNotNone(overlay)
         self.assertIsNotNone(mu)
@@ -202,7 +203,7 @@ class Testoverlays(unittest.TestCase):
     def test_gmlo_graphical_icon_disappears(self):
         o = get_mock_graphical_output()
         overlay = GridMenuLabelOverlay()
-        mu = GridMenu([], get_mock_input(), o, name=mu_name, config={})
+        mu = GridMenu([], get_mock_input(), o, name=ui_name, config={})
         mu.idle_loop = lambda *a, **k: True
         Canvas.fonts_dir = fonts_dir
         overlay.apply_to(mu)
@@ -225,6 +226,30 @@ class Testoverlays(unittest.TestCase):
         with patch.object(mu, 'activate', side_effect=activate) as p:
             mu.activate()
 
+    def test_iaio_apply(self):
+        overlay = IntegerAdjustInputOverlay()
+        ia = IntegerAdjustInput(0, get_mock_input(), get_mock_output(), name=ui_name)
+        overlay.apply_to(ia)
+        self.assertIsNotNone(overlay)
+        self.assertIsNotNone(ia)
+
+    def test_iaio_number_input(self):
+        overlay = IntegerAdjustInputOverlay()
+        i = get_mock_input()
+        ia = IntegerAdjustInput(0, i, get_mock_output(), name=ui_name)
+        overlay.apply_to(ia)
+
+        def scenario():
+            keymap = i.set_keymap.call_args[0][0]
+            keymap["KEY_1"]()
+            assert (ia.number == 1)
+            keymap["KEY_2"]()
+            assert (ia.number == 12)
+            ia.deactivate()
+            assert not ia.in_foreground
+
+        with patch.object(ia, 'idle_loop', side_effect=scenario) as p:
+            ia.activate()
 
 if __name__ == '__main__':
     unittest.main()
