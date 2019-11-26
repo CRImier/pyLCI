@@ -17,6 +17,16 @@ firstboot_file_locations = [firstboot_filename, "/tmp/"+firstboot_filename]
 if not is_emulator():
     firstboot_file_locations = ["/boot/"+firstboot_filename]+firstboot_file_locations
 
+firstboot_action_ordering = \
+[
+  'apps.firstboot_wizard%show_help_wizard',
+  'apps.system_apps.users_groups%change_password',
+  'apps.network_apps.ssh%ssh_setup',
+  'apps.network_apps.wifi_settings%change_wifi_country',
+  'apps.personal.clock%set_timezone',
+  'apps.personal.clock%force_sync_time'
+]
+
 class FirstbootWizard(ZeroApp):
     def set_context(self, c):
         self.context = c
@@ -25,6 +35,62 @@ class FirstbootWizard(ZeroApp):
 
     def execute_after_contexts(self):
         self.do_firstboot()
+
+    def sort_actions_by_ordering(self, actions, actions_involved_in_dependencies):
+        # needs tests lol
+        # Actions passed here are already sorted by dependencies
+        def get_preceding_action(action_fullname):
+            if action_fullname not in firstboot_action_ordering:
+                return False
+            if firstboot_action_ordering.index(action_fullname) == 0:
+                return None
+            index = firstboot_action_ordering.index(action_fullname)
+            return firstboot_action_ordering[index-1]
+        # here, we'll deconstruct the original OrderedDict, sort the items
+        # and then build a new OrderedDict out of these
+        tail = []
+        sorted_part = []
+        pass_counter = 0
+        while True:
+            # O(n)
+            # I mean, I sure hope so
+            already_sorted_action_names = [a[0] for a in sorted_part+tail]
+            if set(already_sorted_action_names) == set(actions.keys()):
+                break
+            logger.info("Firstboot action ordering sort pass {}".format(pass_counter))
+            pass_counter += 1
+            if pass_counter > len(actions.keys()):
+                logger.error("Can't finish sorting in a reasonable amount of time! 0_0")
+                break
+            for action_fullname, action in actions.items():
+                if action_fullname in already_sorted_action_names:
+                    continue
+                preceding_action = get_preceding_action(action_fullname)
+                if preceding_action is False:
+                    # Not even in the ordering, just add it in the end
+                    tail.append((action_fullname, action))
+                elif action_fullname in actions_involved_in_dependencies:
+                    # Action involved in a dependency, that overrides ordering - just add it as-is
+                    sorted_part.append((action_fullname, action))
+                elif preceding_action is None:
+                    # First element and not involved in a dependency
+                    sorted_part.insert(0, (action_fullname, action))
+                else:
+                    # there is a preceding action in the ordering!
+                    if preceding_action in [i[0] for i in sorted_part]:
+                        index = [i[0] for i in sorted_part].index(preceding_action)
+                        sorted_part.insert(index+1, (action_fullname, action))
+                    elif preceding_action in [i[0] for i in tail]:
+                        # WTF WTF
+                        logger.error("Excuse me, what? {} {} {}".format(action_fullname, preceding_action, sorted_part, tail, actions.keys()))
+                    elif preceding_action not in actions.keys():
+                        # if the preceding action is not even present, just adding
+                        sorted_part.append((action_fullname, action))
+                    else:
+                        pass # preceding action is not in the list yet, doing nothing
+        # in the end, we make a list of key,value pairs to pass to the OrderedDict constructor
+        dict_items = sorted_part+tail
+        return OrderedDict(dict_items)
 
     def get_firstboot_file(self):
         """ Returns ``(filename, is_new_file)``, ``(None, False)`` on failure """
@@ -170,6 +236,7 @@ class FirstbootWizard(ZeroApp):
                         sorted_actions[action_fullname] = action
                 # This code untangles an arbitrarily long chain of dependencies
                 # except, well, circular dependencies
+                actions_involved_in_dependencies = []
                 if action_dependants:
                     original_dependants = copy(action_dependants)
                     logger.info("Resolving dependencies: {}".format(action_dependants))
@@ -183,6 +250,7 @@ class FirstbootWizard(ZeroApp):
                         for action_fullname in independent_dependencies:
                             if action_fullname not in sorted_actions:
                                 sorted_actions[action_fullname] = firstboot_actions[action_fullname]
+                                actions_involved_in_dependencies.append(action_fullname)
                             action_dependants.pop(action_fullname)
                     # The while() has run its course and the dependencies have been linearized
                     all_dependent_actions = flatten(original_dependants.values())
@@ -190,7 +258,10 @@ class FirstbootWizard(ZeroApp):
                       if n not in sorted_actions]
                     for action_fullname in all_unadded_dependent_actions:
                         sorted_actions[action_fullname] = firstboot_actions[action_fullname]
+                        actions_involved_in_dependencies.append(action_fullname)
                     logger.info("Dependencies resolved!")
+                # Sorting actions for consistent firstboot experience
+                sorted_actions = self.sort_actions_by_ordering(sorted_actions, actions_involved_in_dependencies)
                 # Now, executing actions one-by-one
                 failed_actions = []
                 log_completed_action_has_failed = False
