@@ -528,7 +528,7 @@ class Canvas(object):
 #
 #	self.image = self.image.rotate(degrees, expand=expand)
 
-    def paste(self, image_or_path, coords=None):
+    def paste(self, image_or_path, coords=None, invert=False):
 	"""
 	Pastes the supplied image onto the canvas, with optional
 	coordinates. Otherwise, you can supply a string path to an image
@@ -544,8 +544,14 @@ class Canvas(object):
         if coords is not None:
             coords = self.check_coordinates(coords)
 	if isinstance(image_or_path, basestring):
-            image_or_path = Image.open(image_or_path)
-	self.image.paste(image_or_path, box=coords)
+            image = Image.open(image_or_path)
+        else:
+            image = image_or_path
+	self.image.paste(image, box=coords)
+        if invert:
+            if not coords: coords = (0, 0)
+            coords = coords+(coords[0]+image.width, coords[1]+image.height)
+            self.invert_rect(coords)
 
     def display_if_interactive(self):
         if self.interactive:
