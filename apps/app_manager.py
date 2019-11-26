@@ -4,7 +4,7 @@ import traceback
 
 import zero_app
 from helpers import setup_logger
-from ui import Printer, Menu, HelpOverlay, TextReader, GridMenu, Entry, \
+from ui import Printer, Menu, HelpOverlay, GridMenu, Entry, \
                GridMenuLabelOverlay, GridMenuSidebarOverlay, GridMenuNavOverlay
 
 from PIL import Image, ImageOps
@@ -76,11 +76,10 @@ class AppManager(object):
 
     def overlay_main_menu(self, menu):
         main_menu_help = "ZPUI main menu. Navigate the folders to get to different apps, or press KEY_PROG2 (anywhere in ZPUI) to get to the context menu."
-        tr = TextReader(main_menu_help, self.i, self.o, h_scroll=False)
         GridMenuNavOverlay().apply_to(menu)
         GridMenuSidebarOverlay(self.sidebar_cb).apply_to(menu)
         GridMenuLabelOverlay().apply_to(menu)
-        HelpOverlay(tr.activate).apply_to(menu)
+        HelpOverlay(main_menu_help).apply_to(menu)
 
     def register_default_plugins(self):
         self.subdir_menu_creators["apps"] = self.create_main_menu

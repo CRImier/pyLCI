@@ -9,7 +9,7 @@ try:
 except:
     import http.client as httplib
 
-from ui import Menu, PrettyPrinter, DialogBox, ProgressBar, Listbox, UniversalInput, TextReader, HelpOverlay
+from ui import Menu, PrettyPrinter, DialogBox, ProgressBar, Listbox, UniversalInput, HelpOverlay
 from helpers import setup_logger, read_or_create_config, save_config_method_gen, local_path_gen
 
 local_path = local_path_gen(__name__)
@@ -334,6 +334,6 @@ def callback():
          ["Logging settings", logging_ui.config_logging],
          ["About", about.about]]
     menu = Menu(c, i, o, "ZPUI settings menu")
-    tr = TextReader("Press RIGHT on \"Update ZPUI\" to change OTA update settings (branch or git URL to use)", i, o, h_scroll=False)
-    HelpOverlay(tr.activate).apply_to(menu)
+    help_text = "Press RIGHT on \"Update ZPUI\" to change OTA update settings (branch or git URL to use)"
+    HelpOverlay(help_text).apply_to(menu)
     menu.activate()
