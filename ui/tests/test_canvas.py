@@ -60,8 +60,9 @@ class TestCanvas(unittest.TestCase):
         assert (c.check_coordinates(("-2", "-3")) == (w-2, h-3))
         assert (c.check_coordinates((0, 1, 2, 3)) == (0, 1, 2, 3))
         assert (c.check_coordinates((0, 1, "-2", "-3")) == (0, 1, w-2, h-3))
-        assert (c.check_coordinates(("-0", "-1", "-2", "-3")) == (w, h-1, w-2, h-3))
-        assert (c.check_coordinates(("-0", "1", "-2", "-3")) == (w, h+1, w-2, h-3))
+        # check_coordinates will rearrange coordinates in a way that x1 < x2 and y1 < y2
+        assert (c.check_coordinates(("-0", "-1", "-2", "-3")) == (w-2, h-3, w, h-1))
+        assert (c.check_coordinates(("-0", "1", "-2", "-3")) == (w-2, h-3, w, h+1))
 
     def test_howto_example_drawing_basics(self):
         """tests the first canvas example from howto"""
