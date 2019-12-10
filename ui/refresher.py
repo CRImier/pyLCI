@@ -22,7 +22,7 @@ class Refresher(BaseUIElement):
     will be updated with whatever it returns.
     """
 
-    def __init__(self, refresh_function, i, o, refresh_interval=1, keymap=None, name="Refresher"):
+    def __init__(self, refresh_function, i, o, refresh_interval=1, keymap=None, name="Refresher", **kwargs):
         """Initialises the Refresher object.
 
         Args:
@@ -44,7 +44,7 @@ class Refresher(BaseUIElement):
 
         """
         self.custom_keymap = keymap if keymap else {}
-        BaseUIElement.__init__(self, i, o, name, input_necessary=False)
+        BaseUIElement.__init__(self, i, o, name, input_necessary=False, **kwargs)
         self.set_refresh_interval(refresh_interval)
         self.refresh_function = refresh_function
         self.calculate_intervals()
