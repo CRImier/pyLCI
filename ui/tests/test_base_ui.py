@@ -39,7 +39,7 @@ def get_mock_graphical_output(width=128, height=64, mode="1", cw=6, ch=8):
 el_name = "Test BaseUIElement"
 
 
-class TestUIElement(BaseUIElement):
+class UIElementTest(BaseUIElement):
     def generate_keymap(self):
         return {}
 
@@ -48,7 +48,7 @@ class TestBaseUIElement(unittest.TestCase):
 
     def test_constructor_generates_name_if_not_supplied(self):
         """tests constructor"""
-        element = TestUIElement(get_mock_input(), get_mock_output(), name=None)
+        element = UIElementTest(get_mock_input(), get_mock_output(), name=None)
         self.assertIsNotNone(element.name)
 
 
