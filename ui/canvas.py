@@ -419,8 +419,14 @@ class Canvas(object):
             return coords
         elif len(coords) == 4:
             x1, y1, x2, y2 = coords
-            # Not sure those checks make sense
-            #assert (x2 >= x1), "x2 ({}) is smaller than x1 ({}), rearrange?".format(x2, x1)
+            # sanity checks for coordinates
+            if (x1 >= x2):
+                x2, x1 = x1, x2
+                logger.info("x1 ({}) is smaller than x2 ({}), rearranging".format(x1, x2))
+            if (y1 >= y2):
+                y2, y1 = y1, y2
+                logger.info("y1 ({}) is smaller than y2 ({}), rearranging".format(y1, y2))
+            coords = x1, y1, x2, y2
             #assert (y2 >= y1), "y2 ({}) is smaller than y1 ({}), rearrange?".format(y2, y1)
             return coords
         else:
