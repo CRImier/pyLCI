@@ -1,4 +1,6 @@
 from time import sleep
+from functools import wraps
+from traceback import print_exc
 
 import PIL
 
@@ -139,6 +141,35 @@ class Refresher(BaseUIElement):
 
     def generate_keymap(self):
         return {}
+
+    def process_callback(self, func):
+        """
+        Decorates a function so that during its execution the UI element stops
+        being in foreground. Is typically used as a wrapper for a callback from
+        input event processing thread. After callback's execution is finished,
+        sets the keymap again and refreshes the UI element.
+        """
+        # This function is copied from base_ui.py - the only difference is
+        # the RefresherExitException handling. TODO: think of a prettier way
+        # to make it work.
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            self.to_background()
+            self.to_background()
+            e = None
+            try:
+                func(*args, **kwargs)
+            except RefresherExitException:
+                self.deactivate()
+            except Exception as e:
+                print_exc()
+            logger.debug("{}: executed wrapped function: {}".format(self.name, func.__name__))
+            if self.in_background:
+                self.to_foreground()
+            if e:
+                raise e
+        return wrapper
+
 
     @to_be_foreground
     def refresh(self):
