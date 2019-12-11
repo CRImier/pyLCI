@@ -46,7 +46,8 @@ class BaseLoadingIndicator(Refresher):
 
     def __init__(self, i, o, on_left=None, *args, **kwargs):
         self._progress = 0
-        self.on_left_cb = on_left
+        if on_left:
+            self.set_on_left(on_left)
         keymap = kwargs.get("keymap", {})
         if "KEY_LEFT" not in keymap:
             keymap["KEY_LEFT"] = "on_left"
@@ -54,6 +55,9 @@ class BaseLoadingIndicator(Refresher):
         Refresher.__init__(self, self.on_refresh, i, o, *args, **kwargs)
         self.t = None
         self.paused = Paused(self)
+
+    def set_on_left(self, on_left):
+        self.on_left_cb = on_left
 
     def on_refresh(self):
         pass
