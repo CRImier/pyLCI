@@ -21,6 +21,11 @@ import about
 menu_name = "Settings"
 logger = setup_logger(__name__, "info")
 
+context=None
+def set_context(c):
+    global context
+    context = c
+    context.register_firstboot_action(bugreport_ui.autosend_optin_fba)
 
 class GitInterface(object):
 
