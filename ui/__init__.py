@@ -16,7 +16,7 @@ from number_input import IntegerAdjustInput
 from numpad_input import NumpadCharInput, NumpadNumberInput, NumpadHexInput, NumpadKeyboardInput, NumpadPasswordInput
 from path_picker import PathPicker
 from printer import Printer, PrettyPrinter, GraphicsPrinter
-from refresher import Refresher, RefresherExitException
+from refresher import Refresher, RefresherExitException, RefresherView
 from scrollable_element import TextReader
 from loading_indicators import ProgressBar, LoadingBar, TextProgressBar, GraphicalProgressBar, CircularProgressBar, IdleDottedMessage, Throbber
 from numbered_menu import NumberedMenu
