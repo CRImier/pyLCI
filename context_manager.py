@@ -518,7 +518,7 @@ class ContextManager(object):
         elif event == "rescind_exclusive":
             if self.exclusive_context == context_alias:
                 self.exclusive_context = None
-                return self.signal_event("finished", context_alias)
+                return True
             else:
                 return False
         elif event == "exclusive_status":
