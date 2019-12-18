@@ -5,8 +5,8 @@ from collections import OrderedDict
 
 from apps import ZeroApp
 from actions import FirstBootAction as FBA
-from helpers import is_emulator, setup_logger, flatten, local_path_gen
-from ui import DialogBox, Canvas, HelpOverlay, Refresher, GraphicsPrinter, RefresherExitException
+from helpers import is_emulator, setup_logger, flatten, local_path_gen, cb_needs_key_state, KEY_HELD
+from ui import DialogBox, Canvas, HelpOverlay, Refresher, GraphicsPrinter, RefresherExitException, PrettyPrinter as Printer, GraphicsPrinter
 
 from __main__ import cm
 
@@ -20,18 +20,68 @@ if not is_emulator():
 
 local_path = local_path_gen(__name__)
 
+# This ordering is applied after the dependencies are sorted out,
+# in a way that should not disturb the dependency-related ordering changes.
+# Nevertheless, it'd be cool if it could be covered with tests of some kind,
+# to make sure the ordering is both applied well and doesn't break the dependency chain.
+
 firstboot_action_ordering = \
 [
-  'apps.firstboot_wizard%show_help_wizard',
+  'apps.firstboot_wizard%learn_about_5_buttons',
+  'apps.firstboot_wizard%learn_about_zeromenu',
+  'apps.firstboot_wizard%learn_about_help_icon',
   'apps.system_apps.users_groups%change_password',
   'apps.network_apps.ssh%ssh_setup',
   'apps.network_apps.wifi_settings%change_wifi_country',
   'apps.personal.clock%set_timezone',
-  'apps.personal.clock%force_sync_time'
+  'apps.personal.clock%force_sync_time',
+  'apps.system_apps.shutdown%reboot_after_firstboot'
 ]
 
 class FirstbootWizard(ZeroApp):
-    def show_help_wizard(self):
+    def learn_about_5_buttons(self):
+        c = Canvas(self.o)
+        c.centered_text("Let's go through\nthe main buttons\nand their meanings")
+        GraphicsPrinter(c.get_image(), self.i, self.o, 5, invert=False)
+        c.clear()
+        c.centered_text("Press the buttons\nto test\nThen ENTER\nto continue")
+        GraphicsPrinter(c.get_image(), self.i, self.o, 5, invert=False)
+        c.clear()
+        # First, show the left/right/up/down buttons
+        # TODO: different behaviour for ZP and emulator?
+        c.text("Enter", (48, 22))
+        c.text("Continue", (39, 30))
+        c.text("Left", (2, 18))
+        c.text("Back", (2, 26))
+        c.text("Cancel", (2, 34))
+        c.text("Right", (92, 22))
+        c.text("Option", (90, 30))
+        c.text("Up", (56, 5))
+        c.text("Down", (52, "-18"))
+        image = c.get_image()
+        def process_key(key, state):
+            # invert/deinvert areas on the canvas when buttons are pressed/released
+            # on drivers that don't support key states, will toggle inversion on every press
+            # on drivers that support key states, will "highlight" the buttons pressed
+            print(key, state)
+            if state != KEY_HELD:
+                if key == "KEY_UP":
+                    c.invert_rect((64-20, 2, 64+20, 22))
+                elif key == "KEY_DOWN":
+                    c.invert_rect((64-20, "-2", 64+20, "-22"))
+                elif key == "KEY_LEFT":
+                    c.invert_rect((2, 32-15, 38, 32+15))
+                elif key == "KEY_RIGHT":
+                    c.invert_rect(("-2", 32-10, "-40", 32+10))
+        keys = ["KEY_UP", "KEY_DOWN", "KEY_LEFT", "KEY_RIGHT"]
+        keymap = {"KEY_ENTER":"deactivate"}
+        for key in keys:
+            cb = cb_needs_key_state(lambda st, x=key: process_key(x, st))
+            keymap[key] = cb
+        Refresher(c.get_image, self.i, self.o, override_left=False, keymap=keymap).activate()
+        return True
+
+    def learn_about_help_icon(self):
         o = HelpOverlay("test")
         c = Canvas(self.o)
         c.text("See this icon?->", (1, 1))
@@ -43,13 +93,34 @@ class FirstbootWizard(ZeroApp):
             c.text("F5:", (5, 51))
             c.paste(local_path("f5_button_location.png"), (30, 50), invert=True)
         o.draw_icon(c)
-        image = c.get_image()
-        Refresher(c.get_image, self.i, self.o, keymap={"KEY_ENTER":"deactivate", "KEY_F5":self.show_help}).activate()
+        Refresher(c.get_image, self.i, self.o, keymap={"KEY_ENTER":"deactivate", "KEY_F5":self.on_help_button_press}).activate()
         return True
 
-    def show_help(self):
+    def learn_about_zeromenu(self):
+        c = Canvas(self.o)
+        if is_emulator():
+            c.text("Press F11 to get", (1, 1))
+        else:
+            c.text("Press PROG2 to get", (1, 1))
+        c.text("a shortcut menu -", (3, 10))
+        c.text("ZeroMenu. You can", (3, 19))
+        c.text("add apps to it", (3, 28))
+        c.text("for quick launch", (3, 37))
+        if not is_emulator():
+            c.text("PROG2:", (5, 51))
+            c.paste(local_path("prog2_button_location.png"), (40, 50), invert=True)
+        Refresher(c.get_image, self.i, self.o, keymap={"KEY_ENTER":"deactivate", "KEY_PROG2":self.on_zeromenu_button_press}).activate()
+        return True
+
+    def on_help_button_press(self):
         c = Canvas(self.o)
         c.centered_text("Good job!\nThe button\nseems to work\n;-P")
+        GraphicsPrinter(c.get_image(), self.i, self.o, 3, invert=False)
+        raise RefresherExitException
+
+    def on_zeromenu_button_press(self):
+        c = Canvas(self.o)
+        c.centered_text("Good job!\nZeroMenu button\nseems to work!")
         GraphicsPrinter(c.get_image(), self.i, self.o, 3, invert=False)
         raise RefresherExitException
 
@@ -57,7 +128,9 @@ class FirstbootWizard(ZeroApp):
         self.context = c
         #self.context.set_target(self.do_firstboot)
         self.context.threaded = False
-        self.context.register_firstboot_action(FBA("show_help_wizard", self.show_help_wizard))
+        self.context.register_firstboot_action(FBA("learn_about_5_buttons", self.learn_about_5_buttons))
+        self.context.register_firstboot_action(FBA("learn_about_help_icon", self.learn_about_help_icon))
+        self.context.register_firstboot_action(FBA("learn_about_zeromenu", self.learn_about_zeromenu))
 
     def execute_after_contexts(self):
         self.do_firstboot()
