@@ -27,22 +27,44 @@ class BaseOverlay(object):
         self.uie[n] = AttrDict()
         ui_el.overlays.append(self)
 
-class BaseOverlayWithTimeout(BaseOverlay):
+class BaseOverlayWithState(BaseOverlay):
 
     def __init__(self, duration = 20):
         BaseOverlay.__init__(self)
-        self.duration = duration
 
     def apply_to(self, ui_el):
         BaseOverlay.apply_to(self, ui_el)
         n = ui_el.name
         self.uie[n].active = False
+
+    def set_state(self, ui_el, new_state):
+        n = ui_el.name
+        self.uie[n].active = new_state
+
+    def get_state(self, ui_el):
+        n = ui_el.name
+        return self.uie[n].active
+
+class BaseOverlayWithTimeout(BaseOverlayWithState):
+
+    def __init__(self, duration = 20):
+        BaseOverlayWithState.__init__(self)
+        self.duration = duration
+
+    def apply_to(self, ui_el):
+        BaseOverlayWithState.apply_to(self, ui_el)
+        n = ui_el.name
         self.uie[n].counter = 0
         self.wrap_before_foreground(ui_el)
         self.wrap_idle_loop(ui_el)
 
     def update_state(self, ui_el):
-        raise NotImplementedException
+        n = ui_el.name
+        if self.uie[n].active:
+            self.uie[n].counter += 1
+            if self.uie[n].counter == self.duration:
+                self.uie[n].active = False
+                ui_el.refresh()
 
     def wrap_idle_loop(self, ui_el):
         idle_loop = ui_el.idle_loop
@@ -113,14 +135,6 @@ class HelpOverlay(BaseOverlayWithTimeout):
 
     def pop_callback(self):
         self.callbacks = self.callbacks[:-1]
-
-    def update_state(self, ui_el):
-        n = ui_el.name
-        if self.uie[n].active:
-            self.uie[n].counter += 1
-            if self.uie[n].counter == self.duration:
-                self.uie[n].active = False
-                ui_el.refresh()
 
     def get_key_and_callback(self):
         return self.key, self.callbacks[-1]
