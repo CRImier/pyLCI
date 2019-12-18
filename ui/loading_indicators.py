@@ -43,6 +43,7 @@ class Paused(object):
 
 class BaseLoadingIndicator(Refresher):
     """Abstract class for "loading indicator" elements."""
+    on_left_cb = None
 
     def __init__(self, i, o, on_left=None, *args, **kwargs):
         self._progress = 0
