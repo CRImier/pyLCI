@@ -35,6 +35,7 @@ firstboot_action_ordering = \
   'apps.network_apps.wifi_settings%change_wifi_country',
   'apps.personal.clock%set_timezone',
   'apps.personal.clock%force_sync_time',
+  'apps.network_apps.internet_tools%check_connectivity',
   'apps.system_apps.shutdown%reboot_after_firstboot'
 ]
 
