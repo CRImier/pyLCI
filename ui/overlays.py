@@ -468,3 +468,83 @@ class IntegerAdjustInputOverlay(BaseNumpadOverlay):
         ui_el.clamp()
         ui_el.refresh(bypass_to_be_foreground=True)
 
+
+class SpinnerOverlay(BaseOverlayWithState):
+    """
+    A screen overlay that hooks onto an UI element, allowing you to show that some activity
+    is happening in the background. Tailored for showing "Scanning" in the WiFi menu,
+    should probably be put in that code, too. Shows a letter inside the spinner if ``letter``
+    is set.
+    """
+    # TODO: an explicit ui_el.refresh after set_state(ui_el, False)
+    # to clean up the spinner's remains?
+    top_offset = 5
+    right_offset = 15
+    spinner_height = 8
+    spinner_width = 7
+    text_x_offset = 1
+    text_y_offset = -2
+    letter = "s"
+
+    def __init__(self, wrap_view=True, **kwargs):
+        self.do_wrap_view = wrap_view
+        BaseOverlayWithState.__init__(self, **kwargs)
+
+    def generate_coords(self, screen_width):
+        o = screen_width - self.right_offset - self.spinner_width
+        t = self.top_offset
+        x = self.spinner_width
+        y = self.spinner_height
+        self.coords = [ (o,   t,   o+x, t),
+                        (o+x, t,   o+x, t+y),
+                        (o,   t+y, o+x, t+y),
+                        (o,   t,   o,   t+y)]
+        self.text_coords = (o+self.text_x_offset, t+self.text_y_offset)
+        self.clear_coords = (o, t, o+x, t+y)
+
+    def apply_to(self, ui_el):
+        BaseOverlayWithState.apply_to(self, ui_el)
+        self.generate_coords(ui_el.o.width)
+        if self.do_wrap_view:
+            self.wrap_view(ui_el)
+        self.wrap_idle_loop(ui_el)
+        n = ui_el.name
+        self.uie[n].spinner_stage = 0
+
+    def wrap_view(self, ui_el):
+        def wrapper(image):
+            if isinstance(image, Image):
+                image = self.modify_image_if_needed(ui_el, image)
+            return image
+        ui_el.add_view_wrapper(wrapper)
+
+    def modify_image_if_needed(self, ui_el, image):
+        n = ui_el.name
+        if not self.uie[n].active:
+            return image
+        if self.uie[n].spinner_stage == 3:
+            self.uie[n].spinner_stage = 0
+        else:
+            self.uie[n].spinner_stage += 1
+        c = Canvas(ui_el.o, base_image=image)
+        self.draw_spinner(c, self.uie[n].spinner_stage)
+        image = c.get_image()
+        return image
+
+    def wrap_idle_loop(self, ui_el):
+        idle_loop = ui_el.idle_loop
+        n = ui_el.name
+        @wraps(idle_loop)
+        def wrapper(*args, **kwargs):
+            return_value = idle_loop(*args, **kwargs)
+            if self.uie[n].active:
+                ui_el.refresh()
+            return return_value
+        ui_el.idle_loop = wrapper
+
+    def draw_spinner(self, c, stage):
+        #print("Drawing spinner at {} stage".format(stage))
+        c.clear(self.clear_coords)
+        if self.letter:
+            c.text(self.letter, self.text_coords)
+        c.line(self.coords[stage])

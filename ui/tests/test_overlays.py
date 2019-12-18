@@ -5,7 +5,7 @@ import unittest
 from mock import patch, Mock
 
 try:
-    from ui import Menu, HelpOverlay, FunctionOverlay, GridMenu, GridMenuLabelOverlay, IntegerAdjustInputOverlay, IntegerAdjustInput
+    from ui import Menu, HelpOverlay, FunctionOverlay, GridMenu, GridMenuLabelOverlay, IntegerAdjustInputOverlay, IntegerAdjustInput, SpinnerOverlay
     from ui.base_list_ui import Canvas
     fonts_dir = "ui/fonts"
 except ImportError:
@@ -23,7 +23,7 @@ except ImportError:
         return orig_import(name, *args)
 
     with patch('__builtin__.__import__', side_effect=import_mock):
-        from overlays import HelpOverlay, FunctionOverlay, GridMenuLabelOverlay, IntegerAdjustInputOverlay
+        from overlays import HelpOverlay, FunctionOverlay, GridMenuLabelOverlay, IntegerAdjustInputOverlay, SpinnerOverlay
         from menu import Menu
         from grid_menu import GridMenu
         from base_list_ui import Canvas
@@ -250,6 +250,56 @@ class TestOverlays(unittest.TestCase):
 
         with patch.object(ia, 'idle_loop', side_effect=scenario) as p:
             ia.activate()
+
+    def test_so_apply(self):
+        overlay = SpinnerOverlay()
+        mu = Menu([], get_mock_input(), get_mock_graphical_output(), name=ui_name)
+        overlay.apply_to(mu)
+        self.assertIsNotNone(overlay)
+        self.assertIsNotNone(mu)
+
+    def test_so_spins(self):
+        Canvas.fonts_dir = fonts_dir
+        o = get_mock_graphical_output()
+        overlay = SpinnerOverlay()
+        mu = Menu([], get_mock_input(), o, name=ui_name)
+        mu.idle_loop = lambda *a, **k: True
+        overlay.apply_to(mu)
+        overlay.set_state(mu, False)
+        def activate():
+            mu.before_activate()
+            mu.to_foreground()
+            mu.idle_loop()
+            img_1 = o.display_image.call_args[0]
+            mu.idle_loop()
+            mu.refresh()
+            img_2 = o.display_image.call_args[0]
+            assert(img_1 == img_2)
+            # enabling the spinner
+            overlay.set_state(mu, True)
+            # first iteration of the spinner
+            mu.idle_loop()
+            img_3 = o.display_image.call_args[0]
+            assert(img_3 != img_1)
+            # second iteration of the spinner
+            mu.idle_loop()
+            img_4 = o.display_image.call_args[0]
+            assert(img_4 != img_1)
+            assert(img_4 != img_3)
+            # disabling the spinner
+            overlay.set_state(mu, False)
+            mu.idle_loop() # now idle_loop shouldn't contain a refresh
+            img_5 = o.display_image.call_args[0]
+            assert(img_5 == img_4)
+            mu.refresh() # now, after an explicit refresh, there should be no spinner left
+            img_6 = o.display_image.call_args[0]
+            assert(img_6 == img_1)
+            assert(img_6 != img_3)
+            assert(img_6 != img_4)
+            mu.deactivate()  # KEY_LEFT
+
+        with patch.object(mu, 'activate', side_effect=activate) as p:
+            mu.activate()
 
 if __name__ == '__main__':
     unittest.main()
