@@ -25,6 +25,7 @@ class BaseOverlay(object):
     def apply_to(self, ui_el):
         n = ui_el.name
         self.uie[n] = AttrDict()
+        ui_el.overlays.append(self)
 
 class BaseOverlayWithTimeout(BaseOverlay):
 

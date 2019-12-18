@@ -40,6 +40,7 @@ class BaseUIElement(object):
             self.name = name
         else:
             self.generate_name_if_not_supplied()
+        self.overlays = []
         self._in_foreground = Event()
         self._in_background = Event()
         self._input_necessary = input_necessary
