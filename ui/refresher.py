@@ -48,7 +48,7 @@ class Refresher(BaseUIElement):
         self.custom_keymap = keymap if keymap else {}
         BaseUIElement.__init__(self, i, o, name, input_necessary=False, **kwargs)
         self.set_refresh_interval(refresh_interval)
-        self.refresh_function = refresh_function
+        self.set_refresh_function(refresh_function)
         self.calculate_intervals()
 
     @property
@@ -102,6 +102,11 @@ class Refresher(BaseUIElement):
         self.refresh_interval = new_interval
         self.sleep_time = 0.1 if new_interval > 0.1 else new_interval
         self.calculate_intervals()
+
+    def set_refresh_function(self, refresh_function):
+        if isinstance(refresh_function, RefresherView):
+            refresh_function.init(self.o)
+        self.refresh_function = refresh_function
 
     def calculate_intervals(self):
         """Calculates the sleep intervals of the refresher, so that no matter the
@@ -170,7 +175,6 @@ class Refresher(BaseUIElement):
                 raise e
         return wrapper
 
-
     @to_be_foreground
     def refresh(self):
         logger.debug("{}: refreshed data on display".format(self.name))
@@ -188,10 +192,28 @@ class Refresher(BaseUIElement):
             #Passed a tuple. Let's convert it into a list!
             data_to_display = list(data_to_display)
         elif isinstance(data_to_display, PIL.Image.Image):
-            if "b&w-pixel" not in self.o.type:
+            if "b&w" not in self.o.type:
                 raise ValueError("The screen doesn't support showing images!")
             self.o.display_image(data_to_display)
             return
         elif not isinstance(data_to_display, list):
             raise ValueError("refresh_function returned an unsupported type: {}!".format(type(data_to_display)))
         self.o.display_data(*data_to_display)
+
+
+class RefresherView(object):
+    def __init__(self, text_callback, monochrome_callback, color_callback=None):
+        self.text_callback = text_callback
+        self.monochrome_callback = monochrome_callback
+        self.color_callback = color_callback
+
+    def init(self, o):
+        if "color" in o.type:
+            self.callback = self.color_callback if self.color_callback else self.monochrome_callback
+        elif "b&w" in o.type:
+            self.callback = self.monochrome_callback
+        else:
+            self.callback = self.text_callback
+
+    def __call__(self, *args, **kwargs):
+        return self.callback(*args, **kwargs)
