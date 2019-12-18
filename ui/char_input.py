@@ -79,7 +79,7 @@ class CharArrowKeysInput(BaseUIElement):
         self.set_view()
 
     def set_view(self):
-        if "b&w-pixel" in self.o.type:
+        if "b&w" in self.o.type:
             view_class = GraphicalView
         elif "char" in self.o.type:
             view_class = TextView

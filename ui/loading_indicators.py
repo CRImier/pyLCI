@@ -317,7 +317,7 @@ class GraphicalProgressBar(ProgressIndicator):
 def ProgressBar(i, o, *args, **kwargs):
     """Instantiates and returns the appropriate kind of progress bar
     for the output device - either graphical or text-based."""
-    if "b&w-pixel" in o.type:
+    if "b&w" in o.type:
         return GraphicalProgressBar(i, o, *args, **kwargs)
     elif "char" in o.type:
         return TextProgressBar(i, o, *args, **kwargs)
@@ -328,7 +328,7 @@ def ProgressBar(i, o, *args, **kwargs):
 def LoadingBar(i, o, *args, **kwargs):
     """Instantiates and returns the appropriate kind of loading indicator
     for the output device - either graphical or text-based."""
-    if "b&w-pixel" in o.type:
+    if "b&w" in o.type:
         return Throbber(i, o, *args, **kwargs)
     elif "char" in o.type:
         return IdleDottedMessage(i, o, *args, **kwargs)

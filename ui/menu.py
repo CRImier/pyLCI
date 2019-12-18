@@ -217,7 +217,7 @@ class MenuRenderingMixin(object):
         for i, line in enumerate(menu_text):
             y = (i * self.charheight - 1) if i != 0 else 0
             c.text(line, (left_offset, y), font=self.font)
-            if "b&w-pixel" in self.o.type:
+            if "b&w" in self.o.type:
                 self.draw_graphic(c, i)
 
 

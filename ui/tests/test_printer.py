@@ -35,7 +35,7 @@ def get_mock_output(rows=8, cols=21):
 
 def get_mock_graphical_output(width, height, mode="1", cw=6, ch=8):
     m = get_mock_output(rows=width/cw, cols=height/ch)
-    m.configure_mock(width=width, height=height, device_mode=mode, char_height=ch, char_width=cw, type=["b&w-pixel"])
+    m.configure_mock(width=width, height=height, device_mode=mode, char_height=ch, char_width=cw, type=["b&w"])
     return m
 
 def easy_graphics_test(image, width, height):

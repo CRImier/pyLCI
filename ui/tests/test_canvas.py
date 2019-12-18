@@ -27,7 +27,7 @@ except ImportError:
 
 def get_mock_output(width=128, height=64, mode="1"):
     m = Mock()
-    m.configure_mock(width=width, height=height, device_mode=mode, type=["b&w-pixel"])
+    m.configure_mock(width=width, height=height, device_mode=mode, type=["b&w"])
     return m
 
 

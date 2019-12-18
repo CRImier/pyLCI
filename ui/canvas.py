@@ -42,7 +42,7 @@ class Canvas(object):
 
     def __init__(self, o, base_image=None, name="", interactive=False):
         self.o = o
-        if "b&w-pixel" not in o.type:
+        if "b&w" not in o.type:
             raise ValueError("The output device supplied doesn't support pixel graphics!")
         self.width = o.width
         self.height = o.height
@@ -578,14 +578,14 @@ class MockOutput(object):
 
       * ``width``
       * ``height``
-      * ``type``: ZPUI output device type list (``["b&w-pixel"]`` by default)
+      * ``type``: ZPUI output device type list (``["b&w"]`` by default)
       * ``device_mode``: PIL device.mode attribute (by default, ``'1'``)
     """
 
     def __init__(self, width=128, height=64, type=None, device_mode='1'):
         self.width = width
         self.height = height
-        self.type = type if type else ["b&w-pixel"]
+        self.type = type if type else ["b&w"]
         self.device_mode = device_mode
 
     def display_image(self, *args):

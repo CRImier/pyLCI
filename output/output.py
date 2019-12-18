@@ -117,7 +117,7 @@ class GraphicalOutputDevice(OutputDevice):
     """Common class for all graphical OutputDevices."""
     height = None  # height of display in pixels
     width = None  # width of display in pixels
-    type = ["b&w-pixel"]  # supported output type list
+    type = ["b&w"]  # supported output type list
     device_mode = "1"  # a "mode" parameter for PIL
     char_height = 8 # height of the default font
     char_width = 8 # width of the default font

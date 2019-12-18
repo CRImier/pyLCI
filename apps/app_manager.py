@@ -361,5 +361,5 @@ if __name__ == "__main__":
     cm.configure_mock(get_io_for_context=lambda x: (x, x))
     am = AppManager("apps/", cm)
     am.o = Mock()
-    am.o.configure_mock(cols=20, rows=8, char_width=6, width=128, height=64, device_mode='1', type=["b&w-pixel"])
+    am.o.configure_mock(cols=20, rows=8, char_width=6, width=128, height=64, device_mode='1', type=["b&w"])
     am.load_all_apps(interactive=False)

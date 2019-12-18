@@ -27,7 +27,7 @@ class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager)
 
     __base_classes__ = (GraphicalOutputDevice, CharacterOutputDevice)
 
-    type = ["char", "b&w-pixel"]
+    type = ["char", "b&w"]
     cursor_enabled = False
     cursor_pos = (0, 0) #x, y
 
