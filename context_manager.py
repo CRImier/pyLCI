@@ -210,7 +210,6 @@ class Context(object):
         """
         Allows an app to register an action that shall be run on ZP first boot.
         """
-        logger.warning((action.name, self.name, action.depends))
         return self.event_cb(self.name, "register_firstboot_action", action)
 
     def get_actions(self):
