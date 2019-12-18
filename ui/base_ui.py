@@ -39,32 +39,7 @@ class BaseUIElement(object):
         if name is not None:
             self.name = name
         else:
-            # Generating a random yet descriptive name
-            # The name being random is necessary for applying overlays
-            # the name will include the directory where the app is called from
-            cwd = os.getcwd()
-            st = stack()
-            last_filename = None
-            filename = None
-            lineno = None
-            for i, frame in enumerate(st):
-                caller = getframeinfo(frame[0])
-                filename = caller.filename
-                lineno = caller.lineno
-                if filename.startswith(cwd):
-                    filename = filename[len(cwd):].lstrip("/")
-                if filename.startswith("apps/"):
-                    # First frame that starts with 'apps' - likely is a frame from the app file
-                    break
-                elif not filename.startswith('ui') and last_filename and last_filename.startswith('ui'):
-                    # First frame that does not start with 'ui' - likely is a useful frame
-                    break
-                last_filename = filename
-            else:
-                # No suitable frame found? 0_0
-                logger.warning("No suitable frame found for UI element {} at {} while generating a name, overlays might not apply correctly!".format(self.__class__.__name__, id(self)))
-            self.name = "{} from {}:{}".format(self.__class__.__name__, filename, lineno)
-            logger.warning("No name supplied for an UI element {} at {}, generated a new name: {}".format(self.__class__.__name__, id(self), repr(self.name)))
+            self.generate_name_if_not_supplied()
         self._in_foreground = Event()
         self._in_background = Event()
         self._input_necessary = input_necessary
@@ -220,7 +195,7 @@ class BaseUIElement(object):
         If a string is supplied instead of a callable, it looks it up from methods -
         if a method is not found, raises ``ValueError``.
         Also, sets KEY_LEFT to ``deactivate`` unless ``self.override_left``
-        is set to False (override with caution).
+        is set to ``False`` (override with caution).
         """
         logger.debug("{}: processing keymap - {}".format(self.name, keymap))
         for key in keymap:
@@ -304,3 +279,31 @@ class BaseUIElement(object):
         To be implemented by a child object.
         """
         raise NotImplementedError
+
+    def generate_name_if_not_supplied(self):
+        """ Generating a random yet descriptive UI element name if one was not supplied.
+        The name hasa to be random enough so that overlays can be applied properly.
+        The name generated will include the directory where the app is called from."""
+        cwd = os.getcwd()
+        st = stack()
+        last_filename = None
+        filename = None
+        lineno = None
+        for i, frame in enumerate(st):
+            caller = getframeinfo(frame[0])
+            filename = caller.filename
+            lineno = caller.lineno
+            if filename.startswith(cwd):
+                filename = filename[len(cwd):].lstrip("/")
+            if filename.startswith("apps/"):
+                # First frame that starts with 'apps' - likely is a frame from the app file
+                break
+            elif not filename.startswith('ui') and last_filename and last_filename.startswith('ui'):
+                # First frame that does not start with 'ui' - likely is a useful frame
+                break
+            last_filename = filename
+        else:
+            # No suitable frame found? 0_0
+            logger.warning("No suitable frame found for UI element {} at {} while generating a name, overlays might not apply correctly!".format(self.__class__.__name__, id(self)))
+        self.name = "{} from {}:{}".format(self.__class__.__name__, filename, lineno)
+        logger.warning("No name supplied for an UI element {} at {}, generated a new name: {}".format(self.__class__.__name__, id(self), repr(self.name)))
