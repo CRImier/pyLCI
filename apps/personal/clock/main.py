@@ -30,7 +30,7 @@ class ClockApp(ZeroApp, Refresher):
 
     def set_context(self, c):
         self.context = c
-        c.register_firstboot_action(FirstBootAction("set_timezone", self.set_timezone, depends=None))
+        c.register_firstboot_action(FirstBootAction("set_timezone", self.set_timezone, depends=None, not_on_emulator=True))
         c.register_firstboot_action(FirstBootAction("force_sync_time", self.force_sync_time, depends=["set_timezone"], not_on_emulator=True))
 
     def force_sync_time(self):
