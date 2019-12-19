@@ -478,10 +478,11 @@ class SpinnerOverlay(BaseOverlayWithState):
     """
     # TODO: an explicit ui_el.refresh after set_state(ui_el, False)
     # to clean up the spinner's remains?
-    top_offset = 5
+    top_offset = 2
     right_offset = 15
     spinner_height = 8
     spinner_width = 7
+    clear_margin = 2
     text_x_offset = 1
     text_y_offset = -2
     letter = "s"
@@ -495,12 +496,13 @@ class SpinnerOverlay(BaseOverlayWithState):
         t = self.top_offset
         x = self.spinner_width
         y = self.spinner_height
+        c = self.clear_margin
         self.coords = [ (o,   t,   o+x, t),
                         (o+x, t,   o+x, t+y),
                         (o,   t+y, o+x, t+y),
                         (o,   t,   o,   t+y)]
         self.text_coords = (o+self.text_x_offset, t+self.text_y_offset)
-        self.clear_coords = (o, t, o+x, t+y)
+        self.clear_coords = (o-c, t-c, o+x+c, t+y+c)
 
     def apply_to(self, ui_el):
         BaseOverlayWithState.apply_to(self, ui_el)
