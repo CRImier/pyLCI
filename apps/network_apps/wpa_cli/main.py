@@ -4,11 +4,12 @@ from time import sleep, time
 from threading import Thread, Event
 from traceback import format_exc
 
-from ui import Menu, PrettyPrinter as Printer, MenuExitException, UniversalInput, \
-               Refresher, DialogBox, ellipsize, Entry, LoadingBar
-from helpers import setup_logger
 from libs.linux import wpa_cli
+from helpers import setup_logger
+from actions import FirstBootAction as FBA
 from libs.linux.wpa_monitor import WpaMonitor
+from ui import Menu, PrettyPrinter as Printer, MenuExitException, UniversalInput, \
+               Refresher, DialogBox, ellipsize, Entry, LoadingBar, SpinnerOverlay
 
 import net_ui
 import read_conf_data
@@ -17,9 +18,10 @@ from pyric import pyw
 
 i = None
 o = None
+context = None
 # wpa-cli-based monitor
 monitor = None
-# "enable temp-disabled networks"
+# "enable temp-disabled networks" thread reference
 etdn_thread = None
 # cache created from wpa_cli "list_networks" call
 network_cache = None
@@ -27,14 +29,24 @@ network_cache = None
 last_interface = None
 # current interface used in the app
 current_interface = None
+# callback used by WiFi wizard menu to get the connection status
+wifi_connect_status_cb = None
+# global to keep the connection status
+wifi_connect_last_status = None
+
 
 # a global for NetworkMenu currently active
 # (global so that we can refresh it once new scan results come)
 net_menu = None
+# a global for SpinnerOverlay applied to the menu
+# so that we can make it active/inactive when scan is started/finished
+net_spinner = None
 
 logger = setup_logger(__name__, "info")
 
+interval_between_scans_in_wizard = 10 # seconds
 connect_timeout = 10 # seconds
+wizard_scan_delay = 10
 
 class NetMenu(Menu):
     """ Menu to show currently available networks """
@@ -61,10 +73,19 @@ def get_scan_results_contents():
                                            ))
     return network_menu_contents
 
-def show_scan_results():
-    global net_menu
+def show_scan_results(activate_spinner=False):
+    # The activate_spinner flag is because, when try_scan is called,
+    # the scan_started event happens before we can open the net menu,
+    # so we need to workaround that and set the spinner state manually.
+    # After the first manual set, as long as the menu is open, all
+    # the other events are processed correctly.
+    global net_menu, net_spinner
     net_menu = NetMenu([], i, o, name="Wireless network menu", \
                        contents_hook=get_scan_results_contents)
+    net_spinner = SpinnerOverlay()
+    net_spinner.apply_to(net_menu)
+    if activate_spinner:
+        net_spinner.set_state(net_menu, True)
     net_menu.activate()
 
 def get_network_info_menu_contents(network_info):
@@ -629,6 +650,8 @@ def receive_event(event):
     # Hook for us to react on certain messages
     logger.info("Received event: {}".format(event))
     if event["code"] == "CTRL-EVENT-SCAN-RESULTS":
+        if net_spinner and net_menu:
+            net_spinner.set_state(net_menu, False)
         if net_menu and net_menu.is_active:
             try:
                 net_menu.trigger_contents_hook()
@@ -637,6 +660,9 @@ def receive_event(event):
             else:
                 if net_menu.in_foreground and net_menu.in_background:
                     net_menu.refresh()
+    elif event["code"] == "CTRL-EVENT-SCAN-STARTED":
+        if net_spinner and net_menu:
+            net_spinner.set_state(net_menu, True)
 
 def restart_monitor(interface=None):
     stop_monitor()
@@ -658,6 +684,73 @@ def stop_monitor():
     if monitor:
         monitor.stop()
     monitor = None
+
+def wizard_scan_thread(connected):
+    sleep_time = 0.1
+    while not connected.isSet():
+        times_to_sleep = wizard_scan_delay / sleep_time
+        try_scan()
+        for i in range(int(times_to_sleep)):
+            # periodically checking the event to avoid the thread lingering in background for a long time
+            if connected.isSet():
+                return
+            sleep(sleep_time)
+
+def start_scan_thread(event):
+    t = Thread(target=wizard_scan_thread, args=(event,))
+    t.daemon = True
+    t.start()
+
+def wifi_connect_wizard():
+    global current_interface, wifi_connect_status_cb
+    # picking a wireless interface to go with
+    # needed on i.e. RPi3 to avoid the p2p-dev-wlan0 stuff
+    # thanks Raspbian developers, you broke a lot of decent WiFi setup tutorials
+    # even if by accident =(
+    # also needed to support proper multi-interface work for the app
+    answer = DialogBox("yn", i, o, message="Connect to WiFi?").activate()
+    if not answer:
+        Printer("Please connect to WiFi later on so that ZPUI and system can be updated - or add some other connectivity now.", i, o, 3, skippable=True)
+        return None
+    winterfaces = pyw.winterfaces()
+    if not winterfaces:
+        Printer("No wireless cards found, can't configure WiFi!", i, o, 3, skippable=True)
+        return False
+    current_interface = winterfaces[0] # Simple, I know
+    # Might add some ZP-specific logic here later, so that
+    # i.e. the ESP-12 based WiFi is guaranteed to be the first
+    # Testing if we actually can connect
+    try:
+        wpa_cli.set_active_interface(current_interface)
+    except OSError as e:
+        if e.errno == 2:
+            Printer("wpa_cli not found, exiting", i, o, 3, skippable=True)
+        else:
+            logger.exception("Exception while using wpa_cli to set active interface to {}".format(current_interface))
+        return False
+    except wpa_cli.WPAException:
+        Printer("Can't find any wireless cards. Do you have wireless cards?", i, o, 3, skippable=True)
+        return False
+    start_monitor()
+    # setting up the status collection callback
+    def wifi_connect_status_cb(status):
+        global wifi_connect_last_status
+        wifi_connect_last_status = status
+        print(status)
+    connected = Event()
+    start_scan_thread(connected)
+    show_scan_results(activate_spinner=True)
+    connected.set()
+    stop_monitor()
+    wifi_connect_status_cb = None
+    if wifi_connect_last_status:
+        return wifi_connect_last_status["connected"]
+    return False
+
+def set_context(c):
+    global context
+    context = c
+    context.register_firstboot_action(FBA("connect_to_wifi", wifi_connect_wizard, not_on_emulator=True))
 
 def callback():
     # picking a wireless interface to go with

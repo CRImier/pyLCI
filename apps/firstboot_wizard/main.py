@@ -35,7 +35,9 @@ firstboot_action_ordering = \
   'apps.network_apps.wifi_settings%change_wifi_country',
   'apps.personal.clock%set_timezone',
   'apps.personal.clock%force_sync_time',
+  'apps.network_apps.wpa_cli%connect_to_wifi', # this and check_conn could use some kind of soft "dependency" for ordering - i.e. "after"?
   'apps.network_apps.internet_tools%check_connectivity',
+  'apps.settings%error_log_auto_send',
   'apps.system_apps.shutdown%reboot_after_firstboot'
 ]
 
