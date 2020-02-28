@@ -591,6 +591,26 @@ class MockOutput(object):
     def display_image(self, *args):
         return True
 
+
+def expand_coords(coords, expand_by):
+    """
+    A simple method to expand 4 coordinates: x1, y1, x2, y2.
+    If expand_by is an integer/float, will do x1-v, y1-v, x2+v, y2+v.
+    If expand_by is a list of 4 values, will do x1-v1, y1-v1, x2+v2, y2+v2.
+    """
+    if len(coords) != 4:
+        raise ValueError("expand_coords expects a tuple/list of 4 coordinates for 'coords', got {}".format(coords))
+    if not isinstance(expand_by, (int, float, list, tuple)):
+        raise ValueError("expand_coords expects an int/float/list/tuple as 'expand_by', got {} ({})".format(expand_by, type(expand_by)))
+    if isinstance(expand_by, (list, tuple)) and len(expand_by) != 4:
+        raise ValueError("expand_coords expects a 4-element list/tuple as 'expand_by', got {} ({} elements)".format(expand_by, len(expand_by)))
+    a, b, c, d = coords
+    e = expand_by
+    if isinstance(expand_by, (int, float)):
+        return (a-e, b-e, c+e, d+e)
+    else:
+        return (a-e[0], b-e[1], c+e[2], d+e[3])
+
 def crop(image, min_width=None, min_height=None, align=None):
     bbox = image.getbbox()
     print(bbox)

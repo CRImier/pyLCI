@@ -6,7 +6,7 @@ from mock import patch, Mock
 from PIL import Image, ImageFont, ImageChops
 
 try:
-    from ui import Canvas
+    from ui import Canvas, expand_coords
 except ImportError:
     print("Absolute imports failed, trying relative imports")
     os.sys.path.append(os.path.dirname(os.path.abspath('.')))
@@ -22,7 +22,7 @@ except ImportError:
         return orig_import(name, *args)
 
     with patch('__builtin__.__import__', side_effect=import_mock):
-        from canvas import Canvas
+        from canvas import Canvas, expand_coords
 
 
 def get_mock_output(width=128, height=64, mode="1"):
@@ -215,6 +215,14 @@ class TestCanvas(unittest.TestCase):
 	c.paste(image_to_paste)
 	assert(c.get_image().mode == o.device_mode)
 	assert(imgs_are_equal(c.get_image(), test_image.convert("RGB")))
+
+    def test_expand_coords(self):
+        """tests the expand_coords function"""
+        c = (1, 2, 3, 4)
+        assert(expand_coords(c, 1) == (0, 1, 4, 5))
+        assert(expand_coords(c, 2) == (-1, 0, 5, 6))
+        assert(expand_coords(c, (1, 2, 3, 4)) == (0, 0, 6, 8))
+
 
 def imgs_are_equal(i1, i2):
     return ImageChops.difference(i1, i2).getbbox() is None
