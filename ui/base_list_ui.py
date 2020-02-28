@@ -502,7 +502,6 @@ class TextView(object):
     def get_active_line_num(self):
         return (self.el.pointer - self.first_displayed_entry) * self.entry_height
 
-    @to_be_foreground
     def refresh(self):
         logger.debug("{}: refreshed data on display".format(self.el.name))
         self.fix_pointers_on_refresh()
@@ -534,7 +533,6 @@ class EightPtView(TextView):
     def get_fow_height_in_chars(self):
         return self.o.height / self.charheight
 
-    @to_be_foreground
     def refresh(self):
         logger.debug("{}: refreshed data on display".format(self.el.name))
         self.fix_pointers_on_refresh()
