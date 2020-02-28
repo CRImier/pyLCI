@@ -15,7 +15,7 @@ class WifiCountry(ZeroApp):
 
 	def set_context(self, c):
 		self.context = c
-		c.register_firstboot_action(FirstBootAction("change_wifi_country", self.change_wifi_country, depends=None, not_on_emulator=True))
+		c.register_firstboot_action(FirstBootAction("change_wifi_country", lambda:self.change_wifi_country(add_purpose=True), depends=None, not_on_emulator=True))
 
 	def get_current_wifi_country(self):
 		return pyw.regget()
@@ -34,7 +34,7 @@ class WifiCountry(ZeroApp):
             mc = [["WiFi country", self.change_wifi_country]]
             Menu(mc, self.i, self.o, name="WiFi settings app main menu").activate()
 
-        def change_wifi_country(self):
+        def change_wifi_country(self, add_purpose=False):
 	 	with open('/usr/share/zoneinfo/iso3166.tab') as f:
 	 		content = f.readlines()
 
@@ -49,8 +49,10 @@ class WifiCountry(ZeroApp):
 	 			continue
                         country_code, description = l.split(' ', 1)
 	 		lc.append([rfa(l), country_code])
-
-		choice = Listbox(lc, self.i, self.o, name="WiFi country selection listbox", selected=current_country).activate()
+		lb = Listbox(lc, self.i, self.o, name="WiFi country selection listbox", selected=current_country)
+		if add_purpose:
+			lb.apply(PurposeOverlay(purpose="Select WiFi country"))
+		choice = lb.activate()
 		if choice:
 			with LoadingBar(self.i, self.o, message="Changing WiFi country", name="WiFi country change LoadingBar"):
 				result = self.set_wifi_country(choice)

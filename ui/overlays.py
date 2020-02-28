@@ -1,6 +1,7 @@
 from functools import wraps
 from threading import Event
 
+from helpers import get_all_available_keys
 from scrollable_element import TextReader
 from canvas import Canvas, expand_coords
 from utils import Rect, clamp
@@ -552,3 +553,76 @@ class SpinnerOverlay(BaseOverlayWithState):
         if self.letter:
             c.text(self.letter, self.text_coords)
         c.line(self.coords[stage])
+
+
+class PurposeOverlay(BaseOverlayWithState):
+    """
+    An overlay that appears when the UI element is activated, shows
+    the UI element's purpose (say, "Now choose timezone") and disappears
+    on any key.
+    """
+
+    def __init__(self, purpose="Test"):
+        BaseOverlayWithState.__init__(self)
+        self.purpose = purpose
+
+    def apply_to(self, ui_el):
+        BaseOverlayWithState.apply_to(self, ui_el)
+        n = ui_el.name
+        self.wrap_generate_keymap(ui_el)
+        self.wrap_before_activate(ui_el)
+        self.wrap_view(ui_el)
+
+    def wrap_before_activate(self, ui_el):
+        before_activate = ui_el.before_activate
+        n = ui_el.name
+        @wraps(before_activate)
+        def wrapper(*args, **kwargs):
+            return_value = before_activate(*args, **kwargs)
+            self.uie[n].active.set()
+            return return_value
+        ui_el.before_activate = wrapper
+
+    def wrap_view(self, ui_el):
+        def wrapper(image):
+            if isinstance(image, Image):
+                image = self.modify_image_if_needed(ui_el, image)
+            return image
+        ui_el.add_view_wrapper(wrapper)
+
+    def wrap_generate_keymap(self, ui_el):
+        generate_keymap = ui_el.generate_keymap
+        n = ui_el.name
+        @wraps(generate_keymap)
+        def wrapper(*args, **kwargs):
+            keymap = generate_keymap(*args, **kwargs)
+            self.uie[n].keymap = keymap
+            self.uie[n].generate_keymap = generate_keymap
+            keys = get_all_available_keys(ui_el.i)
+            f = lambda:self.deactivate_overlay(ui_el)
+            new_keymap = {key:f for key in keys}
+            return new_keymap
+        ui_el.generate_keymap = wrapper
+        ui_el.set_default_keymap()
+
+    def deactivate_overlay(self, ui_el):
+        n = ui_el.name
+        self.uie[n].active.clear()
+        ui_el.generate_keymap = self.uie[n].generate_keymap
+        ui_el.set_keymap(self.uie[n].keymap)
+        ui_el.refresh(bypass_to_be_foreground=True)
+
+    def modify_image_if_needed(self, ui_el, image):
+        n = ui_el.name
+        if not self.uie[n].active.isSet():
+            return image
+        c = Canvas(ui_el.o, base_image=image)
+        self.show_purpose(c)
+        image = c.get_image()
+        return image
+
+    def show_purpose(self, c):
+        bounds = c.get_centered_text_bounds(self.purpose)
+        clear_coords = expand_coords(bounds, 3)
+        c.clear(clear_coords)
+        c.centered_text(self.purpose)

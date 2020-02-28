@@ -27,7 +27,7 @@ from grid_menu import GridMenu
 from order_adjust import OrderAdjust
 from overlays import HelpOverlay, FunctionOverlay, GridMenuLabelOverlay, \
                      GridMenuSidebarOverlay, GridMenuNavOverlay, IntegerAdjustInputOverlay, \
-                     SpinnerOverlay
+                     SpinnerOverlay, PurposeOverlay
 from utils import fit_image_to_screen
 from entry import Entry
 

@@ -38,9 +38,9 @@ yet_unknown_version_str = "Yet unknown version"
 def set_context(c):
     global context
     context = c
-    c.register_firstboot_action(FirstBootAction("set_hardware_version", hw_version_ui, depends=None, not_on_emulator=True))
+    c.register_firstboot_action(FirstBootAction("set_hardware_version", lambda:hw_version_ui(add_purpose=True), depends=None, not_on_emulator=True))
 
-def hw_version_ui():
+def hw_version_ui(add_purpose=False):
     def get_contents():
        if hw_version.version_unknown():
            version_str = unknown_version_str
@@ -51,7 +51,10 @@ def hw_version_ui():
           [version_str],
           ["Change version", set_hw_version]]
        return menu_contents
-    Menu([], i, o, contents_hook=get_contents, name="ZP hardware version menu").activate()
+    m = Menu([], i, o, contents_hook=get_contents, name="ZP hardware version menu")
+    if add_purpose:
+        m.apply(PurposeOverlay(purpose="Pick ZP HW version"))
+    m..activate()
 
 def set_hw_version(offer_zpui_restart=True):
     lbc = sorted([list(reversed(x)) for x in versions.items()])

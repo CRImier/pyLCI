@@ -115,7 +115,9 @@ class ClockApp(ZeroApp, Refresher):
             for k in ZoneInfoFile(getzoneinfofile_stream()).zones.keys():
                 lc.append([k])
         lc = sorted(lc)
-        choice = Listbox(lc, self.i, self.o, "Timezone selection listbox", selected=current_timezone).activate()
+        lb = Listbox(lc, self.i, self.o, "Timezone selection listbox", selected=current_timezone)
+        lb.apply(PurposeOverlay(purpose="Select timezone"))
+        choice = lb.activate()
         if choice:
             # Setting timezone using timedatectl
             try:

@@ -5,7 +5,7 @@ import unittest
 from mock import patch, Mock
 
 try:
-    from ui import Menu, HelpOverlay, FunctionOverlay, GridMenu, GridMenuLabelOverlay, IntegerAdjustInputOverlay, IntegerAdjustInput, SpinnerOverlay
+    from ui import Menu, HelpOverlay, FunctionOverlay, GridMenu, GridMenuLabelOverlay, IntegerAdjustInputOverlay, IntegerAdjustInput, SpinnerOverlay, PurposeOverlay
     from ui.base_list_ui import Canvas
     fonts_dir = "ui/fonts"
 except ImportError:
@@ -16,6 +16,11 @@ except ImportError:
 
     def import_mock(name, *args):
         if name in ['helpers']:
+            # mocking get_all_available_keys
+            if args[-1][0] == "get_all_available_keys":
+                m = Mock()
+                m.get_all_available_keys = Mock(return_value=['KEY_LEFT', 'KEY_RIGHT', 'KEY_UP', 'KEY_DOWN', 'KEY_ENTER'])
+                return m
             return Mock()
         elif name == 'ui.utils':
             import utils
@@ -23,7 +28,7 @@ except ImportError:
         return orig_import(name, *args)
 
     with patch('__builtin__.__import__', side_effect=import_mock):
-        from overlays import HelpOverlay, FunctionOverlay, GridMenuLabelOverlay, IntegerAdjustInputOverlay, SpinnerOverlay
+        from overlays import HelpOverlay, FunctionOverlay, GridMenuLabelOverlay, IntegerAdjustInputOverlay, SpinnerOverlay, PurposeOverlay
         from menu import Menu
         from grid_menu import GridMenu
         from base_list_ui import Canvas
@@ -31,7 +36,9 @@ except ImportError:
         fonts_dir = "../fonts"
 
 def get_mock_input():
-    return Mock()
+    m = Mock()
+    m.available_keys = {"driver1":["KEY_LEFT", "KEY_RIGHT", "KEY_UP", "KEY_DOWN", "KEY_ENTER"]}
+    return m
 
 def get_mock_output(rows=8, cols=21):
     m = Mock()
@@ -297,6 +304,36 @@ class TestOverlays(unittest.TestCase):
             assert(img_6 != img_3)
             assert(img_6 != img_4)
             mu.deactivate()  # KEY_LEFT
+
+        with patch.object(mu, 'activate', side_effect=activate) as p:
+            mu.activate()
+
+    def test_po_apply(self):
+        overlay = PurposeOverlay()
+        mu = Menu([], get_mock_input(), get_mock_graphical_output(), name=ui_name)
+        overlay.apply_to(mu)
+        self.assertIsNotNone(overlay)
+        self.assertIsNotNone(mu)
+
+    def test_po_purpose_disappears(self):
+        o = get_mock_graphical_output()
+        overlay = PurposeOverlay()
+        mu = Menu([], get_mock_input(), o, name=ui_name)
+        self.assertIsNotNone(overlay)
+        self.assertIsNotNone(mu)
+        Canvas.fonts_dir = fonts_dir
+        overlay.apply_to(mu)
+        def activate():
+            mu.before_activate()
+            mu.to_foreground()
+            img_1 = o.display_image.call_args[0]
+            mu.refresh()
+            img_2 = o.display_image.call_args[0]
+            assert(img_1 == img_2)
+            mu.keymap["KEY_ENTER"]()
+            img_2 = o.display_image.call_args[0]
+            assert(img_1 != img_2)
+            mu.deactivate()
 
         with patch.object(mu, 'activate', side_effect=activate) as p:
             mu.activate()
