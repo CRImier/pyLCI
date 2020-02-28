@@ -37,7 +37,9 @@ def set_context(c):
     c.register_firstboot_action(FirstBootAction("ssh_setup", setup_ssh, depends=None, before=["wifi_setup"], not_on_emulator=True))
 
 def setup_ssh():
-    regenerate_ssh_keys()
+    choice = DialogBox("ync", i, o, message="Regenerate SSH keys?").activate()
+    if choice:
+       regenerate_ssh_keys()
     choice = DialogBox("ync", i, o, message="Enable SSH server?").activate()
     if choice is not None:
         if choice:
