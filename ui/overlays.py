@@ -2,7 +2,7 @@ from functools import wraps
 from threading import Event
 
 from scrollable_element import TextReader
-from canvas import Canvas
+from canvas import Canvas, expand_coords
 from utils import Rect, clamp
 from entry import Entry
 
@@ -35,15 +35,16 @@ class BaseOverlayWithState(BaseOverlay):
     def apply_to(self, ui_el):
         BaseOverlay.apply_to(self, ui_el)
         n = ui_el.name
-        self.uie[n].active = False
+        self.uie[n].active = Event()
+        self.uie[n].active.clear()
 
     def set_state(self, ui_el, new_state):
         n = ui_el.name
-        self.uie[n].active = new_state
+        self.uie[n].active.set() if new_state else self.uie[n].active.clear()
 
     def get_state(self, ui_el):
         n = ui_el.name
-        return self.uie[n].active
+        return self.uie[n].active.isSet()
 
 class BaseOverlayWithTimeout(BaseOverlayWithState):
 
@@ -60,10 +61,10 @@ class BaseOverlayWithTimeout(BaseOverlayWithState):
 
     def update_state(self, ui_el):
         n = ui_el.name
-        if self.uie[n].active:
+        if self.uie[n].active.isSet():
             self.uie[n].counter += 1
             if self.uie[n].counter == self.duration:
-                self.uie[n].active = False
+                self.uie[n].active.clear()
                 ui_el.refresh()
 
     def wrap_idle_loop(self, ui_el):
@@ -81,7 +82,7 @@ class BaseOverlayWithTimeout(BaseOverlayWithState):
         @wraps(before_foreground)
         def wrapper(*args, **kwargs):
             return_value = before_foreground(*args, **kwargs)
-            self.uie[n].active = True
+            self.uie[n].active.set()
             self.uie[n].counter = 0
             return return_value
         ui_el.before_foreground = wrapper
@@ -141,7 +142,7 @@ class HelpOverlay(BaseOverlayWithTimeout):
 
     def modify_image_if_needed(self, ui_el, image):
         n = ui_el.name
-        if self.uie[n].active:
+        if self.uie[n].active.isSet():
             c = Canvas(ui_el.o, base_image=image)
             self.draw_icon(c)
             image = c.get_image()
@@ -267,6 +268,8 @@ class GridMenuLabelOverlay(HelpOverlay):
     def apply_to(self, ui_el):
         BaseOverlay.apply_to(self, ui_el)
         n = ui_el.name
+        self.uie[n].active = Event()
+        self.uie[n].active.clear()
         self.uie[n].is_clear_refresh = Event()
         self.uie[n].last_pointer = 0
         self.uie[n].was_on_top = True
@@ -276,10 +279,10 @@ class GridMenuLabelOverlay(HelpOverlay):
 
     def update_state(self, ui_el):
         n = ui_el.name
-        if self.uie[n].active:
+        if self.uie[n].active.isSet():
             self.uie[n].counter += 1
             if self.uie[n].counter == self.duration:
-                self.uie[n].active = False
+                self.uie[n].active.clear()
                 self.uie[n].is_clear_refresh.set()
                 ui_el.refresh()
 
@@ -300,14 +303,14 @@ class GridMenuLabelOverlay(HelpOverlay):
                 self.uie[n].is_clear_refresh.clear()
             else:
                 # This is the usual refresh - making sure we draw the label again
-                self.uie[n].active = True
+                self.uie[n].active.set()
                 self.uie[n].counter = 0
             return refresh()
         ui_el.refresh = wrapper
 
     def modify_image_if_needed(self, ui_el, image):
         n = ui_el.name
-        if not self.uie[n].active:
+        if not self.uie[n].active.isSet():
             return image
         c = Canvas(ui_el.o, base_image=image)
         self.draw_text(c, ui_el)
@@ -522,7 +525,7 @@ class SpinnerOverlay(BaseOverlayWithState):
 
     def modify_image_if_needed(self, ui_el, image):
         n = ui_el.name
-        if not self.uie[n].active:
+        if not self.uie[n].active.isSet():
             return image
         if self.uie[n].spinner_stage == 3:
             self.uie[n].spinner_stage = 0
@@ -539,13 +542,12 @@ class SpinnerOverlay(BaseOverlayWithState):
         @wraps(idle_loop)
         def wrapper(*args, **kwargs):
             return_value = idle_loop(*args, **kwargs)
-            if self.uie[n].active:
+            if self.uie[n].active.isSet():
                 ui_el.refresh()
             return return_value
         ui_el.idle_loop = wrapper
 
     def draw_spinner(self, c, stage):
-        #print("Drawing spinner at {} stage".format(stage))
         c.clear(self.clear_coords)
         if self.letter:
             c.text(self.letter, self.text_coords)
