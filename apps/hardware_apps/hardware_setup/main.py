@@ -6,7 +6,7 @@ import signal
 import traceback
 from time import sleep
 
-from ui import Menu, PrettyPrinter as Printer, DialogBox, LoadingIndicator, PathPicker, Listbox, ProgressBar
+from ui import Menu, PrettyPrinter as Printer, DialogBox, LoadingIndicator, PathPicker, Listbox, ProgressBar, PurposeOverlay
 from helpers import setup_logger, read_or_create_config, local_path_gen, write_config, save_config_gen
 from actions import FirstBootAction
 
@@ -54,7 +54,7 @@ def hw_version_ui(add_purpose=False):
     m = Menu([], i, o, contents_hook=get_contents, name="ZP hardware version menu")
     if add_purpose:
         m.apply(PurposeOverlay(purpose="Pick ZP HW version"))
-    m..activate()
+    m.activate()
 
 def set_hw_version(offer_zpui_restart=True):
     lbc = sorted([list(reversed(x)) for x in versions.items()])

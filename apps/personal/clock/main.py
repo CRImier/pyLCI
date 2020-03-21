@@ -10,7 +10,7 @@ from subprocess import check_output, CalledProcessError
 
 from apps import ZeroApp
 from actions import FirstBootAction
-from ui import Menu, Refresher, Canvas, IntegerAdjustInput, Listbox, LoadingBar, PrettyPrinter as Printer
+from ui import Menu, Refresher, Canvas, IntegerAdjustInput, Listbox, LoadingBar, PrettyPrinter as Printer, PurposeOverlay
 
 from helpers import read_or_create_config, local_path_gen, setup_logger
 

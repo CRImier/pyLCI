@@ -1,6 +1,6 @@
 from apps import ZeroApp
 from actions import FirstBootAction
-from ui import Menu, Listbox, LoadingBar, PrettyPrinter as Printer, rfa
+from ui import Menu, Listbox, LoadingBar, PrettyPrinter as Printer, rfa, PurposeOverlay
 
 from time import sleep
 
