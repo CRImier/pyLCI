@@ -76,7 +76,12 @@ logging_format = log_config["format"]
 logfile_size = log_config["file_size"]
 files_to_store = log_config["files_to_store"]
 
-
+#Py2-3 hax
+try:
+    basestring
+except:
+    import builtins
+    builtins.basestring = str
 
 def init():
     """Initialize input and output objects"""

@@ -23,7 +23,7 @@ class OutputDevice(object):
 
     def init_proxy(self, proxy):
         base_classes = self.__base_classes__
-        base_classes_items = sum([cls.__dict__.items() for cls in base_classes], [])
+        base_classes_items = sum([list(cls.__dict__.items()) for cls in base_classes], [])
         #print(base_classes_items)
         public_attributes = [ (k, v) for (k, v) in base_classes_items if not k.startswith("_") ]
         hidden_attributes = ["current_proxy", "current_image"]

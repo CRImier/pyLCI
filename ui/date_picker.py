@@ -1,9 +1,9 @@
 import calendar
 import datetime
-
 from time import sleep, strftime, struct_time
-from base_ui import BaseUIElement
-from canvas import Canvas
+
+from ui.base_ui import BaseUIElement
+from ui.canvas import Canvas
 
 class DatePicker(BaseUIElement):
 

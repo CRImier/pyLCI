@@ -2,7 +2,7 @@ import smbus
 from time import sleep
 
 from helpers import setup_logger
-from skeleton import InputSkeleton, KEY_PRESSED, KEY_RELEASED, KEY_HELD
+from input.drivers.skeleton import InputSkeleton, KEY_PRESSED, KEY_RELEASED, KEY_HELD
 logger = setup_logger(__name__, "warning")
 
 class InputDevice(InputSkeleton):

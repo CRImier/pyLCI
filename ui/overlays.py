@@ -1,14 +1,14 @@
 from functools import wraps
 from threading import Event
 
-from helpers import get_all_available_keys
-from scrollable_element import TextReader
-from canvas import Canvas, expand_coords
-from utils import Rect, clamp
-from entry import Entry
-
 from PIL import Image
 Image = Image.Image
+
+from ui.scrollable_element import TextReader
+from ui.canvas import Canvas, expand_coords
+from ui.utils import Rect, clamp
+from ui.entry import Entry
+from helpers import get_all_available_keys
 
 # Shorter code
 # from https://stackoverflow.com/questions/4984647/accessing-dict-keys-like-an-attribute/5021467#5021467
@@ -341,7 +341,7 @@ class GridMenuLabelOverlay(HelpOverlay):
         top_clear_coords = (left_offset, 0, text_bounds[0]+left_offset, text_bounds[1])
         bottom_clear_coords = (left_offset, c.height-text_bounds[1]-self.text_border, text_bounds[0]+left_offset, c.height-1)
         last_row_start = (ui_el.rows-1)*ui_el.cols
-        top_bottom_entries = range(ui_el.cols) + range(last_row_start, last_row_start+ui_el.cols)
+        top_bottom_entries = list(range(ui_el.cols)) + list(range(last_row_start, last_row_start+ui_el.cols))
         if grid_rows > 2 and position not in top_bottom_entries:
             if pointer == self.uie[n].last_pointer:
                 clear_coords = top_clear_coords if self.uie[n].was_on_top else bottom_clear_coords

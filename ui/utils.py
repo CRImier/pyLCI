@@ -232,14 +232,14 @@ def fit_image_to_screen(image, o):
 
     image_width, image_height = image.size
     if o.height > image_height and o.width > image.width: # Checks if the screen dimensions are equal to the image size
-	logger.info("Using resize script")
+        logger.info("Using resize script")
         if o.height/image_height < o.width/image_width: # Checks which side is bigger in proportion to the image size
-	    logger.info("Using height as multiplier")
+            logger.info("Using height as multiplier")
             bigger_side = o.height
             bigger_image_side = image_height
             smaller_image_side = image_width
         else:
-	    logger.info("Using width as multiplier")
+            logger.info("Using width as multiplier")
             bigger_side = o.width
             bigger_image_side = image_width
             smaller_image_side = image_height
@@ -247,7 +247,7 @@ def fit_image_to_screen(image, o):
         other_size = int((float(smaller_image_side)*float(bigger_side_percent))) # Working out smaller side length
         image = image.resize((bigger_side,other_size), Image.ANTIALIAS) # Resizes the image to the calculated dimensions to fit the screen and stick to the aspect ratio using a $
     elif (o.width, o.height) == image.size: # Checks if screen dimensions and exactly the same as image dimensions
-	logger.info("Exact same size - no changes needed")
+        logger.info("Exact same size - no changes needed")
     elif (o.width == image_width and o.height > image_height) or (o.height == image_height and o.width > image_width):
         logger.info("One side is the same, the other is bigger - borders needed")
     else: # This should happen if the screen is smaller on one or both sides than the image
@@ -259,16 +259,16 @@ def fit_image_to_screen(image, o):
         left = top = right = bottom = 0
         width, height = image.size
         if o.width > width:
-	    logger.info("Adding borders for width")
+            logger.info("Adding borders for width")
             delta = o.width - width
             left = delta // 2
             right = delta - left
         if o.height > height:
-	    logger.info("Adding borders for height")
+            logger.info("Adding borders for height")
             delta = o.height - height
             top = delta // 2
             bottom = delta - top
         image = ImageOps.expand(image, border=(left, top, right, bottom), fill="black")
-	logger.info("Borders added are: top - {}, bottom - {}, left - {} and right - {}".format(top, bottom, left, right))
+        logger.info("Borders added are: top - {}, bottom - {}, left - {} and right - {}".format(top, bottom, left, right))
     logger.info("All resizing finished")
     return image

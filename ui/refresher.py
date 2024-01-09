@@ -4,10 +4,10 @@ from traceback import print_exc
 
 import PIL
 
+from ui.number_input import IntegerAdjustInput
+from ui.utils import to_be_foreground
+from ui.base_ui import BaseUIElement, internal_callback_in_background
 from helpers import setup_logger
-from number_input import IntegerAdjustInput
-from utils import to_be_foreground
-from base_ui import BaseUIElement, internal_callback_in_background
 
 logger = setup_logger(__name__, "info")
 

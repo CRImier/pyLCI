@@ -1,11 +1,10 @@
 from threading import Event
 from time import sleep
 
-from base_list_ui import BaseListUIElement, to_be_foreground
-from loading_indicators import LoadingBar
-from utils import clamp, clamp_list_index
-from entry import Entry
-
+from ui.base_list_ui import BaseListUIElement, to_be_foreground
+from ui.loading_indicators import LoadingBar
+from ui.utils import clamp, clamp_list_index
+from ui.entry import Entry
 from helpers import setup_logger
 
 logger = setup_logger(__name__, "warning")
@@ -201,11 +200,12 @@ class MenuRenderingMixin(object):
         # for entry_height=2, indices 0-1 will be used for the first menu entry
         # and 2-3 will be used for the second menu entry
         # hence, the /self.entry_height part
-        contents_entry = self.el.contents[self.first_displayed_entry + index/self.entry_height]
+        print(self.first_displayed_entry, index, self.entry_height)
+        contents_entry = self.el.contents[self.first_displayed_entry + index//self.entry_height]
         if self.has_second_callback(contents_entry):
-            tw, th = self.charwidth / 2, self.charheight / 2
+            tw, th = self.charwidth // 2, self.charheight // 2
             right_offset = 1
-            top_offset = (self.charheight - th) / 2
+            top_offset = (self.charheight - th) // 2
             coords = (
                 (str(-1*(right_offset+tw)), index * self.charheight + top_offset),
                 (str(-1*(right_offset+tw)), index * self.charheight + top_offset + th),
@@ -225,7 +225,14 @@ Menu.view_mixin = MenuRenderingMixin
 
 
 class MessagesMenu(Menu):
-    """A modified version of the Menu class for displaying a list of messages and loading new ones"""
+    """
+    A modified version of the Menu class
+    for displaying a list of messages and loading new ones
+
+    HERE BE DRAGONS
+    FORMATTING PROBABLY BROKEN
+    PROCEED WITH CAUTION
+    """
 
     load_more_possible = True
     load_more_marker = ["Load more"]
@@ -242,11 +249,11 @@ class MessagesMenu(Menu):
         Menu.before_activate(self)
         self.pointer = clamp(len(self.contents) - 2, 0, len(self.contents)-1)
         if self.contents: # Not empty
-		self.add_load_more_marker()
+            self.add_load_more_marker()
 
     def add_load_more_marker(self):
-	if [self.load_more_marker] not in self.contents:
-	        self.contents = [self.load_more_marker] + self.contents
+        if [self.load_more_marker] not in self.contents:
+            self.contents = [self.load_more_marker] + self.contents
 
     def remove_load_more_marker(self):
         while self.load_more_marker in self.contents:
@@ -255,32 +262,32 @@ class MessagesMenu(Menu):
     def load_more(self):
         self.load_more_allow_refresh.clear()
         before = len(self.contents)
-	self.remove_load_more_marker()
-	has_loaded_more_events = True
-	contents_added = False
+        self.remove_load_more_marker()
+        has_loaded_more_events = True
+        contents_added = False
         counter = 0
         li = None
-	while has_loaded_more_events and not contents_added:
-                if counter == 5: # the user is let down, let's at least show them stuff is happening
-                    li = LoadingBar(self.i, self.o, message="Loading messages", name="{} - load_more() LoadingBar")
-                    li.run_in_background()
-	        has_loaded_more_events = self.load_more_callback()
+        while has_loaded_more_events and not contents_added:
+            if counter == 5: # the user is let down, let's at least show them stuff is happening
+                li = LoadingBar(self.i, self.o, message="Loading messages", name="{} - load_more() LoadingBar")
+                li.run_in_background()
+                has_loaded_more_events = self.load_more_callback()
                 logger.debug("Loaded more events!")
-		if has_loaded_more_events:
-			self.remove_load_more_marker()
-			self.add_load_more_marker()
-		        after = len(self.contents)
-			difference = after-before
-			if difference > 0:
-				contents_added = True
-				logger.info("Loaded {} messages".format(difference))
-			        self.pointer += (after-before)+1
-			else:
-				logger.info("Loaded events but no messages, retrying")
-			self.pointer = clamp_list_index(self.pointer, self.contents)
-		else:
-			self.remove_load_more_marker()
-                counter += 1
+                if has_loaded_more_events:
+                    self.remove_load_more_marker()
+                    self.add_load_more_marker()
+                    after = len(self.contents)
+            difference = after-before
+            if difference > 0:
+                contents_added = True
+                logger.info("Loaded {} messages".format(difference))
+                self.pointer += (after-before)+1
+            else:
+                logger.info("Loaded events but no messages, retrying")
+            self.pointer = clamp_list_index(self.pointer, self.contents)
+        else:
+            self.remove_load_more_marker()
+            counter += 1
         if li: # LoadingBar fired up, need to stop it now
             li.stop()
             sleep(0.5) # until it actually stops =D

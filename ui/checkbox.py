@@ -1,8 +1,8 @@
 from copy import copy
 
-from base_list_ui import BaseListUIElement, to_be_foreground
+from ui.base_list_ui import BaseListUIElement, to_be_foreground
+from ui.entry import Entry
 from helpers import setup_logger
-from entry import Entry
 
 logger = setup_logger(__name__, "warning")
 

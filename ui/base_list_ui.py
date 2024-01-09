@@ -6,11 +6,11 @@ from copy import copy
 from time import sleep
 from threading import Event
 
-from entry import Entry
-from canvas import Canvas
+from ui.entry import Entry
+from ui.canvas import Canvas
+from ui.base_ui import BaseUIElement
+from ui.utils import to_be_foreground, clamp_list_index
 from helpers import setup_logger
-from base_ui import BaseUIElement
-from utils import to_be_foreground, clamp_list_index
 
 logger = setup_logger(__name__, "warning")
 
@@ -387,7 +387,7 @@ class TextView(object):
         return self.el.in_foreground
 
     def get_entry_count_per_screen(self):
-        return self.get_fow_height_in_chars() / self.entry_height
+        return self.get_fow_height_in_chars() // self.entry_height
 
     def get_fow_width_in_chars(self):
         return self.o.cols

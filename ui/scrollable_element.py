@@ -3,10 +3,10 @@ from __future__ import division
 from textwrap import wrap
 from time import sleep, time
 
-from canvas import Canvas
-from funcs import format_for_screen
-from helpers import setup_logger
+from ui.canvas import Canvas
+from ui.funcs import format_for_screen
 from ui.utils import to_be_foreground, clamp
+from helpers import setup_logger
 
 logger = setup_logger(__name__, "warning")
 

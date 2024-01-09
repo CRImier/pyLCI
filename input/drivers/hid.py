@@ -2,7 +2,7 @@ from evdev import InputDevice as HID, list_devices, ecodes
 from time import sleep
 
 from helpers import setup_logger
-from skeleton import InputSkeleton
+from input.drivers.skeleton import InputSkeleton
 
 logger = setup_logger(__name__, "warning")
 

@@ -5,12 +5,19 @@ from copy import copy
 import importlib
 import inspect
 import atexit
-import Queue
+try:
+    from queue import Queue, Empty
+except ModuleNotFoundError:
+    from Queue import Queue
+    Empty = Queue.Empty
 
 from actions import Action
 from helpers import setup_logger, KEY_RELEASED, KEY_HELD, KEY_PRESSED
 
-from hotplug import DeviceManager
+try:
+    from input.hotplug import DeviceManager
+except ImportError:
+    from hotplug import DeviceManager
 
 logger = setup_logger(__name__, "warning")
 
@@ -35,7 +42,7 @@ class InputProcessor(object):
     def __init__(self, init_drivers, context_manager):
         self.global_keymap = {}
         self.cm = context_manager
-        self.queue = Queue.Queue()
+        self.queue = Queue()
         self.available_keys = {}
         self.drivers = {}
         self.initial_drivers = {}
@@ -172,7 +179,7 @@ class InputProcessor(object):
             if self.get_current_proxy() is not None:
                 try:
                     data = self.queue.get(False, 0.1)
-                except Queue.Empty:
+                except Empty:
                     # here an active event_loop spends most of the time
                     sleep(0.1)
                 except AttributeError:

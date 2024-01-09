@@ -344,7 +344,7 @@ class Canvas(object):
         especially with those displays having even numbers as width and height
         in pixels (that is, the absolute majority of them).
         """
-        return self.width / 2, self.height / 2
+        return self.width // 2, self.height // 2
 
     def invert(self):
         """
@@ -445,7 +445,7 @@ class Canvas(object):
             # Didn't get pairs of coordinates - converting into pairs
             # But first, sanity checks
             assert (len(coord_pairs) % 2 == 0), "Odd number of coordinates supplied! ({})".format(coord_pairs)
-            assert all([isinstance(c, (int, basestring)) for i in coord_pairs]), "Coordinates are non-uniform! ({})".format(coord_pairs)
+            assert all([isinstance(i, (int, basestring)) for i in coord_pairs]), "Coordinates are non-uniform! ({})".format(coord_pairs)
             coord_pairs = convert_flat_list_into_pairs(coord_pairs)
         coord_pairs = list(coord_pairs)
         for i, coord_pair in enumerate(coord_pairs):
@@ -489,8 +489,8 @@ class Canvas(object):
         """
         w, h = self.get_text_bounds(text, font=font)
         # Text center width and height
-        tcw = w / 2
-        tch = h / 2
+        tcw = w // 2
+        tch = h // 2
         # Real center width and height
         rcw, rch = self.get_center()
         # If no values supplied as arguments (likely), using the real ones
@@ -535,25 +535,25 @@ class Canvas(object):
 #	self.image = self.image.rotate(degrees, expand=expand)
 
     def paste(self, image_or_path, coords=None, invert=False):
-	"""
-	Pastes the supplied image onto the canvas, with optional
-	coordinates. Otherwise, you can supply a string path to an image
-        that will be opened and pasted.
+        """
+        Pastes the supplied image onto the canvas, with optional
+        coordinates. Otherwise, you can supply a string path to an image
+            that will be opened and pasted.
 
-	If ``coords`` is not supplied, the image will be pasted in the top left
-	corner. ``coords`` can be a 2-tuple giving the upper left
-	corner or a 4-tuple defining the left, upper, right and lower
-	pixel coordinate. If a 4-tuple is given, the size of the pasted
-	image must match the size of the region.
-	"""
+        If ``coords`` is not supplied, the image will be pasted in the top left
+        corner. ``coords`` can be a 2-tuple giving the upper left
+        corner or a 4-tuple defining the left, upper, right and lower
+        pixel coordinate. If a 4-tuple is given, the size of the pasted
+        image must match the size of the region.
+        """
 
         if coords is not None:
             coords = self.check_coordinates(coords)
-	if isinstance(image_or_path, basestring):
+        if isinstance(image_or_path, basestring):
             image = Image.open(image_or_path)
         else:
             image = image_or_path
-	self.image.paste(image, box=coords)
+        self.image.paste(image, box=coords)
         if invert:
             if not coords: coords = (0, 0)
             coords = coords+(coords[0]+image.width, coords[1]+image.height)
@@ -629,6 +629,6 @@ def crop(image, min_width=None, min_height=None, align=None):
 
 def convert_flat_list_into_pairs(l):
     pl = []
-    for i in range(len(l)/2):
+    for i in range(len(l)//2):
         pl.append((l[i*2], l[i*2+1]))
     return pl

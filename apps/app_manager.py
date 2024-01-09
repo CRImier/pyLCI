@@ -2,7 +2,7 @@ import importlib
 import os
 import traceback
 
-import zero_app
+import apps.zero_app
 from helpers import setup_logger
 from ui import Printer, Menu, HelpOverlay, GridMenu, Entry, \
                GridMenuLabelOverlay, GridMenuSidebarOverlay, GridMenuNavOverlay

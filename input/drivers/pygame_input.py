@@ -5,7 +5,7 @@ import pygame
 
 import emulator
 from helpers import setup_logger
-from skeleton import InputSkeleton
+from input.drivers.skeleton import InputSkeleton
 
 logger = setup_logger(__name__, "warning")
 

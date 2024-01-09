@@ -2,9 +2,9 @@
 
 import string
 
-from helpers import setup_logger
-
 from unidecode import unidecode
+
+from helpers import setup_logger
 
 logger = setup_logger(__name__, "info")
 

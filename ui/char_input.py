@@ -1,12 +1,11 @@
 from time import sleep
-from helpers import setup_logger
-logger = setup_logger(__name__, "warning")
-
 import string
 
-from utils import to_be_foreground
-from canvas import Canvas
-from base_ui import BaseUIElement
+from ui.utils import to_be_foreground
+from ui.canvas import Canvas
+from ui.base_ui import BaseUIElement
+from helpers import setup_logger
+logger = setup_logger(__name__, "warning")
 
 
 class CharArrowKeysInput(BaseUIElement):

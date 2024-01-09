@@ -1,9 +1,9 @@
 from time import sleep
-from helpers import setup_logger
-from funcs import format_for_screen as ffs
 
-from base_ui import BaseUIElement
-from canvas import Canvas
+from ui.base_ui import BaseUIElement
+from ui.canvas import Canvas
+from ui.funcs import format_for_screen as ffs
+from helpers import setup_logger
 
 logger = setup_logger(__name__, "info")
 
@@ -173,7 +173,7 @@ class GraphicalView(TextView):
         #Drawing text
         chunk_y = 0
         formatted_message = ffs(self.el.message, self.o.cols)
-	if len(formatted_message)*(self.o.char_height+2) > self.o.height - self.o.char_height - 2:
+        if len(formatted_message)*(self.o.char_height+2) > self.o.height - self.o.char_height - 2:
             raise ValueError("DialogBox {}: message is too long to fit on the screen: {}".format(self.el.name, formatted_message))
         for line in formatted_message:
             c.text(line, (0, chunk_y))

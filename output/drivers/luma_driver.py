@@ -79,8 +79,8 @@ class LumaScreen(GraphicalOutputDevice, CharacterOutputDevice, BacklightManager)
         self.height = height if height else self.default_height
         self.char_width = 6
         self.char_height = 8
-        self.cols = self.width / self.char_width
-        self.rows = self.height / self.char_height
+        self.cols = self.width // self.char_width
+        self.rows = self.height // self.char_height
         self.init_display(**kwargs)
         self.device_mode = self.device.mode
         BacklightManager.init_backlight(self, **kwargs)

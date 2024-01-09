@@ -1,6 +1,6 @@
 from time import sleep
 
-from skeleton import InputSkeleton, KEY_PRESSED, KEY_RELEASED
+from input.drivers.skeleton import InputSkeleton, KEY_PRESSED, KEY_RELEASED
 
 class InputDevice(InputSkeleton):
     """ A driver for pushbuttons attached to Raspberry Pi GPIO.
