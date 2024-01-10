@@ -528,10 +528,10 @@ class EightPtView(TextView):
         TextView.__init__(self, *args, **kwargs)
 
     def get_fow_width_in_chars(self):
-        return (self.o.width - self.x_scrollbar_offset) / self.charwidth
+        return (self.o.width - self.x_scrollbar_offset) // self.charwidth
 
     def get_fow_height_in_chars(self):
-        return self.o.height / self.charheight
+        return self.o.height // self.charheight
 
     def refresh(self):
         logger.debug("{}: refreshed data on display".format(self.el.name))
