@@ -34,7 +34,7 @@ In ``app/main.py``:
         #Gets called when app is selected from menu
         pass
 
-``app/__init__.py`` has to be an empty file:
+``app/__init__.py`` has to exist, but can be an empty file:
 
 .. code-block:: python
 
@@ -79,7 +79,7 @@ In ``app/main.py``:
             #Gets called when app is selected from menu
             pass
 
-``app/__init__.py`` has to be an empty file, as with the previous example.
+``app/__init__.py`` has to exist and can be an empty file, as with the previous example.
      
 ------------
 
@@ -749,8 +749,7 @@ The resulting config received from ``read_or_create_config`` will look like this
         default_config = '{"your":"default", "config":"to_use"}' #has to be a string
         config_filename = "config.json"
         
-        def __init__(self, *args, **kwargs):
-            ZeroApp.__init__(self, *args, **kwargs)
+        def init_app(self):
             self.config = read_or_create_config(local_path(self.config_filename), self.default_config, self.menu_name+" app")
             self.save_config = save_config_method_gen(self, local_path(self.config_filename))
 
@@ -795,8 +794,7 @@ How to do things on app startup in a class-based app?
 
 .. code-block:: python
 
-    def __init__(self, *args, **kwargs):
-        ZeroApp.__init__(self, *args, **kwargs)
+    def init_app(self):        
         # do your thing
      
 ------------
