@@ -1,7 +1,7 @@
 import smbus
 from time import sleep
 
-from skeleton import InputSkeleton
+from input.drivers.skeleton import InputSkeleton
 
 class InputDevice(InputSkeleton):
     """ A driver for MAX7318-based I2C IO expanders. They have 16 IO pins available as well as an interrupt pin. 
@@ -14,7 +14,7 @@ class InputDevice(InputSkeleton):
     "KEY_UP",
     "KEY_DOWN",
     "KEY_RIGHT",
-    "KEY_KPENTER",
+    "KEY_ENTER",
     "KEY_0",
     "KEY_1",
     "KEY_2",

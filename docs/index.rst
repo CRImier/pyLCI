@@ -1,62 +1,63 @@
-Welcome to pyLCI's documentation!
+Welcome to ZPUI documentation!
 =================================
 
-pyLCI stands for Python-based Linux Control Interface. It's an external interface for configuration of your Linux devices in an easy and quick way. 
+ZPUI (ZeroPhone UI, pronounced *zippy ui*) is a powerful user interface and app framework for small screens. It was designed for the ZeroPhone project,
+but it's usable on a wide variety of single-board computers.
 
-It can be used on:
+Minimum requirements:
+    - monochrome 128x64 or larger screen (OLED/LCD)
+    - 5 buttons
 
-* Embedded devices (where dependency on Python isn't problematic to satisfy), such as OpenWRT-powered routers
-* Single-board computers, including, but not limited to Raspberry Pi, BeagleBone and many others 
-* Tablets and laptops
-* Servers
-* Desktop PCs and HTPCs
+ZPUI is based on pyLCI, a general-purpose UI for embedded devices, an interface that supports 16x2 and larger character displays.
+Currently. ZPUI is tailored for the ZeroPhone hardware, namely, the 1.3" monochrome 128x64 OLED 
+and 30-key numpad (though it still retains input&output drivers from pyLCI), and it also ships with ZeroPhone-specific applications.
+
+At the moment, ZPUI is being made more generic and tested across many different single-board computers, and the documentation is being improved
+along with the effort.
 
 Guides:
-=================================
+=======
 
-* :doc:`Hardware guide <hardware>`
-* :doc:`Setup and configuration guide <setup>`
-* :doc:`Debugging issues <debugging>`
-* :doc:`Managing and developing applications <app_mgmt>`
+* :doc:`Installing and updating ZPUI <setup>`
+* :ref:`Installing ZPUI emulator <emulator>`
+* :doc:`App development - how to ... ? <howto>`
+* :doc:`ZPUI configuration files <config>`
+* :doc:`Hacking on UI <hacking_ui>`
+* :doc:`Logging configuration <logging>`
 
-pyLCI system - the software part (pyLCI daemon) and the hardware part - typically consisting of a character LCD and a keypad of some sort. 
+References:
+===========
 
-The pyLCI daemon consists of 5 parts:
+- :doc:`Crash course <crash_course>`
+- :doc:`UI elements <ui>`
+- :doc:`Helper functions <helpers>`
+- :doc:`Input system <input>`
 
-#. :doc:`Input system <input>`
-#. :doc:`Output system <output>`
-#. :doc:`UI elements <ui>`
-#. :doc:`Applications <apps>`
-#. Glue logic (mostly main.py launcher)
+  - :doc:`Keymaps <keymap>`
+
+- :doc:`Output system <output>`
 
 
 :doc:`Development plans <plans>`
 
-:doc:`FAQ&contacts <faq_contact>`
+:doc:`Contact us <contact>`
 
+:doc:`Working on documentation <docs_development>`
 
 
 .. toctree::
    :maxdepth: 1
    :hidden:
 
-   hardware.rst
    setup.rst
-   debugging.rst
-   input.rst
-   output.rst
+   config.rst
+   crash_course.rst
+   howto.rst
    ui.rst
-   apps.rst
+   helpers.rst
+   keymap.rst
+   hacking_ui.rst
+   logging.rst
    app_mgmt.rst
-   plans.rst
-   faq_contact.rst
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-
+   docs_development.rst
+   contact.rst

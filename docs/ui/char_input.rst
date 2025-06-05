@@ -12,7 +12,7 @@ Character input UI elements
         return False #Cancelling
     #processing the input you received...
 
-.. automodule:: ui.char_input
+.. currentmodule:: ui
 
 .. autoclass:: CharArrowKeysInput
-    :members: __init__,activate,move_up,move_down,move_left,move_right,accept_value,deactivate,print_value,print_name
+    :members: __init__,activate,deactivate

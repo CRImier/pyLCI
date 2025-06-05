@@ -1,0 +1,17 @@
+from apps import ZeroApp
+from ui import DatePicker, TimePicker
+
+def callback(ul):
+	print(ul)
+
+class CalendarApp(ZeroApp):
+    menu_name = "Calendar"
+
+class FirstbootWizard(ZeroApp):
+    def can_load(self):
+        # needs to be able to exit the UI on platforms that are not zerophone
+        return False, "app mothballed until its code is updated"
+
+    def on_start(self):
+        self.dp = DatePicker(self.i, self.o, callback=callback)
+        print(self.dp.activate())

@@ -13,7 +13,7 @@ Numeric input UI elements
         return
     #process the number
 
-.. automodule:: ui.number_input
+.. currentmodule:: ui
 
 .. autoclass:: IntegerAdjustInput
-    :members: __init__,activate,increment,decrement,reset,select_number,deactivate,print_number,print_name
+    :members: __init__,activate,deactivate,print_number,print_name

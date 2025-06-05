@@ -8,7 +8,7 @@ Debugging in general
 
 .. rubric:: Basic debugging steps:
 
-* Launch system manually and see the error messages. Go to the directory you installed pyLCI from and launch ``python main.py``. Alternatively, use ``journalctl -u pylci.service`` for a system that was running in daemon mode but crashed unexpectedly.
+* Launch system manually and see the error messages. Go to the directory you installed ZPUI from and launch ``python main.py``. Alternatively, use ``journalctl -u zpui.service`` for a system that was running in daemon mode but crashed unexpectedly.
 * Check your connections.
 
 .. rubric:: Hardware/driver issues:
@@ -24,13 +24,13 @@ Output issues
 
 .. rubric:: Basic debugging steps:
 
-* Launch the output driver manually to display the test sequence. Go to the directory you installed pyLCI from and launch the output driver directly like ``python output/drivers/your_driver.py``. You might need to adjust variables in ``if __name__ == "__main__":`` section.
+* Launch the output driver manually to display the test sequence. Go to the directory you installed ZPUI from and launch the output driver directly like ``python output/drivers/your_driver.py``. You might need to adjust variables in ``if __name__ == "__main__":`` section.
 * Is the driver you're using even the correct one? See the config.json and documentation for the driver you're using. 
 
 ----------
 
 
-Currently, pyLCI uses HD44780-compatible screens as output devices. Minimum screen size is 16x2. There are some known issues when using those. Again, you're not likely to run into hardware problems when using shields.
+Currently, ZPUI uses HD44780-compatible screens as output devices. Minimum screen size is 16x2. There are some known issues when using those. Again, you're not likely to run into hardware problems when using shields.
 
 .. rubric:: Screen displaying garbage
 
@@ -51,7 +51,3 @@ Currently, pyLCI uses HD44780-compatible screens as output devices. Minimum scre
 
 * Is first row of blocks shown? If not, regulate the contrast with a potentiometer. You can also try to tie the contrast pin to GND.
 * Does screen receive 5V (not 3.3V) as VCC? Unless it's a screen that's capable of doing 3.3V (must be stated in screen's description), that's a no-go.
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

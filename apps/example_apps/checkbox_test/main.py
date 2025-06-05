@@ -1,12 +1,9 @@
 menu_name = "Checkbox test"
 
 from subprocess import call
-from ui import Checkbox
+from ui import Checkbox, Printer
 
-
-#Some globals for pyLCI
 callback = None
-#Some globals for us
 i = None
 o = None
 
@@ -18,8 +15,9 @@ checkbox_contents = [
 ]
 
 def init_app(input, output):
-    global callback, i, o
+    global i, o
     i = input; o = output
-    def callback():
-        print(Checkbox(checkbox_contents, i, o, "Shutdown menu").activate())
 
+def callback():
+    result = Checkbox(checkbox_contents, i, o, "Shutdown menu").activate()
+    Printer(str(result), i, o, 1)

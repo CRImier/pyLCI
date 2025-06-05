@@ -76,12 +76,9 @@ def umount(path, lazy=False):
 def status_menu():
     pass
 
-#Some globals for pyLCI
 callback = None
-#Some globals for us
 i = None
 o = None
-
 
 def init_app(input, output):
     global i, o, callback
@@ -92,5 +89,5 @@ def init_app(input, output):
     #["Drives", list_drives],
     #["Status", status_menu]]
     ]
-    callback = Menu(menu_contents, i, o).activate
+    callback = Menu(menu_contents, i, o, name="Partitions app main menu").activate
 

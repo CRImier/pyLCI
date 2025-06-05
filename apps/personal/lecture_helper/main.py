@@ -39,7 +39,7 @@ def start_lecture():
     helper.start()
     
     
-class LectureHelper():
+class LectureHelper(object):
     refresher = None
     position = 0
     started_at = None

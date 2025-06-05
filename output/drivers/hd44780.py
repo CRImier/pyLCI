@@ -18,7 +18,7 @@ def delay(milliseconds):
     sleep(seconds)
 
 
-class HD44780():
+class HD44780(object):
     """An object that provides high-level functions for interaction with display. It contains all the high-level logic and exposes an interface for system and applications to use."""
 
     # commands

@@ -27,7 +27,7 @@ def status_refresher_data():
         return status_str
 
 def callback():
-    keymap = {"KEY_ENTER":pomodoro_options_menu, "KEY_KPENTER":pomodoro_options_menu}
+    keymap = {"KEY_ENTER":pomodoro_options_menu}
     refresher = Refresher(status_refresher_data, i, o, 1, keymap, "Pomodoro monitor")
     refresher.activate()
 

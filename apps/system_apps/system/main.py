@@ -27,17 +27,17 @@ def uptime_load_monitor():
 def memory_menu_data():
     memory_info = sys_info.free()
     menu_contents = [
-    ["Free {}MB".format(memory_info["Free"])],
-    ["Used {}MB".format(memory_info["Used"])],
-    ["FreeBC {}MB".format(memory_info["FreeBC"])],
-    ["UsedBC {}MB".format(memory_info["UsedBC"])],
-    ["Total {}MB".format(memory_info["Total"])],
-    ["Swap {}MB".format(memory_info["SwapTotal"])],
-    ["SwapUsed {}MB".format(memory_info["SwapUsed"])],
-    ["SwapFree {}MB".format(memory_info["SwapFree"])],
-    ["Cached {}MB".format(memory_info["Cached"])],
-    ["Shared {}MB".format(memory_info["Shared"])],
-    ["Buffers {}MB".format(memory_info["Buffers"])]]
+    ["Free {:.2f}MB".format(memory_info["Free"])],
+    ["Used {:.2f}MB".format(memory_info["Used"])],
+    ["FreeBC {:.2f}MB".format(memory_info["FreeBC"])],
+    ["UsedBC {:.2f}MB".format(memory_info["UsedBC"])],
+    ["Total {:.2f}MB".format(memory_info["Total"])],
+    ["Swap {:.2f}MB".format(memory_info["SwapTotal"])],
+    ["SwapUsed {:.2f}MB".format(memory_info["SwapUsed"])],
+    ["SwapFree {:.2f}MB".format(memory_info["SwapFree"])],
+    ["Cached {:.2f}MB".format(memory_info["Cached"])],
+    ["Shared {:.2f}MB".format(memory_info["Shared"])],
+    ["Buffers {:.2f}MB".format(memory_info["Buffers"])]]
     return menu_contents
 
 def show_memory():
@@ -49,13 +49,12 @@ def show_linux_info():
     [["Hostname:", linux_info["hostname"]]],
     [["Kernel version:", linux_info["k_release"]]],
     [["Architecture:", linux_info["machine"]]],
-    [["Distribution:", " ".join(linux_info["distribution"])]]
     ]
+    if "distribution" in linux_info:
+        menu_contents.append([["Distribution:", " ".join(linux_info["distribution"])]])
     Menu(menu_contents, i, o, entry_height=2).activate()
 
-#Some globals for pyLCI
 callback = None
-#Some globals for us
 i = None
 o = None
 

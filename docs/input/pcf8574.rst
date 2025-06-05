@@ -26,8 +26,3 @@ It works with PCF8574 IO expanders. You can see an guide on modifying them and c
 .. autoclass:: InputDevice
     :members:
     :special-members:
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-

@@ -1,7 +1,8 @@
 import json
 from subprocess import check_output, CalledProcessError
 from time import sleep
-
+from zpui_lib.helpers import setup_logger
+logger = setup_logger(__name__, "info")
 """
 #Not yet implemented:
   -t, --ntsc                        Use NTSC frequency for HDMI mode (e.g. 59.94Hz rather than 60Hz)
@@ -13,9 +14,12 @@ from time import sleep
 
 def tvservice_command(*command):
     try:
-        return check_output(['tvservice'] + list(command))
+        output = check_output(['tvservice'] + list(command))
     except CalledProcessError as e:
         raise
+    else:
+        if isinstance(output, bytes): output = output.decode("ascii")
+        return output
 
 def get_modes(group):
     """-m, --modes=GROUP                 Get supported modes for GROUP (CEA, DMT)"""
@@ -66,7 +70,7 @@ def status():
        result["tv_mode"] = mode
        result["ratio"] = ratio
     else:
-       print("TVSERVICE APP WARNING: Unexpected tvservice -s output {}".format(output))
+       logger.warning("Unexpected tvservice -s output: {}".format(output))
        result["mode"] = "UNKNOWN"
     return result
 

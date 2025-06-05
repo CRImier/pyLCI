@@ -31,9 +31,3 @@ To test your screen, you can just run ``python output/driver/mcp23008.py`` while
 .. autoclass:: Screen
     :members:
     :special-members:
-
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-

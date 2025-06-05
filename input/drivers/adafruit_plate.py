@@ -1,7 +1,7 @@
 import smbus
 from time import sleep
 
-from skeleton import InputSkeleton
+from input.drivers.skeleton import InputSkeleton
 
 class InputDevice(InputSkeleton):
     """A driver for Adafruit-developed Raspberry Pi character LCD&button shields based on MCP23017, either Adafruit-made or Chinese-made.
@@ -9,7 +9,7 @@ class InputDevice(InputSkeleton):
        Tested on hardware compatible with Adafruit schematic and working with Adafruit libraries, but not on genuine Adafruit hardware. 
     """
     default_mapping = [
-    "KEY_KPENTER",
+    "KEY_ENTER",
     "KEY_RIGHT",
     "KEY_DOWN",
     "KEY_UP",

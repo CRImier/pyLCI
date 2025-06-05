@@ -1,7 +1,7 @@
 from jsonrpclib.SimpleJSONRPCServer import SimpleJSONRPCServer
 import threading
 
-class RPCApi():
+class RPCApi(object):
 
     functions = []
 
